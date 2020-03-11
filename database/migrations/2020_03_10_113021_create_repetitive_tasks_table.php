@@ -14,7 +14,7 @@ class CreateRepetitiveTasksTable extends Migration
     public function up()
     {
         Schema::create('repetitive_tasks', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->string('name');
             $table->integer('order');
             $table->timestamp('date')->nullable();  // Date de la tâche

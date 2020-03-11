@@ -14,7 +14,7 @@ class CreateTasksSkillsTable extends Migration
     public function up()
     {
         Schema::create('tasks_skills', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->unsignedBigInteger('task_id');
             $table->foreign('task_id')->references('id')->on('tasks')->onDelete('cascade');
             $table->unsignedBigInteger('skill_id');

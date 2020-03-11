@@ -14,7 +14,7 @@ class CreateTasksBundlesTable extends Migration
     public function up()
     {
         Schema::create('tasks_bundles', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->unsignedBigInteger('project_id');

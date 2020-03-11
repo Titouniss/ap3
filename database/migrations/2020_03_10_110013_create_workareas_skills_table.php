@@ -14,7 +14,7 @@ class CreateWorkareasSkillsTable extends Migration
     public function up()
     {
         Schema::create('workareas_skills', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->unsignedBigInteger('workarea_id');
             $table->foreign('workarea_id')->references('id')->on('workareas')->onDelete('cascade');
             $table->unsignedBigInteger('skill_id');
