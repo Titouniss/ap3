@@ -12,7 +12,3 @@
 */
 
 Route::get('/{any}', 'ApplicationController')->where('any', '.*');
-
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
