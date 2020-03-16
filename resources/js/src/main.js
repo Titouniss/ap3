@@ -21,6 +21,14 @@ Vue.use(Vuesax)
 import axios from './axios.js'
 Vue.prototype.$http = axios
 
+// Auth0 Plugin
+import AuthPlugin from './plugins/auth'
+Vue.use(AuthPlugin)
+
+
+// ACL
+import acl from './acl/acl'
+
 // Theme Configurations
 import '../themeConfig.js'
 
@@ -35,6 +43,15 @@ import router from './router'
 // Vuex Store
 import store from './store/store'
 
+// Tour
+import VueTour from 'vue-tour'
+Vue.use(VueTour)
+require('vue-tour/dist/vue-tour.css')
+
+
+// VeeValidate
+import VeeValidate from 'vee-validate'
+Vue.use(VeeValidate)
 
 // Vuejs - Vue wrapper for hammerjs
 import { VueHammer } from 'vue2-hammer'
@@ -51,5 +68,6 @@ Vue.config.productionTip = false
 new Vue({
   router,
   store,
+  acl,
   render: h => h(App)
 }).$mount('#app')

@@ -132,6 +132,17 @@ export default {
         notify: this.$vs.notify
       }
       this.$store.dispatch('auth/registerUserJWT', payload)
+      .then(() => { this.$vs.loading.close() })
+        .catch(error => {
+          this.$vs.loading.close()
+          this.$vs.notify({
+            title: 'Error',
+            text: error.message,
+            iconPack: 'feather',
+            icon: 'icon-alert-circle',
+            color: 'danger'
+          })
+        })
     }
   }
 }

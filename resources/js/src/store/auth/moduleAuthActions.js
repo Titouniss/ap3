@@ -44,22 +44,23 @@ export default {
     return new Promise((resolve, reject) => {
       jwt.login(payload.userDetails.email, payload.userDetails.password)
         .then(response => {
-
+          console.log(response);
+          console.log(response.success);
+          
           // If there's user data in response
-          if (response.data.userData) {
+          if (response.data && response.data.success) {
             // Navigate User to homepage
             router.push(router.currentRoute.query.to || '/')
-
             // Set accessToken
-            localStorage.setItem('accessToken', response.data.accessToken)
-
-            // Update user details
-            commit('UPDATE_USER_INFO', response.data.userData, {root: true})
-
-            // Set bearer token in axios
-            commit('SET_BEARER', response.data.accessToken)
-
-            resolve(response)
+            localStorage.setItem('accessToken', response.success.token)
+            
+            if (response.data.userData) {
+              // Update user details
+              commit('UPDATE_USER_INFO', response.data.userData, {root: true})
+              // Set bearer token in axios
+              commit('SET_BEARER', response.success.token)
+              resolve(response)
+            }
           } else {
             reject({message: 'Wrong Email or Password'})
           }
@@ -74,12 +75,7 @@ export default {
 
     return new Promise((resolve, reject) => {
 
-      // Check confirm password
-      if (password !== confirmPassword) {
-        reject({message: 'Password doesn\'t match. Please try again.'})
-      }
-
-      jwt.registerUser(displayName, email, password)
+      jwt.registerUser(displayName, email, password, confirmPassword)
         .then(response => {
           // Redirect User
           router.push(router.currentRoute.query.to || '/')

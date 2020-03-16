@@ -34,12 +34,18 @@ const router = new Router({
         {
           path: '/',
           name: 'home',
-          component: () => import('./views/Home.vue')
+          component: () => import('./views/Home.vue'),
+          meta: {
+            rule: 'admin'
+          }
         },
         {
           path: '/page2',
           name: 'page-2',
-          component: () => import('./views/Page2.vue')
+          component: () => import('./views/Page2.vue'),
+          meta: {
+            rule: 'admin'
+          }
         }
       ]
     },
@@ -150,6 +156,35 @@ const router = new Router({
     }
   ]
 })
+
+// router.beforeEach((to, from, next) => {
+
+//     // if (
+//     //     to.path === "/pages/login" ||
+//     //     to.path === "/pages/forgot-password" ||
+//     //     to.path === "/pages/error-404" ||
+//     //     to.path === "/pages/error-500" ||
+//     //     to.path === "/pages/register" ||
+//     //     to.path === "/callback" ||
+//     //     to.path === "/pages/comingsoon" ||
+//     //     (auth.isAuthenticated() || firebaseCurrentUser)
+//     // ) {
+//     //     return next();
+//     // }
+
+//     // If auth required, check login. If login fails redirect to login page
+//     if (to.meta.authRequired) {
+//       if (!(auth.isAuthenticated() || firebaseCurrentUser)) {
+//         router.push({ path: '/pages/login', query: { to: to.path } })
+//       }
+//     }
+
+//     return next()
+//     // Specify the current path as the customState parameter, meaning it
+//     // will be returned to the application after auth
+//     // auth.login({ target: to.path });
+
+// })
 
 router.afterEach(() => {
   // Remove initial loading
