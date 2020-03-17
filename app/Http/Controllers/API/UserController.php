@@ -75,4 +75,16 @@ class UserController extends Controller
         $user = Auth::user(); 
         return response()->json(['success' => $user], $this-> successStatus); 
     } 
+
+        /** 
+     * details api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function index() 
+    { 
+        $user = Auth::user(); 
+        $usersList = $user->isAdmin ? User::all() : User::where('company_id',$user->company_id)->get();
+        return response()->json(['success' => $usersList], $this-> successStatus); 
+    } 
 }

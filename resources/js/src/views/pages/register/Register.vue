@@ -118,8 +118,8 @@ export default {
         // this.$vs.loading.close()
 
         this.$vs.notify({
-          title: 'Login Attempt',
-          text: 'You are already logged in!',
+          title: 'Connexion',
+          text: 'Vous êtes déjà connecté!',
           iconPack: 'feather',
           icon: 'icon-alert-circle',
           color: 'warning'

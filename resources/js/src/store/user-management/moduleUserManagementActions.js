@@ -20,11 +20,14 @@ export default {
   //       .catch((error) => { reject(error) })
   //   })
   // },
-  fetchUsers ({ commit }) {
+  fetchUsers ({ commit }) {    
     return new Promise((resolve, reject) => {
       axios.get('/api/user-management/users')
         .then((response) => {
-          commit('SET_USERS', response.data)
+          console.log('axios.get /api/user-management/users');
+          console.log(response);
+          
+          commit('SET_USERS', response.data.success)
           resolve(response)
         })
         .catch((error) => { reject(error) })
