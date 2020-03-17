@@ -79,8 +79,8 @@
                                       class="w-full mt-6" />
                                     <span class="text-danger text-sm">{{ errors.first('confirm_password') }}</span>
 
-                                    <vs-checkbox v-model="isTermsConditionAccepted" class="mt-6">I accept the terms & conditions.</vs-checkbox>
-                                    <vs-button  type="border" to="/pages/login" class="mt-6">Connexion</vs-button>
+                                    <vs-checkbox v-model="isTermsConditionAccepted" class="mt-6">J'accepte les conditions générales d'utilisation.</vs-checkbox>
+                                    <vs-button  type="border" to="/pages/login" class="mt-6">Retour</vs-button>
                                     <vs-button class="float-right mt-6" @click="registerUserJWt" :disabled="!validateForm">S'enregistrer</vs-button>
                                   </div>
                             </div>

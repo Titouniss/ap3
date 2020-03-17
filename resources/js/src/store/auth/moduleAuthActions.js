@@ -9,6 +9,7 @@
 
 import jwt from '../../http/requests/auth/jwt/index.js'
 import router from '@/router'
+import moment from 'moment'
 
 export default {
   updateUsername ({ commit }, payload) {
@@ -57,13 +58,13 @@ export default {
               // Set bearer token in axios
               commit('SET_BEARER', data.success.token)
             }
+            localStorage.setItem('loggedIn', true)
             localStorage.setItem('token', data.success.token)
-            localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date())
+            localStorage.setItem('tokenExpires', moment(data.success.tokenExpires).unix() || moment().unix())
             resolve(response)
           } else {
             reject({message: 'Connexion impossible l’identifiant ou le mot de passe est incorrect.'})
           }
-
         })
         .catch(error => { reject({message: 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'}) })
     })
@@ -81,6 +82,7 @@ export default {
           if (data && data.success) {
             // Update data in localStorage
             router.push(router.currentRoute.query.to || '/')
+            localStorage.setItem('loggedIn', true)
             localStorage.setItem('token', data.success.token)
             localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date())
             commit('SET_BEARER', data.success.token)
@@ -112,6 +114,7 @@ export default {
     return new Promise((resolve, reject) => {
       jwt.logout()
         .then(response => {  
+          localStorage.removeItem('loggedIn')
           localStorage.removeItem('token')
           localStorage.removeItem('tokenExpires')
           localStorage.removeItem('userInfo')          

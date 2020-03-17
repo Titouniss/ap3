@@ -6,18 +6,13 @@
   Author: Pixinvent
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
+import moment from 'moment'
 
 export default {
   isUserLoggedIn: () => {
     let isAuthenticated = false
     let expiresAt = localStorage.getItem('tokenExpires')
-    if (expiresAt && expiresAt > new Date()) isAuthenticated = true
-     console.log(expiresAt);
-     console.log(new Date());
-     console.log(expiresAt > new Date());
-     console.log(isAuthenticated);
-     
-     
+    if (expiresAt && expiresAt > moment().unix()) isAuthenticated = true
     return localStorage.getItem('userInfo') && isAuthenticated
   }
 }

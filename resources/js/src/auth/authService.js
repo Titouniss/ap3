@@ -1,13 +1,13 @@
 import auth0 from 'auth0-js'
 import EventEmitter from 'events'
 import authConfig from '@/../auth_config.json'
-
+import moment from 'moment'
 import store from '@/store/store.js'
 
 // 'loggedIn' is used in other parts of application. So, Don't forget to change there also
 const localStorageKey = 'loggedIn'
 
-const tokenExpiryKey = 'tokenExpiry'
+const tokenExpiryKey = 'tokenExpires'
 const loginEvent = 'loginEvent'
 
 const webAuth = new auth0.WebAuth({
@@ -104,10 +104,13 @@ class AuthService extends EventEmitter {
     }
 
     isAuthenticated () {
-      return (
-        new Date(Date.now()) < new Date(localStorage.getItem(tokenExpiryKey)) &&
-            localStorage.getItem(localStorageKey) === 'true'
-      )
+      const expiresAt = localStorage.getItem(tokenExpiryKey)      
+      if (expiresAt && expiresAt !== null) {
+        return (
+          moment().unix() < expiresAt &&
+              localStorage.getItem(localStorageKey) === 'true'
+        )
+      } else return false
     }
 }
 

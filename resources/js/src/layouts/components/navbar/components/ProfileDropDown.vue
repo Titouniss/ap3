@@ -1,8 +1,8 @@
 <template>
-  <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo.firstname">
+  <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo">
 
     <div class="text-right leading-tight hidden sm:block">
-      <p class="font-semibold">{{ activeUserInfo.firstname }} {{ activeUserInfo.lastname.toUpperCase() }}</p>
+      <p class="font-semibold">{{ activeUserInfo.firstname }} {{ activeUserInfo.lastname  ? activeUserInfo.lastname.toUpperCase() : '' }}</p>
       <small>Available</small>
     </div>
 
