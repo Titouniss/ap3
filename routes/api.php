@@ -16,12 +16,21 @@ use Illuminate\Http\Request;
 
 
 Route::prefix('auth')->group(function () {
+    /***********************************************************************************/
+    /********************************    USERS    **************************************/
+    /***********************************************************************************/
     Route::post('login', 'API\UserController@login');
+    Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
-    Route::get('refresh', 'AuthController@refresh');
+    Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
+    Route::post('password/reset', 'Auth\ResetPasswordController@reset');
+    Route::get('email/verify/{token}', 'Auth\VerificationController@verify');
 
-    Route::group(['middleware' => 'auth:api'], function(){
-        Route::get('user', 'AuthController@user');
-        Route::post('logout', 'AuthController@logout');
-    });
+    /***********************************************************************************/
+    /********************************    OTHERS   **************************************/
+    /***********************************************************************************/
+    // Route::group(['middleware' => 'auth:api'], function(){
+    //     Route::get('user', 'AuthController@user');
+    //     Route::post('logout', 'AuthController@logout');
+    // });
 });

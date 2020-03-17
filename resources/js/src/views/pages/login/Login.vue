@@ -24,8 +24,8 @@
               <div class="p-8 login-tabs-container">
 
                 <div class="vx-card__title mb-4">
-                  <h4 class="mb-4">Connexion</h4>
-                  <p>Welcome back, please login to your account.</p>
+                  <h4 class="mb-4">Bienvenu sur votre outil de plannification</h4>
+                  <p>Connexion</p>
                 </div>
 
                 <div>
@@ -49,10 +49,10 @@
                       class="w-full mt-6" />
 
                   <div class="flex flex-wrap justify-between my-5">
-                      <router-link to="">Forgot Password?</router-link>
+                      <router-link to="forgot-password" @click="forgotPassword">Mot de passe oublié?</router-link>
                   </div>
-                    <vs-button  type="border" @click="registerUser">Register</vs-button>
-                    <vs-button :disabled="!validateForm" @click="loginJWT">Login</vs-button>
+                    <vs-button  type="border" @click="registerUser">Inscription</vs-button>
+                    <vs-button :disabled="!validateForm" @click="loginJWT">Connexion</vs-button>
                 </div>
 
               </div>
@@ -82,14 +82,16 @@ export default {
   methods: {
     checkLogin () {
       // If user is already logged in notify
+      console.log(this.$store.state);
+      
       if (this.$store.state.auth.isUserLoggedIn()) {
 
         // Close animation if passed as payload
         // this.$vs.loading.close()
 
         this.$vs.notify({
-          title: 'Login Attempt',
-          text: 'You are already logged in!',
+          title: 'Connexion',
+          text: 'Vous êtes déjà connecté!',
           iconPack: 'feather',
           icon: 'icon-alert-circle',
           color: 'warning'
@@ -116,10 +118,10 @@ export default {
 
       this.$store.dispatch('auth/loginJWT', payload)
         .then(() => { this.$vs.loading.close() })
-        .catch(error => {
+        .catch(error => {          
           this.$vs.loading.close()
           this.$vs.notify({
-            title: 'Error',
+            title: 'Echec',
             text: error.message,
             iconPack: 'feather',
             icon: 'icon-alert-circle',
@@ -130,6 +132,14 @@ export default {
     registerUser () {
       if (!this.checkLogin()) return
       this.$router.push('/pages/register').catch(() => {})
+    },
+    forgotPassword () {
+      console.log('here');
+      
+      if (!this.checkLogin()) return
+      console.log('next');
+      
+      this.$router.push('/pages/forgot-password').catch(() => {})
     }
   }
 }

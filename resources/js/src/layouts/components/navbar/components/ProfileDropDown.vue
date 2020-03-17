@@ -1,8 +1,8 @@
 <template>
-  <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo.displayName">
+  <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo.firstname">
 
     <div class="text-right leading-tight hidden sm:block">
-      <p class="font-semibold">{{ activeUserInfo.displayName }}</p>
+      <p class="font-semibold">{{ activeUserInfo.firstname }} {{ activeUserInfo.lastname.toUpperCase() }}</p>
       <small>Available</small>
     </div>
 
@@ -60,14 +60,30 @@ export default {
     }
   },
   computed: {
-    activeUserInfo () {
+    activeUserInfo () {      
       return this.$store.state.AppActiveUser
     }
   },
   methods: {
     logout () {
-      // This is just for demo Purpose. If user clicks on logout -> redirect
-      this.$router.push('/pages/login').catch(() => {})
+      this.$vs.loading()
+      this.$store.dispatch('auth/logoutJWT', localStorage.getItem('token'))
+        .then(() => { 
+          console.log('then');
+          
+          this.$vs.loading.close()
+          this.$router.push('/pages/login').catch(() => {})
+        })
+        .catch(error => {                    
+          this.$vs.loading.close()
+          this.$vs.notify({
+            title: 'Echec',
+            text: error.message,
+            iconPack: 'feather',
+            icon: 'icon-alert-circle',
+            color: 'danger'
+          })
+        })
     }
   }
 }

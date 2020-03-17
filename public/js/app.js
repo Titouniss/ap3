@@ -78171,18 +78171,35 @@ function addSubscriber(callback) {
       password: pwd
     });
   },
-  registerUser: function registerUser(name, email, pwd, c_password) {
+  registerUser: function registerUser(firstname, lastname, email, pwd, c_password, isTermsConditionAccepted) {
     return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/register', {
-      name: name,
+      firstname: firstname,
+      lastname: lastname,
+      email: email,
+      password: pwd,
+      c_password: c_password,
+      isTermsConditionAccepted: isTermsConditionAccepted
+    });
+  },
+  refreshToken: function refreshToken() {
+    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/refresh-token', {
+      token: localStorage.getItem('token')
+    });
+  },
+  forgotPassword: function forgotPassword(email) {
+    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/forget', {
+      email: email
+    });
+  },
+  resetPassword: function resetPassword(email, pwd, c_password) {
+    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/password/reset', {
       email: email,
       password: pwd,
       c_password: c_password
     });
   },
-  refreshToken: function refreshToken() {
-    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/refresh-token', {
-      accessToken: localStorage.getItem('accessToKen')
-    });
+  logout: function logout() {
+    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].get('/api/auth/logout');
   }
 });
 
@@ -78742,6 +78759,7 @@ var actions = {
   // /////////////////////////////////////////////
   updateUserInfo: function updateUserInfo(_ref7, payload) {
     var commit = _ref7.commit;
+    console.log('updateUserInfo actions');
     commit('UPDATE_USER_INFO', payload);
   }
 };
@@ -78839,50 +78857,63 @@ __webpack_require__.r(__webpack_exports__);
     var commit = _ref2.commit;
     return new Promise(function (resolve, reject) {
       _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].login(payload.userDetails.email, payload.userDetails.password).then(function (response) {
-        console.log(response);
-        console.log(response.success); // If there's user data in response
+        var data = response.data; // If there's user data in response           
 
-        if (response.data && response.data.success) {
+        if (data && data.success) {
           // Navigate User to homepage
           _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/'); // Set accessToken
 
-          localStorage.setItem('accessToken', response.success.token);
-
-          if (response.data.userData) {
-            // Update user details
-            commit('UPDATE_USER_INFO', response.data.userData, {
+          if (data.userData) {
+            // Update user details              
+            commit('UPDATE_USER_INFO', data.userData, {
               root: true
-            }); // Set bearer token in axios
-
-            commit('SET_BEARER', response.success.token);
-            resolve(response);
+            });
           }
+
+          if (data.success.token) {
+            // Set bearer token in axios
+            commit('SET_BEARER', data.success.token);
+          }
+
+          localStorage.setItem('token', data.success.token);
+          localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date());
+          resolve(response);
         } else {
           reject({
-            message: 'Wrong Email or Password'
+            message: 'Connexion impossible l’identifiant ou le mot de passe est incorrect.'
           });
         }
       }).catch(function (error) {
-        reject(error);
+        reject({
+          message: 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
+        });
       });
     });
   },
   registerUserJWT: function registerUserJWT(_ref3, payload) {
     var commit = _ref3.commit;
     var _payload$userDetails = payload.userDetails,
-        displayName = _payload$userDetails.displayName,
+        firstname = _payload$userDetails.firstname,
+        lastname = _payload$userDetails.lastname,
         email = _payload$userDetails.email,
         password = _payload$userDetails.password,
-        confirmPassword = _payload$userDetails.confirmPassword;
+        confirmPassword = _payload$userDetails.confirmPassword,
+        isTermsConditionAccepted = _payload$userDetails.isTermsConditionAccepted;
     return new Promise(function (resolve, reject) {
-      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].registerUser(displayName, email, password, confirmPassword).then(function (response) {
-        // Redirect User
-        _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/'); // Update data in localStorage
+      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].registerUser(firstname, lastname, email, password, confirmPassword, isTermsConditionAccepted).then(function (response) {
+        var data = response.data; // Redirect User
 
-        localStorage.setItem('accessToken', response.data.accessToken);
-        commit('UPDATE_USER_INFO', response.data.userData, {
-          root: true
-        });
+        if (data && data.success) {
+          // Update data in localStorage
+          _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/');
+          localStorage.setItem('token', data.success.token);
+          localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date());
+          commit('SET_BEARER', data.success.token);
+          commit('UPDATE_USER_INFO', data.userData, {
+            root: true
+          });
+        }
+
         resolve(response);
       }).catch(function (error) {
         reject(error);
@@ -78893,6 +78924,40 @@ __webpack_require__.r(__webpack_exports__);
     return new Promise(function (resolve) {
       _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].refreshToken().then(function (response) {
         resolve(response);
+      });
+    });
+  },
+  forgotPassword: function forgotPassword(_ref4, payload) {
+    var commit = _ref4.commit;
+    return new Promise(function (resolve) {
+      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].forgotPassword(payload.email).then(function (response) {
+        console.log(response);
+        resolve(response);
+      });
+    });
+  },
+  resetPassword: function resetPassword(_ref5, payload) {
+    var commit = _ref5.commit;
+    return new Promise(function (resolve) {
+      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].resetPassword(payload.email, payload.pwd, payload.c_password).then(function (response) {
+        resolve(response);
+      });
+    });
+  },
+  // JWT
+  logoutJWT: function logoutJWT(_ref6) {
+    var commit = _ref6.commit;
+    return new Promise(function (resolve, reject) {
+      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].logout().then(function (response) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenExpires');
+        localStorage.removeItem('userInfo');
+        resolve(response);
+      }).catch(function (error) {
+        console.log(error);
+        reject({
+          message: 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
+        });
       });
     });
   }
@@ -78917,7 +78982,11 @@ __webpack_require__.r(__webpack_exports__);
   Author: Pixinvent
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
-/* harmony default export */ __webpack_exports__["default"] = ({});
+/* harmony default export */ __webpack_exports__["default"] = ({
+  GET_BEARER: function GET_BEARER() {
+    return axios.defaults.headers.common['Authorization'];
+  }
+});
 
 /***/ }),
 
@@ -78957,7 +79026,6 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _auth_authService__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/auth/authService */ "./resources/js/src/auth/authService.js");
 /*=========================================================================================
   File Name: moduleAuthState.js
   Description: Auth Module State
@@ -78966,11 +79034,15 @@ __webpack_require__.r(__webpack_exports__);
   Author: Pixinvent
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
-
 /* harmony default export */ __webpack_exports__["default"] = ({
   isUserLoggedIn: function isUserLoggedIn() {
     var isAuthenticated = false;
-    if (_auth_authService__WEBPACK_IMPORTED_MODULE_0__["default"].isAuthenticated()) isAuthenticated = true;else isAuthenticated = false;
+    var expiresAt = localStorage.getItem('tokenExpires');
+    if (expiresAt && expiresAt > new Date()) isAuthenticated = true;
+    console.log(expiresAt);
+    console.log(new Date());
+    console.log(expiresAt > new Date());
+    console.log(isAuthenticated);
     return localStorage.getItem('userInfo') && isAuthenticated;
   }
 });
@@ -79289,11 +79361,11 @@ __webpack_require__.r(__webpack_exports__);
 ==========================================================================================*/
 // MAIN COLORS - VUESAX THEME COLORS
 var colors = {
-  primary: '#7367F0',
-  success: '#28C76F',
-  danger: '#EA5455',
-  warning: '#FF9F43',
-  dark: '#1E1E1E'
+  primary: '#2196f3',
+  success: '#2D8F7B',
+  danger: '#CE645D',
+  warning: '#E8B92E',
+  dark: '#424242'
 }; // CONFIGS
 
 var themeConfig = {
@@ -79317,7 +79389,7 @@ var themeConfig = {
   // options[Boolean] : true, false(default)
   sidebarCollapsed: false,
   // options[Boolean] : true, false(default)
-  theme: 'light',
+  theme: 'semi-dark',
   // options[String]  : "light"(default), "dark", "semi-dark"
   // Not required yet - WIP
   userInfoLocalStorageKey: 'userInfo' // NOTE: themeTour will be disabled in screens < 1200. Please refer docs for more info.

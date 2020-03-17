@@ -47,6 +47,8 @@ const actions = {
   // /////////////////////////////////////////////
 
   updateUserInfo ({ commit }, payload) {
+    console.log('updateUserInfo actions');
+    
     commit('UPDATE_USER_INFO', payload)
   }
 }

@@ -7,14 +7,17 @@
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
-
-import auth from '@/auth/authService'
-
 export default {
   isUserLoggedIn: () => {
     let isAuthenticated = false
-    if (auth.isAuthenticated()) isAuthenticated = true
-    else isAuthenticated = false
+    let expiresAt = localStorage.getItem('tokenExpires')
+    if (expiresAt && expiresAt > new Date()) isAuthenticated = true
+     console.log(expiresAt);
+     console.log(new Date());
+     console.log(expiresAt > new Date());
+     console.log(isAuthenticated);
+     
+     
     return localStorage.getItem('userInfo') && isAuthenticated
   }
 }

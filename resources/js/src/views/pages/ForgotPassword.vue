@@ -20,13 +20,13 @@
                         <div class="vx-col sm:w-full md:w-full lg:w-1/2 mx-auto self-center d-theme-dark-bg">
                             <div class="p-8">
                                 <div class="vx-card__title mb-8">
-                                    <h4 class="mb-4">Recover your password</h4>
-                                    <p>Please enter your email address and we'll send you instructions on how to reset your password.</p>
+                                    <h4 class="mb-4">Récupération de mot de passe</h4>
+                                    <p>Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
                                 </div>
 
                                 <vs-input type="email" label-placeholder="Email" v-model="value1" class="w-full mb-8" />
-                                <vs-button type="border" to="/pages/login" class="px-4 w-full md:w-auto">Back To Login</vs-button>
-                                <vs-button class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0">Recover Password</vs-button>
+                                <vs-button type="border" to="/pages/login" class="px-4 w-full md:w-auto">Retour</vs-button>
+                                <vs-button class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0"  @click="forgotPassword">Envoyer le lien</vs-button>
                             </div>
                         </div>
                     </div>
@@ -41,6 +41,48 @@ export default {
   data () {
     return {
       value1: ''
+    }
+  },
+  methods: {
+    checkLogin () {
+      // If user is already logged in notify
+      if (this.$store.state.auth.isUserLoggedIn()) {
+
+        // Close animation if passed as payload
+        // this.$vs.loading.close()
+
+        this.$vs.notify({
+          title: 'Connexion',
+          text: 'Vous êtes déjà connecté!',
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'warning'
+        })
+
+        return false
+      }
+      return true
+    },
+    forgotPassword () {
+
+      if (!this.checkLogin()) return
+      const payload = {
+          email: this.value1
+      }
+      // Loading
+      this.$vs.loading()
+      this.$store.dispatch('auth/forgotPassword',payload)
+        .then(() => { this.$vs.loading.close() })
+        .catch(error => {          
+          this.$vs.loading.close()
+          this.$vs.notify({
+            title: 'Echec',
+            text: error.message,
+            iconPack: 'feather',
+            icon: 'icon-alert-circle',
+            color: 'danger'
+          })
+        })
     }
   }
 }

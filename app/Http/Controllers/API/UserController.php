@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Validator;
 class UserController extends Controller 
 {
-public $successStatus = 200;
-/** 
+    public $successStatus = 200;
+    /** 
      * login api 
      * 
      * @return \Illuminate\Http\Response 
@@ -16,13 +16,29 @@ public $successStatus = 200;
     public function login(){ 
         if(Auth::attempt(['email' => request('email'), 'password' => request('password')])){ 
             $user = Auth::user(); 
-            $success['token'] =  $user->createToken('ProjetX')-> accessToken; 
+            $token =  $user->createToken('ProjetX');
+            $success['token'] =  $token->accessToken;
+            $success['tokenExpires'] =  $token->token->expires_at;
             return response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
         } 
         else{ 
-            return response()->json(['error'=>'Unauthorised'], 401); 
+            return response()->json(['success' => false, 'error'=>'Unauthorised']); 
         } 
     }
+    /** 
+    * logout api 
+    * 
+    * @return \Illuminate\Http\Response 
+    */ 
+   public function logout(){ 
+    $success = false;
+    if (Auth::check()) {
+        Auth::user()->AauthAcessToken()->delete();
+        $success = true;
+     }
+     return response()->json(['success'=>$success], $this-> successStatus); 
+   }
+
     /** 
      * Register api 
      * 
@@ -31,10 +47,12 @@ public $successStatus = 200;
     public function register(Request $request) 
     { 
         $validator = Validator::make($request->all(), [ 
-            'name' => 'required', 
+            'firstname' => 'required', 
+            'lastname' => 'required', 
             'email' => 'required|email', 
             'password' => 'required', 
             'c_password' => 'required|same:password', 
+            'isTermsConditionAccepted' => 'required', 
         ]);
         if ($validator->fails()) { 
             return response()->json(['error'=>$validator->errors()], 401);            
@@ -42,9 +60,10 @@ public $successStatus = 200;
         $input = $request->all(); 
         $input['password'] = bcrypt($input['password']); 
         $user = User::create($input); 
-        $success['token'] =  $user->createToken('ProjetX')-> accessToken; 
-        $success['name'] =  $user->name;
-        return response()->json(['success'=>$success], $this-> successStatus); 
+        $token =  $user->createToken('ProjetX');
+        $success['token'] =  $token->accessToken;
+        $success['tokenExpires'] =  $token->token->expires_at;
+        return response()->json(['success'=>$success, 'userData' => $user], $this-> successStatus); 
     }
     /** 
      * details api 

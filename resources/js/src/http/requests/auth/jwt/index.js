@@ -50,15 +50,26 @@ export default {
       password: pwd
     })
   },
-  registerUser (name, email, pwd, c_password) {
+  registerUser (firstname,lastname, email, pwd, c_password,isTermsConditionAccepted) {
     return axios.post('/api/auth/register', {
-      name: name,
+      firstname: firstname,
+      lastname: lastname,
       email,
       password: pwd,
-      c_password: c_password
+      c_password: c_password,
+      isTermsConditionAccepted: isTermsConditionAccepted
     })
   },
   refreshToken () {
-    return axios.post('/api/auth/refresh-token', {accessToken: localStorage.getItem('accessToKen')})
-  }
+    return axios.post('/api/auth/refresh-token', {token: localStorage.getItem('token')})
+  },
+  forgotPassword (email) {
+    return axios.post('/api/auth/forget', {email: email})
+  },
+  resetPassword (email, pwd, c_password) {
+    return axios.post('/api/auth/password/reset', {email: email, password: pwd, c_password: c_password})
+  },
+  logout () {
+    return axios.get('/api/auth/logout')
+  },
 }

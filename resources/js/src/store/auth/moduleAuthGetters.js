@@ -8,4 +8,8 @@
 ==========================================================================================*/
 
 
-export default {}
+export default {
+  GET_BEARER () {    
+    return axios.defaults.headers.common['Authorization']
+  }
+}

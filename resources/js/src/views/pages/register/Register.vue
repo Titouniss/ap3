@@ -20,19 +20,29 @@
                         <div class="vx-col sm:w-full md:w-full lg:w-1/2 mx-auto self-center  d-theme-dark-bg">
                             <div class="px-8 pt-8 register-tabs-container">
                                 <div class="vx-card__title mb-4">
-                                    <h4 class="mb-4">Create Account</h4>
-                                    <p>Fill the below form to create a new account.</p>
+                                    <h4 class="mb-4">Création de compte</h4>
+                                    <p></p>
                                 </div>
                                 <div class="clearfix">
                                     <vs-input
                                       v-validate="'required|alpha_dash|min:3'"
                                       data-vv-validate-on="blur"
-                                      label-placeholder="Name"
-                                      name="displayName"
-                                      placeholder="Name"
-                                      v-model="displayName"
+                                      label-placeholder="Prénom"
+                                      name="firstname"
+                                      placeholder="Prénom"
+                                      v-model="firstname"
                                       class="w-full" />
-                                    <span class="text-danger text-sm">{{ errors.first('displayName') }}</span>
+                                    <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
+
+                                    <vs-input
+                                      v-validate="'required|alpha_dash|min:3'"
+                                      data-vv-validate-on="blur"
+                                      label-placeholder="Nom"
+                                      name="lastname"
+                                      placeholder="Nom"
+                                      v-model="lastname"
+                                      class="w-full" />
+                                    <span class="text-danger text-sm">{{ errors.first('lastname') }}</span>
 
                                     <vs-input
                                       v-validate="'required|email'"
@@ -51,8 +61,8 @@
                                       data-vv-validate-on="blur"
                                       v-validate="'required|min:6|max:10'"
                                       name="password"
-                                      label-placeholder="Password"
-                                      placeholder="Password"
+                                      label-placeholder="Mot de passe"
+                                      placeholder="Mot de passe"
                                       v-model="password"
                                       class="w-full mt-6" />
                                     <span class="text-danger text-sm">{{ errors.first('password') }}</span>
@@ -63,15 +73,15 @@
                                       data-vv-validate-on="blur"
                                       data-vv-as="password"
                                       name="confirm_password"
-                                      label-placeholder="Confirm Password"
-                                      placeholder="Confirm Password"
+                                      label-placeholder="Confirmation mot de passe"
+                                      placeholder="Confirmation mot de passe"
                                       v-model="confirm_password"
                                       class="w-full mt-6" />
                                     <span class="text-danger text-sm">{{ errors.first('confirm_password') }}</span>
 
                                     <vs-checkbox v-model="isTermsConditionAccepted" class="mt-6">I accept the terms & conditions.</vs-checkbox>
-                                    <vs-button  type="border" to="/pages/login" class="mt-6">Login</vs-button>
-                                    <vs-button class="float-right mt-6" @click="registerUserJWt" :disabled="!validateForm">Register</vs-button>
+                                    <vs-button  type="border" to="/pages/login" class="mt-6">Connexion</vs-button>
+                                    <vs-button class="float-right mt-6" @click="registerUserJWt" :disabled="!validateForm">S'enregistrer</vs-button>
                                   </div>
                             </div>
                         </div>
@@ -86,7 +96,8 @@
 export default {
   data () {
     return {
-      displayName: '',
+      firstname: '',
+      lastname: '',
       email: '',
       password: '',
       confirm_password: '',
@@ -95,7 +106,7 @@ export default {
   },
   computed: {
     validateForm () {
-      return !this.errors.any() && this.displayName !== '' && this.email !== '' && this.password !== '' && this.confirm_password !== '' && this.isTermsConditionAccepted === true
+      return !this.errors.any() && this.firstname !== '' && this.lastname !== '' && this.email !== '' && this.password !== '' && this.confirm_password !== '' && this.isTermsConditionAccepted === true
     }
   },
   methods: {
@@ -124,10 +135,12 @@ export default {
 
       const payload = {
         userDetails: {
-          displayName: this.displayName,
+          firstname: this.firstname,
+          lastname: this.lastname,
           email: this.email,
           password: this.password,
-          confirmPassword: this.confirm_password
+          confirmPassword: this.confirm_password,
+          isTermsConditionAccepted: this.isTermsConditionAccepted
         },
         notify: this.$vs.notify
       }
