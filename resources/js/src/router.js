@@ -93,7 +93,7 @@ const router = new Router({
           }
         },
         {
-          path: '/pages/reset-password',
+          path: '/pages/reset-password/:token/:email',
           name: 'page-reset-password',
           component: () => import('@/views/pages/ResetPassword.vue'),
           meta: {
@@ -158,19 +158,13 @@ const router = new Router({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  console.log(to.path);
-  console.log(auth.isAuthenticated());
-  
-  
+router.beforeEach((to, from, next) => { 
     if (
         (to.path === "/pages/login" ||
         to.path === "/pages/forgot-password" ||
         to.path === "/pages/register") &&
         auth.isAuthenticated()
     ) {      
-      console.log('in');
-      
         router.push({ path: '/', query: { to: to.path } })
         return next();
     }

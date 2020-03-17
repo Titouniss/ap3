@@ -98,7 +98,7 @@ export default {
       jwt.refreshToken().then(response => { resolve(response) })
     })
   },
-  forgotPassword ({ commit }, payload) {
+  forgotPassword ({ commit }, payload) {    
     return new Promise((resolve) => {
       jwt.forgotPassword(payload.email).then(response => { console.log(response);
        resolve(response) })
@@ -106,7 +106,7 @@ export default {
   },
   resetPassword ({ commit }, payload) {
     return new Promise((resolve) => {
-      jwt.resetPassword(payload.email, payload.pwd, payload.c_password).then(response => { resolve(response) })
+      jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token).then(response => { resolve(response) })
     })
   },
   // JWT

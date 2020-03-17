@@ -64,7 +64,6 @@ export default {
       return true
     },
     forgotPassword () {
-
       if (!this.checkLogin()) return
       const payload = {
           email: this.value1

@@ -8,6 +8,8 @@ use App\Transformers\Json;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\RedirectResponse;
+use Hash;
+use Illuminate\Auth\Events\PasswordReset;
 
 class ResetPasswordController extends Controller
 {
@@ -40,6 +42,15 @@ class ResetPasswordController extends Controller
     {
         $this->middleware('guest');
     }
+
+    /**
+     * Handle reset password 
+     */
+    public function callResetPassword(Request $request)
+    {
+        return $this->reset($request);
+    }
+
     public function reset(Request $request)
     {
         $this->validate($request, $this->rules(), $this->validationErrorMessages());
@@ -61,5 +72,20 @@ class ResetPasswordController extends Controller
 
         return  new RedirectResponse(env('APP_URL')+"?verified=$response");
 
+    }
+
+
+    /**
+     * Reset the given user's password.
+     *
+     * @param  \Illuminate\Contracts\Auth\CanResetPassword  $user
+     * @param  string  $password
+     * @return void
+     */
+    protected function resetPassword($user, $password)
+    {
+        $user->password = Hash::make($password);
+        $user->save();
+        event(new PasswordReset($user));
     }
 }

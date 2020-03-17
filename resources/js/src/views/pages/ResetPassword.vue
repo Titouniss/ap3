@@ -23,15 +23,37 @@
                                     <h4 class="mb-4">Réinitialisation de mot de passe</h4>
                                     <p>Saisissez votre nouveau mot de passe.</p>
                                 </div>
-                                <vs-input type="email" label-placeholder="Email" v-model="value1" class="w-full mb-6" />
-                                <vs-input type="password" label-placeholder="Password" v-model="value2" class="w-full mb-6" />
-                                <vs-input type="password" label-placeholder="Confirm Password" v-model="value3" class="w-full mb-8" />
-
-                                <div class="flex flex-wrap justify-between flex-col-reverse sm:flex-row">
-                                    <vs-button type="border" to="/pages/login" class="w-full sm:w-auto mb-8 sm:mb-auto mt-3 sm:mt-auto">Connexion</vs-button>
-                                    <vs-button class="w-full sm:w-auto"  @click="resetPassword">Réinitialiser</vs-button>
+                                <div class="clearfix">
+                                   <vs-input type="email" label-placeholder="Email" v-model="this.$route.params.email" class="w-full mb-6" disabled />
+                                  <vs-input
+                                    ref="password"
+                                    type="password"
+                                    data-vv-validate-on="blur"
+                                    v-validate="'required|min:6|max:10'"
+                                    name="password"
+                                    label-placeholder="Mot de passe"
+                                    placeholder="Mot de passe"
+                                    v-model="password"
+                                    class="w-full mt-6" />
+                                  <span class="text-danger text-sm">{{ errors.first('password') }}</span>
+                                  <vs-input
+                                          type="password"
+                                          v-validate="'min:6|max:10|confirmed:password'"
+                                          data-vv-validate-on="blur"
+                                          data-vv-as="password"
+                                          name="c_password"
+                                          label-placeholder="Confirmation mot de passe"
+                                          placeholder="Confirmation mot de passe"
+                                          v-model="c_password"
+                                          class="w-full mt-8" />
+                                  <span class="text-danger text-sm">{{ errors.first('c_password') }}</span>
+                                  
+                                  <div>
+                                    <vs-button type="border" to="/pages/login" class="mt-6">Connexion</vs-button>
+                                    <vs-button class="float-right mt-6"  @click="resetPassword">Réinitialiser</vs-button>
+                                  </div>
                                 </div>
-
+                               
                             </div>
                         </div>
                     </div>
@@ -45,9 +67,8 @@
 export default {
   data () {
     return {
-      value1: '',
-      value2: '',
-      value3: ''
+      password: '',
+      c_password: ''
     }
   },
   methods: {
@@ -70,14 +91,17 @@ export default {
       }
       return true
     },
-    forgotPassword () {
+    resetPassword () {
 
       if (!this.checkLogin()) return
       const payload = {
-          email: this.value1,
-          password: this.value2,
-          c_password: this.value3
+          email: this.$route.params.email,
+          password: this.password,
+          c_password: this.c_password,
+          token: this.$route.params.token
       }
+      console.log(payload);
+      
       // Loading
       this.$vs.loading()
       this.$store.dispatch('auth/resetPassword', payload)

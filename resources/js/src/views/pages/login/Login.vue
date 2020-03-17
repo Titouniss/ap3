@@ -82,8 +82,6 @@ export default {
   methods: {
     checkLogin () {
       // If user is already logged in notify
-      console.log(this.$store.state);
-      
       if (this.$store.state.auth.isUserLoggedIn()) {
 
         // Close animation if passed as payload

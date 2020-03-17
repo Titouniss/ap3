@@ -95836,11 +95836,16 @@ function addSubscriber(callback) {
       email: email
     });
   },
-  resetPassword: function resetPassword(email, pwd, c_password) {
-    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/password/reset', {
+  resetPassword: function resetPassword(email, pwd, c_password, token) {
+    console.log(email);
+    console.log(pwd);
+    console.log(c_password);
+    console.log(token);
+    return _axios_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].post('/api/auth/reset/password', {
       email: email,
       password: pwd,
-      c_password: c_password
+      password_confirmation: c_password,
+      token: token
     });
   },
   logout: function logout() {
@@ -96245,7 +96250,7 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
         rule: 'editor'
       }
     }, {
-      path: '/pages/reset-password',
+      path: '/pages/reset-password/:token/:email',
       name: 'page-reset-password',
       component: function component() {
         return __webpack_require__.e(/*! import() */ 8).then(__webpack_require__.bind(null, /*! @/views/pages/ResetPassword.vue */ "./resources/js/src/views/pages/ResetPassword.vue"));
@@ -96315,11 +96320,7 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
   }]
 });
 router.beforeEach(function (to, from, next) {
-  console.log(to.path);
-  console.log(_auth_authService__WEBPACK_IMPORTED_MODULE_2__["default"].isAuthenticated());
-
   if ((to.path === "/pages/login" || to.path === "/pages/forgot-password" || to.path === "/pages/register") && _auth_authService__WEBPACK_IMPORTED_MODULE_2__["default"].isAuthenticated()) {
-    console.log('in');
     router.push({
       path: '/',
       query: {
@@ -96598,7 +96599,7 @@ __webpack_require__.r(__webpack_exports__);
   resetPassword: function resetPassword(_ref5, payload) {
     var commit = _ref5.commit;
     return new Promise(function (resolve) {
-      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].resetPassword(payload.email, payload.pwd, payload.c_password).then(function (response) {
+      _http_requests_auth_jwt_index_js__WEBPACK_IMPORTED_MODULE_0__["default"].resetPassword(payload.email, payload.password, payload.c_password, payload.token).then(function (response) {
         resolve(response);
       });
     });

@@ -22,10 +22,13 @@ Route::prefix('auth')->group(function () {
     Route::post('login', 'API\UserController@login');
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
+    
+    // handle reset password form process
     Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
-    Route::post('password/reset', 'Auth\ResetPasswordController@reset');
+    Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset');
+    Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
+    
     Route::get('email/verify/{token}', 'Auth\VerificationController@verify');
-
     /***********************************************************************************/
     /********************************    OTHERS   **************************************/
     /***********************************************************************************/
