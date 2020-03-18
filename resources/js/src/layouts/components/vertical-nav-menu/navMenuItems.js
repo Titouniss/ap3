@@ -6,8 +6,6 @@
   Author: Pixinvent
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
-
-
 export default [
   {
     url: '/',
@@ -26,5 +24,11 @@ export default [
     name: 'Rôles',
     slug: 'roles',
     icon: 'AwardIcon'
+  },
+  {
+    url: '/companies',
+    name: 'Compagnies',
+    slug: 'companies',
+    icon: 'BriefcaseIcon'
   }
 ]

@@ -95804,9 +95804,9 @@ __webpack_require__.r(__webpack_exports__);
       icon: 'HomeIcon',
       is_bookmarked: false
     }, {
-      title: 'Page 2',
-      url: '/page2',
-      icon: 'FileIcon',
+      title: 'Compagnies',
+      url: '/companies',
+      icon: 'BriefcaseIcon',
       is_bookmarked: false
     }]
   }
@@ -96064,6 +96064,15 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
       meta: {
         rule: 'admin',
         requiresAuth: true
+      }
+    }, {
+      path: '/companies',
+      name: 'companies',
+      component: function component() {
+        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2), __webpack_require__.e(20)]).then(__webpack_require__.bind(null, /*! ./views/companies/index.vue */ "./resources/js/src/views/companies/index.vue"));
+      },
+      meta: {
+        rule: 'admin'
       }
     }, {
       path: '/roles',

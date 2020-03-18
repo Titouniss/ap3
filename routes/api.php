@@ -61,5 +61,12 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::delete('roles/{id}', 'API\RoleController@delete');
         });
     });
+
+    /***********************************************************************************/
+    /********************************    COMPANIES **************************************/
+    /***********************************************************************************/
+    Route::prefix('companies-management')->group(function () {
+        Route::get('companies', 'API\CompaniesController@index');
+    });
 });
 

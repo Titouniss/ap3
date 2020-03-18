@@ -1,6 +1,6 @@
 <!-- =========================================================================================
-  File Name: UserList.vue
-  Description: User List page
+  File Name: CompaniesList.vue
+  Description: Companies List page
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -9,9 +9,9 @@
 
 <template>
 
-  <div id="page-user-list">
+  <div id="page-companies-list">
 
-    <!-- <vx-card ref="filterCard" title="Filters" class="user-list-filters mb-8" actionButtons @refresh="resetColFilters" @remove="resetColFilters">
+    <vx-card ref="filterCard" title="Filters" class="companies-list-filters mb-8" actionButtons @refresh="resetColFilters" @remove="resetColFilters">
       <div class="vx-row">
         <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
           <label class="text-sm opacity-75">Role</label>
@@ -30,7 +30,7 @@
           <v-select :options="departmentOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="departmentFilter" />
         </div>
       </div>
-    </vx-card> -->
+    </vx-card>
 
     <div class="vx-card p-6">
 
@@ -40,7 +40,7 @@
         <div class="flex-grow">
           <vs-dropdown vs-trigger-click class="cursor-pointer">
             <div class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium">
-              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ usersData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : usersData.length }} of {{ usersData.length }}</span>
+              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ companiesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : companiesData.length }} of {{ companiesData.length }}</span>
               <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
             </div>
             <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -117,7 +117,7 @@
         class="ag-theme-material w-100 my-4 ag-grid-table"
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
-        :rowData="usersData"
+        :rowData="companiesData"
         rowSelection="multiple"
         colResizeDefault="shift"
         :animateRows="true"
@@ -144,7 +144,7 @@ import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
 
 // Store Module
-import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
+import moduleCompaniesManagement from '@/store/companies-management/moduleCompaniesManagement.js'
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
@@ -304,8 +304,8 @@ export default {
     }
   },
   computed: {
-    usersData () {
-      return this.$store.state.userManagement.users
+    companiesData() {
+      return this.$store.state.companiesManagement.companies
     },
     paginationPageSize () {
       if (this.gridApi) return this.gridApi.paginationGetPageSize()
@@ -365,19 +365,18 @@ export default {
     }
   },
   created () {
-    if (!moduleUserManagement.isRegistered) {
-      this.$store.registerModule('userManagement', moduleUserManagement)
-      moduleUserManagement.isRegistered = true
+    if (!moduleCompaniesManagement.isRegistered) {
+      this.$store.registerModule('companiesManagement', moduleCompaniesManagement)
     }
-    this.$store.dispatch('userManagement/fetchUsers').catch(err => { console.error(err) })
+    this.$store.dispatch('companiesManagement/fetchCompanies').catch(err => { console.error(err) })
   }
 }
 
 </script>
 
 <style lang="scss">
-#page-user-list {
-  .user-list-filters {
+#page-companies-list {
+  .companies-list-filters {
     .vs__actions {
       position: absolute;
       right: 0;

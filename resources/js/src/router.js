@@ -49,6 +49,14 @@ const router = new Router({
             rule: 'admin',
             requiresAuth: true
           }
+        },
+        {
+          path: '/companies',
+          name: 'companies',
+          component: () => import('./views/companies/index.vue'),
+          meta: {
+            rule: 'admin'
+          }
         }
         ,
         {
