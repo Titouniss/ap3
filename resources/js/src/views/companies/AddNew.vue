@@ -53,7 +53,7 @@ export default {
     addCompany () {
       this.$validator.validateAll().then(result => {
         if (result) {
-          this.$store.dispatch('companiesManagement/addCompany', Object.assign({}, this.companyLocal)).catch(err => { console.error(err) })
+          this.$store.dispatch('companyManagement/addCompany', Object.assign({}, this.companyLocal)).catch(err => { console.error(err) })
           this.clearFields()
         }
       })

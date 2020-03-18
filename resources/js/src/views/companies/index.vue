@@ -113,12 +113,10 @@ import vSelect from 'vue-select'
 import AddNew from './AddNew.vue'
 
 // Store Module
-import moduleCompaniesManagement from '@/store/companies-management/moduleCompaniesManagement.js'
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererStatus from './cell-renderer/CellRendererStatus.vue'
-import CellRendererVerified from './cell-renderer/CellRendererVerified.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -130,8 +128,6 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererStatus,
-    CellRendererVerified,
     CellRendererActions
   },
   data () {
@@ -180,8 +176,6 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererStatus,
-        CellRendererVerified,
         CellRendererActions
       }
     }
@@ -190,7 +184,7 @@ export default {
   },
   computed: {
     companiesData() {
-      return this.$store.state.companiesManagement.companies
+      return this.$store.state.companyManagement.companies
     },
     paginationPageSize () {
       if (this.gridApi) return this.gridApi.paginationGetPageSize()
@@ -229,11 +223,11 @@ export default {
     }
   },
   created () {
-    if (!moduleCompaniesManagement.isRegistered) {
-      this.$store.registerModule('companiesManagement', moduleCompaniesManagement)
-      moduleCompaniesManagement.isRegistered = true
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule('companyManagement', moduleCompanyManagement)
+      moduleCompanyManagement.isRegistered = true
     }
-    this.$store.dispatch('companiesManagement/fetchCompanies').catch(err => { console.error(err) })
+    this.$store.dispatch('companyManagement/fetchCompanies').catch(err => { console.error(err) })
   }
 }
 
