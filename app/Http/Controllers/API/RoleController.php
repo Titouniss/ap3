@@ -47,7 +47,7 @@ class RoleController extends Controller
     } 
 
     /** 
-     * get create item api 
+     * create item api 
      * 
      * @return \Illuminate\Http\Response 
      */ 
@@ -65,22 +65,24 @@ class RoleController extends Controller
     } 
 
     /** 
-     * get edit item api 
+     * update item api 
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function edit($request, $id) 
+    public function edit(Request $request, $id) 
     { 
         $arrayRequest = $request->all();
+        
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required'
-        ]);
-        $item = Role::where('id',$id)->update(['name' => $arrayRequest['name']]);
+            ]);
+        
+        $item = Role::where('id',$id)->update(['name' => $arrayRequest['name'], 'description' => $arrayRequest['description'] , 'isPublic' => $arrayRequest['isPublic'] ]);
         return response()->json(['success' => $item], $this-> successStatus); 
     } 
 
     /** 
-     * get delete item api 
+     * delete item api 
      * 
      * @return \Illuminate\Http\Response 
      */ 

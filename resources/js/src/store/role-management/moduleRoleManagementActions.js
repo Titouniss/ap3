@@ -10,16 +10,16 @@
 import axios from '@/axios.js'
 
 export default {
-  // addItem({ commit }, item) {
-  //   return new Promise((resolve, reject) => {
-  //     axios.post("/api/data-list/products/", {item: item})
-  //       .then((response) => {
-  //         commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
-  //         resolve(response)
-  //       })
-  //       .catch((error) => { reject(error) })
-  //   })
-  // },
+  addItem({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post("/api/role-management/roles/create", {item: item})
+        .then((response) => {
+          commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   fetchRoles ({ commit }) {    
     return new Promise((resolve, reject) => {
       axios.get('/api/role-management/index')
@@ -32,10 +32,20 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  fetchUser (context, id) {
+  fetchRole (context, id) {
     return new Promise((resolve, reject) => {
       axios.get(`/api/role-management/roles/${id}`)
         .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  updateRole (context, payload) {    
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/role-management/roles/edit/${payload.id}`,payload )
+        .then((response) => {
+          commit('UPDATE_ITEM', payload)
           resolve(response)
         })
         .catch((error) => { reject(error) })

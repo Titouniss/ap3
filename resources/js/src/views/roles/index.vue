@@ -103,8 +103,6 @@ import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererStatus from './cell-renderer/CellRendererStatus.vue'
-import CellRendererVerified from './cell-renderer/CellRendererVerified.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -115,8 +113,6 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererStatus,
-    CellRendererVerified,
     CellRendererActions
   },
   data () {
@@ -136,22 +132,32 @@ export default {
         {
           headerName: 'ID',
           field: 'id',
-          width: 125,
+          maxWidth: 125,
+          flex: 2,
           filter: false,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
+          resizable: false
         },
         {
           headerName: 'Titre',
           field: 'name',
           filter: false,
+          flex: 2,
           cellRendererFramework: 'CellRendererLink'
+        },
+        {
+          headerName: 'Description',
+          field: 'description',
+          flex: 6,
+          filter: false
         },
         {
           headerName: 'Actions',
           field: 'transactions',
-          width: 150,
+          maxWidth: 150,
+          flex: 2,
           cellRendererFramework: 'CellRendererActions'
         }
       ],
@@ -159,8 +165,6 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererStatus,
-        CellRendererVerified,
         CellRendererActions
       }
     }
@@ -236,16 +240,3 @@ export default {
 }
 
 </script>
-
-<style lang="scss">
-#page-role-list {
-  .role-list-filters {
-    .vs__actions {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-58%);
-    }
-  }
-}
-</style>
