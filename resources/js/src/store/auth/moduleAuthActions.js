@@ -109,7 +109,6 @@ export default {
       jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token).then(response => { resolve(response) })
     })
   },
-  // JWT
   logoutJWT ({ commit }) {
     return new Promise((resolve, reject) => {
       jwt.logout()

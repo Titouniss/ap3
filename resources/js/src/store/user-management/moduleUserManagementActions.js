@@ -21,6 +21,8 @@ export default {
   //   })
   // },
   fetchUsers ({ commit }) {    
+    console.log(axios.defaults.headers.common['Authorization']);
+    
     return new Promise((resolve, reject) => {
       axios.get('/api/user-management/users')
         .then((response) => {
