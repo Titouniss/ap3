@@ -16,6 +16,8 @@ import getters from './getters'
 import mutations from './mutations'
 import actions from './actions'
 
+import createPersistedState from "vuex-persistedstate"
+
 Vue.use(Vuex)
 
 import moduleAuth from './auth/moduleAuth.js'
@@ -32,5 +34,8 @@ export default new Vuex.Store({
     // email: moduleEmail,
     auth: moduleAuth
   },
+  plugins: [
+    createPersistedState({ storage: window.sessionStorage })
+  ],
   strict: process.env.NODE_ENV !== 'production'
 })

@@ -21,12 +21,11 @@ export default {
   //   })
   // },
   fetchUsers ({ commit }) {    
+    console.log(axios.defaults.headers.common['Authorization']);
+    
     return new Promise((resolve, reject) => {
       axios.get('/api/user-management/users')
         .then((response) => {
-          console.log('axios.get /api/user-management/users');
-          console.log(response);
-          
           commit('SET_USERS', response.data.success)
           resolve(response)
         })

@@ -36,8 +36,15 @@ Route::prefix('auth')->group(function () {
 /***********************************************************************************/
 
 Route::group(['middleware' => 'auth:api'], function(){
+    
+    /***********************************************************************************/
+    /********************************    USER     **************************************/
+    /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
         Route::get('users', 'API\UserController@index');
+        Route::group(['middleware' => ['can:publish users']], function () {
+            Route::post('create/user', 'API\UserController@create');
+        });
     });
 
     Route::prefix('companies-management')->group(function () {

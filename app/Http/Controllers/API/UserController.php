@@ -3,6 +3,7 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request; 
 use App\Http\Controllers\Controller; 
 use App\User; 
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth; 
 use Validator;
 class UserController extends Controller 
@@ -83,8 +84,13 @@ class UserController extends Controller
      */ 
     public function index() 
     { 
-        $user = Auth::user(); 
-        $usersList = $user->isAdmin ? User::all() : User::where('company_id',$user->company_id)->get();
+        $user = Auth::user();
+        $usersList = [];
+        if ($user->hasRole('superAdmin')) {
+            $usersList = User::all();
+        } else if ($user->company_id != null) {
+            $usersList = User::where('company_id',$user->company_id)->get();
+        }
         return response()->json(['success' => $usersList], $this-> successStatus); 
     } 
 }

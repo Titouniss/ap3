@@ -19,7 +19,7 @@ class RolesTableSeeder extends Seeder
         ];
 
         foreach ($keys as $key) {
-            Role::firstOrCreate(['name' => $key, 'guard_name' => $key,]);
+            Role::firstOrCreate(['name' => $key, 'guard_name' => 'api']);
         }
     }
 
