@@ -96190,7 +96190,8 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
         return __webpack_require__.e(/*! import() */ 16).then(__webpack_require__.bind(null, /*! ./views/Home.vue */ "./resources/js/src/views/Home.vue"));
       },
       meta: {
-        rule: 'admin'
+        rule: 'admin',
+        requiresAuth: true
       }
     }, {
       path: '/users',
@@ -96199,7 +96200,8 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
         return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2)]).then(__webpack_require__.bind(null, /*! ./views/users/index.vue */ "./resources/js/src/views/users/index.vue"));
       },
       meta: {
-        rule: 'admin'
+        rule: 'admin',
+        requiresAuth: true
       }
     }]
   }, // =============================================================================
@@ -96324,14 +96326,14 @@ router.beforeEach(function (to, from, next) {
     router.push({
       path: '/',
       query: {
-        to: to.path
+        to: '/'
       }
     });
     return next();
-  } // If auth required, check login. If login fails redirect to login page
+  } // If auth required, check login. If login fails redirect to login page  
 
 
-  if (to.meta.authRequired) {
+  if (to.meta.requiresAuth) {
     if (!_auth_authService__WEBPACK_IMPORTED_MODULE_2__["default"].isAuthenticated()) {
       router.push({
         path: '/pages/login',
@@ -96518,9 +96520,7 @@ __webpack_require__.r(__webpack_exports__);
         var data = response.data; // If there's user data in response           
 
         if (data && data.success) {
-          // Navigate User to homepage
-          _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/'); // Set accessToken
-
+          // Set accessToken
           if (data.userData) {
             // Update user details              
             commit('UPDATE_USER_INFO', data.userData, {
@@ -96535,7 +96535,9 @@ __webpack_require__.r(__webpack_exports__);
 
           localStorage.setItem('loggedIn', true);
           localStorage.setItem('token', data.success.token);
-          localStorage.setItem('tokenExpires', moment__WEBPACK_IMPORTED_MODULE_2___default()(data.success.tokenExpires).unix() || moment__WEBPACK_IMPORTED_MODULE_2___default()().unix());
+          localStorage.setItem('tokenExpires', moment__WEBPACK_IMPORTED_MODULE_2___default()(data.success.tokenExpires).unix() || moment__WEBPACK_IMPORTED_MODULE_2___default()().unix()); // Navigate User to homepage
+
+          _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/');
           resolve(response);
         } else {
           reject({
@@ -96563,15 +96565,15 @@ __webpack_require__.r(__webpack_exports__);
         var data = response.data; // Redirect User
 
         if (data && data.success) {
-          // Update data in localStorage
-          _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/');
           localStorage.setItem('loggedIn', true);
           localStorage.setItem('token', data.success.token);
           localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date());
           commit('SET_BEARER', data.success.token);
           commit('UPDATE_USER_INFO', data.userData, {
             root: true
-          });
+          }); // Update data in localStorage
+
+          _router__WEBPACK_IMPORTED_MODULE_1__["default"].push(_router__WEBPACK_IMPORTED_MODULE_1__["default"].currentRoute.query.to || '/');
         }
 
         resolve(response);
