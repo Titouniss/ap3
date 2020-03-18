@@ -38,7 +38,7 @@ Route::prefix('auth')->group(function () {
 Route::group(['middleware' => 'auth:api'], function(){
     
     /***********************************************************************************/
-    /********************************    USER     **************************************/
+    /********************************    USERS    **************************************/
     /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
         Route::get('users', 'API\UserController@index');
@@ -47,9 +47,26 @@ Route::group(['middleware' => 'auth:api'], function(){
         });
     });
 
+    /***********************************************************************************/
+    /********************************    ROLES    **************************************/
+    /***********************************************************************************/
+    Route::prefix('role-management')->group(function () {
+        Route::get('index', 'API\RoleController@index');
+        Route::get('roles/{id}', 'API\RoleController@read');
+        Route::group(['middleware' => ['can:publish roles|edit roles']], function () {
+            Route::post('create/role', 'API\RoleController@create');
+            Route::post('edit/role', 'API\RoleController@edit');
+        });
+        Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('roles/{id}', 'API\RoleController@delete');
+        });
+    });
+
+    /***********************************************************************************/
+    /********************************    COMPANIES **************************************/
+    /***********************************************************************************/
     Route::prefix('companies-management')->group(function () {
         Route::get('companies', 'API\CompaniesController@index');
     });
-    
 });
 

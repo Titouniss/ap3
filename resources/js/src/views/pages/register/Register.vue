@@ -24,15 +24,6 @@
                                     <p></p>
                                 </div>
                                 <div class="clearfix">
-                                    <vs-input
-                                      v-validate="'required|alpha_dash|min:3'"
-                                      data-vv-validate-on="blur"
-                                      label-placeholder="Prénom"
-                                      name="firstname"
-                                      placeholder="Prénom"
-                                      v-model="firstname"
-                                      class="w-full" />
-                                    <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
 
                                     <vs-input
                                       v-validate="'required|alpha_dash|min:3'"
@@ -43,6 +34,16 @@
                                       v-model="lastname"
                                       class="w-full" />
                                     <span class="text-danger text-sm">{{ errors.first('lastname') }}</span>
+                                    
+                                    <vs-input
+                                      v-validate="'required|alpha_dash|min:3'"
+                                      data-vv-validate-on="blur"
+                                      label-placeholder="Prénom"
+                                      name="firstname"
+                                      placeholder="Prénom"
+                                      v-model="firstname"
+                                      class="w-full" />
+                                    <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
 
                                     <vs-input
                                       v-validate="'required|email'"

@@ -58,6 +58,16 @@ const router = new Router({
             rule: 'admin'
           }
         }
+        ,
+        {
+          path: '/roles',
+          name: 'roles',
+          component: () => import('./views/roles/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        }
       ]
     },
     // =============================================================================
