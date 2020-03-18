@@ -14,5 +14,10 @@ export default {
   },
   SET_COMPANIES (state, companies) {
     state.companies = companies
+  },
+  REMOVE_COMPANY (state, itemId) {
+    const index = state.companies.findIndex((u) => u.id === itemId)
+    state.companies.splice(index, 1)
   }
+
 }

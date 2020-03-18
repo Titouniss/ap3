@@ -72,9 +72,9 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::post('store', 'API\CompanyController@store');
             Route::post('update/{id}', 'API\CompanyController@update');
         // });
-        Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('{id}', 'API\RoleController@destroy');
-        });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\CompanyController@destroy');
+        // });
     });
 });
 

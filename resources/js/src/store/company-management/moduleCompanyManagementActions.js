@@ -34,4 +34,14 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  removeCompany ({ commit }, id) {
+    return new Promise((resolve, reject) => {
+      axios.delete(`/api/company-management/${id}`)
+        .then((response) => {
+          commit('REMOVE_COMPANY', id)
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  }
 }

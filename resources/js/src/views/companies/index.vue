@@ -117,8 +117,6 @@ import moduleCompanyManagement from '@/store/company-management/moduleCompanyMan
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererStatus from './cell-renderer/CellRendererStatus.vue'
-import CellRendererVerified from './cell-renderer/CellRendererVerified.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -130,8 +128,6 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererStatus,
-    CellRendererVerified,
     CellRendererActions
   },
   data () {
@@ -180,8 +176,6 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererStatus,
-        CellRendererVerified,
         CellRendererActions
       }
     }
