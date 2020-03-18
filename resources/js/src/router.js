@@ -47,6 +47,14 @@ const router = new Router({
           meta: {
             rule: 'admin'
           }
+        },
+        {
+          path: '/companies',
+          name: 'companies',
+          component: () => import('./views/companies/index.vue'),
+          meta: {
+            rule: 'admin'
+          }
         }
       ]
     },

@@ -95942,9 +95942,9 @@ __webpack_require__.r(__webpack_exports__);
       icon: 'HomeIcon',
       is_bookmarked: false
     }, {
-      title: 'Page 2',
-      url: '/page2',
-      icon: 'FileIcon',
+      title: 'Compagnies',
+      url: '/companies',
+      icon: 'BriefcaseIcon',
       is_bookmarked: false
     }]
   }
@@ -96196,7 +96196,16 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
       path: '/users',
       name: 'users',
       component: function component() {
-        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2)]).then(__webpack_require__.bind(null, /*! ./views/users/index.vue */ "./resources/js/src/views/users/index.vue"));
+        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2), __webpack_require__.e(19)]).then(__webpack_require__.bind(null, /*! ./views/users/index.vue */ "./resources/js/src/views/users/index.vue"));
+      },
+      meta: {
+        rule: 'admin'
+      }
+    }, {
+      path: '/companies',
+      name: 'companies',
+      component: function component() {
+        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2), __webpack_require__.e(20)]).then(__webpack_require__.bind(null, /*! ./views/companies/index.vue */ "./resources/js/src/views/companies/index.vue"));
       },
       meta: {
         rule: 'admin'
@@ -97085,9 +97094,9 @@ vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuesax__WEBPACK_IMPORTED_MODULE_1
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! C:\wamp64\www\projetx_web\resources\js\app.js */"./resources/js/app.js");
-__webpack_require__(/*! C:\wamp64\www\projetx_web\resources\sass\app.scss */"./resources/sass/app.scss");
-module.exports = __webpack_require__(/*! C:\wamp64\www\projetx_web\resources\assets\css\main.css */"./resources/assets/css/main.css");
+__webpack_require__(/*! C:\Users\Florentin MERLET\Desktop\Numidev\ProjetX\projetx_web\resources\js\app.js */"./resources/js/app.js");
+__webpack_require__(/*! C:\Users\Florentin MERLET\Desktop\Numidev\ProjetX\projetx_web\resources\sass\app.scss */"./resources/sass/app.scss");
+module.exports = __webpack_require__(/*! C:\Users\Florentin MERLET\Desktop\Numidev\ProjetX\projetx_web\resources\assets\css\main.css */"./resources/assets/css/main.css");
 
 
 /***/ })

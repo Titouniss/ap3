@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: sidebarItems.js
-  Description: Sidebar Items list. Add / Remove menu items from here.
+  File Name: 
+  Description: 
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -8,23 +8,17 @@
 ==========================================================================================*/
 
 
-export default [
-  {
-    url: '/',
-    name: 'Home',
-    slug: 'home',
-    icon: 'HomeIcon'
-  },
-  {
-    url: '/users',
-    name: 'Utilisateurs',
-    slug: 'users',
-    icon: 'UsersIcon'
-  },
-  {
-    url: '/companies',
-    name: 'Compagnies',
-    slug: 'companies',
-    icon: 'BriefcaseIcon'
-  }
-]
+import state from './moduleCompaniesManagementState.js'
+import mutations from './moduleCompaniesManagementMutations.js'
+import actions from './moduleCompaniesManagementActions.js'
+import getters from './moduleCompaniesManagementGetters.js'
+
+export default {
+  isRegistered: false,
+  namespaced: true,
+  state,
+  mutations,
+  actions,
+  getters
+}
+

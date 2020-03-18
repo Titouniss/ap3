@@ -39,5 +39,10 @@ Route::group(['middleware' => 'auth:api'], function(){
     Route::prefix('user-management')->group(function () {
         Route::get('users', 'API\UserController@index');
     });
+
+    Route::prefix('companies-management')->group(function () {
+        Route::get('companies', 'API\CompaniesController@index');
+    });
+    
 });
 
