@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: sidebarItems.js
-  Description: Sidebar Items list. Add / Remove menu items from here.
+  File Name: moduleRoleManagement.js
+  Description: Calendar Module
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -8,23 +8,17 @@
 ==========================================================================================*/
 
 
-export default [
-  {
-    url: '/',
-    name: 'Home',
-    slug: 'home',
-    icon: 'HomeIcon'
-  },
-  {
-    url: '/users',
-    name: 'Utilisateurs',
-    slug: 'users',
-    icon: 'UsersIcon'
-  },
-  {
-    url: '/roles',
-    name: 'Rôles',
-    slug: 'roles',
-    icon: 'AwardIcon'
-  }
-]
+import state from './moduleRoleManagementState.js'
+import mutations from './moduleRoleManagementMutations.js'
+import actions from './moduleRoleManagementActions.js'
+import getters from './moduleRoleManagementGetters.js'
+
+export default {
+  isRegistered: false,
+  namespaced: true,
+  state,
+  mutations,
+  actions,
+  getters
+}
+

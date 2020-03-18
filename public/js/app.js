@@ -96059,7 +96059,17 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
       path: '/users',
       name: 'users',
       component: function component() {
-        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2)]).then(__webpack_require__.bind(null, /*! ./views/users/index.vue */ "./resources/js/src/views/users/index.vue"));
+        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2), __webpack_require__.e(19)]).then(__webpack_require__.bind(null, /*! ./views/users/index.vue */ "./resources/js/src/views/users/index.vue"));
+      },
+      meta: {
+        rule: 'admin',
+        requiresAuth: true
+      }
+    }, {
+      path: '/roles',
+      name: 'roles',
+      component: function component() {
+        return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(2), __webpack_require__.e(18)]).then(__webpack_require__.bind(null, /*! ./views/roles/index.vue */ "./resources/js/src/views/roles/index.vue"));
       },
       meta: {
         rule: 'admin',

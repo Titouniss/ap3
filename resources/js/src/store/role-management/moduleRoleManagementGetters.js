@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: sidebarItems.js
-  Description: Sidebar Items list. Add / Remove menu items from here.
+  File Name: moduleCalendarGetters.js
+  Description: Calendar Module Getters
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -8,23 +8,4 @@
 ==========================================================================================*/
 
 
-export default [
-  {
-    url: '/',
-    name: 'Home',
-    slug: 'home',
-    icon: 'HomeIcon'
-  },
-  {
-    url: '/users',
-    name: 'Utilisateurs',
-    slug: 'users',
-    icon: 'UsersIcon'
-  },
-  {
-    url: '/roles',
-    name: 'Rôles',
-    slug: 'roles',
-    icon: 'AwardIcon'
-  }
-]
+export default {}
