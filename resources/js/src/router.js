@@ -167,13 +167,13 @@ router.beforeEach((to, from, next) => {
         to.path === "/pages/register") &&
         auth.isAuthenticated()
     ) {      
-        router.push({ path: '/', query: { to: to.path } })
+        router.push({ path: '/', query: { to: '/' } })
         return next();
     }
 
     // If auth required, check login. If login fails redirect to login page  
     if (to.meta.requiresAuth) {
-      if (!(auth.isAuthenticated())) {
+      if (!(auth.isAuthenticated())) {      
         router.push({ path: '/pages/login', query: { to: to.path } })
       }
     }

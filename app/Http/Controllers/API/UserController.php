@@ -83,8 +83,13 @@ class UserController extends Controller
      */ 
     public function index() 
     { 
-        $user = Auth::user(); 
-        $usersList = $user->isAdmin ? User::all() : User::where('company_id',$user->company_id)->get();
+        $user = Auth::user();
+        $usersList = null;
+        if ($user->isAdmin) {
+            $usersList = User::all();
+        } else if ($user->company_id != null) {
+            $usersList = User::where('company_id',$user->company_id)->get();
+        }
         return response()->json(['success' => $usersList], $this-> successStatus); 
     } 
 }

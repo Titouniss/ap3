@@ -47,8 +47,6 @@ export default {
           const data = response.data               
           // If there's user data in response           
           if (data && data.success) {
-            // Navigate User to homepage
-            router.push(router.currentRoute.query.to || '/')
             // Set accessToken
             if (data.userData) {
               // Update user details              
@@ -61,6 +59,8 @@ export default {
             localStorage.setItem('loggedIn', true)
             localStorage.setItem('token', data.success.token)
             localStorage.setItem('tokenExpires', moment(data.success.tokenExpires).unix() || moment().unix())
+            // Navigate User to homepage
+            router.push(router.currentRoute.query.to || '/')
             resolve(response)
           } else {
             reject({message: 'Connexion impossible l’identifiant ou le mot de passe est incorrect.'})
@@ -80,13 +80,13 @@ export default {
           const data = response.data
           // Redirect User
           if (data && data.success) {
-            // Update data in localStorage
-            router.push(router.currentRoute.query.to || '/')
             localStorage.setItem('loggedIn', true)
             localStorage.setItem('token', data.success.token)
             localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date())
             commit('SET_BEARER', data.success.token)
             commit('UPDATE_USER_INFO', data.userData, {root: true})
+            // Update data in localStorage
+            router.push(router.currentRoute.query.to || '/')
           }
           resolve(response)
         })
