@@ -67,6 +67,7 @@ Route::group(['middleware' => 'auth:api'], function(){
     /***********************************************************************************/
     Route::prefix('companies-management')->group(function () {
         Route::get('companies', 'API\CompaniesController@index');
+        Route::post('companies', 'API\CompaniesController@store');
     });
 });
 
