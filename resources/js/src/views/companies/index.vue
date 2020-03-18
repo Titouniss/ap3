@@ -12,6 +12,7 @@
   <div id="page-companies-list">
 
     <div class="vx-card p-6">
+      <add-new />
 
       <div class="flex flex-wrap items-center">
 
@@ -69,20 +70,6 @@
                 </span>
               </vs-dropdown-item>
 
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="FileIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Print</span>
-                </span>
-              </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="SaveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>CSV</span>
-                </span>
-              </vs-dropdown-item>
-
             </vs-dropdown-menu>
           </vs-dropdown>
       </div>
@@ -122,6 +109,9 @@ import { AgGridVue } from 'ag-grid-vue'
 import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
 
+//CRUD
+import AddNew from './AddNew.vue'
+
 // Store Module
 import moduleCompaniesManagement from '@/store/companies-management/moduleCompaniesManagement.js'
 
@@ -136,6 +126,7 @@ export default {
   components: {
     AgGridVue,
     vSelect,
+    AddNew,
 
     // Cell Renderer
     CellRendererLink,
@@ -240,6 +231,7 @@ export default {
   created () {
     if (!moduleCompaniesManagement.isRegistered) {
       this.$store.registerModule('companiesManagement', moduleCompaniesManagement)
+      moduleCompaniesManagement.isRegistered = true
     }
     this.$store.dispatch('companiesManagement/fetchCompanies').catch(err => { console.error(err) })
   }
