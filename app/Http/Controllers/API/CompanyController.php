@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Company;
 
-class CompaniesController extends Controller
+class CompanyController extends Controller
 {
     public $successStatus = 200;
     /**
@@ -20,6 +20,16 @@ class CompaniesController extends Controller
         return response()->json(['success' => $companies], $this-> successStatus);  
     }
 
+    /**
+     * Show the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
 
     /**
      * Store a newly created resource in storage.

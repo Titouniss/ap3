@@ -65,9 +65,16 @@ Route::group(['middleware' => 'auth:api'], function(){
     /***********************************************************************************/
     /********************************    COMPANIES **************************************/
     /***********************************************************************************/
-    Route::prefix('companies-management')->group(function () {
-        Route::get('companies', 'API\CompaniesController@index');
-        Route::post('companies', 'API\CompaniesController@store');
+    Route::prefix('company-management')->group(function () {
+        Route::get('index', 'API\CompanyController@index');
+        Route::get('show/{id}', 'API\CompanyController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+            Route::post('store', 'API\CompanyController@store');
+            Route::post('update/{id}', 'API\CompanyController@update');
+        // });
+        Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\RoleController@destroy');
+        });
     });
 });
 

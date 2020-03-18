@@ -13,9 +13,9 @@ export default {
   addCompany({ commit }, item) {
     console.log(item)
     return new Promise((resolve, reject) => {
-      axios.post("/api/companies-management/companies", item)
+      axios.post("/api/company-management/store", item)
         .then((response) => {
-          commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
+          commit('ADD_COMPANY', Object.assign(item, {id: response.data.id}))
           resolve(response)
         })
         .catch((error) => { reject(error) })
@@ -23,9 +23,9 @@ export default {
   },
   fetchCompanies ({ commit }) {    
     return new Promise((resolve, reject) => {
-      axios.get('/api/companies-management/companies')
+      axios.get('/api/company-management/index')
         .then((response) => {
-          console.log('axios.get /api/companies-management/companies');
+          console.log('axios.get /api/company-management/index');
           console.log(response);
           
           commit('SET_COMPANIES', response.data.success)

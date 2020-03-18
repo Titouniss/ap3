@@ -8,10 +8,10 @@
 ==========================================================================================*/
 
 
-import state from './moduleCompaniesManagementState.js'
-import mutations from './moduleCompaniesManagementMutations.js'
-import actions from './moduleCompaniesManagementActions.js'
-import getters from './moduleCompaniesManagementGetters.js'
+import state from './moduleCompanyManagementState.js'
+import mutations from './moduleCompanyManagementMutations.js'
+import actions from './moduleCompanyManagementActions.js'
+import getters from './moduleCompanyManagementGetters.js'
 
 export default {
   isRegistered: false,
