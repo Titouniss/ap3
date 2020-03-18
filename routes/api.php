@@ -52,13 +52,13 @@ Route::group(['middleware' => 'auth:api'], function(){
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
         Route::get('index', 'API\RoleController@index');
-        Route::get('roles/{id}', 'API\RoleController@read');
+        Route::get('show/{id}', 'API\RoleController@show');
         Route::group(['middleware' => ['can:publish roles|edit roles']], function () {
-            Route::post('roles/create', 'API\RoleController@create');
-            Route::post('roles/edit/{id}', 'API\RoleController@edit');
+            Route::post('store', 'API\RoleController@store');
+            Route::post('update/{id}', 'API\RoleController@update');
         });
         Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('roles/{id}', 'API\RoleController@delete');
+            Route::delete('destroy/{id}', 'API\RoleController@destroy');
         });
     });
 

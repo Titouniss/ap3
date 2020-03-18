@@ -1,12 +1,3 @@
-<!-- =========================================================================================
-  File Name: RoleEdit.vue
-  Description: role Edit Page
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/role/pixinvent
-========================================================================================== -->
-
 <template>
   <div id="page-role-edit">
     <vs-alert color="danger" title="role Not Found" :active.sync="role_not_found">

@@ -12,6 +12,9 @@ export default {
   ADD_ITEM (state, item) {
     state.roles.unshift(item)
   },
+  EDIT_ITEM (state, item) {
+    state.role = item
+  },
   SET_ROLES (state, roles) {
     state.roles = roles
   },

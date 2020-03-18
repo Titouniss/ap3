@@ -40,7 +40,7 @@ class RoleController extends Controller
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function read($id) 
+    public function show($id) 
     { 
         $item = Role::where('id',$id)->first();
         return response()->json(['success' => $item], $this-> successStatus); 
@@ -51,7 +51,7 @@ class RoleController extends Controller
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function create($request) 
+    public function store(Request $request) 
     { 
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [ 
@@ -69,7 +69,7 @@ class RoleController extends Controller
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function edit(Request $request, $id) 
+    public function update(Request $request, $id) 
     { 
         $arrayRequest = $request->all();
         
@@ -86,7 +86,7 @@ class RoleController extends Controller
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function delete($id) 
+    public function destroy($id) 
     { 
         $item = Role::where('id',$id)->delete();
         return response()->json(['success' => $item], $this-> successStatus); 

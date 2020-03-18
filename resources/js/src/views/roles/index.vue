@@ -63,6 +63,7 @@
           </vs-dropdown>
       </div>
 
+      <AddForm />
 
       <!-- AgGrid Table -->
       <ag-grid-vue
@@ -87,7 +88,7 @@
         :total="totalPages"
         :max="7"
         v-model="currentPage" />
-
+      <edit-form />
     </div>
   </div>
 
@@ -102,22 +103,21 @@ import vSelect from 'vue-select'
 import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
 
 // Cell Renderer
-import CellRendererLink from './cell-renderer/CellRendererLink.vue'
+import AddForm from './AddForm.vue'
+import EditForm from './EditForm.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
-
 
 export default {
   components: {
     AgGridVue,
     vSelect,
-
+    AddForm,
+    EditForm,
     // Cell Renderer
-    CellRendererLink,
     CellRendererActions
   },
   data () {
     return {
-
       searchQuery: '',
 
       // AgGrid
@@ -133,7 +133,6 @@ export default {
           headerName: 'ID',
           field: 'id',
           maxWidth: 125,
-          flex: 2,
           filter: false,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
@@ -142,30 +141,24 @@ export default {
         },
         {
           headerName: 'Titre',
-          field: 'name',
-          filter: false,
-          flex: 2,
-          cellRendererFramework: 'CellRendererLink'
+          field: 'name'
         },
         {
           headerName: 'Description',
           field: 'description',
-          flex: 6,
           filter: false
         },
         {
           headerName: 'Actions',
           field: 'transactions',
           maxWidth: 150,
-          flex: 2,
           cellRendererFramework: 'CellRendererActions'
         }
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererLink,
-        CellRendererActions
+        CellRendererActions,
       }
     }
   },
