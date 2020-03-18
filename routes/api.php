@@ -54,8 +54,8 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('index', 'API\RoleController@index');
         Route::get('roles/{id}', 'API\RoleController@read');
         Route::group(['middleware' => ['can:publish roles|edit roles']], function () {
-            Route::post('create/role', 'API\RoleController@create');
-            Route::post('edit/role', 'API\RoleController@edit');
+            Route::post('roles/create', 'API\RoleController@create');
+            Route::post('roles/edit/{id}', 'API\RoleController@edit');
         });
         Route::group(['middleware' => ['can:delete roles']], function () {
             Route::delete('roles/{id}', 'API\RoleController@delete');
