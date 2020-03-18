@@ -167,38 +167,6 @@ export default {
   data () {
     return {
 
-      // Filter Options
-      roleFilter: { label: 'All', value: 'all' },
-      roleOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Admin', value: 'admin' },
-        { label: 'User', value: 'user' },
-        { label: 'Staff', value: 'staff' }
-      ],
-
-      statusFilter: { label: 'All', value: 'all' },
-      statusOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Active', value: 'active' },
-        { label: 'Deactivated', value: 'deactivated' },
-        { label: 'Blocked', value: 'blocked' }
-      ],
-
-      isVerifiedFilter: { label: 'All', value: 'all' },
-      isVerifiedOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Yes', value: 'yes' },
-        { label: 'No', value: 'no' }
-      ],
-
-      departmentFilter: { label: 'All', value: 'all' },
-      departmentOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Sales', value: 'sales' },
-        { label: 'Development', value: 'development' },
-        { label: 'Management', value: 'management' }
-      ],
-
       searchQuery: '',
 
       // AgGrid
@@ -220,54 +188,14 @@ export default {
           headerCheckboxSelection: true
         },
         {
-          headerName: 'Username',
-          field: 'username',
-          filter: true,
-          width: 210,
-          cellRendererFramework: 'CellRendererLink'
-        },
-        {
-          headerName: 'Email',
-          field: 'email',
-          filter: true,
-          width: 225
-        },
-        {
           headerName: 'Name',
           field: 'name',
           filter: true,
           width: 200
         },
         {
-          headerName: 'Country',
-          field: 'country',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Role',
-          field: 'role',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Status',
-          field: 'status',
-          filter: true,
-          width: 150,
-          cellRendererFramework: 'CellRendererStatus'
-        },
-        {
-          headerName: 'Verified',
-          field: 'is_verified',
-          filter: true,
-          width: 125,
-          cellRendererFramework: 'CellRendererVerified',
-          cellClass: 'text-center'
-        },
-        {
-          headerName: 'Department',
-          field: 'department',
+          headerName: 'Siret',
+          field: 'siret',
           filter: true,
           width: 150
         },
@@ -289,19 +217,6 @@ export default {
     }
   },
   watch: {
-    roleFilter (obj) {
-      this.setColumnFilter('role', obj.value)
-    },
-    statusFilter (obj) {
-      this.setColumnFilter('status', obj.value)
-    },
-    isVerifiedFilter (obj) {
-      const val = obj.value === 'all' ? 'all' : obj.value === 'yes' ? 'true' : 'false'
-      this.setColumnFilter('is_verified', val)
-    },
-    departmentFilter (obj) {
-      this.setColumnFilter('department', obj.value)
-    }
   },
   computed: {
     companiesData() {

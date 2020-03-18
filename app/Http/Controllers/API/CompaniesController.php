@@ -8,6 +8,7 @@ use App\Models\Company;
 
 class CompaniesController extends Controller
 {
+    public $successStatus = 200;
     /**
      * Display a listing of the resource.
      *
