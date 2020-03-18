@@ -96072,7 +96072,8 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
         return Promise.all(/*! import() */[__webpack_require__.e(0), __webpack_require__.e(1), __webpack_require__.e(3)]).then(__webpack_require__.bind(null, /*! ./views/companies/index.vue */ "./resources/js/src/views/companies/index.vue"));
       },
       meta: {
-        rule: 'admin'
+        rule: 'admin',
+        requiresAuth: true
       }
     }, {
       path: '/roles',

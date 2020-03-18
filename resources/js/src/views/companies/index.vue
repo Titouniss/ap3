@@ -11,27 +11,6 @@
 
   <div id="page-companies-list">
 
-    <vx-card ref="filterCard" title="Filters" class="companies-list-filters mb-8" actionButtons @refresh="resetColFilters" @remove="resetColFilters">
-      <div class="vx-row">
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Role</label>
-          <v-select :options="roleOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="roleFilter" class="mb-4 md:mb-0" />
-        </div>
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Status</label>
-          <v-select :options="statusOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="statusFilter" class="mb-4 md:mb-0" />
-        </div>
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Verified</label>
-          <v-select :options="isVerifiedOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="isVerifiedFilter" class="mb-4 sm:mb-0" />
-        </div>
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Department</label>
-          <v-select :options="departmentOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="departmentFilter" />
-        </div>
-      </div>
-    </vx-card>
-
     <div class="vx-card p-6">
 
       <div class="flex flex-wrap items-center">
@@ -241,27 +220,6 @@ export default {
     }
   },
   methods: {
-    setColumnFilter (column, val) {
-      const filter = this.gridApi.getFilterInstance(column)
-      let modelObj = null
-
-      if (val !== 'all') {
-        modelObj = { type: 'equals', filter: val }
-      }
-
-      filter.setModel(modelObj)
-      this.gridApi.onFilterChanged()
-    },
-    resetColFilters () {
-      // Reset Grid Filter
-      this.gridApi.setFilterModel(null)
-      this.gridApi.onFilterChanged()
-
-      // Reset Filter Options
-      this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = { label: 'All', value: 'all' }
-
-      this.$refs.filterCard.removeRefreshAnimation()
-    },
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
     }
