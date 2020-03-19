@@ -8,4 +8,6 @@
 ==========================================================================================*/
 
 
-export default {}
+export default {
+  getItem: state => id => state.roles.find((item) => item.id === id)
+}

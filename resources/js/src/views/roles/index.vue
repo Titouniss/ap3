@@ -88,8 +88,8 @@
         :total="totalPages"
         :max="7"
         v-model="currentPage" />
-      <edit-form />
     </div>
+      <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -119,7 +119,6 @@ export default {
   data () {
     return {
       searchQuery: '',
-
       // AgGrid
       gridApi: null,
       gridOptions: {},
@@ -163,6 +162,9 @@ export default {
     }
   },
   computed: {
+    itemIdToEdit () {
+        return this.$store.state.roleManagement.role.id || 0
+    },
     rolesData () {
       return this.$store.state.roleManagement.roles
     },
@@ -228,7 +230,10 @@ export default {
       this.$store.registerModule('roleManagement', moduleManagement)
       moduleManagement.isRegistered = true
     }
-    this.$store.dispatch('roleManagement/fetchRoles').catch(err => { console.error(err) })
+    this.$store.dispatch('roleManagement/fetchItems').catch(err => { console.error(err) })
+  },
+  beforeDestroy () {
+    this.$store.unregisterModule('roleManagement')
   }
 }
 

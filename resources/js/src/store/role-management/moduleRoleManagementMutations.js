@@ -19,7 +19,7 @@ export default {
     state.roles = roles
   },
   UPDATE_ITEM (state, item) {
-    const index = state.roles.findIndex((p) => p.id === item.id)
+    const index = state.roles.findIndex((r) => r.id === item.id)    
     Object.assign(state.roles[index], item)
   },
   REMOVE_RECORD (state, itemId) {

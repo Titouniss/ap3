@@ -24,12 +24,10 @@ export default {
     commit('EDIT_ITEM', item)
     return
   },
-  fetchRoles ({ commit }) {    
+  fetchItems ({ commit }) {    
     return new Promise((resolve, reject) => {
       axios.get('/api/role-management/index')
-        .then((response) => {
-          console.log(response);
-          
+        .then((response) => {          
           commit('SET_ROLES', response.data.success)
           resolve(response)
         })
@@ -45,10 +43,10 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  updateItem (context, payload) {    
+  updateItem ({ commit }, payload) {    
     return new Promise((resolve, reject) => {
       axios.post(`/api/role-management/update/${payload.id}`,payload )
-        .then((response) => {
+        .then((response) => {          
           commit('UPDATE_ITEM', payload)
           resolve(response)
         })
