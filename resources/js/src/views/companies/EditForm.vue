@@ -10,34 +10,22 @@
 
 <template>
     <vs-prompt
-        title="Edition"
+        title="Edition d'une compagnie"
         accept-text= "Modifier"
         cancel-text = "Annuler"
         button-cancel = "border"
         @cancel="init"
-        @accept="submitTodo"
+        @accept="submitItem"
         @close="init"
         :is-valid="validateForm"
         :active.sync="activePrompt">
         <div>
             <form>
-                <div class="vx-row">
-                    <div class="vx-col ml-auto flex">
-                        <vs-dropdown class="cursor-pointer flex" vs-custom-content>
-                            <feather-icon icon="TagIcon" svgClasses="h-5 w-5" />
-                            <vs-dropdown-menu style="z-index: 200001">
-                                  <vs-dropdown-item @click.stop v-for="(perm, index) in permissions" :key="index">
-                                      <vs-checkbox :vs-value="perm.value" v-model="itemLocal.tags">{{ perm.name }}</vs-checkbox>
-                                  </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
-                    </div>
-                </div>
 
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Titre" v-model="itemLocal.name" />
-                        <vs-textarea rows="5" label="Ajouter description" v-model="itemLocal.description" />
+                        <vs-input v-validate="'required'" name="siret" class="w-full mb-4 mt-5" placeholder="Siret" v-model="itemLocal.siret" :color="validateForm ? 'success' : 'danger'" />
                     </div>
                 </div>
 
@@ -56,7 +44,7 @@ export default {
   },
   data () {
     return {
-      itemLocal: Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId))
+      itemLocal: Object.assign({}, this.$store.getters['companyManagement/getItem'](this.itemId))
     }
   },
   computed: {
@@ -65,7 +53,7 @@ export default {
         return this.itemId && this.itemId > 0 ? true : false
       },
       set (value) {
-        this.$store.dispatch("roleManagement/editItem", {})
+        this.$store.dispatch("companyManagement/editItem", {})
           .then(()   => {  })
           .catch(err => { console.error(err)       })
       }
@@ -79,10 +67,10 @@ export default {
   },
   methods: {
     init () {
-      this.itemLocal = Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId))
+      this.itemLocal = Object.assign({}, this.$store.getters['companyManagement/getItem'](this.itemId))
     },
-    submitTodo () {
-      this.$store.dispatch('roleManagement/updateItem', this.itemLocal)
+    submitItem () {
+      this.$store.dispatch('companyManagement/updateItem', Object.assign({}, this.itemLocal))
     }
   }
 }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Company;
+use Validator;
+
 
 class CompanyController extends Controller
 {
@@ -39,8 +41,16 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $company = Company::create($request->all());
-        return $company;
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [ 
+            'name' => 'required',
+            'siret' => 'required'
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['error'=>$validator->errors()], 401);            
+        }
+        $item = Company::create($arrayRequest);
+        return response()->json(['success' => $item], $this-> successStatus); 
     }
 
     /**
@@ -63,7 +73,15 @@ class CompanyController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $arrayRequest = $request->all();
+        
+        $validator = Validator::make($arrayRequest, [ 
+            'name' => 'required',
+            'siret' => 'required'
+            ]);
+        
+        $item = Company::where('id',$id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
+        return response()->json(['success' => $item], $this-> successStatus); 
     }
 
     /**
