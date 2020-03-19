@@ -87,7 +87,7 @@ class UserController extends Controller
         $user = Auth::user();
         $usersList = [];
         if ($user->hasRole('superAdmin')) {
-            $usersList = User::all()->load('roles');
+            $usersList = User::withTrashed()->get()->load('roles');
         } else if ($user->company_id != null) {
             $usersList = User::where('company_id',$user->company_id)->get()->load('roles');
         }
@@ -116,11 +116,23 @@ class UserController extends Controller
         $arrayRequest = $request->all();
         
         $validator = Validator::make($arrayRequest, [ 
-            'name' => 'required'
+            'firstname' => 'required',
+            'lastname' => 'required'
             ]);
-        
-        $item = User::where('id',$id)->update(['name' => $arrayRequest['name'], 'description' => $arrayRequest['description'] , 'isPublic' => $arrayRequest['isPublic'] ]);
-        return response()->json(['success' => $item], $this-> successStatus); 
+        $user = User::withTrashed()->find($id);
+        if ($user != null) {
+            if (isset($arrayRequest['roles'])) {
+                $roles = array();
+                foreach ($arrayRequest['roles'] as $role) {
+                    array_push($roles,$role['id']);
+                }
+                $user->syncRoles($roles);
+            }
+            $user->firstname = $arrayRequest['firstname'];
+            $user->lastname = $arrayRequest['lastname'];
+            $user->save();
+        }
+        return response()->json(['success' => $user], $this-> successStatus); 
     } 
 
     /** 

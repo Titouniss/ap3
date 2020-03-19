@@ -111,6 +111,7 @@
         v-model="currentPage" />
 
     </div>
+    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -123,6 +124,7 @@ import vSelect from 'vue-select'
 // Store Module
 import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
 
+import EditForm from './EditForm.vue'
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
@@ -133,7 +135,7 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-
+    EditForm,
     // Cell Renderer
     CellRendererLink,
     CellRendererRelations,
@@ -251,6 +253,9 @@ export default {
     }
   },
   computed: {
+    itemIdToEdit () {
+        return this.$store.state.userManagement.user.id || 0
+    },
     usersData () {
       return this.$store.state.userManagement.users
     },
@@ -316,7 +321,7 @@ export default {
       this.$store.registerModule('userManagement', moduleUserManagement)
       moduleUserManagement.isRegistered = true
     }
-    this.$store.dispatch('userManagement/fetchUsers').catch(err => { console.error(err) })
+    this.$store.dispatch('userManagement/fetchItems').catch(err => { console.error(err) })
   }
 }
 

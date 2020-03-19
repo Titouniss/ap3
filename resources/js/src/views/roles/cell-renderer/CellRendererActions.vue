@@ -24,7 +24,8 @@ export default {
         title: 'Confirmer suppression',
         text: `Vous allez supprimer "${this.params.data.name}"`,
         accept: this.deleteRecord,
-        acceptText: 'Delete'
+        acceptText: 'Supprimer !',
+        cancelText: 'Annuler',
       })
     },
     deleteRecord () {

@@ -9,5 +9,5 @@
 
 export default {
   companies: [],
-  companies: {}
+  company: {}
 }

@@ -9,5 +9,6 @@
 
 
 export default {
-  getItem: state => id => state.roles.find((item) => item.id === id)
+  getItem: state => id => state.roles.find((item) => item.id === id),
+  getItems: state => state.roles
 }

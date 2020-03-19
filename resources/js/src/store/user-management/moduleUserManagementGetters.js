@@ -8,4 +8,11 @@
 ==========================================================================================*/
 
 
-export default {}
+export default {
+  getItem: state => id => state.users.find((item) => item.id === id),
+  getRole: state => id => {
+    let user = state.users.find((item) => item.id === id)
+    return user && user.roles.length ? parseInt(user.roles[0].id) : 0 
+  }
+
+}

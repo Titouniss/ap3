@@ -10,11 +10,11 @@ export default {
   computed: {
     RelationToText () {
       let text = ''
-      if (this.params.value) {
+      if (this.params.value) {        
         this.params.value.forEach(element => {
           let role = ''
           if (text) {
-              text = '|'+element.name
+              text = ' |'+element.name
           }else  text += element.name
         });
       }
