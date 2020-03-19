@@ -87,10 +87,50 @@ class UserController extends Controller
         $user = Auth::user();
         $usersList = [];
         if ($user->hasRole('superAdmin')) {
-            $usersList = User::all();
+            $usersList = User::all()->load('roles');
         } else if ($user->company_id != null) {
-            $usersList = User::where('company_id',$user->company_id)->get();
+            $usersList = User::where('company_id',$user->company_id)->get()->load('roles');
         }
         return response()->json(['success' => $usersList], $this-> successStatus); 
+    } 
+
+      
+    /** 
+     * get single item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function show($id) 
+    { 
+        $item = User::where('id',$id)->first();
+        return response()->json(['success' => $item], $this-> successStatus); 
+    } 
+
+    /** 
+     * update item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function update(Request $request, $id) 
+    { 
+        $arrayRequest = $request->all();
+        
+        $validator = Validator::make($arrayRequest, [ 
+            'name' => 'required'
+            ]);
+        
+        $item = User::where('id',$id)->update(['name' => $arrayRequest['name'], 'description' => $arrayRequest['description'] , 'isPublic' => $arrayRequest['isPublic'] ]);
+        return response()->json(['success' => $item], $this-> successStatus); 
+    } 
+
+    /** 
+     * delete item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function destroy($id) 
+    { 
+        $item = User::where('id',$id)->delete();
+        return response()->json(['success' => $item], $this-> successStatus); 
     } 
 }

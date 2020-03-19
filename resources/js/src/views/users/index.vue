@@ -75,35 +75,12 @@
             </div>
 
             <vs-dropdown-menu>
-
               <vs-dropdown-item>
                 <span class="flex items-center">
                   <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Delete</span>
+                  <span>Supprimer</span>
                 </span>
               </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Archive</span>
-                </span>
-              </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="FileIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Print</span>
-                </span>
-              </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="SaveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>CSV</span>
-                </span>
-              </vs-dropdown-item>
-
             </vs-dropdown-menu>
           </vs-dropdown>
       </div>
@@ -148,8 +125,7 @@ import moduleUserManagement from '@/store/user-management/moduleUserManagement.j
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererStatus from './cell-renderer/CellRendererStatus.vue'
-import CellRendererVerified from './cell-renderer/CellRendererVerified.vue'
+import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -160,8 +136,7 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererStatus,
-    CellRendererVerified,
+    CellRendererRelations,
     CellRendererActions
   },
   data () {
@@ -220,11 +195,16 @@ export default {
           headerCheckboxSelection: true
         },
         {
-          headerName: 'Username',
-          field: 'username',
+          headerName: 'Nom',
+          field: 'lastname',
           filter: true,
-          width: 210,
-          cellRendererFramework: 'CellRendererLink'
+          width: 200
+        },
+        {
+          headerName: 'Prénom',
+          field: 'firstname',
+          filter: true,
+          width: 150
         },
         {
           headerName: 'Email',
@@ -233,43 +213,11 @@ export default {
           width: 225
         },
         {
-          headerName: 'Name',
-          field: 'name',
-          filter: true,
-          width: 200
-        },
-        {
-          headerName: 'Country',
-          field: 'country',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Role',
-          field: 'role',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Status',
-          field: 'status',
+          headerName: 'Rôle',
+          field: 'roles',
           filter: true,
           width: 150,
-          cellRendererFramework: 'CellRendererStatus'
-        },
-        {
-          headerName: 'Verified',
-          field: 'is_verified',
-          filter: true,
-          width: 125,
-          cellRendererFramework: 'CellRendererVerified',
-          cellClass: 'text-center'
-        },
-        {
-          headerName: 'Department',
-          field: 'department',
-          filter: true,
-          width: 150
+          cellRendererFramework: 'CellRendererRelations'
         },
         {
           headerName: 'Actions',
@@ -282,8 +230,7 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererStatus,
-        CellRendererVerified,
+        CellRendererRelations,
         CellRendererActions
       }
     }
