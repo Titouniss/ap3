@@ -38,7 +38,9 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post(`/api/role-management/update/${payload.id}`,payload )
         .then((response) => {          
-          commit('UPDATE_ITEM', payload)
+          if (response.data && response.data.item) {            
+            commit('UPDATE_ITEM', response.data.item)            
+          }
           resolve(response)
         })
         .catch((error) => { reject(error) })

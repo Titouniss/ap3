@@ -76,9 +76,20 @@ class RoleController extends Controller
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required'
             ]);
-        
-        $item = Role::where('id',$id)->update(['name' => $arrayRequest['name'], 'description' => $arrayRequest['description'] , 'isPublic' => $arrayRequest['isPublic'] ]);
-        return response()->json(['success' => $item], $this-> successStatus); 
+            $role = Role::where('id',$id)->first();
+            if ($role != null) {
+                $role->name = $arrayRequest['name'];
+                $role->description = $arrayRequest['description'];
+                $role->isPublic = $arrayRequest['isPublic'];
+                if (isset($arrayRequest['permissions'])) {
+                    $permissions = array();
+                    foreach ($arrayRequest['permissions'] as $permission) {
+                        array_push($permissions,$permission);
+                    }
+                    $role->syncPermissions($permissions);
+                }
+            }
+        return response()->json(['success' => true, 'item' => $role], $this-> successStatus); 
     } 
 
     /** 

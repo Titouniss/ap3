@@ -21,13 +21,11 @@
         :active.sync="activePrompt">
         <div>
             <form>
-
-
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Titre" v-model="itemLocal.name" />
                         <vs-textarea rows="5" label="Ajouter description" v-model="itemLocal.description" />
-                        <vs-select label="Permissions" v-model="itemLocal.permissions" class="w-full mt-5" multiple>
+                        <vs-select label="Permissions" v-model="selected" class="w-full mt-5" multiple>
                               <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in permissions" />
                         </vs-select>
                     </div>
@@ -52,7 +50,8 @@ export default {
   },
   data () {
     return {
-      itemLocal: Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId))
+      itemLocal: Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId)),
+      selected: Object.assign([], this.$store.getters['roleManagement/getPermissions'](this.itemId))
     }
   },
   computed: {
@@ -78,6 +77,7 @@ export default {
       this.itemLocal = Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId))
     },
     submitTodo () {
+      this.itemLocal.permissions = this.selected
       this.$store.dispatch('roleManagement/updateItem', this.itemLocal)
     }
   },
@@ -85,8 +85,9 @@ export default {
     if (!modulePermissionManagement.isRegistered) {
       this.$store.registerModule('permissionManagement', modulePermissionManagement)
       modulePermissionManagement.isRegistered = true
-      console.log(Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId)));
     }
+    console.log(Object.assign([], this.$store.getters['roleManagement/getPermissions'](this.itemId)));
+    
     this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {

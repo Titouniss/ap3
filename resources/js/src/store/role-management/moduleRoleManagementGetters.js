@@ -10,5 +10,16 @@
 
 export default {
   getItem: state => id => state.roles.find((item) => item.id === id),
-  getItems: state => state.roles
+  getItems: state => state.roles,
+  getPermissions: state => id => {
+    const role = state.roles.find((item) => item.id === id)
+    let permissions = []
+    
+    if (role && role.permissions.length) {
+      role.permissions.forEach(permission => {
+        permissions.push(permission.id)
+      });
+    }
+    return permissions
+  }
 }
