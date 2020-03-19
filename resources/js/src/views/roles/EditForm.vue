@@ -21,23 +21,15 @@
         :active.sync="activePrompt">
         <div>
             <form>
-                <div class="vx-row">
-                    <div class="vx-col ml-auto flex">
-                        <vs-dropdown class="cursor-pointer flex" vs-custom-content>
-                            <feather-icon icon="TagIcon" svgClasses="h-5 w-5" />
-                            <vs-dropdown-menu style="z-index: 200001">
-                                  <vs-dropdown-item @click.stop v-for="(perm, index) in permissions" :key="index">
-                                      <vs-checkbox :vs-value="perm.value" v-model="itemLocal.tags">{{ perm.name }}</vs-checkbox>
-                                  </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
-                    </div>
-                </div>
+
 
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Titre" v-model="itemLocal.name" />
                         <vs-textarea rows="5" label="Ajouter description" v-model="itemLocal.description" />
+                        <vs-select label="Permissions" v-model="itemLocal.permissions" class="w-full mt-5" multiple>
+                              <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in permissions" />
+                        </vs-select>
                     </div>
                 </div>
 
@@ -47,6 +39,10 @@
 </template>
 
 <script>
+
+// Store Module
+import modulePermissionManagement from '@/store/permission-management/modulePermissionManagement.js'
+
 export default {
   props: {
     itemId: {
@@ -71,7 +67,7 @@ export default {
       }
     },
     permissions () {
-      return this.$store.state.roleManagement.permissions
+      return this.$store.state.permissionManagement.permissions
     },
     validateForm () {
       return !this.errors.any() && this.itemLocal.name !== ''
@@ -84,6 +80,18 @@ export default {
     submitTodo () {
       this.$store.dispatch('roleManagement/updateItem', this.itemLocal)
     }
+  },
+  created () {
+    if (!modulePermissionManagement.isRegistered) {
+      this.$store.registerModule('permissionManagement', modulePermissionManagement)
+      modulePermissionManagement.isRegistered = true
+      console.log(Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId)));
+    }
+    this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
+  },
+  beforeDestroy () {
+    modulePermissionManagement.isRegistered = false
+    this.$store.unregisterModule('permissionManagement')
   }
 }
 </script>

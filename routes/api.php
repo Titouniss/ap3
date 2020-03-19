@@ -69,7 +69,22 @@ Route::group(['middleware' => 'auth:api'], function(){
     });
 
     /***********************************************************************************/
-    /********************************  COMPANIES  **************************************/
+    /********************************    PERMISSIONS  **********************************/
+    /***********************************************************************************/
+    Route::prefix('permission-management')->group(function () {
+        Route::get('index', 'API\PermissionController@index');
+        Route::get('show/{id}', 'API\PermissionController@show');
+        Route::group(['middleware' => ['can:publish permissions|edit permissions']], function () {
+            Route::post('store', 'API\PermissionController@store');
+            Route::post('update/{id}', 'API\PermissionController@update');
+        });
+        Route::group(['middleware' => ['can:delete permissions']], function () {
+            Route::delete('destroy/{id}', 'API\PermissionController@destroy');
+        });
+    });
+
+    /***********************************************************************************/
+    /********************************    COMPANIES **************************************/
     /***********************************************************************************/
     Route::prefix('company-management')->group(function () {
         Route::get('index', 'API\CompanyController@index');

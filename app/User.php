@@ -16,8 +16,6 @@ class User extends Authenticatable implements MustVerifyEmail
     
     use HasRoles, HasApiTokens, Notifiable, SoftDeletes;
 
-    protected $guard_name = 'api'; // used by roles
-
     /**
      * The attributes that are mass assignable.
      *

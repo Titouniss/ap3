@@ -37,6 +37,7 @@ const router = new Router({
           name: 'home',
           component: () => import('./views/Home.vue'),
           meta: {
+            pageTitle: 'Tableau de bord',
             rule: 'admin',
             requiresAuth: true
           }
@@ -46,6 +47,7 @@ const router = new Router({
           name: 'users',
           component: () => import('./views/users/index.vue'),
           meta: {
+            pageTitle: 'Gestion des utilisateurs',
             rule: 'admin',
             requiresAuth: true
           }
@@ -55,6 +57,7 @@ const router = new Router({
           name: 'companies',
           component: () => import('./views/companies/index.vue'),
           meta: {
+            pageTitle: 'Gestion des compagnies',
             rule: 'admin',
             requiresAuth: true
           }
@@ -64,6 +67,7 @@ const router = new Router({
           name: 'roles',
           component: () => import('./views/roles/index.vue'),
           meta: {
+            pageTitle: 'Gestion des rôles',
             rule: 'admin',
             requiresAuth: true
           }

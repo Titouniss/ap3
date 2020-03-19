@@ -77,7 +77,7 @@
         rowSelection="multiple"
         colResizeDefault="shift"
         :animateRows="true"
-        :floatingFilter="true"
+        :floatingFilter="false"
         :pagination="true"
         :paginationPageSize="paginationPageSize"
         :suppressPaginationPanel="true"
@@ -131,7 +131,7 @@ export default {
         {
           filter: false,
           checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: true,
+          headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
           resizable: true
         },
@@ -141,8 +141,7 @@ export default {
         },
         {
           headerName: 'Description',
-          field: 'description',
-          filter: false
+          field: 'description'
         },
         {
           headerName: 'Actions',
@@ -229,6 +228,7 @@ export default {
     this.$store.dispatch('roleManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
+    moduleManagement.isRegistered = false
     this.$store.unregisterModule('roleManagement')
   }
 }
