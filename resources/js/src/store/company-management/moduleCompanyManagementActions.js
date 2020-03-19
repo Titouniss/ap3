@@ -10,7 +10,7 @@
 import axios from '@/axios.js'
 
 export default {
-  addCompany({ commit }, item) {
+  addItem({ commit }, item) {
     console.log(item)
     return new Promise((resolve, reject) => {
       axios.post("/api/company-management/store", item)
@@ -21,11 +21,21 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  editItem({ commit }, item) {    
+  editItem({ commit }, item) {  
     commit('EDIT_ITEM', item)
     return
   },
-  fetchCompanies ({ commit }) {    
+  updateItem ({ commit }, item) {    
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/company-management/update/${item.id}`,item )
+        .then((response) => {          
+          commit('UPDATE_ITEM', item)
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  fetchItems ({ commit }) {    
     return new Promise((resolve, reject) => {
       axios.get('/api/company-management/index')
         .then((response) => {          
@@ -35,7 +45,7 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  removeCompany ({ commit }, id) {
+  removeItem ({ commit }, id) {
     return new Promise((resolve, reject) => {
       axios.delete(`/api/company-management/${id}`)
         .then((response) => {

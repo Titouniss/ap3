@@ -12,7 +12,7 @@
   <div id="page-companies-list">
 
     <div class="vx-card p-6">
-      
+      <add-form />
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -100,8 +100,7 @@
 
     </div>
 
-    <add-form />
-    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
+    <edit-form :itemId="itemIdToEdit" @refreshTest="refreshTest"  v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -234,8 +233,11 @@ export default {
       this.$store.registerModule('companyManagement', moduleCompanyManagement)
       moduleCompanyManagement.isRegistered = true
     }
-    this.$store.dispatch('companyManagement/fetchCompanies').catch(err => { console.error(err) })
-  }
+    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
+  },
+  beforeDestroy () {
+    this.$store.unregisterModule('companyManagement')
+  },
 }
 
 </script>
