@@ -30,5 +30,11 @@ export default [
     name: 'Compagnies',
     slug: 'companies',
     icon: 'BriefcaseIcon'
+  },
+  {
+    url: '/skills',
+    name: 'Compétences',
+    slug: 'skills',
+    icon: 'BookOpenIcon'
   }
 ]

@@ -58,12 +58,20 @@ const router = new Router({
             rule: 'admin',
             requiresAuth: true
           }
-        }
-        ,
+        },
         {
           path: '/roles',
           name: 'roles',
           component: () => import('./views/roles/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/skils',
+          name: 'skills',
+          component: () => import('./views/skills/index.vue'),
           meta: {
             rule: 'admin',
             requiresAuth: true

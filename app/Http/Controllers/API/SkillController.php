@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Company;
+use App\Models\Skill;
 use Validator;
 
 
-class CompanyController extends Controller
+class SkillController extends Controller
 {
     public $successStatus = 200;
     /**
@@ -18,7 +18,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $items = Company::all();
+        $items = Skill::all();
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 
@@ -49,7 +49,7 @@ class CompanyController extends Controller
         if ($validator->fails()) { 
             return response()->json(['error'=>$validator->errors()], 401);            
         }
-        $item = Company::create($arrayRequest);
+        $item = Skill::create($arrayRequest);
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -80,7 +80,7 @@ class CompanyController extends Controller
             'siret' => 'required'
             ]);
         
-        $item = Company::where('id',$id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
+        $item = Skill::where('id',$id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -92,7 +92,7 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
-        $item = Company::findOrFail($id);
+        $item = Skill::findOrFail($id);
         $item->delete();
         return '';
     }

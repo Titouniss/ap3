@@ -7,8 +7,8 @@
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
-var slug = 'companies'
-var slug_singular = 'company'
+var slug = 'skills'
+var slug_singular = 'skill'
 
 export default {
   ADD_ITEM (state, item) {
