@@ -12,8 +12,7 @@
   <div id="page-companies-list">
 
     <div class="vx-card p-6">
-      <add-new />
-
+      
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -100,6 +99,9 @@
         v-model="currentPage" />
 
     </div>
+
+    <add-form />
+    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -110,7 +112,8 @@ import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
 
 //CRUD
-import AddNew from './AddNew.vue'
+import AddForm from './AddForm.vue'
+import EditForm from './EditForm.vue'
 
 // Store Module
 import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
@@ -124,7 +127,8 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-    AddNew,
+    AddForm,
+    EditForm,
 
     // Cell Renderer
     CellRendererLink,
@@ -193,6 +197,9 @@ export default {
     totalPages () {
       if (this.gridApi) return this.gridApi.paginationGetTotalPages()
       else return 0
+    },
+    itemIdToEdit () {
+      return this.$store.state.companyManagement.company.id || 0
     },
     currentPage: {
       get () {

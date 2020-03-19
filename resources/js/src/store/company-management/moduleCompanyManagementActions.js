@@ -21,13 +21,14 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  editItem({ commit }, item) {    
+    commit('EDIT_ITEM', item)
+    return
+  },
   fetchCompanies ({ commit }) {    
     return new Promise((resolve, reject) => {
       axios.get('/api/company-management/index')
-        .then((response) => {
-          console.log('axios.get /api/company-management/index');
-          console.log(response);
-          
+        .then((response) => {          
           commit('SET_ITEMS', response.data.success)
           resolve(response)
         })
