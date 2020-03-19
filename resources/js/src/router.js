@@ -69,16 +69,6 @@ const router = new Router({
             requiresAuth: true
           }
         },
-        {
-          path: '/roles/role-edit/:id',
-          name: 'roles-role-edit',
-          component: () => import('@/views/roles/RoleEdit.vue'),
-          meta: {
-            pageTitle: 'Edition de role',
-            rule: 'admin',
-            requiresAuth: true
-          }
-        },
       ]
     },
     // =============================================================================

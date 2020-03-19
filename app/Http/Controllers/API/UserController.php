@@ -87,10 +87,62 @@ class UserController extends Controller
         $user = Auth::user();
         $usersList = [];
         if ($user->hasRole('superAdmin')) {
-            $usersList = User::all();
+            $usersList = User::withTrashed()->get()->load('roles');
         } else if ($user->company_id != null) {
-            $usersList = User::where('company_id',$user->company_id)->get();
+            $usersList = User::where('company_id',$user->company_id)->get()->load('roles');
         }
         return response()->json(['success' => $usersList], $this-> successStatus); 
+    } 
+
+      
+    /** 
+     * get single item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function show($id) 
+    { 
+        $item = User::where('id',$id)->first();
+        return response()->json(['success' => $item], $this-> successStatus); 
+    } 
+
+    /** 
+     * update item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function update(Request $request, $id) 
+    { 
+        $arrayRequest = $request->all();
+        
+        $validator = Validator::make($arrayRequest, [ 
+            'firstname' => 'required',
+            'lastname' => 'required'
+            ]);
+        $user = User::withTrashed()->find($id);
+        if ($user != null) {
+            if (isset($arrayRequest['roles'])) {
+                $roles = array();
+                foreach ($arrayRequest['roles'] as $role) {
+                    array_push($roles,$role['id']);
+                }
+                $user->syncRoles($roles);
+            }
+            $user->firstname = $arrayRequest['firstname'];
+            $user->lastname = $arrayRequest['lastname'];
+            $user->save();
+        }
+        return response()->json(['success' => $user], $this-> successStatus); 
+    } 
+
+    /** 
+     * delete item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function destroy($id) 
+    { 
+        $item = User::where('id',$id)->delete();
+        return response()->json(['success' => $item], $this-> successStatus); 
     } 
 }

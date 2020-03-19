@@ -129,14 +129,11 @@ export default {
       },
       columnDefs: [
         {
-          headerName: 'ID',
-          field: 'id',
-          maxWidth: 125,
           filter: false,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
-          resizable: false
+          resizable: true
         },
         {
           headerName: 'Titre',
@@ -150,7 +147,6 @@ export default {
         {
           headerName: 'Actions',
           field: 'transactions',
-          maxWidth: 150,
           cellRendererFramework: 'CellRendererActions'
         }
       ],

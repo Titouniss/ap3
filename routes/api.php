@@ -41,11 +41,17 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    USERS    **************************************/
     /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
-        Route::get('users', 'API\UserController@index');
-        Route::group(['middleware' => ['can:publish users']], function () {
-            Route::post('create/user', 'API\UserController@create');
+        Route::get('index', 'API\UserController@index');
+        Route::get('show/{id}', 'API\UserController@show');
+        Route::group(['middleware' => ['can:publish users|edit users']], function () {
+            Route::post('store', 'API\UserController@store');
+            Route::post('update/{id}', 'API\UserController@update');
+        });
+        Route::group(['middleware' => ['can:delete users']], function () {
+            Route::delete('destroy/{id}', 'API\UserController@destroy');
         });
     });
+
 
     /***********************************************************************************/
     /********************************    ROLES    **************************************/

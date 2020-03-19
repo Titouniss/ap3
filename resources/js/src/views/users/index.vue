@@ -10,28 +10,6 @@
 <template>
 
   <div id="page-user-list">
-
-    <!-- <vx-card ref="filterCard" title="Filters" class="user-list-filters mb-8" actionButtons @refresh="resetColFilters" @remove="resetColFilters">
-      <div class="vx-row">
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Role</label>
-          <v-select :options="roleOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="roleFilter" class="mb-4 md:mb-0" />
-        </div>
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Status</label>
-          <v-select :options="statusOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="statusFilter" class="mb-4 md:mb-0" />
-        </div>
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Verified</label>
-          <v-select :options="isVerifiedOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="isVerifiedFilter" class="mb-4 sm:mb-0" />
-        </div>
-        <div class="vx-col md:w-1/4 sm:w-1/2 w-full">
-          <label class="text-sm opacity-75">Department</label>
-          <v-select :options="departmentOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="departmentFilter" />
-        </div>
-      </div>
-    </vx-card> -->
-
     <div class="vx-card p-6">
 
       <div class="flex flex-wrap items-center">
@@ -75,35 +53,12 @@
             </div>
 
             <vs-dropdown-menu>
-
               <vs-dropdown-item>
                 <span class="flex items-center">
                   <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Delete</span>
+                  <span>Supprimer</span>
                 </span>
               </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Archive</span>
-                </span>
-              </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="FileIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Print</span>
-                </span>
-              </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="SaveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>CSV</span>
-                </span>
-              </vs-dropdown-item>
-
             </vs-dropdown-menu>
           </vs-dropdown>
       </div>
@@ -134,6 +89,7 @@
         v-model="currentPage" />
 
     </div>
+    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -146,10 +102,10 @@ import vSelect from 'vue-select'
 // Store Module
 import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
 
+import EditForm from './EditForm.vue'
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererStatus from './cell-renderer/CellRendererStatus.vue'
-import CellRendererVerified from './cell-renderer/CellRendererVerified.vue'
+import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -157,48 +113,14 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-
+    EditForm,
     // Cell Renderer
     CellRendererLink,
-    CellRendererStatus,
-    CellRendererVerified,
+    CellRendererRelations,
     CellRendererActions
   },
   data () {
     return {
-
-      // Filter Options
-      roleFilter: { label: 'All', value: 'all' },
-      roleOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Admin', value: 'admin' },
-        { label: 'User', value: 'user' },
-        { label: 'Staff', value: 'staff' }
-      ],
-
-      statusFilter: { label: 'All', value: 'all' },
-      statusOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Active', value: 'active' },
-        { label: 'Deactivated', value: 'deactivated' },
-        { label: 'Blocked', value: 'blocked' }
-      ],
-
-      isVerifiedFilter: { label: 'All', value: 'all' },
-      isVerifiedOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Yes', value: 'yes' },
-        { label: 'No', value: 'no' }
-      ],
-
-      departmentFilter: { label: 'All', value: 'all' },
-      departmentOptions: [
-        { label: 'All', value: 'all' },
-        { label: 'Sales', value: 'sales' },
-        { label: 'Development', value: 'development' },
-        { label: 'Management', value: 'management' }
-      ],
-
       searchQuery: '',
 
       // AgGrid
@@ -211,20 +133,23 @@ export default {
       },
       columnDefs: [
         {
-          headerName: 'ID',
-          field: 'id',
-          width: 125,
-          filter: true,
+          filter: false,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
+          resizable: true
         },
         {
-          headerName: 'Username',
-          field: 'username',
+          headerName: 'Nom',
+          field: 'lastname',
           filter: true,
-          width: 210,
-          cellRendererFramework: 'CellRendererLink'
+          width: 200
+        },
+        {
+          headerName: 'Prénom',
+          field: 'firstname',
+          filter: true,
+          width: 150
         },
         {
           headerName: 'Email',
@@ -233,43 +158,11 @@ export default {
           width: 225
         },
         {
-          headerName: 'Name',
-          field: 'name',
-          filter: true,
-          width: 200
-        },
-        {
-          headerName: 'Country',
-          field: 'country',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Role',
-          field: 'role',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Status',
-          field: 'status',
+          headerName: 'Rôle',
+          field: 'roles',
           filter: true,
           width: 150,
-          cellRendererFramework: 'CellRendererStatus'
-        },
-        {
-          headerName: 'Verified',
-          field: 'is_verified',
-          filter: true,
-          width: 125,
-          cellRendererFramework: 'CellRendererVerified',
-          cellClass: 'text-center'
-        },
-        {
-          headerName: 'Department',
-          field: 'department',
-          filter: true,
-          width: 150
+          cellRendererFramework: 'CellRendererRelations'
         },
         {
           headerName: 'Actions',
@@ -282,8 +175,7 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererStatus,
-        CellRendererVerified,
+        CellRendererRelations,
         CellRendererActions
       }
     }
@@ -304,6 +196,9 @@ export default {
     }
   },
   computed: {
+    itemIdToEdit () {
+        return this.$store.state.userManagement.user.id || 0
+    },
     usersData () {
       return this.$store.state.userManagement.users
     },
@@ -369,7 +264,7 @@ export default {
       this.$store.registerModule('userManagement', moduleUserManagement)
       moduleUserManagement.isRegistered = true
     }
-    this.$store.dispatch('userManagement/fetchUsers').catch(err => { console.error(err) })
+    this.$store.dispatch('userManagement/fetchItems').catch(err => { console.error(err) })
   }
 }
 
