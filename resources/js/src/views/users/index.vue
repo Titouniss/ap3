@@ -265,6 +265,10 @@ export default {
       moduleUserManagement.isRegistered = true
     }
     this.$store.dispatch('userManagement/fetchItems').catch(err => { console.error(err) })
+  },
+  beforeDestroy () {
+    moduleUserManagement.isRegistered = false
+    this.$store.unregisterModule('userManagement')
   }
 }
 

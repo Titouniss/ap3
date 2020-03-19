@@ -33,7 +33,7 @@
                         class="w-full mt-8" />
                       <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
 
-                      <vs-select label="Rôle:" v-model="selected" class="w-full mt-5">
+                      <vs-select label="Rôle" v-model="selected" class="w-full mt-5">
                             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in roles" />
                         </vs-select>
                     </div>
