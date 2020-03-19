@@ -8,10 +8,14 @@
 ==========================================================================================*/
 
 var slug = 'companies'
+var slug_singular = 'companies'
 
 export default {
   ADD_ITEM (state, item) {
     state[slug].unshift(item)
+  },
+  EDIT_ITEM (state, item) {
+    state[slug_singular] = item
   },
   SET_ITEMS (state, companies) {
     state[slug] = companies

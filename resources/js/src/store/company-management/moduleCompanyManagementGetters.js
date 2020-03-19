@@ -8,4 +8,6 @@
 ==========================================================================================*/
 
 
-export default {}
+export default {
+  getItem: state => id => state.companies.find((item) => item.id === id)
+}

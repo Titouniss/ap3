@@ -11,14 +11,9 @@ export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      this.$router.push(`/apps/user/user-edit/${  268}`).catch(() => {})
-
-      /*
-              Below line will be for actual product
-              Currently it's commented due to demo purpose - Above url is for demo purpose
-
-              this.$router.push("/apps/user/user-edit/" + this.params.data.id).catch(() => {})
-            */
+      this.$store.dispatch("companyManagement/editItem", this.params.data)
+        .then(()   => {  })
+        .catch(err => { console.error(err)       })
     },
     confirmDeleteRecord () {
       this.$vs.dialog({
