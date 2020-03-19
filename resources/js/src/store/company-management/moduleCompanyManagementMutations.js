@@ -7,17 +7,18 @@
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
+var slug = 'companies'
 
 export default {
-  ADD_COMPANY (state, item) {
-    state.companies.unshift(item)
+  ADD_ITEM (state, item) {
+    state[slug].unshift(item)
   },
-  SET_COMPANIES (state, companies) {
-    state.companies = companies
+  SET_ITEMS (state, companies) {
+    state[slug] = companies
   },
-  REMOVE_COMPANY (state, itemId) {
-    const index = state.companies.findIndex((u) => u.id === itemId)
-    state.companies.splice(index, 1)
+  REMOVE_ITEM (state, itemId) {
+    const index = state[slug].findIndex((u) => u.id === itemId)
+    state[slug].splice(index, 1)
   }
 
 }
