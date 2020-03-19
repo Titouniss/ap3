@@ -1,9 +1,13 @@
+/*=========================================================================================
+  Description: Module Actions
+==========================================================================================*/
+
 import axios from '@/axios.js'
 
 export default {
   addItem({ commit }, item) {    
     return new Promise((resolve, reject) => {
-      axios.post("/api/role-management/store", item)
+      axios.post("/api/permission-management/store", item)
         .then((response) => {
           commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
           resolve(response)
@@ -17,9 +21,9 @@ export default {
   },
   fetchItems ({ commit }) {    
     return new Promise((resolve, reject) => {
-      axios.get('/api/role-management/index')
+      axios.get('/api/permission-management/index')
         .then((response) => {          
-          commit('SET_ROLES', response.data.success)
+          commit('SET_ITEMS', response.data.success)
           resolve(response)
         })
         .catch((error) => { reject(error) })
@@ -27,7 +31,7 @@ export default {
   },
   fetchRole (context, id) {
     return new Promise((resolve, reject) => {
-      axios.get(`/api/role-management/show/${id}`)
+      axios.get(`/api/permission-management/show/${id}`)
         .then((response) => {
           resolve(response)
         })
@@ -36,7 +40,7 @@ export default {
   },
   updateItem ({ commit }, payload) {    
     return new Promise((resolve, reject) => {
-      axios.post(`/api/role-management/update/${payload.id}`,payload )
+      axios.post(`/api/permission-management/update/${payload.id}`,payload )
         .then((response) => {          
           commit('UPDATE_ITEM', payload)
           resolve(response)
@@ -46,7 +50,7 @@ export default {
   },
   removeRecord ({ commit }, id) {
     return new Promise((resolve, reject) => {
-      axios.delete(`/api/role-management/destroy/${id}`)
+      axios.delete(`/api/permission-management/destroy/${id}`)
         .then((response) => {
           commit('REMOVE_RECORD', id)
           resolve(response)

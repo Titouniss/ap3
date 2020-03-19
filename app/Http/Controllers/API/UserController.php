@@ -61,24 +61,18 @@ class UserController extends Controller
         $input = $request->all(); 
         $input['password'] = bcrypt($input['password']); 
         $user = User::create($input); 
+        $role = Role::where('name', 'clientAdmin');
+        if ($role != null) {
+            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits
+        }
         $token =  $user->createToken('ProjetX');
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
         return response()->json(['success'=>$success, 'userData' => $user], $this-> successStatus); 
-    }
-    /** 
-     * details api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function details() 
-    { 
-        $user = Auth::user(); 
-        return response()->json(['success' => $user], $this-> successStatus); 
     } 
 
-        /** 
-     * details api 
+    /** 
+     * get all items api 
      * 
      * @return \Illuminate\Http\Response 
      */ 
