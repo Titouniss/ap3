@@ -27,7 +27,7 @@ export default {
       })
     },
     deleteRecord () {
-      this.$store.dispatch("companyManagement/removeCompany", this.params.data.id)
+      this.$store.dispatch("companyManagement/removeItem", this.params.data.id)
         .then(()   => { this.showDeleteSuccess() })
         .catch(err => { console.error(err)       })
     },

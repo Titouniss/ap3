@@ -100,7 +100,7 @@
 
     </div>
 
-    <edit-form :itemId="itemIdToEdit" @refreshTest="refreshTest"  v-if="itemIdToEdit"/>
+    <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -236,6 +236,7 @@ export default {
     this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
+    moduleCompanyManagement.isRegistered = false
     this.$store.unregisterModule('companyManagement')
   },
 }

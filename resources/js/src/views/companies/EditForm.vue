@@ -70,7 +70,7 @@ export default {
       this.itemLocal = Object.assign({}, this.$store.getters['companyManagement/getItem'](this.itemId))
     },
     submitItem () {
-      this.$store.dispatch('companyManagement/updateItem', Object.assign({}, this.itemLocal))
+      this.$store.dispatch('companyManagement/updateItem', this.itemLocal)
     }
   }
 }
