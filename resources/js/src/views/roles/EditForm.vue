@@ -85,7 +85,6 @@ export default {
     if (!modulePermissionManagement.isRegistered) {
       this.$store.registerModule('permissionManagement', modulePermissionManagement)
       modulePermissionManagement.isRegistered = true
-      console.log(Object.assign({}, this.$store.getters['roleManagement/getItem'](this.itemId)));
     }
     this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
   },

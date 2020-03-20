@@ -9,5 +9,9 @@
 
 
 export default {
-  getItem: state => id => state.skills.find((item) => item.id === id)
+  getItem: state => id => state.skills.find((item) => item.id === id),
+  getCompany: state => id => {
+    let skill = state.skills.find((item) => item.id === id)
+    return skill ? skill.company_id : 0
+  }
 }

@@ -6,12 +6,12 @@
 </template>
 
 <script>
-var modelTitle = 'Compagnie'
+var modelTitle = 'Compétence'
 export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      this.$store.dispatch("companyManagement/editItem", this.params.data)
+      this.$store.dispatch("skillManagement/editItem", this.params.data)
         .then(()   => {  })
         .catch(err => { console.error(err)       })
     },
@@ -27,7 +27,7 @@ export default {
       })
     },
     deleteRecord () {
-      this.$store.dispatch("companyManagement/removeItem", this.params.data.id)
+      this.$store.dispatch("skillManagement/removeItem", this.params.data.id)
         .then(()   => { this.showDeleteSuccess() })
         .catch(err => { console.error(err)       })
     },

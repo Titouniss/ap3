@@ -10,7 +10,7 @@
 
 <template>
     <vs-prompt
-        title="Edition d'une compagnie"
+        title="Edition d'une compétence"
         accept-text= "Modifier"
         cancel-text = "Annuler"
         button-cancel = "border"
@@ -24,8 +24,11 @@
 
                 <div class="vx-row">
                     <div class="vx-col w-full">
-                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Titre" v-model="itemLocal.name" />
-                        <vs-input v-validate="'required'" name="siret" class="w-full mb-4 mt-5" placeholder="Siret" v-model="itemLocal.siret" :color="validateForm ? 'success' : 'danger'" />
+                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" />
+                        <!-- <vs-input v-validate="'required'" name="company_id" class="w-full mb-4 mt-5" placeholder="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" /> -->
+                        <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" class="w-full mt-5">
+                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
+                        </vs-select>
                     </div>
                 </div>
 
@@ -35,6 +38,9 @@
 </template>
 
 <script>
+// Store Module
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+
 export default {
   props: {
     itemId: {
@@ -44,7 +50,7 @@ export default {
   },
   data () {
     return {
-      itemLocal: Object.assign({}, this.$store.getters['companyManagement/getItem'](this.itemId))
+      itemLocal: Object.assign({}, this.$store.getters['skillManagement/getItem'](this.itemId))
     }
   },
   computed: {
@@ -53,10 +59,13 @@ export default {
         return this.itemId && this.itemId > 0 ? true : false
       },
       set (value) {
-        this.$store.dispatch("companyManagement/editItem", {})
+        this.$store.dispatch("skillManagement/editItem", {})
           .then(()   => {  })
           .catch(err => { console.error(err)       })
       }
+    },
+    companiesData() {
+      return this.$store.state.companyManagement.companies
     },
     permissions () {
       return this.$store.state.roleManagement.permissions
@@ -67,11 +76,18 @@ export default {
   },
   methods: {
     init () {
-      this.itemLocal = Object.assign({}, this.$store.getters['companyManagement/getItem'](this.itemId))
+      this.itemLocal = Object.assign({}, this.$store.getters['skillManagement/getItem'](this.itemId))
     },
     submitItem () {
-      this.$store.dispatch('companyManagement/updateItem', this.itemLocal)
+      this.$store.dispatch('skillManagement/updateItem', this.itemLocal)
     }
+  },
+  created () {
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule('companyManagement', moduleCompanyManagement)
+      moduleCompanyManagement.isRegistered = true
+    }
+    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
   }
 }
 </script>

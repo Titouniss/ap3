@@ -11,11 +11,10 @@ import axios from '@/axios.js'
 
 export default {
   addItem({ commit }, item) {
-    console.log(item)
     return new Promise((resolve, reject) => {
       axios.post("/api/skill-management/store", item)
         .then((response) => {
-          commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
+          commit('ADD_ITEM', Object.assign(item, {id: response.data.success.id, company: response.data.success.company}))
           resolve(response)
         })
         .catch((error) => { reject(error) })

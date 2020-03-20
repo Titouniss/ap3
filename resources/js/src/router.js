@@ -73,7 +73,7 @@ const router = new Router({
           }
         },
         {
-          path: '/skils',
+          path: '/skills',
           name: 'skills',
           component: () => import('./views/skills/index.vue'),
           meta: {

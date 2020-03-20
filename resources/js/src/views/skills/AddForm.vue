@@ -1,15 +1,15 @@
 <template>
     <div class="p-3 mb-4 mr-4">
       <vs-button @click="activePrompt = true" class="w-full">
-          Ajouter une compagnie
+          Ajouter une compétence
       </vs-button>
       <vs-prompt
-          title="Ajouter une compagnie"
+          title="Ajouter une compétence"
           accept-text= "Ajouter"
           cancel-text= "Annuler"
           button-cancel = "border"
           @cancel="clearFields"
-          @accept="addCompany"
+          @accept="addSkill"
           @close="clearFields"
           :is-valid="validateForm"
           :active.sync="activePrompt">
@@ -17,8 +17,11 @@
               <form>
                   <div class="vx-row">
                       <div class="vx-col w-full">
-                          <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom de la compagnie" v-model="itemLocal.name" :color="validateForm ? 'success' : 'danger'" />
-                          <vs-input v-validate="'required'" name="siret" class="w-full mb-4 mt-5" placeholder="Siret" v-model="itemLocal.siret" :color="validateForm ? 'success' : 'danger'" />
+                          <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" :color="validateForm ? 'success' : 'danger'" />
+                          <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
+                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
+                          </vs-select>
+                          <!-- <vs-input v-validate="'required'" name="company_id" class="w-full mb-4 mt-5" placeholder="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" /> -->
                       </div>
                   </div>
 
@@ -29,6 +32,9 @@
 </template>
 
 <script>
+// Store Module
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+
 export default {
   data () {
     return {
@@ -36,30 +42,41 @@ export default {
 
       itemLocal: {
         name: '',
-        siret: '',
+        company_id: null,
       }
     }
   },
   computed: {
     validateForm () {
-      return !this.errors.any() && this.itemLocal.name !== '' && this.itemLocal.siret !== ''
-    }
+      return !this.errors.any() && this.itemLocal.name !== '' && this.itemLocal.company !== null
+    },
+    companiesData() {
+      return this.$store.state.companyManagement.companies
+    },
   },
   methods: {
     clearFields () {
       Object.assign(this.itemLocal, {
         name: '',
-        siret: '',
+        company_id: null,
       })
     },
-    addCompany () {
+    addSkill () {
       this.$validator.validateAll().then(result => {
+        console.log(this.itemLocal)
         if (result) {
-          this.$store.dispatch('companyManagement/addItem', Object.assign({}, this.itemLocal)).catch(err => { console.error(err) })
+          this.$store.dispatch('skillManagement/addItem', Object.assign({}, this.itemLocal)).catch(err => { console.error(err) })
           this.clearFields()
         }
       })
     }
+  },
+  created () {
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule('companyManagement', moduleCompanyManagement)
+      moduleCompanyManagement.isRegistered = true
+    }
+    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
   }
 }
 </script>

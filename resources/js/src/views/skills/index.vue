@@ -119,6 +119,7 @@ import moduleSkillManagement from '@/store/skill-management/moduleSkillManagemen
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
+import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -131,7 +132,8 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererActions
+    CellRendererActions,
+    CellRendererRelations
   },
   data () {
     return {
@@ -164,9 +166,10 @@ export default {
         },
         {
           headerName: 'Compagnie',
-          field: 'company_id',
+          field: 'company',
           filter: true,
-          width: 150
+          width: 150,
+          cellRendererFramework: 'CellRendererRelations'
         },
         {
           headerName: 'Actions',
@@ -179,7 +182,8 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererActions
+        CellRendererActions,
+        CellRendererRelations
       }
     }
   },

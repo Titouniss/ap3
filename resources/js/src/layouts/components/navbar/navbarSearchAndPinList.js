@@ -4,7 +4,7 @@ export default {
     data: [
       {title: 'Home',   url: '/',      icon: 'HomeIcon', is_bookmarked: false},
       {title: 'Compagnies', url: '/companies', icon: 'BriefcaseIcon', is_bookmarked: false},
-      {title: 'Compétences', url: '/skills', icon: 'BookOpenIcon', is_bookmarked: false},
+      {title: 'Competences', url: '/skills', icon: 'BookOpenIcon', is_bookmarked: false},
     ]
   }
 }

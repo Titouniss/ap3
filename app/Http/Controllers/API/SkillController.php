@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Skill;
+use Illuminate\Support\Facades\Auth;
 use Validator;
 
 
@@ -18,7 +19,13 @@ class SkillController extends Controller
      */
     public function index()
     {
-        $items = Skill::all();
+        $user = Auth::user();
+        $items = [];
+        if ($user->hasRole('superAdmin')) {
+            $items = Skill::all()->load('company');
+        } else if ($user->company_id != null) {
+            $items = Skill::where('company_id',$user->company_id)->get()->load('company');
+        }
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 
@@ -44,12 +51,12 @@ class SkillController extends Controller
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
-            'siret' => 'required'
+            'company_id' => 'required'
         ]);
         if ($validator->fails()) { 
             return response()->json(['error'=>$validator->errors()], 401);            
         }
-        $item = Skill::create($arrayRequest);
+        $item = Skill::create($arrayRequest)->load('company');
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -77,10 +84,10 @@ class SkillController extends Controller
         
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
-            'siret' => 'required'
+            'company_id' => 'required'
             ]);
         
-        $item = Skill::where('id',$id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
+        $item = Skill::where('id',$id)->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']]);
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
