@@ -35,7 +35,7 @@ const router = new Router({
         {
           path: '/',
           name: 'home',
-          component: () => import('./views/Home.vue'),
+          component: () => import('./views/Dashboard.vue'),
           meta: {
             pageTitle: 'Tableau de bord',
             rule: 'admin',
