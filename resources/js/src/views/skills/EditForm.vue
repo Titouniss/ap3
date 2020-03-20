@@ -38,8 +38,6 @@
 </template>
 
 <script>
-// Store Module
-import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
 export default {
   props: {
@@ -80,14 +78,27 @@ export default {
     },
     submitItem () {
       this.$store.dispatch('skillManagement/updateItem', this.itemLocal)
+      .then(() => { 
+        this.$vs.loading.close() 
+        this.$vs.notify({
+          title: 'Modification d\'une compétence',
+          text: `"${this.itemLocal.name}" modifiée avec succès`,
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'success'
+        })
+      })
+      .catch(error => {            
+        this.$vs.loading.close()
+        this.$vs.notify({
+          title: 'Error',
+          text: error.message,
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'danger'
+        })
+      })
     }
   },
-  created () {
-    if (!moduleCompanyManagement.isRegistered) {
-      this.$store.registerModule('companyManagement', moduleCompanyManagement)
-      moduleCompanyManagement.isRegistered = true
-    }
-    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
-  }
 }
 </script>

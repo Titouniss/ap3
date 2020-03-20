@@ -32,8 +32,6 @@
 </template>
 
 <script>
-// Store Module
-import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
 export default {
   data () {
@@ -65,18 +63,30 @@ export default {
       this.$validator.validateAll().then(result => {
         console.log(this.itemLocal)
         if (result) {
-          this.$store.dispatch('skillManagement/addItem', Object.assign({}, this.itemLocal)).catch(err => { console.error(err) })
-          this.clearFields()
+          this.$store.dispatch('skillManagement/addItem', Object.assign({}, this.itemLocal))
+          .then(() => { 
+            this.$vs.loading.close() 
+            this.$vs.notify({
+              title: 'Ajout d\'une compétence',
+              text: `"${this.itemLocal.name}" ajoutée avec succès`,
+              iconPack: 'feather',
+              icon: 'icon-alert-circle',
+              color: 'success'
+            })
+          })
+          .catch(error => {            
+            this.$vs.loading.close()
+            this.$vs.notify({
+              title: 'Error',
+              text: error.message,
+              iconPack: 'feather',
+              icon: 'icon-alert-circle',
+              color: 'danger'
+            })
+          })
         }
       })
     }
-  },
-  created () {
-    if (!moduleCompanyManagement.isRegistered) {
-      this.$store.registerModule('companyManagement', moduleCompanyManagement)
-      moduleCompanyManagement.isRegistered = true
-    }
-    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
   }
 }
 </script>

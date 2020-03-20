@@ -71,6 +71,26 @@ export default {
     },
     submitItem () {
       this.$store.dispatch('companyManagement/updateItem', this.itemLocal)
+      .then(() => { 
+        this.$vs.loading.close() 
+        this.$vs.notify({
+          title: 'Modification d\'une compagnie',
+          text: `"${this.itemLocal.name}" modifiée avec succès`,
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'success'
+        })
+      })
+      .catch(error => {            
+        this.$vs.loading.close()
+        this.$vs.notify({
+          title: 'Error',
+          text: error.message,
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'danger'
+        })
+      })
     }
   }
 }

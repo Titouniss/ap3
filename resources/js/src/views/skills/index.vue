@@ -116,6 +116,7 @@ import EditForm from './EditForm.vue'
 
 // Store Module
 import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
@@ -237,11 +238,18 @@ export default {
       this.$store.registerModule('skillManagement', moduleSkillManagement)
       moduleSkillManagement.isRegistered = true
     }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule('companyManagement', moduleCompanyManagement)
+      moduleCompanyManagement.isRegistered = true
+    }
+    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('skillManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
     moduleSkillManagement.isRegistered = false
+    moduleCompanyManagement.isRegistered = false
     this.$store.unregisterModule('skillManagement')
+    this.$store.unregisterModule('companyManagement')
   },
 }
 

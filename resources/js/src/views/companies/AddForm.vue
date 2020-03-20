@@ -55,7 +55,27 @@ export default {
     addCompany () {
       this.$validator.validateAll().then(result => {
         if (result) {
-          this.$store.dispatch('companyManagement/addItem', Object.assign({}, this.itemLocal)).catch(err => { console.error(err) })
+          this.$store.dispatch('companyManagement/addItem', Object.assign({}, this.itemLocal))
+          .then(() => { 
+            this.$vs.loading.close() 
+            this.$vs.notify({
+              title: 'Ajout d\'une compagnie',
+              text: `"${this.itemLocal.name}" ajoutée avec succès`,
+              iconPack: 'feather',
+              icon: 'icon-alert-circle',
+              color: 'success'
+            })
+          })
+          .catch(error => {            
+            this.$vs.loading.close()
+            this.$vs.notify({
+              title: 'Error',
+              text: error.message,
+              iconPack: 'feather',
+              icon: 'icon-alert-circle',
+              color: 'danger'
+            })
+          })
           this.clearFields()
         }
       })
