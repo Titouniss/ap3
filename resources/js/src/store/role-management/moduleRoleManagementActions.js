@@ -2,9 +2,11 @@ import axios from '@/axios.js'
 
 export default {
   addItem({ commit }, item) {    
+    console.log(item);
+    
     return new Promise((resolve, reject) => {
       axios.post("/api/role-management/store", item)
-        .then((response) => {
+        .then((response) => {          
           commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
           resolve(response)
         })
@@ -25,7 +27,7 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  fetchRole (context, id) {
+  fetchItem (context, id) {
     return new Promise((resolve, reject) => {
       axios.get(`/api/role-management/show/${id}`)
         .then((response) => {
@@ -37,10 +39,7 @@ export default {
   updateItem ({ commit }, payload) {    
     return new Promise((resolve, reject) => {
       axios.post(`/api/role-management/update/${payload.id}`,payload )
-        .then((response) => {          
-          if (response.data && response.data.item) {            
-            commit('UPDATE_ITEM', response.data.item)            
-          }
+        .then((response) => {    
           resolve(response)
         })
         .catch((error) => { reject(error) })

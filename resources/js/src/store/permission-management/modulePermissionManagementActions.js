@@ -29,7 +29,7 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  fetchRole (context, id) {
+  fetchItem (context, id) {
     return new Promise((resolve, reject) => {
       axios.get(`/api/permission-management/show/${id}`)
         .then((response) => {

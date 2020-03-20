@@ -18,8 +18,8 @@ export default {
   SET_ROLES (state, roles) {
     state.roles = roles
   },
-  UPDATE_ITEM (state, item) {
-    const index = state.roles.findIndex((r) => r.id === item.id)    
+  UPDATE_ITEM (state, item) {    
+    const index = state.roles.findIndex((r) => r.id === item.id)  
     Object.assign(state.roles[index], item)
   },
   REMOVE_RECORD (state, itemId) {

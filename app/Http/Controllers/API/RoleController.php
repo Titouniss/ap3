@@ -56,11 +56,18 @@ class RoleController extends Controller
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required'
-        ]);
-        if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
-        }
+            ]);
+            if ($validator->fails()) { 
+                return response()->json(['error'=>$validator->errors()], 401);            
+            }
+        $permissions = $arrayRequest['permissions'];
+        unset($arrayRequest['permissions']);
         $item = Role::create($arrayRequest);
+        if ($item != null) {
+            if (isset($permissions)) {
+                $item->syncPermissions($permissions);
+            }
+        }
         return response()->json(['success' => $item], $this-> successStatus); 
     } 
 
@@ -82,11 +89,7 @@ class RoleController extends Controller
                 $role->description = $arrayRequest['description'];
                 $role->isPublic = $arrayRequest['isPublic'];
                 if (isset($arrayRequest['permissions'])) {
-                    $permissions = array();
-                    foreach ($arrayRequest['permissions'] as $permission) {
-                        array_push($permissions,$permission);
-                    }
-                    $role->syncPermissions($permissions);
+                    $role->syncPermissions($arrayRequest['permissions'] );
                 }
             }
         return response()->json(['success' => true, 'item' => $role], $this-> successStatus); 
