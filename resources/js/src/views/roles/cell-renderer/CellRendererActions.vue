@@ -13,9 +13,10 @@ export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      this.$store.dispatch("roleManagement/editItem", this.params.data)
-        .then(()   => {  })
-        .catch(err => { console.error(err)       })
+      this.$router.push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`).catch(() => {})
+      // this.$store.dispatch("roleManagement/editItem", this.params.data)
+      //   .then(()   => {  })
+      //   .catch(err => { console.error(err)       })
     },
     confirmDeleteRecord () {
       this.$vs.dialog({

@@ -63,8 +63,9 @@
           </vs-dropdown>
       </div>
 
-      <AddForm />
-
+      <div class="px-6 pb-2 pt-6">
+        <vs-button @click="addRecord" class="w-full">Ajouter un rôle</vs-button>
+      </div>
       <!-- AgGrid Table -->
       <ag-grid-vue
         ref="agGridTable"
@@ -89,12 +90,16 @@
         :max="7"
         v-model="currentPage" />
     </div>
-      <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
   </div>
 
 </template>
 
 <script>
+
+var model = 'role'
+var modelPlurial = 'roles'
+var modelTitle = 'Rôle'
+
 import { AgGridVue } from 'ag-grid-vue'
 import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
@@ -103,16 +108,12 @@ import vSelect from 'vue-select'
 import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
 
 // Cell Renderer
-import AddForm from './AddForm.vue'
-import EditForm from './EditForm.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 export default {
   components: {
     AgGridVue,
     vSelect,
-    AddForm,
-    EditForm,
     // Cell Renderer
     CellRendererActions
   },
@@ -205,7 +206,10 @@ export default {
     },
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
-    }
+    },
+    addRecord () {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {})
+    },
   },
   mounted () {
     this.gridApi = this.gridOptions.api

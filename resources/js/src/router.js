@@ -45,7 +45,7 @@ const router = new Router({
         {
           path: '/users',
           name: 'users',
-          component: () => import('./views/users/index.vue'),
+          component: () => import('./views/users/Index.vue'),
           meta: {
             pageTitle: 'Gestion des utilisateurs',
             rule: 'admin',
@@ -65,7 +65,7 @@ const router = new Router({
         {
           path: '/roles',
           name: 'roles',
-          component: () => import('./views/roles/index.vue'),
+          component: () => import('./views/roles/Index.vue'),
           meta: {
             pageTitle: 'Gestion des rôles',
             rule: 'admin',
@@ -77,6 +77,26 @@ const router = new Router({
           name: 'skills',
           component: () => import('./views/skills/index.vue'),
           meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/roles/role-add',
+          name: 'roles-role-add',
+          component: () => import('@/views/roles/Add.vue'),
+          meta: {
+            pageTitle: 'Ajout de rôle',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/roles/role-edit/:id',
+          name: 'roles-role-edit',
+          component: () => import('@/views/roles/Edit.vue'),
+          meta: {
+            pageTitle: 'Edition de rôle',
             rule: 'admin',
             requiresAuth: true
           }
