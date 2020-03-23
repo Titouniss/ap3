@@ -36,5 +36,11 @@ export default [
     name: 'Compétences',
     slug: 'skills',
     icon: 'BookOpenIcon'
+  },
+  {
+    url: '/workareas',
+    name: 'Ilots',
+    slug: 'workareas',
+    icon: 'ArchiveIcon'
   }
 ]
