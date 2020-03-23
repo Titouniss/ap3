@@ -29,7 +29,7 @@ class RoleController extends Controller
             $listObject = Role::where('company_id',$user->company_id)
                             ->where(function ($query) use ($a,$b) {
                                 $query->where('company_id', '=', 'null')
-                                    ->orWhere('isPublic', true);
+                                    ->where('isPublic', true);
                             })->get()->load('permissions');
         }
         return response()->json(['success' => $listObject], $this-> successStatus); 

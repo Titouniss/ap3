@@ -27,7 +27,7 @@ class PermissionController extends Controller
         if ($user->hasRole('superAdmin')) {
             $listObject = Permission::all();
         } else {
-            $listObject = Permission::where('isPublic', true)->get();
+            $listObject = Permission::all(); //Permission::where('isPublic', true)->get();
         }
         return response()->json(['success' => $listObject], $this-> successStatus); 
     } 

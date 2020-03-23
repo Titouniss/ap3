@@ -2,15 +2,15 @@ import axios from '@/axios.js'
 
 export default {
   addItem({ commit }, item) {    
-    console.log(item);
-    
     return new Promise((resolve, reject) => {
       axios.post("/api/role-management/store", item)
         .then((response) => {          
           commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
           resolve(response)
         })
-        .catch((error) => { reject(error) })
+        .catch((error) => { 
+          console.log(error);
+          reject(error) })
     })
   },
   editItem({ commit }, item) {    

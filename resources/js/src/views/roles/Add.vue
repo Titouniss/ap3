@@ -11,6 +11,13 @@
   <div id="page-role-add">
     <vx-card>
       <div slot="no-body" class="tabs-container px-6 pt-6">
+        <div class="vx-row" v-if="!disabled">
+          <vs-switch v-model="role_data.isPublic" name="isPublic">
+            <span slot="on">Publique</span>
+            <span slot="off">Privé</span>
+          </vs-switch>
+          <span class="text-danger text-sm"  v-show="errors.has('isPublic')">{{ errors.first('isPublic') }}</span>
+        </div>
         <div class="vx-row">
           <vs-input class="w-full mt-4" label="Titre" v-model="role_data.name" v-validate="'required'" name="name" />
           <span class="text-danger text-sm"  v-show="errors.has('name')">{{ errors.first('name') }}</span>
@@ -67,7 +74,7 @@
 <script>
 import lodash from 'lodash'
 // Store Module
-import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
+import moduleRoleManagement from '@/store/role-management/moduleRoleManagement.js'
 import modulePermissionManagement from '@/store/permission-management/modulePermissionManagement.js'
 var model = 'role'
 var modelPlurial = 'roles'
@@ -79,15 +86,28 @@ export default {
       role_data: {
         name: '',
         guard_name: 'web',
-        description: ''
+        description: '', 
+        isPublic: false,
+        company_id: null
       },
       selected: [],
       role_not_found: false,
     }
   },
   computed: {
+    disabled () { 
+      const user = this.$store.state.AppActiveUser 
+      if (user.roles && user.roles.length > 0) {
+        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
+          return false
+        } else  {
+          this.role_data.company_id = user.company_id
+          return true
+        }
+      } else return true
+    },
     permissions () {
-        const permissionsStore = this.$store.state.permissionManagement.permissions
+        const permissionsStore = this.$store.state.permissionManagement.permissions        
         let permissions = permissionsStore.reduce(function(acc, valeurCourante){
             let permissionName = valeurCourante.name
             let titles = permissionName.split(" ")            
@@ -128,11 +148,13 @@ export default {
         })
         this.$router.push(`/${modelPlurial}`).catch(() => {})
         })
-        .catch(error => {            
+        .catch(error => {   
+          const unauthorize = error.message ? error.message.includes('status code 403') : false
+          const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`
           this.$vs.loading.close()
           this.$vs.notify({
-            title: 'Error',
-            text: error.message,
+            title: 'Echec',
+            text: unauthorize ? unauthorizeMessage : error.message,
             iconPack: 'feather',
             icon: 'icon-alert-circle',
             color: 'danger'
@@ -145,9 +167,9 @@ export default {
   },
   created () {
     // Register Module roleManagement Module
-    if (!moduleManagement.isRegistered) {
-      this.$store.registerModule('roleManagement', moduleManagement)
-      moduleManagement.isRegistered = true
+    if (!moduleRoleManagement.isRegistered) {
+      this.$store.registerModule('roleManagement', moduleRoleManagement)
+      moduleRoleManagement.isRegistered = true
     }
     if (!modulePermissionManagement.isRegistered) {
       this.$store.registerModule('permissionManagement', modulePermissionManagement)
@@ -156,7 +178,7 @@ export default {
     this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
-    moduleManagement.isRegistered = false
+    moduleRoleManagement.isRegistered = false
     modulePermissionManagement.isRegistered = false
     this.$store.unregisterModule('roleManagement')
     this.$store.unregisterModule('permissionManagement')

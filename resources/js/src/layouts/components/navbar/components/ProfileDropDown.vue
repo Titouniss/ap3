@@ -2,14 +2,15 @@
   <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo">
 
     <div class="text-right leading-tight hidden sm:block">
-      <p class="font-semibold">{{ activeUserInfo.firstname }} {{ activeUserInfo.lastname  ? activeUserInfo.lastname.toUpperCase() : '' }}</p>
-      <small>Available</small>
+      <p class="font-semibold">{{ displayName }}</p>
+      <small>{{company}}</small>
     </div>
 
     <vs-dropdown vs-custom-content vs-trigger-click class="cursor-pointer">
 
       <div class="con-img ml-3">
         <img v-if="activeUserInfo.photoURL" key="onlineImg" :src="activeUserInfo.photoURL" alt="user-img" width="40" height="40" class="rounded-full shadow-md cursor-pointer block" />
+        <vs-avatar v-if="!activeUserInfo.photoURL" size="large" :text="displayName" />
       </div>
 
       <vs-dropdown-menu class="vx-navbar-dropdown">
@@ -56,12 +57,21 @@
 export default {
   data () {
     return {
-
+      company: null,
+      displayName: ''
     }
   },
   computed: {
-    activeUserInfo () {      
-      return this.$store.state.AppActiveUser
+    activeUserInfo () {  
+      const user = this.$store.state.AppActiveUser
+      if (user && user !== null) {        
+        const lastname = user.lastname && user.lastname !== null ? user.lastname.toUpperCase() : ''
+        this.displayName = user.firstname + ' ' + lastname
+        if (user.company) {
+          this.company = user.company.name          
+        }
+      }
+      return user
     }
   },
   methods: {

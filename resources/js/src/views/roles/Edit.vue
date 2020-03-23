@@ -139,11 +139,13 @@ export default {
       const payload = {...this.role_data}      
       this.$store.dispatch('roleManagement/updateItem', payload)
       .then(() => { this.$vs.loading.close() })
-        .catch(error => {            
+        .catch(error => {   
+          const unauthorize = error.message ? error.message.includes('status code 403') : false
+          const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`
           this.$vs.loading.close()
           this.$vs.notify({
-            title: 'Error',
-            text: error.message,
+            title: 'Echec',
+            text: unauthorize ? unauthorizeMessage : error.message,
             iconPack: 'feather',
             icon: 'icon-alert-circle',
             color: 'danger'
