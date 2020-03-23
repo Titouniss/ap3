@@ -24,7 +24,7 @@ class UserController extends Controller
             $token =  $user->createToken('ProjetX');
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
-            $user->load('roles');
+            $user->load('roles')->load('company');
             return response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
         } 
         else{ 

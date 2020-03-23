@@ -113,6 +113,7 @@ export default {
     return new Promise((resolve, reject) => {
       jwt.logout()
         .then(response => {  
+          commit('CLEAN_USER_INFO', {}, {root: true})
           localStorage.removeItem('loggedIn')
           localStorage.removeItem('token')
           localStorage.removeItem('tokenExpires')
