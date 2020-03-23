@@ -112,5 +112,20 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::delete('{id}', 'API\SkillController@destroy');
         // });
     });
+
+    /***********************************************************************************/
+    /*******************************   WORKAREAS   *************************************/
+    /***********************************************************************************/
+    Route::prefix('workarea-management')->group(function () {
+        Route::get('index', 'API\WorkareaController@index');
+        Route::get('show/{id}', 'API\WorkareaController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+            Route::post('store', 'API\WorkareaController@store');
+            Route::post('update/{id}', 'API\WorkareaController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\WorkareaController@destroy');
+        // });
+    });
 });
 

@@ -101,6 +101,15 @@ const router = new Router({
             requiresAuth: true
           }
         },
+        {
+          path: '/workareas',
+          name: 'workareas',
+          component: () => import('./views/workareas/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
       ]
     },
     // =============================================================================
