@@ -44,6 +44,15 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  fetchItem (context, id) {
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/workarea-management/show/${id}`)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   removeItem ({ commit }, id) {
     return new Promise((resolve, reject) => {
       axios.delete(`/api/workarea-management/${id}`)

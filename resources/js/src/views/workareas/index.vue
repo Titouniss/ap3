@@ -12,7 +12,9 @@
   <div id="page-workareas-list">
 
     <div class="vx-card p-6">
-      <add-form />
+      <div class="px-6 pb-2 pt-6">
+        <vs-button @click="addRecord" class="w-full">Ajouter un îlot</vs-button>
+      </div>
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -99,20 +101,19 @@
         v-model="currentPage" />
 
     </div>
-
-    <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/>
   </div>
 
 </template>
 
 <script>
+
+var model = 'workarea'
+var modelPlurial = 'workareas'
+var modelTitle = 'Ilot'
+
 import { AgGridVue } from 'ag-grid-vue'
 import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
-
-//CRUD
-import AddForm from './AddForm.vue'
-import EditForm from './EditForm.vue'
 
 // Store Module
 import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
@@ -129,8 +130,6 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-    AddForm,
-    EditForm,
 
     // Cell Renderer
     CellRendererLink,
@@ -203,9 +202,6 @@ export default {
       if (this.gridApi) return this.gridApi.paginationGetTotalPages()
       else return 0
     },
-    itemIdToEdit () {
-      return this.$store.state.skillManagement.skill.id || 0
-    },
     currentPage: {
       get () {
         if (this.gridApi) return this.gridApi.paginationGetCurrentPage() + 1
@@ -219,7 +215,10 @@ export default {
   methods: {
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
-    }
+    },
+    addRecord () {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {})
+    },
   },
   mounted () {
     this.gridApi = this.gridOptions.api

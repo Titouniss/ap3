@@ -6,14 +6,14 @@
 </template>
 
 <script>
-var modelTitle = 'Compétence'
+var model = 'workarea'
+var modelPlurial = 'workareas'
+var modelTitle = 'Ilot'
 export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      this.$store.dispatch("skillManagement/editItem", this.params.data)
-        .then(()   => {  })
-        .catch(err => { console.error(err)       })
+      this.$router.push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`).catch(() => {})
     },
     confirmDeleteRecord () {
       this.$vs.dialog({
@@ -27,7 +27,7 @@ export default {
       })
     },
     deleteRecord () {
-      this.$store.dispatch("skillManagement/removeItem", this.params.data.id)
+      this.$store.dispatch("workareaManagement/removeItem", this.params.data.id)
         .then(()   => { this.showDeleteSuccess() })
         .catch(err => { console.error(err)       })
     },

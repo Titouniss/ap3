@@ -110,6 +110,27 @@ const router = new Router({
             requiresAuth: true
           }
         },
+        {
+          path: '/workareas/workarea-add',
+          name: 'workareas-workarea-add',
+          component: () => import('@/views/workareas/Add.vue'),
+          meta: {
+            pageTitle: 'Ajout d\'un îlot',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        
+        {
+          path: '/workareas/workarea-edit/:id',
+          name: 'workareas-workarea-edit',
+          component: () => import('@/views/workareas/Edit.vue'),
+          meta: {
+            pageTitle: 'Modification d\'un îlot',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
       ]
     },
     // =============================================================================
