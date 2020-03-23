@@ -1,5 +1,5 @@
 <template>
-    <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}">
+    <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}"  v-if="!disabled">
       <feather-icon icon="Edit3Icon" svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer" @click="editRecord" />
       <feather-icon icon="Trash2Icon" svgClasses="h-5 w-5 hover:text-danger cursor-pointer" @click="confirmDeleteRecord" />
     </div>
@@ -11,12 +11,14 @@ var modelPlurial = 'roles'
 var modelTitle = 'Rôle'
 export default {
   name: 'CellRendererActions',
+  computed:{
+    disabled () {         
+      return !this.params.data.isPublic
+    }
+  },
   methods: {
     editRecord () {
       this.$router.push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`).catch(() => {})
-      // this.$store.dispatch("roleManagement/editItem", this.params.data)
-      //   .then(()   => {  })
-      //   .catch(err => { console.error(err)       })
     },
     confirmDeleteRecord () {
       this.$vs.dialog({

@@ -19,14 +19,15 @@ export default {
     commit('EDIT_ITEM', item)
     return
   },
-  fetchItems ({ commit }) {    
+  fetchItems ({ commit }) {      
     return new Promise((resolve, reject) => {
       axios.get('/api/permission-management/index')
-        .then((response) => {          
+        .then((response) => {     
           commit('SET_ITEMS', response.data.success)
           resolve(response)
         })
-        .catch((error) => { reject(error) })
+        .catch((error) => { console.log(error);
+        reject(error) })
     })
   },
   fetchItem (context, id) {

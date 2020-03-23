@@ -2,10 +2,14 @@
 namespace App\Http\Controllers\API;
 use Illuminate\Http\Request; 
 use App\Http\Controllers\Controller; 
-use App\User; 
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Carbon;
 use Validator;
+
+use App\User; 
+use App\Models\Company;
+use Spatie\Permission\Models\Role;
+
 class UserController extends Controller 
 {
     public $successStatus = 200;
@@ -20,6 +24,7 @@ class UserController extends Controller
             $token =  $user->createToken('ProjetX');
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
+            $user->load('roles');
             return response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
         } 
         else{ 
@@ -60,15 +65,22 @@ class UserController extends Controller
         }
         $input = $request->all(); 
         $input['password'] = bcrypt($input['password']); 
-        $user = User::create($input); 
+        $user = User::create($input);
+        if ($user == null) {
+            return response()->json(['error'=>$validator->errors()], 401);
+        }
         $role = Role::where('name', 'clientAdmin');
         if ($role != null) {
             $user->assignRole('clientAdmin'); // pour les nouveaux inscrits
         }
+        $company = Company::create(['name' => 'Entreprise '.$user->lastname, 'expire_at' => now()->addDays(29)]);
+        $user->company()->associate($company);
+        $user->save();
+        
         $token =  $user->createToken('ProjetX');
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
-        return response()->json(['success'=>$success, 'userData' => $user], $this-> successStatus); 
+        return response()->json(['success'=>$success, 'userData' => $user, 'company' => $company], $this-> successStatus); 
     } 
 
     /** 

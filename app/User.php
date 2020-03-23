@@ -43,6 +43,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
     
+    public function company()
+    {
+        return $this->belongsTo('App\Models\Company');
+    }
+
     /**
      * Override the mail body for reset password notification mail.
      */
