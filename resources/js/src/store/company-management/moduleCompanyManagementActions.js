@@ -37,7 +37,7 @@ export default {
   fetchItems ({ commit }) {    
     return new Promise((resolve, reject) => {
       axios.get('/api/company-management/index')
-        .then((response) => {          
+        .then((response) => {      
           commit('SET_ITEMS', response.data.success)
           resolve(response)
         })

@@ -18,7 +18,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $items = Company::all();
+        $items = Company::all()->load('skills');
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 

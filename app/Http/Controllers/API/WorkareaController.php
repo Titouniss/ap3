@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Workarea;
+use App\Models\WorkareasSkill;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
@@ -22,9 +23,9 @@ class WorkareaController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Workarea::all()->load('company');
+            $items = Workarea::all()->load('company')->load('skills');;
         } else if ($user->company_id != null) {
-            $items = Workarea::where('company_id',$user->company_id)->get()->load('company');
+            $items = Workarea::where('company_id',$user->company_id)->get()->load('company')->load('skills');
         }
         return response()->json(['success' => $items], $this-> successStatus);  
     }
@@ -37,7 +38,7 @@ class WorkareaController extends Controller
      */
     public function show($id)
     {
-        $item = Workarea::where('id',$id)->first()->load('company');
+        $item = Workarea::where('id',$id)->first()->load('skills')->load('company');
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -58,6 +59,12 @@ class WorkareaController extends Controller
             return response()->json(['error'=>$validator->errors()], 401);            
         }
         $item = Workarea::create($arrayRequest)->load('company');
+        if(!empty($arrayRequest['skills'])){
+            foreach($arrayRequest['skills'] as $skill_id){
+                WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
+            }
+        }
+        
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -86,9 +93,21 @@ class WorkareaController extends Controller
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
             'company_id' => 'required'
-            ]);
+        ]);
+        $item = Workarea::find($id);
+        if($item != null){
+            $item->name = $arrayRequest['name'];
+            $item->company_id = $arrayRequest['company_id'];
+
+            WorkareasSkill::where('workarea_id', $item->id)->delete();
+            if(!empty($arrayRequest['skills'])){
+                foreach($arrayRequest['skills'] as $skill_id){
+                    WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
+                }
+            }
+            $item->save();
+        }
         
-        $item = Workarea::where('id',$id)->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']]);
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 

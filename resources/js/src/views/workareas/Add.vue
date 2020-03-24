@@ -15,23 +15,18 @@
           <vs-input class="w-full mt-4" label="Titre" v-model="itemLocal.name" v-validate="'required'" name="name" />
           <span class="text-danger text-sm"  v-show="errors.has('name')">{{ errors.first('name') }}</span>
         </div>
-        <div class="vx-row">
-          <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
+        <div class="vx-row" v-if="!disabled">
+          <vs-select v-on:change="selectCompanySkills" v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
           </vs-select>
           <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
         </div>
-        <!-- Permissions -->
-        <div class="vx-row mt-4">
-            <div class="vx-col w-full">
-            <div class="flex items-end px-3">
-                <feather-icon svgClasses="w-6 h-6" icon="BookOpenIcon" class="mr-2" />
-                <span class="font-medium text-lg leading-none">Compétences</span>
-            </div>
-            <vs-divider />
-            </div>
-        </div>
-         
+        <div class="vx-row" v-if="itemLocal.company_id">
+          <vs-select v-validate="'required'" label="Compétences" v-model="itemLocal.skills" class="w-full mt-5" multiple autocomplete>
+            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companySkills" />
+          </vs-select>
+          <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
+        </div>         
 
       </div>
       <!-- Save & Reset Button -->
@@ -61,12 +56,24 @@ export default {
     return {
       itemLocal: {
         name: '',
-        company_id: null
+        company_id: null,
+        skills: []
       },
-      selected: [],
+      companySkills: [],
     }
   },
   computed: {
+    disabled () { 
+      const user = this.$store.state.AppActiveUser 
+      if (user.roles && user.roles.length > 0) {
+        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
+          return false
+        } else  {
+          this.itemLocal.company_id = user.company_id
+          return true
+        }
+      } else return true
+    },
     companiesData() {
       return this.$store.state.companyManagement.companies
     },
@@ -102,6 +109,9 @@ export default {
           })
         }
       })
+    },
+    selectCompanySkills (item) {
+      this.companySkills = this.companiesData.find(company => company.id === item).skills
     },
     back () {
       this.$router.push(`/${modelPlurial}`).catch(() => {})

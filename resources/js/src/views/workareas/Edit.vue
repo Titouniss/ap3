@@ -22,22 +22,18 @@
           <vs-input class="w-full mt-4" label="Titre" v-model="itemLocal.name" v-validate="'required'" name="name" />
           <span class="text-danger text-sm"  v-show="errors.has('name')">{{ errors.first('name') }}</span>
         </div>
-        <div class="vx-row">
-          <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" class="w-full mt-5">
+        <div class="vx-row" v-if="companiesData">
+          <vs-select v-on:change="selectCompanySkills" v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" class="w-full mt-5">
             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
           </vs-select>
           <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
         </div>
-        <!-- Permissions -->
-        <div class="vx-row mt-4">
-            <div class="vx-col w-full">
-            <div class="flex items-end px-3">
-                <feather-icon svgClasses="w-6 h-6" icon="BookOpenIcon" class="mr-2" />
-                <span class="font-medium text-lg leading-none">Compétences</span>
-            </div>
-            <vs-divider />
-            </div>
-        </div>
+        <div class="vx-row" v-if="itemLocal.company_id && companySkills.length > 0">
+          <vs-select v-validate="'required'" label="Compétences" v-model="itemLocal.skills" class="w-full mt-5" multiple autocomplete>
+            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companySkills" />
+          </vs-select>
+          <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
+        </div>    
          
 
       </div>
@@ -68,12 +64,12 @@ export default {
   data () {
     return {
       itemLocal: null,
-      selected: [],
       workarea_not_found: false,
+      companySkills: []
     }
   },
   computed: {
-    companiesData() {
+    companiesData () {
       return this.$store.state.companyManagement.companies
     },
     validateForm () {
@@ -84,7 +80,15 @@ export default {
     fetch_data (id) {
       this.$store.dispatch('workareaManagement/fetchItem', id)
         .then(res => { 
-            this.itemLocal = res.data.success
+            let item = res.data.success
+            let skill_ids = []
+            if(item.skills.length > 0){
+              item.skills.forEach(element => {
+                skill_ids.push(element.skill_id)
+              });
+            }
+            item.skills = skill_ids
+            this.itemLocal = item
         })
         .catch(err => {
           if (err.response.status === 404) {
@@ -98,8 +102,6 @@ export default {
       /* eslint-disable */
       if (!this.validateForm) return
       this.$vs.loading()
-      //this.itemLocal.permissions = _.keys(_.pickBy(this.selected ))
-       
       const payload = {...this.itemLocal}   
       this.$store.dispatch('workareaManagement/updateItem', payload)
       .then(() => { 
@@ -115,16 +117,25 @@ export default {
       .catch(error => {            
         this.$vs.loading.close()
         this.$vs.notify({
-        title: 'Error',
-        text: error.message,
-        iconPack: 'feather',
-        icon: 'icon-alert-circle',
-        color: 'danger'
+          title: 'Error',
+          text: error.message,
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'danger'
+        })
       })
-    })
+    },
+    selectCompanySkills (item) {
+      this.itemLocal.skills = []
+      this.companySkills = this.companiesData.find(company => company.id === item).skills
     },
     back () {
       this.$router.push(`/${modelPlurial}`).catch(() => {})
+    }
+  },
+  watch: {
+    companiesData(){
+      this.companySkills = this.companiesData.length > 0 ? this.companiesData.find(company => company.id === this.itemLocal.company_id).skills : []
     }
   },
   created () {
@@ -137,8 +148,8 @@ export default {
       this.$store.registerModule('companyManagement', moduleCompanyManagement)
       moduleCompanyManagement.isRegistered = true
     }
-    this.fetch_data(this.$route.params.id)
     this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
+    this.fetch_data(this.$route.params.id)
   },
   beforeDestroy () {
     moduleWorkareaManagement.isRegistered = false

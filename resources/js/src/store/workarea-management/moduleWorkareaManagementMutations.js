@@ -20,7 +20,7 @@ export default {
   },
 
   UPDATE_ITEM (state, item) {
-    const index = state[slug].findIndex((r) => r.id === item.id)    
+    const index = state[slug].findIndex((r) => r.id === item.id)
     Object.assign(state[slug][index], item)
   },
 
