@@ -17,28 +17,44 @@ class PermissionsRoleTableSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $keys = [
+        $Permkeys = [
             'users',
             'roles',
             'permissions',
-            'companies'
+            'companies',
+            'workareas',
+            'skills',
+            'projects'
         ];
         // create permissions
-        foreach ($keys as $key) {
-            Permission::firstOrCreate(['name' => 'edit '.$key]);
-            Permission::firstOrCreate(['name' => 'delete '.$key]);
-            Permission::firstOrCreate(['name' => 'publish '.$key]);
-    
+        foreach ($Permkeys as $Permkey) {
+            Permission::firstOrCreate(['name' => 'edit '.$Permkey]);
+            Permission::firstOrCreate(['name' => 'delete '.$Permkey]);
+            Permission::firstOrCreate(['name' => 'publish '.$Permkey]);
         }
         
-        $keys = [
+        $Rolekeys = [
             'superAdmin',
             'littleAdmin',
             'clientAdmin'
         ];
 
-        foreach ($keys as $key) {
-            Role::firstOrCreate(['name' => $key]);
+        foreach ($Rolekeys as $key) {
+            $role = Role::firstOrCreate(['name' => $key]);
+            if ($key == 'superAdmin') {
+                $role->givePermissionTo(Permission::all());
+            } else {
+                foreach ($Permkeys as $Permkey) {
+                    if ($Permkey == 'permissions' || $Permkey == 'companies') {
+                        if ($key == 'littleAdmin') {
+                            $role->givePermissionTo(['edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
+                        }
+                    } else {
+                        $role->givePermissionTo(['edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
+                    }
+                }
+            }
+
         }
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
