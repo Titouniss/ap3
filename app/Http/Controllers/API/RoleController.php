@@ -96,6 +96,7 @@ class RoleController extends Controller
                 if (isset($arrayRequest['permissions'])) {
                     $role->syncPermissions($arrayRequest['permissions'] );
                 }
+                $role->save();
             }
         return response()->json(['success' => true, 'item' => $role], $this-> successStatus); 
     } 

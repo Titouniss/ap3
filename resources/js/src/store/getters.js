@@ -27,7 +27,33 @@ const getters = {
   scrollbarTag: state => {
     return state.is_touch_device ? 'div' : 'VuePerfectScrollbar'
   },
-  AppActiveUser: state => state.AppActiveUser
+  AppActiveUser: state => state.AppActiveUser,
+  userPermissions: state => {
+    const user = state.AppActiveUser
+    let userPermissions = []
+    if (user && user.id !== null) {
+      let userPermissionsMultiple = user.roles.reduce((acc, role)=> {
+        if(!acc) acc = []
+         acc.push(role.permissions) // get role permmissions in 1 list
+         return acc
+      }, [])
+      userPermissions = [...new Set(userPermissionsMultiple)][0]; // get unique only
+    }
+    return userPermissions
+  },
+  userHasPermissionTo: state => permName => {
+    const user = state.AppActiveUser
+    let userPermissions = []
+    if (user && user.id !== null) {
+      let userPermissionsMultiple = user.roles.reduce((acc, role)=> {
+        if(!acc) acc = []
+         acc.push(role.permissions) // get role permmissions in 1 list
+         return acc
+      }, [])
+      userPermissions = [...new Set(userPermissionsMultiple)][0]; // get unique only
+    }
+    return userPermissions.findIndex(p => p.name === permName)
+  }
 }
 
 export default getters

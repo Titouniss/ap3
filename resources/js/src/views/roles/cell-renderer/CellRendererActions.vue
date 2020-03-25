@@ -1,7 +1,7 @@
 <template>
     <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}"  v-if="!disabled">
-      <feather-icon icon="Edit3Icon" svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer" @click="editRecord" />
-      <feather-icon icon="Trash2Icon" svgClasses="h-5 w-5 hover:text-danger cursor-pointer" @click="confirmDeleteRecord" />
+      <feather-icon icon="Edit3Icon" svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer" v-if="authorizedToEdit" @click="editRecord" />
+      <feather-icon icon="Trash2Icon" svgClasses="h-5 w-5 hover:text-danger cursor-pointer" v-if="authorizedToDelete" @click="confirmDeleteRecord" />
     </div>
 </template>
 
@@ -14,6 +14,12 @@ export default {
   computed:{
     disabled () {         
       return this.params.data.company_id === null && !this.params.data.isPublic
+    },
+    authorizedToEdit () {
+      return this.$store.getters.userHasPermissionTo( `edit ${modelPlurial}`) > -1
+    },
+    authorizedToDelete () {               
+      return this.$store.getters.userHasPermissionTo( `delete ${modelPlurial}`) > -1
     }
   },
   methods: {

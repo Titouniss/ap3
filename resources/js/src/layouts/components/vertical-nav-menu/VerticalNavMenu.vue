@@ -169,31 +169,21 @@ export default {
     menuItemsUpdated () {
       const clone = this.navMenuItems.slice()
       const user = this.$store.state.AppActiveUser
-      let userPermissions = []
-      if (user && user.id !== null) {
-        let userPermissionsMultiple = user.roles.reduce((acc, role)=> {
-          if(!acc) acc = []
-           acc.push(role.permissions) // get role permmissions in 1 list
-           return acc
-        }, [])
-        userPermissions = [...new Set(userPermissionsMultiple)][0]; // get unique only
-      }
-      console.log(userPermissions);
-      
+      let userPermissions = this.$store.getters.userPermissions      
       for (const [index, item] of this.navMenuItems.entries()) {
         if (item.header && item.items.length && (index || 1)) {
           const i = clone.findIndex(ix => ix.header === item.header)
           for (const [subIndex, subItem] of item.items.entries()) {
             clone.splice(i + 1 + subIndex, 0, subItem)
           }
-        }
+        }        
         if (user && user.id !== null){
           if (user.roles.findIndex(r => r.name === 'superAdmin')) {
             item.show = true
           }else if (userPermissions.length > 0) {
               item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1 || item.slug === 'home'
           } else item.show = false
-        }else item.isDisabled = true
+        }
       }
 
       return clone

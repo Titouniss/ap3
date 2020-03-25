@@ -143,7 +143,17 @@ export default {
        
       const payload = {...this.role_data}      
       this.$store.dispatch('roleManagement/updateItem', payload)
-      .then(() => { this.$vs.loading.close() })
+        .then(() => { 
+          this.$vs.loading.close() 
+          this.$vs.notify({
+          title: 'Modification',
+          text: 'Rôle modifier avec succès',
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'success'
+        })
+        this.$router.push(`/${modelPlurial}`).catch(() => {})
+        })
         .catch(error => {   
           const unauthorize = error.message ? error.message.includes('status code 403') : false
           const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`
