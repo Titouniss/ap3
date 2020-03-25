@@ -25,9 +25,9 @@ class PermissionController extends Controller
         $user = Auth::user();
         $listObject = [];
         if ($user->hasRole('superAdmin')) {
-            $listObject = Permission::all();
+            $listObject = Permission::orderBy('name', 'desc')->get(); // order important because vuejs have fixed array
         } else {
-            $listObject = Permission::all(); //Permission::where('isPublic', true)->get();
+            $listObject = Permission::where('isPublic', true)->orderBy('name', 'desc')->get();
         }
         return response()->json(['success' => $listObject], $this-> successStatus); 
     } 

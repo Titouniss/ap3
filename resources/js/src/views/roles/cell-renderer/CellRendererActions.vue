@@ -13,7 +13,7 @@ export default {
   name: 'CellRendererActions',
   computed:{
     disabled () {         
-      return !this.params.data.isPublic
+      return this.params.data.company_id === null && !this.params.data.isPublic
     }
   },
   methods: {
