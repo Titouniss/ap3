@@ -27,7 +27,7 @@ class RoleController extends Controller
             $listObject = Role::all()->load('permissions');
         } else if ($user->company_id != null) {
             $listObject = Role::where('company_id',$user->company_id)
-                            ->where(function ($query) use ($a,$b) {
+                            ->orWhere(function ($query) {
                                 $query->where('company_id', '=', 'null')
                                     ->where('isPublic', true);
                             })->get()->load('permissions');
@@ -53,6 +53,7 @@ class RoleController extends Controller
      */ 
     public function store(Request $request) 
     { 
+        $user = Auth::user();
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required'
@@ -62,13 +63,17 @@ class RoleController extends Controller
             }
         $permissions = $arrayRequest['permissions'];
         unset($arrayRequest['permissions']);
-        $item = Role::create($arrayRequest);
-        if ($item != null) {
-            if (isset($permissions)) {
-                $item->syncPermissions($permissions);
+        if ($user != null) {
+            $arrayRequest['company_id'] = $user->company_id;
+            $item = Role::create($arrayRequest);
+            if ($item != null) {
+                if (isset($permissions)) {
+                    $item->syncPermissions($permissions);
+                }
             }
+            return response()->json(['success' => $item], $this-> successStatus); 
         }
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => 'notAuthentified'], 500);
     } 
 
     /** 
@@ -91,6 +96,7 @@ class RoleController extends Controller
                 if (isset($arrayRequest['permissions'])) {
                     $role->syncPermissions($arrayRequest['permissions'] );
                 }
+                $role->save();
             }
         return response()->json(['success' => true, 'item' => $role], $this-> successStatus); 
     } 

@@ -46,11 +46,9 @@ const actions = {
   // User/Account
   // /////////////////////////////////////////////
 
-  updateUserInfo ({ commit }, payload) {
-    console.log('updateUserInfo actions');
-    
+  updateUserInfo ({ commit }, payload) {    
     commit('UPDATE_USER_INFO', payload)
-  }
+  },
 }
 
 export default actions

@@ -20,6 +20,7 @@ Route::prefix('auth')->group(function () {
     /********************************    USER     **************************************/
     /***********************************************************************************/
     Route::post('login', 'API\UserController@login');
+    Route::get('user', 'API\UserController@getUserByToken');
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
     
@@ -41,10 +42,14 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    USERS    **************************************/
     /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
-        Route::get('index', 'API\UserController@index');
-        Route::get('show/{id}', 'API\UserController@show');
-        Route::group(['middleware' => ['can:publish users|edit users']], function () {
+        Route::group(['middleware' => ['can:read users']], function () {
+            Route::get('index', 'API\UserController@index');
+            Route::get('show/{id}', 'API\UserController@show');
+        });
+        Route::group(['middleware' => ['can:publish users']], function () {
             Route::post('store', 'API\UserController@store');
+        });
+        Route::group(['middleware' => ['can:edit users']], function () {
             Route::post('update/{id}', 'API\UserController@update');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
@@ -57,10 +62,14 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    ROLES    **************************************/
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
-        Route::get('index', 'API\RoleController@index');
-        Route::get('show/{id}', 'API\RoleController@show');
-        Route::group(['middleware' => ['can:publish roles|edit roles']], function () {
+        Route::group(['middleware' => ['can:read roles']], function () {
+            Route::get('index', 'API\RoleController@index');
+            Route::get('show/{id}', 'API\RoleController@show');
+        });
+        Route::group(['middleware' => ['can:publish roles']], function () {
             Route::post('store', 'API\RoleController@store');
+        });
+        Route::group(['middleware' => ['can:edit roles']], function () {
             Route::post('update/{id}', 'API\RoleController@update');
         });
         Route::group(['middleware' => ['can:delete roles']], function () {
@@ -73,9 +82,13 @@ Route::group(['middleware' => 'auth:api'], function(){
     /***********************************************************************************/
     Route::prefix('permission-management')->group(function () {
         Route::get('index', 'API\PermissionController@index');
-        Route::get('show/{id}', 'API\PermissionController@show');
-        Route::group(['middleware' => ['can:publish permissions|edit permissions']], function () {
+        Route::group(['middleware' => ['can:read permissions']], function () {
+            Route::get('show/{id}', 'API\PermissionController@show');
+        });
+        Route::group(['middleware' => ['can:publish permissions']], function () {
             Route::post('store', 'API\PermissionController@store');
+        });
+        Route::group(['middleware' => ['can:edit permissions']], function () {
             Route::post('update/{id}', 'API\PermissionController@update');
         });
         Route::group(['middleware' => ['can:delete permissions']], function () {

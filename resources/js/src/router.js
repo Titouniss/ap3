@@ -10,7 +10,8 @@
 
 import Vue from 'vue'
 import Router from 'vue-router'
-import auth from '@/auth/authService'
+import axios from '@/axios.js'
+import moment from 'moment'
 
 Vue.use(Router)
 
@@ -262,11 +263,21 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => { 
+    let isAuthenticated = false
+    const expiresAt = localStorage.getItem('tokenExpires')      
+    if (expiresAt && expiresAt !== null) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('token')}`
+      isAuthenticated = (
+        moment().unix() < expiresAt &&
+            localStorage.getItem('loggedIn') === 'true'
+      )
+    }
+
     if (
         (to.path === "/pages/login" ||
         to.path === "/pages/forgot-password" ||
         to.path === "/pages/register") &&
-        auth.isAuthenticated()
+        isAuthenticated
     ) {      
         router.push({ path: '/', query: { to: '/' } })
         return next();
@@ -274,7 +285,7 @@ router.beforeEach((to, from, next) => {
 
     // If auth required, check login. If login fails redirect to login page  
     if (to.meta.requiresAuth) {
-      if (!(auth.isAuthenticated())) {      
+      if (!isAuthenticated) {      
         router.push({ path: '/pages/login', query: { to: to.path } })
       }
     }

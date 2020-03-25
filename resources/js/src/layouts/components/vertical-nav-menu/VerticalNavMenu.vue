@@ -70,7 +70,7 @@
             </span>
             <!-- /Group Header -->
 
-            <template v-else-if="!item.header">
+            <template v-else-if="!item.header && item.show">
 
               <!-- Nav-Item -->
               <v-nav-menu-item
@@ -168,13 +168,21 @@ export default {
     },
     menuItemsUpdated () {
       const clone = this.navMenuItems.slice()
-
+      const user = this.$store.state.AppActiveUser
+      let userPermissions = this.$store.getters.userPermissions      
       for (const [index, item] of this.navMenuItems.entries()) {
         if (item.header && item.items.length && (index || 1)) {
           const i = clone.findIndex(ix => ix.header === item.header)
           for (const [subIndex, subItem] of item.items.entries()) {
             clone.splice(i + 1 + subIndex, 0, subItem)
           }
+        }        
+        if (user && user.id !== null){
+          if (user.roles.findIndex(r => r.name === 'superAdmin')) {
+            item.show = true
+          }else if (userPermissions.length > 0) {
+              item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1 || item.slug === 'home'
+          } else item.show = false
         }
       }
 

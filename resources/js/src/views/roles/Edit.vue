@@ -45,10 +45,10 @@
                 our data structure. You just have to loop over above variable to get table headers.
                 Below we made it simple. So, everyone can understand.
                 -->
-                <th class="font-semibold text-base text-left px-3 py-2" v-for="heading in ['Module', 'Editer', 'Créer', 'Supprimer']" :key="heading">{{ heading }}</th>
+                <th class="font-semibold text-base text-left px-3 py-2" v-for="heading in ['Module', 'Consulter','Créer', 'Editer',  'Supprimer']" :key="heading">{{ heading }}</th>
             </tr>
             <tr v-for="(items,index) in permissions" :key="index">
-                <td class="px-3 py-2">{{ index }}</td>
+                <td class="px-3 py-2">{{ capitalizeFirstLetter(index) }}</td>
                 <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
                     <vs-checkbox v-model="selected[item.id]" />
                 </td>
@@ -91,20 +91,25 @@ export default {
   computed: {
     permissions () {
         const permissionsStore = this.$store.state.permissionManagement.permissions
-        let permissions = permissionsStore.reduce(function(acc, valeurCourante){
-            let permissionName = valeurCourante.name
-            let titles = permissionName.split(" ")            
-            if (!acc) {
-                acc = {}
-            }
-            if (titles.length > 1) {
-                if (!acc[titles[1]]) {
-                    acc[titles[1]] = {}
-                }
-                acc[titles[1]][titles[0]] = valeurCourante
-            }             
-        return acc;
-        }, {});
+        let permissions =  []
+        if (permissionsStore && permissionsStore.length > 0) {
+                permissions = permissionsStore.reduce(function(acc, valeurCourante){
+                  let permissionName = valeurCourante.name
+                  let titles = permissionName.split(" ")
+                  
+                  if (!acc) {
+                      acc = {}
+                  }
+                  if (titles.length > 1) {
+                      if (!acc[valeurCourante.name_fr]) {
+                          acc[valeurCourante.name_fr] = {}
+                      }
+                      acc[valeurCourante.name_fr][titles[0]] = valeurCourante
+                  }             
+              return acc;
+              }, {});
+        }
+
       return permissions
     },
     validateForm () {
@@ -138,7 +143,17 @@ export default {
        
       const payload = {...this.role_data}      
       this.$store.dispatch('roleManagement/updateItem', payload)
-      .then(() => { this.$vs.loading.close() })
+        .then(() => { 
+          this.$vs.loading.close() 
+          this.$vs.notify({
+          title: 'Modification',
+          text: 'Rôle modifier avec succès',
+          iconPack: 'feather',
+          icon: 'icon-alert-circle',
+          color: 'success'
+        })
+        this.$router.push(`/${modelPlurial}`).catch(() => {})
+        })
         .catch(error => {   
           const unauthorize = error.message ? error.message.includes('status code 403') : false
           const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`
@@ -154,6 +169,10 @@ export default {
     },
     back () {
       this.$router.push(`/${modelPlurial}`).catch(() => {})
+    },
+    capitalizeFirstLetter (word) {
+      if (typeof word !== 'string') return ''
+        return word.charAt(0).toUpperCase() + word.slice(1)
     }
   },
   created () {

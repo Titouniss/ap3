@@ -24,13 +24,37 @@ class UserController extends Controller
             $token =  $user->createToken('ProjetX');
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
-            $user->load('roles')->load('company');
+            $user->load(['roles' => function ($query) {
+                $query->select(['id','name'])->with(['permissions' => function ($query) {
+                    $query->select(['id','name','name_fr', 'isPublic']);
+                }]);
+            }])->load('company:id,name');
             return response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
         } 
         else{ 
             return response()->json(['success' => false, 'error'=>'Unauthorised']); 
         } 
     }
+
+    /** 
+     * login api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function getUserByToken () { 
+        $user = Auth::user();
+        $success = false;
+        if ($user != null) {
+            $user->load(['roles' => function ($query) {
+                $query->select(['id','name'])->with(['permissions' => function ($query) {
+                    $query->select(['id','name','name_fr', 'isPublic']);
+                }]);
+            }])->load('company:id,name');
+            $success = true;
+        }
+        response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
+    }
+
     /** 
     * logout api 
     * 
@@ -95,7 +119,7 @@ class UserController extends Controller
         if ($user->hasRole('superAdmin')) {
             $usersList = User::withTrashed()->get()->load('roles');
         } else if ($user->company_id != null) {
-            $usersList = User::where('company_id',$user->company_id)->get()->load('roles');
+            $usersList = User::where('company_id',$user->company_id)->get()->load('roles:id,name','company:id,name');
         }
         return response()->json(['success' => $usersList], $this-> successStatus); 
     } 
@@ -108,7 +132,7 @@ class UserController extends Controller
      */ 
     public function show($id) 
     { 
-        $item = User::where('id',$id)->first();
+        $item = User::where('id',$id)->first()->load('roles:id,name','company:id,name');
         return response()->json(['success' => $item], $this-> successStatus); 
     } 
 
