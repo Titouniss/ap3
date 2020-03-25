@@ -21,11 +21,6 @@ Vue.use(Vuesax)
 import axios from './axios.js'
 Vue.prototype.$http = axios
 
-// Auth0 Plugin
-import AuthPlugin from './plugins/auth'
-Vue.use(AuthPlugin)
-
-
 // ACL
 import acl from './acl/acl'
 

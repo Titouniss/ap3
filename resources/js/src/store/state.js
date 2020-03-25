@@ -16,6 +16,7 @@ import themeConfig, { colors } from '@/../themeConfig.js'
 // /////////////////////////////////////////////
 
 const userDefaults = {
+  id: null
   // photoURL    : require('@assets/images/portrait/small/avatar-s-11.jpg'), // From Auth
 }
 

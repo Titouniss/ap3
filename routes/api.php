@@ -20,6 +20,7 @@ Route::prefix('auth')->group(function () {
     /********************************    USER     **************************************/
     /***********************************************************************************/
     Route::post('login', 'API\UserController@login');
+    Route::get('user', 'API\UserController@getUserByToken');
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
     

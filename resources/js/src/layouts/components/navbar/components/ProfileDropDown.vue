@@ -64,12 +64,22 @@ export default {
   computed: {
     activeUserInfo () {  
       const user = this.$store.state.AppActiveUser
-      if (user && user !== null) {        
+      
+      if (user && user.id !== null) { 
+             
         const lastname = user.lastname && user.lastname !== null ? user.lastname.toUpperCase() : ''
         this.displayName = user.firstname + ' ' + lastname
         if (user.company) {
           this.company = user.company.name          
         }
+      } else {
+        this.$store.dispatch('auth/logoutJWT', localStorage.getItem('token'))
+        .then(() => { 
+          this.$router.push('/pages/login').catch(() => {})
+        })
+        .catch(error => {          
+          this.$router.push('/pages/login').catch(() => {})
+        })
       }
       return user
     }

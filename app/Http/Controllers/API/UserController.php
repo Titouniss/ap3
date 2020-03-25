@@ -31,6 +31,22 @@ class UserController extends Controller
             return response()->json(['success' => false, 'error'=>'Unauthorised']); 
         } 
     }
+
+    /** 
+     * login api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function getUserByToken () { 
+        $user = Auth::user();
+        $success = false;
+        if ($user != null) {
+            $user->load('roles')->load('company');
+            $success = true;
+        }
+        response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
+    }
+
     /** 
     * logout api 
     * 
