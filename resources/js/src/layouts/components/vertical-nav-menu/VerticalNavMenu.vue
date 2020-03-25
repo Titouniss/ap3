@@ -70,7 +70,7 @@
             </span>
             <!-- /Group Header -->
 
-            <template v-else-if="!item.header">
+            <template v-else-if="!item.header && item.show">
 
               <!-- Nav-Item -->
               <v-nav-menu-item
@@ -168,7 +168,18 @@ export default {
     },
     menuItemsUpdated () {
       const clone = this.navMenuItems.slice()
-
+      const user = this.$store.state.AppActiveUser
+      let userPermissions = []
+      if (user && user.id !== null) {
+        let userPermissionsMultiple = user.roles.reduce((acc, role)=> {
+          if(!acc) acc = []
+           acc.push(role.permissions) // get role permmissions in 1 list
+           return acc
+        }, [])
+        userPermissions = [...new Set(userPermissionsMultiple)][0]; // get unique only
+      }
+      console.log(userPermissions);
+      
       for (const [index, item] of this.navMenuItems.entries()) {
         if (item.header && item.items.length && (index || 1)) {
           const i = clone.findIndex(ix => ix.header === item.header)
@@ -176,6 +187,9 @@ export default {
             clone.splice(i + 1 + subIndex, 0, subItem)
           }
         }
+        if (userPermissions.length > 0) {          
+          item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1 || item.slug === 'home'
+        } else item.isDisabled = true
       }
 
       return clone
