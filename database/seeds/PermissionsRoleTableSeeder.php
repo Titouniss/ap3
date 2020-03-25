@@ -28,6 +28,7 @@ class PermissionsRoleTableSeeder extends Seeder
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
+            Permission::firstOrCreate(['name' => 'read '.$Permkey]);
             Permission::firstOrCreate(['name' => 'edit '.$Permkey]);
             Permission::firstOrCreate(['name' => 'delete '.$Permkey]);
             Permission::firstOrCreate(['name' => 'publish '.$Permkey]);
@@ -47,10 +48,10 @@ class PermissionsRoleTableSeeder extends Seeder
                 foreach ($Permkeys as $Permkey) {
                     if ($Permkey == 'permissions' || $Permkey == 'companies') {
                         if ($key == 'littleAdmin') {
-                            $role->givePermissionTo(['edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
+                            $role->givePermissionTo(['read '.$Permkey,'edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
                         }
                     } else {
-                        $role->givePermissionTo(['edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
+                        $role->givePermissionTo(['read '.$Permkey,'edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
                     }
                 }
             }

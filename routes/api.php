@@ -42,8 +42,10 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    USERS    **************************************/
     /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
-        Route::get('index', 'API\UserController@index');
-        Route::get('show/{id}', 'API\UserController@show');
+        Route::group(['middleware' => ['can:read users']], function () {
+            Route::get('index', 'API\UserController@index');
+            Route::get('show/{id}', 'API\UserController@show');
+        });
         Route::group(['middleware' => ['can:publish users']], function () {
             Route::post('store', 'API\UserController@store');
         });
@@ -60,8 +62,10 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    ROLES    **************************************/
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
-        Route::get('index', 'API\RoleController@index');
-        Route::get('show/{id}', 'API\RoleController@show');
+        Route::group(['middleware' => ['can:read roles']], function () {
+            Route::get('index', 'API\RoleController@index');
+            Route::get('show/{id}', 'API\RoleController@show');
+        });
         Route::group(['middleware' => ['can:publish roles']], function () {
             Route::post('store', 'API\RoleController@store');
         });
@@ -77,8 +81,10 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    PERMISSIONS  **********************************/
     /***********************************************************************************/
     Route::prefix('permission-management')->group(function () {
-        Route::get('index', 'API\PermissionController@index');
-        Route::get('show/{id}', 'API\PermissionController@show');
+        Route::group(['middleware' => ['can:read permissions']], function () {
+            Route::get('index', 'API\PermissionController@index');
+            Route::get('show/{id}', 'API\PermissionController@show');
+        });
         Route::group(['middleware' => ['can:publish permissions']], function () {
             Route::post('store', 'API\PermissionController@store');
         });
