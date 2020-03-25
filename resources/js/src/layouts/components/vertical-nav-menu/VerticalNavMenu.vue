@@ -187,9 +187,13 @@ export default {
             clone.splice(i + 1 + subIndex, 0, subItem)
           }
         }
-        if (userPermissions.length > 0) {          
-          item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1 || item.slug === 'home'
-        } else item.isDisabled = true
+        if (user && user.id !== null){
+          if (user.roles.findIndex(r => r.name === 'superAdmin')) {
+            item.show = true
+          }else if (userPermissions.length > 0) {
+              item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1 || item.slug === 'home'
+          } else item.show = false
+        }else item.isDisabled = true
       }
 
       return clone
