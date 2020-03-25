@@ -127,5 +127,20 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::delete('{id}', 'API\WorkareaController@destroy');
         // });
     });
+
+    /***********************************************************************************/
+    /********************************   PROJETCS   *************************************/
+    /***********************************************************************************/
+    Route::prefix('project-management')->group(function () {
+        Route::get('index', 'API\ProjectController@index');
+        Route::get('show/{id}', 'API\ProjectController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+            Route::post('store', 'API\ProjectController@store');
+            Route::post('update/{id}', 'API\ProjectController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\ProjectController@destroy');
+        // });
+    });
 });
 

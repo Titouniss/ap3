@@ -63,20 +63,21 @@ const router = new Router({
           }
         },
         {
+          path: '/skills',
+          name: 'skills',
+          component: () => import('./views/skills/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+/////-----/////
+        {
           path: '/roles',
           name: 'roles',
           component: () => import('./views/roles/Index.vue'),
           meta: {
             pageTitle: 'Gestion des rôles',
-            rule: 'admin',
-            requiresAuth: true
-          }
-        },
-        {
-          path: '/skills',
-          name: 'skills',
-          component: () => import('./views/skills/index.vue'),
-          meta: {
             rule: 'admin',
             requiresAuth: true
           }
@@ -101,6 +102,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
+/////-----/////
         {
           path: '/workareas',
           name: 'workareas',
@@ -120,13 +122,31 @@ const router = new Router({
             requiresAuth: true
           }
         },
-        
         {
           path: '/workareas/workarea-edit/:id',
           name: 'workareas-workarea-edit',
           component: () => import('@/views/workareas/Edit.vue'),
           meta: {
             pageTitle: 'Modification d\'un îlot',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+/////-----/////
+        {
+          path: '/projects',
+          name: 'projects',
+          component: () => import('./views/projects/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/projects/project-view/:id',
+          name: 'projects-project-view',
+          component: () => import('./views/projects/Read.vue'),
+          meta: {
             rule: 'admin',
             requiresAuth: true
           }

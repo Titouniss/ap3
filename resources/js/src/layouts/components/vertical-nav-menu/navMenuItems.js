@@ -42,5 +42,11 @@ export default [
     name: 'Ilots',
     slug: 'workareas',
     icon: 'ArchiveIcon'
+  },
+  {
+    url: '/projects',
+    name: 'Projets',
+    slug: 'project',
+    icon: 'ActivityIcon'
   }
 ]
