@@ -64,6 +64,7 @@ export default {
   computed: {
     activeUserInfo () {  
       const user = this.$store.state.AppActiveUser
+      console.log(user);
       
       if (user && user.id !== null) { 
              

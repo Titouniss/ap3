@@ -10,6 +10,7 @@
 
 import Vue from 'vue'
 import Router from 'vue-router'
+import axios from '@/axios.js'
 import moment from 'moment'
 
 Vue.use(Router)
@@ -245,6 +246,7 @@ router.beforeEach((to, from, next) => {
     let isAuthenticated = false
     const expiresAt = localStorage.getItem('tokenExpires')      
     if (expiresAt && expiresAt !== null) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('token')}`
       isAuthenticated = (
         moment().unix() < expiresAt &&
             localStorage.getItem('loggedIn') === 'true'

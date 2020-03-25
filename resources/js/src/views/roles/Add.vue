@@ -100,10 +100,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
           return false
-        } else  {
-          this.role_data.company_id = user.company_id
-          return true
-        }
+        } return true
       } else return true
     },
     permissions () {
