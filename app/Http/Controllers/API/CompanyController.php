@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use Validator;
 
@@ -18,7 +19,14 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $items = Company::all()->load('skills');
+        $user = Auth::user();
+        $items = [];
+        if ($user->hasRole('superAdmin')) {
+            $items = Company::all()->load('skills');
+        } else if ($user->company_id != null) {
+            $items = Company::where('id', $user->company_id)->get()->load('skills');
+        }
+        
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 

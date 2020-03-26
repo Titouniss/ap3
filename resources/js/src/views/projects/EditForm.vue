@@ -75,7 +75,6 @@ export default {
   computed: {
     activePrompt: {
       get () {
-        console.log(this.itemId)
         return this.itemId && this.itemId > 0 ? true : false
       },
       set (value) {
@@ -96,8 +95,6 @@ export default {
   },
   methods: {
     init () {
-      console.log(this.itemId)
-      console.log(Object.assign({}, this.$store.getters['projectManagement/getItem'](this.itemId)))
       this.itemLocal = Object.assign({}, this.$store.getters['projectManagement/getItem'](this.itemId))
     },
     submitItem () {

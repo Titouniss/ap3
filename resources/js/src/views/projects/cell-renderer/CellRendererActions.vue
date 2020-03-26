@@ -11,7 +11,6 @@ export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      console.log(this.params.data)
       this.$store.dispatch("projectManagement/editItem", this.params.data)
         .then(()   => {  })
         .catch(err => { console.error(err)       })

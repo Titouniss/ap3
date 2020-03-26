@@ -13,7 +13,9 @@ export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      this.$router.push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`).catch(() => {})
+      this.$store.dispatch("workareaManagement/editItem", this.params.data)
+        .then(()   => {  })
+        .catch(err => { console.error(err)       })
     },
     confirmDeleteRecord () {
       this.$vs.dialog({
