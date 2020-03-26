@@ -23,7 +23,7 @@ class WorkareaController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Workarea::all()->load('company')->load('skills');;
+            $items = Workarea::all()->load('company')->load('skills');
         } else if ($user->company_id != null) {
             $items = Workarea::where('company_id',$user->company_id)->get()->load('company')->load('skills');
         }

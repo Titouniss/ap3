@@ -61,7 +61,6 @@ export default {
     },
     addSkill () {
       this.$validator.validateAll().then(result => {
-        console.log(this.itemLocal)
         if (result) {
           this.$store.dispatch('skillManagement/addItem', Object.assign({}, this.itemLocal))
           .then(() => { 

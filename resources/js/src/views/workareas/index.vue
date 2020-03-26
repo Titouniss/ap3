@@ -12,9 +12,7 @@
   <div id="page-workareas-list">
 
     <div class="vx-card p-6">
-      <div class="px-6 pb-2 pt-6">
-        <vs-button @click="addRecord" class="w-full">Ajouter un îlot</vs-button>
-      </div>
+      <add-form />
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -101,6 +99,8 @@
         v-model="currentPage" />
 
     </div>
+
+    <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/>
   </div>
 
 </template>
@@ -120,6 +120,10 @@ import moduleSkillManagement from '@/store/skill-management/moduleSkillManagemen
 import moduleWorkareaManagement from '@/store/workarea-management/moduleWorkareaManagement.js'
 import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
+//CRUD
+import AddForm from './AddForm.vue'
+import EditForm from './EditForm.vue'
+
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
@@ -130,6 +134,9 @@ export default {
   components: {
     AgGridVue,
     vSelect,
+
+    AddForm,
+    EditForm,
 
     // Cell Renderer
     CellRendererLink,
@@ -201,6 +208,9 @@ export default {
     totalPages () {
       if (this.gridApi) return this.gridApi.paginationGetTotalPages()
       else return 0
+    },
+    itemIdToEdit () {
+      return this.$store.state.workareaManagement.workarea.id || 0
     },
     currentPage: {
       get () {

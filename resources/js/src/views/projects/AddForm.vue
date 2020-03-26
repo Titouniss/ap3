@@ -89,7 +89,6 @@ export default {
     addProject () {
       this.$validator.validateAll().then(result => {
         this.itemLocal.date = moment(this.itemLocal.date).format('YYYY-MM-DD')
-        console.log(this.itemLocal)
         if (result) {
           this.$store.dispatch('projectManagement/addItem', Object.assign({}, this.itemLocal))
           .then(() => { 
