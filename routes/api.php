@@ -13,8 +13,6 @@ use Illuminate\Http\Request;
 |
 */
 
-
-
 Route::prefix('auth')->group(function () {
     /***********************************************************************************/
     /********************************    USER     **************************************/
@@ -28,8 +26,9 @@ Route::prefix('auth')->group(function () {
     Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
     Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset');
     Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
-    
-    Route::get('email/verify/{token}', 'Auth\VerificationController@verify');
+
+    Route::get('email/verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
+    Route::post('email/resend', 'API\UserController@resendVerification');
 });
 
 /***********************************************************************************/

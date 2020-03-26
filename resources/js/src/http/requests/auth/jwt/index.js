@@ -72,4 +72,7 @@ export default {
   logout () {
     return axios.get('/api/auth/logout')
   },
+  verify (email) {
+    return axios.post('/api/auth/email/resend', {email: email})
+  },
 }

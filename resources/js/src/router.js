@@ -181,6 +181,22 @@ const router = new Router({
           }
         },
         {
+          path: '/pages/verify',
+          name: 'page-verify',
+          component: () => import('@/views/pages/login/verify.vue'),
+          meta: {
+            rule: 'editor'
+          }
+        },
+        {
+          path: '/pages/verify/success',
+          name: 'page-verify-success',
+          component: () => import('@/views/pages/login/verifySuccess.vue'),
+          meta: {
+            rule: 'editor'
+          }
+        },
+        {
           path: '/pages/register',
           name: 'page-register',
           component: () => import('@/views/pages/register/Register.vue'),

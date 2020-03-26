@@ -21,6 +21,9 @@ class UserController extends Controller
     public function login(){ 
         if(Auth::attempt(['email' => request('email'), 'password' => request('password')])){ 
             $user = Auth::user(); 
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json(['success' => false, 'verify' => false], $this-> successStatus); 
+            }
             $token =  $user->createToken('ProjetX');
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
@@ -36,6 +39,58 @@ class UserController extends Controller
         } 
     }
 
+                /**
+     * Resend the email verification notification.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function resendVerification(Request $request)
+    {
+        $verificationSend = false;
+        $arrayRequest = $request->all();
+        
+        if (isset($arrayRequest['email'])) {
+            $user = User::where('email', $arrayRequest['email'])->first();
+            
+            if (!$user->hasVerifiedEmail()) {
+                $user->SendEmailVerificationNotification();
+                $verificationSend = true;
+            }
+        }
+        return response()->json(['success' => $verificationSend], 200); 
+
+    }
+
+        /**
+     * Mark the authenticated user's email address as verified.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function verify(Request $request)
+    {
+        $user = User::find($request->route('id'));
+        if ($user === null) {
+            return redirect('/pages/not-authorized');
+        }
+
+        if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+            return redirect('/pages/not-authorized');
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect('/pages/verify/success');
+            return redirect('/pages/login');
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+        return redirect('/pages/verify/success');
+    }
     /** 
      * login api 
      * 
@@ -100,7 +155,7 @@ class UserController extends Controller
         $company = Company::create(['name' => 'Entreprise '.$user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);
         $user->save();
-        
+        $user->sendEmailVerificationNotification();
         $token =  $user->createToken('ProjetX');
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;

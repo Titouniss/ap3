@@ -62,11 +62,20 @@ export default {
             // Navigate User to homepage
             router.push(router.currentRoute.query.to || '/')
             resolve(response)
+          } else if (data && data.verify === false) {
+            reject({ message: 'Veuillez valider votre adresse e-mail avant de vous connecter.',activeResend: true })
           } else {
             reject({message: 'Connexion impossible l’identifiant ou le mot de passe est incorrect.'})
           }
         })
-        .catch(error => { reject({message: 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'}) })
+        .catch(error => { 
+          let message = 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
+          let activeResend = false
+          if (error.response.data.message === "Your email address is not verified." ) {
+            activeResend = true
+            message = 'Veuillez valider votre adresse e-mail avant de vous connecter.'
+          }
+         reject({message: message, activeResend: activeResend}) })
     })
   },
   registerUserJWT ({ commit }, payload) {
@@ -120,8 +129,23 @@ export default {
           localStorage.removeItem('userInfo')          
           resolve(response)
         })
-        .catch(error => { console.log(error);
-         reject({message: 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'}) })
+        .catch(error => { 
+          let message = 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
+         reject({message: message}) })
+    })
+  },
+  verify ({ commit },payload) {
+    return new Promise((resolve, reject) => {
+      jwt.verify(payload.email)
+        .then(response => {           
+          resolve(response)
+        })
+        .catch(error => { 
+          let message = 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
+          if (error.response.data.message === "Your email address is not verified." ) {
+            message = 'Veuillez valider votre adresse e-mail avant de vous connecter.'
+          }
+         reject({message: message}) })
     })
   },
 }
