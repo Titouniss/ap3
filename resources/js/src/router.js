@@ -199,7 +199,7 @@ const router = new Router({
         {
           path: '/pages/reset-password/:token/:email',
           name: 'page-reset-password',
-          component: () => import('@/views/pages/ResetPassword.vue'),
+          component: () => import('@/views/pages/RPassword.vue'),
           meta: {
             rule: 'editor'
           }
@@ -263,6 +263,7 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => { 
+  
     let isAuthenticated = false
     const expiresAt = localStorage.getItem('tokenExpires')      
     if (expiresAt && expiresAt !== null) {

@@ -105,8 +105,8 @@ export default {
     })
   },
   resetPassword ({ commit }, payload) {
-    return new Promise((resolve) => {
-      jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token).then(response => { resolve(response) })
+    return new Promise((resolve, reject) => {
+      jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token).then(response => { resolve(response) }).catch(error => { reject(error)})
     })
   },
   logoutJWT ({ commit }) {

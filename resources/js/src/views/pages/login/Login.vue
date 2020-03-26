@@ -132,11 +132,7 @@ export default {
       this.$router.push('/pages/register').catch(() => {})
     },
     forgotPassword () {
-      console.log('here');
-      
-      if (!this.checkLogin()) return
-      console.log('next');
-      
+      if (!this.checkLogin()) return      
       this.$router.push('/pages/forgot-password').catch(() => {})
     }
   }
