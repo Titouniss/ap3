@@ -127,6 +127,7 @@ import EditForm from './EditForm.vue'
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
+import CellRendererRelationSkills from './cell-renderer/CellRendererRelationSkills.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -141,7 +142,8 @@ export default {
     // Cell Renderer
     CellRendererLink,
     CellRendererActions,
-    CellRendererRelations
+    CellRendererRelations,
+    CellRendererRelationSkills
   },
   data () {
     return {
@@ -160,7 +162,6 @@ export default {
         {
           headerName: 'ID',
           field: 'id',
-          width: 125,
           filter: true,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
@@ -170,19 +171,21 @@ export default {
           headerName: 'Name',
           field: 'name',
           filter: true,
-          width: 200
         },
         {
           headerName: 'Compagnie',
           field: 'company',
           filter: true,
-          width: 150,
           cellRendererFramework: 'CellRendererRelations'
+        },
+        {
+          headerName: 'Compétences',
+          field: 'skills',
+          cellRendererFramework: 'CellRendererRelationSkills'
         },
         {
           headerName: 'Actions',
           field: 'transactions',
-          width: 150,
           cellRendererFramework: 'CellRendererActions'
         }
       ],
@@ -191,7 +194,8 @@ export default {
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations
+        CellRendererRelations,
+        CellRendererRelationSkills
       }
     }
   },
