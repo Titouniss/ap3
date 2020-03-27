@@ -38,7 +38,7 @@ class WorkareaController extends Controller
      */
     public function show($id)
     {
-        $item = Workarea::where('id',$id)->first()->load('skills')->load('company');
+        $item = Workarea::where('id',$id)->first()->load('skills', 'company');
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -107,7 +107,7 @@ class WorkareaController extends Controller
             }
             $item->save();
         }
-        
+        $item = Workarea::find($id)->load('skills', 'company'); 
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 

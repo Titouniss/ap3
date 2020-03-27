@@ -27,8 +27,8 @@ export default {
   updateItem ({ commit }, item) {    
     return new Promise((resolve, reject) => {
       axios.post(`/api/skill-management/update/${item.id}`,item )
-        .then((response) => {          
-          commit('UPDATE_ITEM', item)
+        .then((response) => {       
+          commit('UPDATE_ITEM', response.data.success)
           resolve(response)
         })
         .catch((error) => { reject(error) })

@@ -91,13 +91,21 @@ class ProjectController extends Controller
             'company_id' => 'required'
             ]);
         
-        $item = Project::where('id',$id)
+        $update = Project::where('id',$id)
             ->update([
                 'name' => $arrayRequest['name'], 
                 'date' => $arrayRequest['date'],
                 'company_id' => $arrayRequest['company_id']
             ]);
-        return response()->json(['success' => $item], $this-> successStatus); 
+        
+        if($update){
+            $item = Project::find($id)->load('company');
+            return response()->json(['success' => $item], $this-> successStatus); 
+        }
+        else{
+            return response()->json(['error' => 'error'], $this-> errorStatus); 
+        }
+        
     }
 
     /**

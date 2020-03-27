@@ -87,8 +87,15 @@ class SkillController extends Controller
             'company_id' => 'required'
             ]);
         
-        $item = Skill::where('id',$id)->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']]);
-        return response()->json(['success' => $item], $this-> successStatus); 
+        $update = Skill::where('id',$id)->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']]);
+        if($update){
+            $item = Skill::find($id)->load('company');
+            return response()->json(['success' => $item], $this-> successStatus); 
+        }
+        else{
+            return response()->json(['errore' => 'error'], $this-> errorStatus); 
+        }
+        
     }
 
     /**
