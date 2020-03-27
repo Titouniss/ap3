@@ -68,6 +68,7 @@ class PermissionsRoleTableSeeder extends Seeder
                 'lastname' => 'NUMIDEV',
                 'email' => 'admin@numidev.fr',
                 'password' => Hash::make('password'),
+                'email_verified_at' => '2020-01-01 00:00:00.000000',
                 'isTermsConditionAccepted' => true
             ]);
             $admin->syncRoles('superAdmin');

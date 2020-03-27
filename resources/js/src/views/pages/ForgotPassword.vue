@@ -24,7 +24,8 @@
                                     <p>Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
                                 </div>
 
-                                <vs-input type="email" label-placeholder="Email" v-model="value1" class="w-full mb-8" />
+                                <vs-input type="email" label-placeholder="Email" v-model="value1" class="w-full mb-8" :danger-text="dangerText" :danger="danger" :success-text="successText" :success="success"/>
+
                                 <vs-button type="border" to="/pages/login" class="px-4 w-full md:w-auto">Retour</vs-button>
                                 <vs-button class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0"  @click="forgotPassword">Envoyer le lien</vs-button>
                             </div>
@@ -40,7 +41,11 @@
 export default {
   data () {
     return {
-      value1: ''
+      value1: '',
+      danger: false,
+      success: false,
+      dangerText: `Cette adresse e-mail n'est pas associée à un compte utilisateur`,
+      successText: `Un lien de réinitialisation a été envoyé`
     }
   },
   methods: {
@@ -71,8 +76,14 @@ export default {
       // Loading
       this.$vs.loading()
       this.$store.dispatch('auth/forgotPassword',payload)
-        .then(() => { this.$vs.loading.close() })
-        .catch(error => {          
+        .then((r) => { 
+          this.danger = r.data.message === "Failed"
+          this.success = r.data.message === "Success"
+          this.$vs.loading.close()
+        })
+        .catch(error => {         
+          console.log(error);
+           
           this.$vs.loading.close()
           this.$vs.notify({
             title: 'Echec',
