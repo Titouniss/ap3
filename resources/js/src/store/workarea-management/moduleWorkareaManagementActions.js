@@ -28,7 +28,7 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post(`/api/workarea-management/update/${item.id}`,item )
         .then((response) => {          
-          //commit('UPDATE_ITEM', item)
+          commit('UPDATE_ITEM', item)
           resolve(response)
         })
         .catch((error) => { reject(error) })

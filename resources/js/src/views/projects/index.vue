@@ -159,14 +159,12 @@ export default {
           headerName: 'Name',
           field: 'name',
           filter: true,
-          width: 200,
           cellRendererFramework: 'CellRendererLink'
         },
         {
           headerName: 'Date de création',
           field: 'created_at',
           filter: true,
-          width: 200,
           cellRenderer: (data) => {
             moment.locale('fr')
             return moment(data.createdAt).format('DD MMMM YYYY')
@@ -176,19 +174,16 @@ export default {
           headerName: 'Avancement',
           field: 'status',
           filter: true,
-          width: 200
         },
         {
           headerName: 'Compagnie',
           field: 'company',
           filter: true,
-          width: 150,
           cellRendererFramework: 'CellRendererRelations'
         },
         {
           headerName: 'Actions',
           field: 'transactions',
-          width: 150,
           cellRendererFramework: 'CellRendererActions'
         }
       ],

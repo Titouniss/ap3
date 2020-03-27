@@ -24,14 +24,14 @@
                         </div>
                         <vs-input name="client" class="w-full mb-4 mt-5" placeholder="Client (RAF)" v-model="itemLocal.client" :color="validateForm ? 'success' : 'danger'" />
                         <vs-input name="gammes" class="w-full mb-4 mt-5" placeholder="Gammes (RAF)" v-model="itemLocal.gammes" :color="validateForm ? 'success' : 'danger'" />
-                        <div class="vx-row mt-4">
+                        <div class="vx-row mt-4" v-if="!disabled">
                           <div class="vx-col w-full">
                             <div class="flex items-end px-3">
                                 <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
                                 <span class="font-medium text-lg leading-none">Admin</span>
                             </div>
                             <vs-divider />
-                            <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
+                            <vs-select name="company" v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
                               <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
                             </vs-select>
                           </div>
@@ -74,6 +74,17 @@ export default {
     },
     companiesData() {
       return this.$store.state.companyManagement.companies
+    },
+    disabled () { 
+      const user = this.$store.state.AppActiveUser 
+      if (user.roles && user.roles.length > 0) {
+        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
+          return false
+        } else  {
+          this.itemLocal.company_id = user.company_id
+          return true
+        }
+      } else return true
     },
   },
   methods: {
