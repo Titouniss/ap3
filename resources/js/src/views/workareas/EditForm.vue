@@ -60,16 +60,8 @@ export default {
     }
   },
   data () {
-    let item = Object.assign({}, this.$store.getters['workareaManagement/getItem'](this.itemId))
-    let skill_ids = []
-    if(item.skills.length > 0){
-      item.skills.forEach(element => {
-        skill_ids.push(element.skill_id)
-      });
-    }
-    item.skills = skill_ids
     return {
-      itemLocal: item,
+      itemLocal: Object.assign({}, this.$store.getters['workareaManagement/getItem'](this.itemId)),
       companySkills: [],
     }
   },

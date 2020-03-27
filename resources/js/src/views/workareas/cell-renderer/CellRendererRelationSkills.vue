@@ -10,7 +10,6 @@ export default {
   computed: {
     RelationToText () {
       let text = ''
-      console.log(this.params.value)
       if(this.params.value.length > 0){
         this.params.value.forEach(element => {
           if (element.name) {        

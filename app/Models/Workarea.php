@@ -15,7 +15,7 @@ class Workarea extends Model
 
     public function skills()
     {
-        return $this->hasMany('App\Models\WorkareasSkill', 'workarea_id');
+        return $this->belongsToMany('App\Models\Skill', 'workareas_skills', 'workarea_id');
     }
 
 }
