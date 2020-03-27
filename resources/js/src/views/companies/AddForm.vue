@@ -55,12 +55,13 @@ export default {
     addCompany () {
       this.$validator.validateAll().then(result => {
         if (result) {
-          this.$store.dispatch('companyManagement/addItem', Object.assign({}, this.itemLocal))
+          let itemLocal = Object.assign({}, this.itemLocal)
+          this.$store.dispatch('companyManagement/addItem', itemLocal)
           .then(() => { 
             this.$vs.loading.close() 
             this.$vs.notify({
               title: 'Ajout d\'une compagnie',
-              text: `"${this.itemLocal.name}" ajoutée avec succès`,
+              text: `"${itemLocal.name}" ajoutée avec succès`,
               iconPack: 'feather',
               icon: 'icon-alert-circle',
               color: 'success'

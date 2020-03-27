@@ -14,7 +14,7 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post("/api/company-management/store", item)
         .then((response) => {
-          commit('ADD_ITEM', Object.assign(item, {id: response.data.id}))
+          commit('ADD_ITEM', Object.assign(item, {id: response.data.success.id}))
           resolve(response)
         })
         .catch((error) => { reject(error) })
@@ -26,9 +26,9 @@ export default {
   },
   updateItem ({ commit }, item) {    
     return new Promise((resolve, reject) => {
-      axios.post(`/api/company-management/update/${item.id}`,item )
-        .then((response) => {          
-          commit('UPDATE_ITEM', item)
+      axios.post(`/api/company-management/update/${item.id}`, item)
+        .then((response) => {        
+          commit('UPDATE_ITEM', Object.assign({}, item))
           resolve(response)
         })
         .catch((error) => { reject(error) })
