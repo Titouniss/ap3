@@ -1,6 +1,6 @@
 <!-- =========================================================================================
-  File Name: workareasList.vue
-  Description: workareas List page
+  File Name: ProjectsList.vue
+  Description: Projects List page
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -9,7 +9,7 @@
 
 <template>
 
-  <div id="page-workareas-list">
+  <div id="page-projects-list">
 
     <div class="vx-card p-6">
       <add-form />
@@ -19,7 +19,7 @@
         <div class="flex-grow">
           <vs-dropdown vs-trigger-click class="cursor-pointer">
             <div class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium">
-              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ workareasData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : workareasData.length }} of {{ workareasData.length }}</span>
+              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ projectsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : projectsData.length }} of {{ projectsData.length }}</span>
               <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
             </div>
             <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -82,7 +82,7 @@
         class="ag-theme-material w-100 my-4 ag-grid-table"
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
-        :rowData="workareasData"
+        :rowData="projectsData"
         rowSelection="multiple"
         colResizeDefault="shift"
         :animateRows="true"
@@ -106,28 +106,22 @@
 </template>
 
 <script>
-
-var model = 'workarea'
-var modelPlurial = 'workareas'
-var modelTitle = 'Ilot'
-
 import { AgGridVue } from 'ag-grid-vue'
 import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
-
-// Store Module
-import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
-import moduleWorkareaManagement from '@/store/workarea-management/moduleWorkareaManagement.js'
-import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moment from 'moment'
 
 //CRUD
 import AddForm from './AddForm.vue'
 import EditForm from './EditForm.vue'
 
+// Store Module
+import moduleProjectManagement from '@/store/project-management/moduleProjectManagement.js'
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
-import CellRendererRelationSkills from './cell-renderer/CellRendererRelationSkills.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
 
@@ -135,19 +129,16 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-
     AddForm,
     EditForm,
 
     // Cell Renderer
     CellRendererLink,
     CellRendererActions,
-    CellRendererRelations,
-    CellRendererRelationSkills
+    CellRendererRelations
   },
   data () {
     return {
-
       searchQuery: '',
 
       // AgGrid
@@ -160,16 +151,28 @@ export default {
       },
       columnDefs: [
         {
-          headerName: 'ID',
-          field: 'id',
-          filter: true,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
         },
         {
           headerName: 'Name',
           field: 'name',
+          filter: true,
+          cellRendererFramework: 'CellRendererLink'
+        },
+        {
+          headerName: 'Date de création',
+          field: 'created_at',
+          filter: true,
+          cellRenderer: (data) => {
+            moment.locale('fr')
+            return moment(data.createdAt).format('DD MMMM YYYY')
+          }
+        },
+        {
+          headerName: 'Avancement',
+          field: 'status',
           filter: true,
         },
         {
@@ -177,11 +180,6 @@ export default {
           field: 'company',
           filter: true,
           cellRendererFramework: 'CellRendererRelations'
-        },
-        {
-          headerName: 'Compétences',
-          field: 'skills',
-          cellRendererFramework: 'CellRendererRelationSkills'
         },
         {
           headerName: 'Actions',
@@ -194,16 +192,15 @@ export default {
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations,
-        CellRendererRelationSkills
+        CellRendererRelations
       }
     }
   },
   watch: {
   },
   computed: {
-    workareasData() {
-      return this.$store.state.workareaManagement.workareas
+    projectsData() {
+      return this.$store.state.projectManagement.projects
     },
     paginationPageSize () {
       if (this.gridApi) return this.gridApi.paginationGetPageSize()
@@ -214,7 +211,7 @@ export default {
       else return 0
     },
     itemIdToEdit () {
-      return this.$store.state.workareaManagement.workarea.id || 0
+      return this.$store.state.projectManagement.project.id || 0
     },
     currentPage: {
       get () {
@@ -229,10 +226,7 @@ export default {
   methods: {
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
-    },
-    addRecord () {
-      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {})
-    },
+    }
   },
   mounted () {
     this.gridApi = this.gridOptions.api
@@ -248,28 +242,21 @@ export default {
     }
   },
   created () {
-    if (!moduleWorkareaManagement.isRegistered) {
-      this.$store.registerModule('workareaManagement', moduleWorkareaManagement)
-      moduleWorkareaManagement.isRegistered = true
-    }
-    if (!moduleSkillManagement.isRegistered) {
-      this.$store.registerModule('skillManagement', moduleSkillManagement)
-      moduleSkillManagement.isRegistered = true
+    if (!moduleProjectManagement.isRegistered) {
+      this.$store.registerModule('projectManagement', moduleProjectManagement)
+      moduleProjectManagement.isRegistered = true
     }
     if (!moduleCompanyManagement.isRegistered) {
       this.$store.registerModule('companyManagement', moduleCompanyManagement)
       moduleCompanyManagement.isRegistered = true
     }
-    this.$store.dispatch('workareaManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
-    this.$store.dispatch('skillManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('projectManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
-    moduleWorkareaManagement.isRegistered = false
-    moduleSkillManagement.isRegistered = false
+    moduleProjectManagement.isRegistered = false
     moduleCompanyManagement.isRegistered = false
-    this.$store.unregisterModule('workareaManagement')
-    this.$store.unregisterModule('skillManagement')
+    this.$store.unregisterModule('projectManagement')
     this.$store.unregisterModule('companyManagement')
   },
 }
@@ -277,8 +264,8 @@ export default {
 </script>
 
 <style lang="scss">
-#page-workareas-list {
-  .workareas-list-filters {
+#page-projects-list {
+  .projects-list-filters {
     .vs__actions {
       position: absolute;
       right: 0;

@@ -64,20 +64,21 @@ const router = new Router({
           }
         },
         {
+          path: '/skills',
+          name: 'skills',
+          component: () => import('./views/skills/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+/////-----/////
+        {
           path: '/roles',
           name: 'roles',
           component: () => import('./views/roles/Index.vue'),
           meta: {
             pageTitle: 'Gestion des rôles',
-            rule: 'admin',
-            requiresAuth: true
-          }
-        },
-        {
-          path: '/skills',
-          name: 'skills',
-          component: () => import('./views/skills/index.vue'),
-          meta: {
             rule: 'admin',
             requiresAuth: true
           }
@@ -102,6 +103,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
+/////-----/////
         {
           path: '/workareas',
           name: 'workareas',
@@ -111,23 +113,21 @@ const router = new Router({
             requiresAuth: true
           }
         },
+/////-----/////
         {
-          path: '/workareas/workarea-add',
-          name: 'workareas-workarea-add',
-          component: () => import('@/views/workareas/Add.vue'),
+          path: '/projects',
+          name: 'projects',
+          component: () => import('./views/projects/index.vue'),
           meta: {
-            pageTitle: 'Ajout d\'un îlot',
             rule: 'admin',
             requiresAuth: true
           }
         },
-        
         {
-          path: '/workareas/workarea-edit/:id',
-          name: 'workareas-workarea-edit',
-          component: () => import('@/views/workareas/Edit.vue'),
+          path: '/projects/project-view/:id',
+          name: 'projects-project-view',
+          component: () => import('./views/projects/Read.vue'),
           meta: {
-            pageTitle: 'Modification d\'un îlot',
             rule: 'admin',
             requiresAuth: true
           }
@@ -161,6 +161,22 @@ const router = new Router({
           }
         },
         {
+          path: '/pages/verify',
+          name: 'page-verify',
+          component: () => import('@/views/pages/login/verify.vue'),
+          meta: {
+            rule: 'editor'
+          }
+        },
+        {
+          path: '/pages/verify/success',
+          name: 'page-verify-success',
+          component: () => import('@/views/pages/login/verifySuccess.vue'),
+          meta: {
+            rule: 'editor'
+          }
+        },
+        {
           path: '/pages/register',
           name: 'page-register',
           component: () => import('@/views/pages/register/Register.vue'),
@@ -179,7 +195,7 @@ const router = new Router({
         {
           path: '/pages/reset-password/:token/:email',
           name: 'page-reset-password',
-          component: () => import('@/views/pages/ResetPassword.vue'),
+          component: () => import('@/views/pages/RPassword.vue'),
           meta: {
             rule: 'editor'
           }
@@ -243,6 +259,7 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => { 
+  
     let isAuthenticated = false
     const expiresAt = localStorage.getItem('tokenExpires')      
     if (expiresAt && expiresAt !== null) {

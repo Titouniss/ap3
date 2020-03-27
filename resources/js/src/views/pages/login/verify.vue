@@ -20,14 +20,13 @@
                         <div class="vx-col sm:w-full md:w-full lg:w-1/2 mx-auto self-center d-theme-dark-bg">
                             <div class="p-8">
                                 <div class="vx-card__title mb-8">
-                                    <h4 class="mb-4">Your Session is locked</h4>
+                                    <h4 class="mb-4">Votre adresse e-mail n'est pas vérifiée</h4>
                                 </div>
-                                <vs-input icon-no-border icon="icon icon-user" icon-pack="feather" label-placeholder="Username" v-model="value1" class="w-full mb-6"/>
-                                <vs-input icon-no-border icon="icon icon-lock" icon-pack="feather" type="password" label-placeholder="Password" v-model="value2" class="w-full mb-6" />
+                                <vs-input icon-no-border icon="icon icon-mail" icon-pack="feather" label-placeholder="e-mail" v-model="value1" class="w-full mb-6"/>
 
                                 <div class="flex justify-between flex-wrap">
-                                    <router-link to="/pages/login" class="mb-4">Are you not John Doe?</router-link>
-                                    <vs-button class="ml-2">Unlock</vs-button>
+                                    <router-link to="/pages/login" class="mb-4">Vous avez déjà un lien de vérification?</router-link>
+                                    <vs-button class="mb-4" @click="sendVerificationEmail">Renvoyer un e-mail de vérification</vs-button>
                                 </div>
 
                             </div>
@@ -43,9 +42,27 @@
 export default {
   data () {
     return {
-      value1: '',
-      value2: ''
+      value1: ''
     }
-  }
+  },
+   methods: {
+    sendVerificationEmail () {
+      // Loading
+      this.$vs.loading()
+
+      this.$store.dispatch('auth/verify', {email: this.value1})
+        .then(() => { this.$vs.loading.close() })
+        .catch(error => {         
+          this.$vs.loading.close()
+          this.$vs.notify({
+            title: 'Echec',
+            text: error.message,
+            iconPack: 'feather',
+            icon: 'icon-alert-circle',
+            color: 'danger'
+          })
+        })
+    }
+   }
 }
 </script>

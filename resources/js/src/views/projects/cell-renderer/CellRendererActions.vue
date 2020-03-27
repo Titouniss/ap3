@@ -6,14 +6,12 @@
 </template>
 
 <script>
-var model = 'workarea'
-var modelPlurial = 'workareas'
-var modelTitle = 'Ilot'
+var modelTitle = 'Projet'
 export default {
   name: 'CellRendererActions',
   methods: {
     editRecord () {
-      this.$store.dispatch("workareaManagement/editItem", this.params.data)
+      this.$store.dispatch("projectManagement/editItem", this.params.data)
         .then(()   => {  })
         .catch(err => { console.error(err)       })
     },
@@ -29,7 +27,7 @@ export default {
       })
     },
     deleteRecord () {
-      this.$store.dispatch("workareaManagement/removeItem", this.params.data.id)
+      this.$store.dispatch("projectManagement/removeItem", this.params.data.id)
         .then(()   => { this.showDeleteSuccess() })
         .catch(err => { console.error(err)       })
     },

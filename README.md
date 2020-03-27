@@ -35,15 +35,16 @@ Installation des dépendances :
 composer install && npm install
 ```
 
-Création des autorisations :
-```
-php artisan passport:install
 ```
 
 Récupération d'une base de données existante ou création d'un base de données nommée `projetx` puis :
 ```
 php artisan migrate
 ```
+
+Création des autorisations :
+```
+php artisan passport:install
 
 Construction des fichiers js :
 ```

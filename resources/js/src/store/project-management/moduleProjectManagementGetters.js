@@ -9,19 +9,9 @@
 
 
 export default {
-  getItem: state => id => {
-    let item = state.workareas.find((item) => item.id === id)
-    let skill_ids = []
-    if(item.skills.length > 0){
-      item.skills.forEach(element => {
-        skill_ids.push(element.id)
-      });
-    }
-    item.skills = skill_ids
-    return item
-  },
+  getItem: state => id => state.projects.find((item) => item.id === id),
   getCompany: state => id => {
-    let workarea = state.workareas.find((item) => item.id === id)
-    return workarea ? workarea.company_id : 0
+    let skill = state.skills.find((item) => item.id === id)
+    return skill ? skill.company_id : 0
   }
 }

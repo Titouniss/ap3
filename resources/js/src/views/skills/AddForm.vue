@@ -18,9 +18,20 @@
                   <div class="vx-row">
                       <div class="vx-col w-full">
                           <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" :color="validateForm ? 'success' : 'danger'" />
-                          <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
-                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
-                          </vs-select>
+                          <div class="vx-row mt-4" v-if="!disabled">
+                            <div class="vx-col w-full">
+                              <div class="flex items-end px-3">
+                                  <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
+                                  <span class="font-medium text-lg leading-none">Admin</span>
+                              </div>
+                              <vs-divider />
+                              <div>
+                                <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
+                                  <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
+                                </vs-select>
+                              </div>
+                            </div>
+                          </div>
                           <!-- <vs-input v-validate="'required'" name="company_id" class="w-full mb-4 mt-5" placeholder="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" /> -->
                       </div>
                   </div>
@@ -51,6 +62,17 @@ export default {
     companiesData() {
       return this.$store.state.companyManagement.companies
     },
+    disabled () { 
+      const user = this.$store.state.AppActiveUser 
+      if (user.roles && user.roles.length > 0) {
+        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
+          return false
+        } else  {
+          this.itemLocal.company_id = user.company_id
+          return true
+        }
+      } else return true
+    },
   },
   methods: {
     clearFields () {
@@ -61,7 +83,6 @@ export default {
     },
     addSkill () {
       this.$validator.validateAll().then(result => {
-        console.log(this.itemLocal)
         if (result) {
           this.$store.dispatch('skillManagement/addItem', Object.assign({}, this.itemLocal))
           .then(() => { 

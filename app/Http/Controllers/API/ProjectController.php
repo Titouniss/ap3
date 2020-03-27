@@ -4,12 +4,12 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Company;
 use Validator;
 
 
-class CompanyController extends Controller
+class ProjectController extends Controller
 {
     public $successStatus = 200;
     /**
@@ -22,11 +22,10 @@ class CompanyController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Company::all()->load('skills');
+            $items = Project::all()->load('company');
         } else if ($user->company_id != null) {
-            $items = Company::where('id', $user->company_id)->get()->load('skills');
+            $items = Project::where('company_id',$user->company_id)->get()->load('company');
         }
-        
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 
@@ -38,7 +37,8 @@ class CompanyController extends Controller
      */
     public function show($id)
     {
-        //
+        $item = Project::where('id',$id)->first();
+        return response()->json(['success' => $item], $this-> successStatus); 
     }
 
     /**
@@ -52,12 +52,14 @@ class CompanyController extends Controller
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
-            'siret' => 'required'
+            'date' => 'required',
+            'company_id' => 'required',
+            
         ]);
         if ($validator->fails()) { 
             return response()->json(['error'=>$validator->errors()], 401);            
         }
-        $item = Company::create($arrayRequest);
+        $item = Project::create($arrayRequest)->load('company');
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -85,10 +87,16 @@ class CompanyController extends Controller
         
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
-            'siret' => 'required'
+            'date' => 'required',
+            'company_id' => 'required'
             ]);
         
-        $item = Company::where('id',$id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
+        $item = Project::where('id',$id)
+            ->update([
+                'name' => $arrayRequest['name'], 
+                'date' => $arrayRequest['date'],
+                'company_id' => $arrayRequest['company_id']
+            ]);
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -100,7 +108,7 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
-        $item = Company::findOrFail($id);
+        $item = Project::findOrFail($id);
         $item->delete();
         return '';
     }

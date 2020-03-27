@@ -83,10 +83,6 @@ export default {
     checkLogin () {
       // If user is already logged in notify
       if (this.$store.state.auth.isUserLoggedIn()) {
-
-        // Close animation if passed as payload
-        // this.$vs.loading.close()
-
         this.$vs.notify({
           title: 'Connexion',
           text: 'Vous êtes déjà connecté!',
@@ -115,8 +111,23 @@ export default {
       }
 
       this.$store.dispatch('auth/loginJWT', payload)
-        .then(() => { this.$vs.loading.close() })
-        .catch(error => {          
+        .then((r) => {
+          
+          this.$vs.loading.close() 
+          if (r.activeResend) {
+            console.log('in');
+            
+            this.$vs.notify({
+              title: 'Echec',
+              text: r.message,
+              iconPack: 'feather',
+              icon: 'icon-alert-circle',
+              color: 'danger'
+            })
+            this.$router.push('/pages/verify').catch(() => {})
+          } 
+          })
+        .catch(error => {         
           this.$vs.loading.close()
           this.$vs.notify({
             title: 'Echec',
@@ -125,6 +136,9 @@ export default {
             icon: 'icon-alert-circle',
             color: 'danger'
           })
+          if (error.activeResend) {
+            this.$router.push('/pages/verify').catch(() => {})
+          } 
         })
     },
     registerUser () {
@@ -132,11 +146,7 @@ export default {
       this.$router.push('/pages/register').catch(() => {})
     },
     forgotPassword () {
-      console.log('here');
-      
-      if (!this.checkLogin()) return
-      console.log('next');
-      
+      if (!this.checkLogin()) return      
       this.$router.push('/pages/forgot-password').catch(() => {})
     }
   }

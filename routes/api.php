@@ -13,8 +13,6 @@ use Illuminate\Http\Request;
 |
 */
 
-
-
 Route::prefix('auth')->group(function () {
     /***********************************************************************************/
     /********************************    USER     **************************************/
@@ -28,8 +26,9 @@ Route::prefix('auth')->group(function () {
     Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
     Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset');
     Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
-    
-    Route::get('email/verify/{token}', 'Auth\VerificationController@verify');
+
+    Route::get('email/verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
+    Route::post('email/resend', 'API\UserController@resendVerification');
 });
 
 /***********************************************************************************/
@@ -138,6 +137,21 @@ Route::group(['middleware' => 'auth:api'], function(){
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
             Route::delete('{id}', 'API\WorkareaController@destroy');
+        // });
+    });
+
+    /***********************************************************************************/
+    /********************************   PROJETCS   *************************************/
+    /***********************************************************************************/
+    Route::prefix('project-management')->group(function () {
+        Route::get('index', 'API\ProjectController@index');
+        Route::get('show/{id}', 'API\ProjectController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+            Route::post('store', 'API\ProjectController@store');
+            Route::post('update/{id}', 'API\ProjectController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\ProjectController@destroy');
         // });
     });
 });
