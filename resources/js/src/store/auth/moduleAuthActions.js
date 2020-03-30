@@ -109,13 +109,16 @@ export default {
   },
   forgotPassword ({ commit }, payload) {    
     return new Promise((resolve) => {
-      jwt.forgotPassword(payload.email).then(response => { console.log(response);
-       resolve(response) })
+      jwt.forgotPassword(payload.email)
+      .then(response => {resolve(response) })
+      .catch(error => { reject(error)})
     })
   },
   resetPassword ({ commit }, payload) {
     return new Promise((resolve, reject) => {
-      jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token).then(response => { resolve(response) }).catch(error => { reject(error)})
+      jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token)
+      .then(response => { resolve(response) })
+      .catch(error => { reject(error)})
     })
   },
   logoutJWT ({ commit }) {
