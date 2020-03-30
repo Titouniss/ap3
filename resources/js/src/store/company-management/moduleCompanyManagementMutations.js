@@ -20,8 +20,8 @@ export default {
   },
 
   UPDATE_ITEM (state, item) {
-    const index = state[slug].findIndex((r) => r.id === item.id)    
-    Object.assign(state[slug][index], item)
+    const index = state[slug].findIndex((r) => r.id === item.id)
+    state[slug].splice(index, 1, item)
   },
 
   SET_ITEMS (state, items) {
