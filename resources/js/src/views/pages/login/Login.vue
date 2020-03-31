@@ -19,8 +19,8 @@
         <div class="img-container">
           <img src="@assets/images/login/plan-icon.png" alt="login" class="img" />
         </div>
-        <div class="title">
-          <h4>Bienvenu sur votre outil de plannification</h4>
+        <div>
+          <h4>Bienvenue sur votre outil de plannification</h4>
         </div>
 
         <div>
