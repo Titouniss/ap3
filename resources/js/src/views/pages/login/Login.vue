@@ -19,8 +19,8 @@
         <div class="img-container">
           <img src="@assets/images/login/plan-icon.png" alt="login" class="img" />
         </div>
-        <div class="title">
-          <h4>Bienvenu sur votre outil de plannification</h4>
+        <div>
+          <h4>Bienvenue sur votre outil de plannification</h4>
         </div>
 
         <div>
@@ -48,7 +48,7 @@
           <div class="forgot-password">
             <router-link to="forgot-password" @click="forgotPassword">Mot de passe oublié ?</router-link>
           </div>
-          <div class="btn-container">
+          <div class="btn-container-login">
             <button :disabled="!validateForm" @click="loginJWT" class="login-btn">Connexion</button>
             <p type="border" @click="registerUser" class="register-link">Inscription</p>
           </div>
@@ -153,5 +153,5 @@ export default {
 </script>
 
 <style lang="scss">
-@import "../../../../../assets/css/login.css";
+@import "../../../../../assets/css/login/login.css";
 </style>
