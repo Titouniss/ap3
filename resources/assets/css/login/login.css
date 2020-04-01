@@ -32,7 +32,7 @@ h4 {
 .forgot-password:hover {
   font-weight: bold;
 }
-.btn-container {
+.btn-container-login {
 display: flex;
 flex: 1;
 flex-direction: column;
