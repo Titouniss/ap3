@@ -85,7 +85,7 @@
           class="checkBox"
         >J'accepte les conditions générales d'utilisation.</vs-checkbox>
         <div class="btn-container">
-          <a type="border" href="/pages/login" class="back-link">Retour</a>
+          <router-link to="/pages/login" class="back-link">Retour</router-link>
           <button
             class="register-btn"
             @click="registerUserJWt"
