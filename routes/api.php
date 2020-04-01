@@ -19,12 +19,15 @@ Route::prefix('auth')->group(function () {
     /***********************************************************************************/
     Route::post('login', 'API\UserController@login');
     Route::get('user', 'API\UserController@getUserByToken');
+    Route::get('user/registration/{token}', 'API\UserController@getUserForRegistration');
+
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
+    Route::post('register/{token}', 'API\UserController@registerWithToken');
     
     // handle reset password form process
     Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
-    Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset');
+    Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
     Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
 
     Route::get('email/verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
@@ -36,7 +39,6 @@ Route::prefix('auth')->group(function () {
 /***********************************************************************************/
 
 Route::group(['middleware' => 'auth:api'], function(){
-    
     /***********************************************************************************/
     /********************************    USERS    **************************************/
     /***********************************************************************************/

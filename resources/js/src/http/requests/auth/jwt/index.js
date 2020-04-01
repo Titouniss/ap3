@@ -60,6 +60,16 @@ export default {
       isTermsConditionAccepted: isTermsConditionAccepted
     })
   },
+  registerUserWithToken (firstname,lastname,email, pwd, c_password,isTermsConditionAccepted,token) {
+    return axios.post('/api/auth/register/' + token, {
+      firstname: firstname,
+      lastname: lastname,
+      email: email,
+      password: pwd,
+      c_password: c_password,
+      isTermsConditionAccepted: isTermsConditionAccepted
+    })
+  },
   refreshToken () {
     return axios.post('/api/auth/refresh-token', {token: localStorage.getItem('token')})
   },
