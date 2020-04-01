@@ -185,6 +185,14 @@ const router = new Router({
           }
         },
         {
+          path: '/pages/register/:token/:email',
+          name: 'page-register',
+          component: () => import('@/views/pages/register/RegisterWithToken.vue'),
+          meta: {
+            rule: 'editor'
+          }
+        },
+        {
           path: '/pages/forgot-password',
           name: 'page-forgot-password',
           component: () => import('@/views/pages/ForgotPassword.vue'),

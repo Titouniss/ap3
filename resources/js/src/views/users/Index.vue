@@ -9,9 +9,9 @@
 
 <template>
 
-  <div id="page-user-list">
+  <div id="page-users-list">
     <div class="vx-card p-6">
-
+      <add-form />
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -101,7 +101,10 @@ import vSelect from 'vue-select'
 
 // Store Module
 import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
+import moduleRoleManagement from '@/store/role-management/moduleRoleManagement.js'
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
+import AddForm from './AddForm.vue'
 import EditForm from './EditForm.vue'
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
@@ -113,6 +116,7 @@ export default {
   components: {
     AgGridVue,
     vSelect,
+    AddForm,
     EditForm,
     // Cell Renderer
     CellRendererLink,
@@ -264,11 +268,26 @@ export default {
       this.$store.registerModule('userManagement', moduleUserManagement)
       moduleUserManagement.isRegistered = true
     }
+
+    if (!moduleRoleManagement.isRegistered) {
+      this.$store.registerModule('roleManagement', moduleRoleManagement)
+      moduleRoleManagement.isRegistered = true
+    }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule('companyManagement', moduleCompanyManagement)
+      moduleCompanyManagement.isRegistered = true
+    }
     this.$store.dispatch('userManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('roleManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
     moduleUserManagement.isRegistered = false
+    moduleRoleManagement.isRegistered = false
+    moduleCompanyManagement.isRegistered = false
     this.$store.unregisterModule('userManagement')
+    this.$store.unregisterModule('roleManagement')
+    this.$store.unregisterModule('companyManagement')
   }
 }
 

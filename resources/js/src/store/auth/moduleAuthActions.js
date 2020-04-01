@@ -10,7 +10,7 @@
 import jwt from '../../http/requests/auth/jwt/index.js'
 import router from '@/router'
 import moment from 'moment'
-
+import axios from '@/axios.js'
 export default {
   updateUsername ({ commit }, payload) {
     payload.user.updateProfile({
@@ -102,9 +102,42 @@ export default {
         .catch(error => { reject(error) })
     })
   },
+  updateUserJWT ({ commit }, payload) {
+
+    const { firstname, lastname, email, password, confirmPassword , isTermsConditionAccepted} = payload.userDetails
+
+    return new Promise((resolve, reject) => {
+
+      jwt.registerUserWithToken(firstname,lastname,email, password, confirmPassword,isTermsConditionAccepted, token)
+        .then(response => {
+          const data = response.data
+          // Redirect User
+          if (data && data.success) {
+            localStorage.setItem('loggedIn', true)
+            localStorage.setItem('token', data.success.token)
+            localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date())
+            commit('SET_BEARER', data.success.token)
+            commit('UPDATE_USER_INFO', data.userData, {root: true})
+            // Update data in localStorage
+            router.push(router.currentRoute.query.to || '/')
+          }
+          resolve(response)
+        })
+        .catch(error => { reject(error) })
+    })
+  },
   fetchAccessToken () {
     return new Promise((resolve) => {
       jwt.refreshToken().then(response => { resolve(response) })
+    })
+  },
+  fetchItemWithToken (context, token) {
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/auth/user/registration/${token}`)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
     })
   },
   forgotPassword ({ commit }, payload) {    
