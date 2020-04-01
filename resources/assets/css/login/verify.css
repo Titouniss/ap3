@@ -1,0 +1,38 @@
+.verify-container {
+    width: 25%;
+    max-width: 400px;
+    max-height: 500px;
+    min-height: 300px;
+    padding: 15px 40px 20px 40px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: -5px 0px 15px grey, 5px 0px 15px grey ;
+  }
+  h4 {
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+  .btn-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  }
+  .send-btn {
+    width: 200;
+    min-height: 30px;
+    max-height: 75px;
+    padding: 5px 10px 5px 10px;
+    font-size: 1.2em;
+    background-color: lightgray;
+    border-color: #424242;
+    border-radius: 5px;
+    margin-top: 25px;
+  }
+  .send-btn:hover {
+    background-color: #2196f3;
+    color: white;
+    cursor: pointer;
+  }
