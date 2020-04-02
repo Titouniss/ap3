@@ -178,12 +178,12 @@ export default {
           }
         }        
         if (user && user.id !== null){
-          if (user.roles.findIndex(r => r.name === 'superAdmin')) {
+          if (user.roles.findIndex(r => r.name === 'superAdmin') > -1 || item.slug === 'home') {            
             item.show = true
           }else if (userPermissions.length > 0) {
-              item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1 || item.slug === 'home'
+              item.show = userPermissions.findIndex(p => p.name === `read ${item.slug}`) > -1
           } else item.show = false
-        }
+        }        
       }
 
       return clone
