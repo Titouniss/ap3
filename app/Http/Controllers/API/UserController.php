@@ -200,7 +200,7 @@ class UserController extends Controller
             return response()->json(['error'=>$validator->errors()], 401);            
         }
         $input = $request->all(); 
-        $user = User::where('token', $token)->where('email', $input['email'])->first();
+        $user = User::where('register_token', $token)->where('email', $input['email'])->first();
         if (!isset($user)) return response()->json(['success'=>false], 404); 
         // get full data user before or after update
         $user->load(['roles' => function ($query) {
@@ -214,6 +214,7 @@ class UserController extends Controller
         $user->firstname = $input['firstname'];
         $user->lastname = $input['lastname'];
         $user->isTermsConditionAccepted = $input['isTermsConditionAccepted']; 
+        $user->register_token = null; 
         $user->markEmailAsVerified();
         $user->save();
 
@@ -222,7 +223,7 @@ class UserController extends Controller
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
 
-        return response()->json(['success'=>$success, 'userData' => $user, 'company' => $company], $this-> successStatus); 
+        return response()->json(['success'=>$success, 'userData' => $user], $this-> successStatus); 
     } 
 
     /** 
