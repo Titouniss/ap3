@@ -37,17 +37,18 @@ class PermissionsRoleTableSeeder extends Seeder
         }
         
         $Rolekeys = [
-            'superAdmin',
-            'littleAdmin',
-            'clientAdmin',
-            'basicUsers'
+            ['superAdmin', false],
+            ['littleAdmin', false],
+            ['Administrateur', true], // role publique
+            ['Utilisateur', true] // role publique
         ];
 
-        foreach ($Rolekeys as $key) {
-            $role = Role::firstOrCreate(['name' => $key]);
+        foreach ($Rolekeys as $roleKey) {
+            $key = $roleKey[0];
+            $role = Role::firstOrCreate(['name' => $key, 'isPublic' => $roleKey[1]]);
             if ($key == 'superAdmin') {
                 $role->givePermissionTo(Permission::all());
-            } else if ($key != 'basicUsers') {
+            } else if ($key != 'utilisateur') {
                 foreach ($Permkeys as $PermkeyArray) {
                     $Permkey = $PermkeyArray[0]; //get name only
                     if ($Permkey == 'permissions' || $Permkey == 'companies') {

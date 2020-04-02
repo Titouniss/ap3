@@ -6,6 +6,7 @@ use App\Notifications\UserRegistration;
 
 use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Auth\Events\Verified;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -168,9 +169,9 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error'=>$validator->errors()], 401);
         }
-        $role = Role::where('name', 'clientAdmin');
+        $role = Role::where('name', 'Administrateur');
         if ($role != null) {
-            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits
+            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => 'Entreprise '.$user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);

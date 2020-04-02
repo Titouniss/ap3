@@ -29,7 +29,7 @@
                             </div>
                             <vs-divider />
                             <div>
-                              <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
+                              <vs-select v-validate="'required'" name="company_id" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
                                 <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
                               </vs-select>
                               <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
@@ -38,7 +38,7 @@
                         </div>
                         
                         <div>
-                          <vs-select v-validate="'required'" label="Rôle" v-model="itemLocal.roles" class="w-full mt-5" autocomplete>
+                          <vs-select v-validate="'required'" name="role" label="Rôle" v-model="itemLocal.roles" class="w-full mt-5" autocomplete>
                             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in rolesData" />
                           </vs-select>
                           <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
@@ -82,7 +82,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
           return false
-        } else  {
+        } else  {          
           this.itemLocal.company_id = user.company_id
           return true
         }
