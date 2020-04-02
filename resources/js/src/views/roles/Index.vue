@@ -228,7 +228,7 @@ export default {
     if (!moduleManagement.isRegistered) {
       this.$store.registerModule('roleManagement', moduleManagement)
       moduleManagement.isRegistered = true
-    }
+    }    
     this.$store.dispatch('roleManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
