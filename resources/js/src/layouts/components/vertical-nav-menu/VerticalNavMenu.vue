@@ -177,7 +177,7 @@ export default {
             clone.splice(i + 1 + subIndex, 0, subItem)
           }
         }        
-        if (user && user.id !== null){
+        if (user && user.id !== null){          
           if (user.roles.findIndex(r => r.name === 'superAdmin') > -1 || item.slug === 'home') {            
             item.show = true
           }else if (userPermissions.length > 0) {

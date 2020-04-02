@@ -52,6 +52,8 @@
 </template>
 
 <script>
+var model = 'user'
+var modelPlurial = 'users'
 
 export default {
   data () {
@@ -87,7 +89,7 @@ export default {
     },
     validateForm () {
       return !this.errors.any()
-    }
+    },
   },
   methods: {
     clearFields () {

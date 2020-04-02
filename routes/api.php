@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    ROLES    **************************************/
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
-        Route::group(['middleware' => ['can:read roles']], function () {
+        Route::group(['middleware' => ['permission:read roles|publish users']], function () {
             Route::get('index', 'API\RoleController@index');
             Route::get('show/{id}', 'API\RoleController@show');
         });
