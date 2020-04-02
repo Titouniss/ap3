@@ -9,91 +9,103 @@
 
 
 <template>
-    <div class="h-screen flex w-full bg-img">
-        <div class="vx-col w-4/5 sm:w-4/5 md:w-3/5 lg:w-3/4 xl:w-3/5 mx-auto self-center">
-            <vx-card>
-                <div slot="no-body" class="full-page-bg-color">
-                    <div class="vx-row">
-                        <div class="vx-col hidden sm:hidden md:hidden lg:block lg:w-1/2 mx-auto self-center">
-                            <img src="@assets/images/pages/forgot-password.png" alt="login" class="mx-auto">
-                        </div>
-                        <div class="vx-col sm:w-full md:w-full lg:w-1/2 mx-auto self-center d-theme-dark-bg">
-                            <div class="p-8">
-                                <div class="vx-card__title mb-8">
-                                    <h4 class="mb-4">Récupération de mot de passe</h4>
-                                    <p>Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
-                                </div>
+  <div
+    v-bind:style="cssProps"
+    class="h-screen flex w-full vx-row no-gutter items-center justify-center"
+    id="page-forgor-password"
+  >
+    <div class="forgotpassword-container">
+      <div>
+        <h4>Récupération de mot de passe</h4>
+        <p
+          class="text"
+        >Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
+      </div>
 
-                                <vs-input type="email" label-placeholder="Email" v-model="value1" class="w-full mb-8" :danger-text="dangerText" :danger="danger" :success-text="successText" :success="success"/>
-
-                                <vs-button type="border" to="/pages/login" class="px-4 w-full md:w-auto">Retour</vs-button>
-                                <vs-button class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0"  @click="forgotPassword">Envoyer le lien</vs-button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </vx-card>
-        </div>
+      <vs-input
+        type="email"
+        label-placeholder="Email"
+        v-model="value1"
+        class="w-full mb-8"
+        :danger-text="dangerText"
+        :danger="danger"
+        :success-text="successText"
+        :success="success"
+      />
+      <div class="btn-container">
+        <router-link to="/pages/login" class="back-link">Retour</router-link>
+        <button class="send-btn" @click="forgotPassword">Envoyer le lien</button>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
 export default {
-  data () {
+  data() {
     return {
-      value1: '',
+      value1: "",
       danger: false,
       success: false,
       dangerText: `Cette adresse e-mail n'est pas associée à un compte utilisateur`,
-      successText: `Un lien de réinitialisation a été envoyé`
-    }
+      successText: `Un lien de réinitialisation a été envoyé`,
+      cssProps: {
+        backgroundImage: `url(${require("../../../../assets/images/login/background_workshop.jpeg")})`,
+        backgroundPosition: "center center",
+        backgroundSize: "cover"
+      }
+    };
   },
   methods: {
-    checkLogin () {
+    checkLogin() {
       // If user is already logged in notify
       if (this.$store.state.auth.isUserLoggedIn()) {
-
         // Close animation if passed as payload
         // this.$vs.loading.close()
 
         this.$vs.notify({
-          title: 'Connexion',
-          text: 'Vous êtes déjà connecté!',
-          iconPack: 'feather',
-          icon: 'icon-alert-circle',
-          color: 'warning'
-        })
+          title: "Connexion",
+          text: "Vous êtes déjà connecté!",
+          iconPack: "feather",
+          icon: "icon-alert-circle",
+          color: "warning"
+        });
 
-        return false
+        return false;
       }
-      return true
+      return true;
     },
-    forgotPassword () {
-      if (!this.checkLogin()) return
+    forgotPassword() {
+      if (!this.checkLogin()) return;
       const payload = {
-          email: this.value1
-      }
+        email: this.value1
+      };
       // Loading
-      this.$vs.loading()
-      this.$store.dispatch('auth/forgotPassword',payload)
-        .then((r) => { 
-          this.danger = r.data.message === "Failed"
-          this.success = r.data.message === "Success"
-          this.$vs.loading.close()
+      this.$vs.loading();
+      this.$store
+        .dispatch("auth/forgotPassword", payload)
+        .then(r => {
+          this.danger = r.data.message === "Failed";
+          this.success = r.data.message === "Success";
+          this.$vs.loading.close();
         })
-        .catch(error => {         
+        .catch(error => {
           console.log(error);
-           
-          this.$vs.loading.close()
+
+          this.$vs.loading.close();
           this.$vs.notify({
-            title: 'Echec',
+            title: "Echec",
             text: error.message,
-            iconPack: 'feather',
-            icon: 'icon-alert-circle',
-            color: 'danger'
-          })
-        })
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
+        });
     }
   }
-}
+};
 </script>
+
+<style lang="scss">
+@import "../../../../assets/css/forgotPassword.css";
+</style>

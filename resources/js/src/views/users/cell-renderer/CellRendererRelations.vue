@@ -9,8 +9,8 @@ export default {
   name: 'CellRendererVerified',
   computed: {
     RelationToText () {
-      let text = ''
-      if (this.params.value) {        
+      let text = ''      
+      if (this.params.value && this.params.value.length) {        
         this.params.value.forEach(element => {
           let role = ''
           if (text) {

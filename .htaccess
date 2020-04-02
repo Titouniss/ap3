@@ -1,0 +1,10 @@
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [QSA,L]
+
+    RewriteRule ^(.*)$ https://vps804792.ovh.net/$1 [R,L]
+<Files .env>
+Order allow,deny
+Deny from all
+</Files>

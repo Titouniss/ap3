@@ -1,10 +1,19 @@
 <?php
 namespace App\Http\Controllers\API;
-use Illuminate\Http\Request; 
+
 use App\Http\Controllers\Controller; 
+use App\Notifications\UserRegistration;
+
+use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Auth\Events\Verified;
+
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
 use Validator;
+use Mail;
 
 use App\User; 
 use App\Models\Company;
@@ -96,7 +105,7 @@ class UserController extends Controller
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function getUserByToken () { 
+    public function getUserByUserToken () { 
         $user = Auth::user();
         $success = false;
         if ($user != null) {
@@ -109,6 +118,18 @@ class UserController extends Controller
         }
         response()->json(['success' => $success, 'userData' => $user], $this-> successStatus); 
     }
+
+        /** 
+     * get single item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function getUserForRegistration($token) 
+    { 
+        $item = User::where('register_token',$token)->first();
+        $success = isset($item) ? true : false;
+        return response()->json(['success' => $success, 'userData' => $item], $success ? $this-> successStatus : 404); 
+    } 
 
     /** 
     * logout api 
@@ -148,9 +169,9 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error'=>$validator->errors()], 401);
         }
-        $role = Role::where('name', 'clientAdmin');
+        $role = Role::where('name', 'Administrateur');
         if ($role != null) {
-            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits
+            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => 'Entreprise '.$user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);
@@ -160,6 +181,50 @@ class UserController extends Controller
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
         return response()->json(['success'=>$success, 'userData' => $user, 'company' => $company], $this-> successStatus); 
+    } 
+
+    /** 
+     * Register api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function registerWithToken(Request $request, $token) 
+    { 
+        $validator = Validator::make($request->all(), [ 
+            'firstname' => 'required', 
+            'lastname' => 'required', 
+            'password' => 'required', 
+            'c_password' => 'required|same:password', 
+            'isTermsConditionAccepted' => 'required', 
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['error'=>$validator->errors()], 401);            
+        }
+        $input = $request->all(); 
+        $user = User::where('register_token', $token)->where('email', $input['email'])->first();
+        if (!isset($user)) return response()->json(['success'=>false], 404); 
+        // get full data user before or after update
+        $user->load(['roles' => function ($query) {
+            $query->select(['id','name'])->with(['permissions' => function ($query) {
+                $query->select(['id','name','name_fr', 'isPublic']);
+            }]);
+        }])->load('company:id,name');
+
+        // update user data
+        $user->password = bcrypt($input['password']); 
+        $user->firstname = $input['firstname'];
+        $user->lastname = $input['lastname'];
+        $user->isTermsConditionAccepted = $input['isTermsConditionAccepted']; 
+        $user->register_token = null; 
+        $user->markEmailAsVerified();
+        $user->save();
+
+        // generate access token
+        $token =  $user->createToken('ProjetX');
+        $success['token'] =  $token->accessToken;
+        $success['tokenExpires'] =  $token->token->expires_at;
+
+        return response()->json(['success'=>$success, 'userData' => $user], $this-> successStatus); 
     } 
 
     /** 
@@ -179,7 +244,42 @@ class UserController extends Controller
         return response()->json(['success' => $usersList], $this-> successStatus); 
     } 
 
-      
+    
+    /** 
+     * add item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function store(Request $request) 
+    { 
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [ 
+            'lastname' => 'required',
+            'firstname' => 'required',
+            'email' => 'required',
+            'company_id' => 'required'
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['error'=>$validator->errors()], 401);            
+        }
+        $arrayRequest['password'] = Hash::make(Str::random(12)); // on créer un password temporaire
+        $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
+        $arrayRequest['isTermsConditionAccepted'] = false;
+        $item = User::create($arrayRequest)->load('company');
+        if (isset($arrayRequest['roles'])) {
+            $item->assignRole($arrayRequest['roles']); // on ajoute le role à l'utilisateur
+        } else {
+            // on assigne le rôle d'utilisateur sans droit par défault pour éviter un bug.
+            $item->assignRole('basicUsers');
+        }
+
+        $item->notify(new UserRegistration($item));
+
+        return response()->json(['success' => $arrayRequest ], $this-> successStatus); 
+        //Il faut envoyer un email avec lien d'inscription
+
+    } 
+
     /** 
      * get single item api 
      * 
@@ -188,7 +288,7 @@ class UserController extends Controller
     public function show($id) 
     { 
         $item = User::where('id',$id)->first()->load('roles:id,name','company:id,name');
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => $item], isset($item) ? $this-> successStatus : 404); 
     } 
 
     /** 

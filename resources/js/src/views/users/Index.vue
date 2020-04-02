@@ -1,17 +1,7 @@
-<!-- =========================================================================================
-  File Name: UserList.vue
-  Description: User List page
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-========================================================================================== -->
-
 <template>
-
-  <div id="page-user-list">
+  <div id="page-users-list">
     <div class="vx-card p-6">
-
+      <add-form   v-if="authorizedToPublish" />
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -53,7 +43,7 @@
             </div>
 
             <vs-dropdown-menu>
-              <vs-dropdown-item>
+              <vs-dropdown-item v-if="authorizedToDelete">
                 <span class="flex items-center">
                   <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                   <span>Supprimer</span>
@@ -89,7 +79,7 @@
         v-model="currentPage" />
 
     </div>
-    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit"/>
+    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit && authorizedToEdit "/>
   </div>
 
 </template>
@@ -101,18 +91,25 @@ import vSelect from 'vue-select'
 
 // Store Module
 import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
+import moduleRoleManagement from '@/store/role-management/moduleRoleManagement.js'
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
 
+import AddForm from './AddForm.vue'
 import EditForm from './EditForm.vue'
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
+var model = 'user'
+var modelPlurial = 'users'
+var modelTitle = 'Utilisateurs'
 
 export default {
   components: {
     AgGridVue,
     vSelect,
+    AddForm,
     EditForm,
     // Cell Renderer
     CellRendererLink,
@@ -202,6 +199,15 @@ export default {
     usersData () {
       return this.$store.state.userManagement.users
     },
+    authorizedToPublish () {               
+      return this.$store.getters.userHasPermissionTo( `publish ${modelPlurial}`) > -1
+    },
+    authorizedToDelete () {               
+      return this.$store.getters.userHasPermissionTo( `delete ${modelPlurial}`) > -1
+    },
+    authorizedToEdit () {
+      return this.$store.getters.userHasPermissionTo( `edit ${modelPlurial}`) > -1
+    },
     paginationPageSize () {
       if (this.gridApi) return this.gridApi.paginationGetPageSize()
       else return 10
@@ -244,6 +250,11 @@ export default {
     },
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
+    },
+    manageErrors(err){
+      if (err && err.request && err.request.status === 403) {
+        this.$router.push({ name: 'page-not-authorized'}).catch(() => {})
+      } else console.error(err)
     }
   },
   mounted () {
@@ -264,11 +275,26 @@ export default {
       this.$store.registerModule('userManagement', moduleUserManagement)
       moduleUserManagement.isRegistered = true
     }
-    this.$store.dispatch('userManagement/fetchItems').catch(err => { console.error(err) })
+
+    if (!moduleRoleManagement.isRegistered) {
+      this.$store.registerModule('roleManagement', moduleRoleManagement)
+      moduleRoleManagement.isRegistered = true
+    }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule('companyManagement', moduleCompanyManagement)
+      moduleCompanyManagement.isRegistered = true
+    }
+    this.$store.dispatch('userManagement/fetchItems').catch(err => { this.manageErrors(err) })
+    this.$store.dispatch('companyManagement/fetchItems').catch(err => { this.manageErrors(err) })
+    this.$store.dispatch('roleManagement/fetchItems').catch(err => { this.manageErrors(err)  })
   },
   beforeDestroy () {
     moduleUserManagement.isRegistered = false
+    moduleRoleManagement.isRegistered = false
+    moduleCompanyManagement.isRegistered = false
     this.$store.unregisterModule('userManagement')
+    this.$store.unregisterModule('roleManagement')
+    this.$store.unregisterModule('companyManagement')
   }
 }
 

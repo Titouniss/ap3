@@ -28,7 +28,7 @@ class RoleController extends Controller
         } else if ($user->company_id != null) {
             $listObject = Role::where('company_id',$user->company_id)
                             ->orWhere(function ($query) {
-                                $query->where('company_id', '=', 'null')
+                                $query->where('company_id', '=', null)
                                     ->where('isPublic', true);
                             })->get()->load('permissions');
         }
