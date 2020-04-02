@@ -20,12 +20,7 @@
                         <vs-input v-validate="'required'" name="lastname" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.lastname" :color="validateForm ? 'success' : 'danger'" />
                         <vs-input v-validate="'required'" name="firstname" class="w-full mb-4 mt-5" placeholder="Prénom" v-model="itemLocal.firstname" :color="validateForm ? 'success' : 'danger'" />
                         <vs-input v-validate="'required'" name="email" class="w-full mb-4 mt-5" placeholder="E-mail" v-model="itemLocal.email" :color="validateForm ? 'success' : 'danger'" />
-                        <div>
-                          <vs-select v-validate="'required'" label="Rôle" v-model="itemLocal.roles" class="w-full mt-5" autocomplete>
-                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in rolesData" />
-                          </vs-select>
-                          <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
-                        </div> 
+
                         <div class="vx-row mt-4" v-if="!disabled">
                           <div class="vx-col w-full">
                             <div class="flex items-end px-3">
@@ -34,7 +29,7 @@
                             </div>
                             <vs-divider />
                             <div>
-                              <vs-select v-on:change="selectCompanyRoles" v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
+                              <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
                                 <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
                               </vs-select>
                               <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
@@ -42,6 +37,13 @@
                           </div>
                         </div>
                         
+                        <div>
+                          <vs-select v-validate="'required'" label="Rôle" v-model="itemLocal.roles" class="w-full mt-5" autocomplete>
+                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in rolesData" />
+                          </vs-select>
+                          <span class="text-danger text-sm"  v-show="errors.has('company_id')">{{ errors.first('company_id') }}</span>
+                        </div> 
+
                       </div>
                   </div>
 
@@ -65,8 +67,7 @@ export default {
         email: '',
         company_id: null,
         roles: []
-      },
-      companyRoles: []
+      }
     }
   },
   computed: {
@@ -74,7 +75,7 @@ export default {
       return this.$store.state.companyManagement.companies
     },
     rolesData() {
-      return this.$store.state.roleManagement.roles
+      return this.$store.getters['roleManagement/getItemsForCompany'](this.itemLocal.company_id)
     },
     disabled () { 
       const user = this.$store.state.AppActiveUser 
@@ -100,9 +101,6 @@ export default {
           roles: []
         },
       })
-    },
-    selectCompanyRoles (item) {
-      this.companyRoles = this.companiesData.find(company => company.id === item).roles
     },
     addItem () {
       this.$validator.validateAll().then(result => {
