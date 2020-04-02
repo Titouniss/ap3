@@ -128,6 +128,10 @@
             background: #fafafa;
         }
 
+        .bg_gray {
+            background: #ccc;
+        }
+
         .bg_black {
             background: #000000;
         }
@@ -514,8 +518,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td valign="middle" class="hero bg_white"
-                        style="background-image: url(images/bg_1.jpg); background-size: cover; height: 400px;">
+                    <td valign="middle" class="hero bg_gray">
                         <div class="overlay"></div>
                         <table>
                             <tr>
