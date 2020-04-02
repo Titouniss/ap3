@@ -154,5 +154,20 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::delete('{id}', 'API\ProjectController@destroy');
         // });
     });
+
+    /***********************************************************************************/
+    /***********************************   TASK   **************************************/
+    /***********************************************************************************/
+    Route::prefix('task-management')->group(function () {
+        Route::get('index/{id}', 'API\TaskController@index');
+        Route::get('show/{id}', 'API\TaskController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+            Route::post('store', 'API\TaskController@store');
+            Route::post('update/{id}', 'API\TaskController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\TaskController@destroy');
+        // });
+    });
 });
 
