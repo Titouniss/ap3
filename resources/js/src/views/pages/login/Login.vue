@@ -14,46 +14,56 @@
     class="h-screen flex w-full vx-row no-gutter items-center justify-center"
     id="page-login"
   >
-    <div class="login-container">
-      <div class="p-8 login-tabs-container">
-        <div class="img-container">
-          <img src="@assets/images/login/plan-icon.png" alt="login" class="img" />
-        </div>
-        <div>
-          <h4>Bienvenue sur votre outil de plannification</h4>
-        </div>
-
-        <div>
-          <vs-input
-            name="email"
-            icon-no-border
-            icon="icon icon-user"
-            icon-pack="feather"
-            placeholder="Email"
-            v-model="email"
-            class="w-full"
-          />
-
-          <vs-input
-            type="password"
-            name="password"
-            icon-no-border
-            icon="icon icon-lock"
-            icon-pack="feather"
-            placeholder="Mot de passe"
-            v-model="password"
-            class="w-full mt-6"
-          />
-
-          <div class="forgot-password">
-            <router-link to="forgot-password" @click="forgotPassword">Mot de passe oublié ?</router-link>
+    <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
+      <vx-card>
+        <img src="@assets/images/login/plan-icon.png" alt="login" class="w-2/5 ml-auto mr-auto" />
+        <div class="p-8 login-tabs-container">
+          <div class="vx-card__title mb-4">
+            <h4 class="mb-4 text-center">Bienvenue sur votre outil de plannification</h4>
+            <p class="text-center">Connexion</p>
           </div>
-          <div class="btn-container-login">
-            <button :disabled="!validateForm" @click="loginJWT" class="login-btn">Connexion</button>
-            <p type="border" @click="registerUser" class="register-link">Inscription</p>
+
+          <div class="flex-column">
+            <vs-input
+              name="email"
+              icon-no-border
+              icon="icon icon-user"
+              icon-pack="feather"
+              placeholder="Email"
+              v-model="email"
+              class="w-full"
+            />
+
+            <vs-input
+              type="password"
+              name="password"
+              icon-no-border
+              icon="icon icon-lock"
+              icon-pack="feather"
+              placeholder="Mot de passe"
+              v-model="password"
+              class="w-full mt-6"
+            />
+
+            <div class="flex justify-center my-5 ml-auto mr-auto">
+              <router-link
+                to="forgot-password"
+                @click="forgotPassword"
+                class="ml-auto mr-auto text-center"
+              >Mot de passe oublié ?</router-link>
+            </div>
+            <vs-row vs-align="center" vs-type="flex" vs-justify="space-around">
+              <router-link to="register" @click="registerUser">Inscription</router-link>
+              <vs-button
+                color="light"
+                text-color="grey"
+                :disabled="!validateForm"
+                @click="loginJWT"
+              >Connexion</vs-button>
+            </vs-row>
           </div>
         </div>
-      </div>
+      </vx-card>
     </div>
   </div>
 </template>
@@ -151,7 +161,3 @@ export default {
   }
 };
 </script>
-
-<style lang="scss">
-@import "../../../../../assets/css/login/login.css";
-</style>

@@ -14,23 +14,33 @@
     class="h-screen flex w-full vx-row no-gutter items-center justify-center"
     id="page-verify"
   >
-    <div class="verify-container">
-      <div>
-        <h4>Votre adresse e-mail n'est pas vérifiée</h4>
-      </div>
-      <vs-input
-        icon-no-border
-        icon="icon icon-mail"
-        icon-pack="feather"
-        label-placeholder="e-mail"
-        v-model="value1"
-        class="w-full mb-6"
-      />
-
-      <div class="btn-container">
-        <router-link to="/pages/login" class="mb-4">Vous avez déjà un lien de vérification?</router-link>
-        <button class="send-btn" @click="sendVerificationEmail">Renvoyer un e-mail de vérification</button>
-      </div>
+    <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
+      <vx-card class="flex-col">
+        <div class="vx-card__title mb-8">
+          <h4 class="mb-4 text-center">Votre adresse e-mail n'est pas vérifiée</h4>
+        </div>
+        <vs-input
+          icon-no-border
+          icon="icon icon-mail"
+          icon-pack="feather"
+          placeholder="e-mail"
+          v-model="value1"
+          class="w-full mb-6"
+        />
+        <div class="flex justify-center my-3 ml-auto mr-auto">
+          <router-link
+            to="/pages/login"
+            class="mb-2 text-center"
+          >Vous avez déjà un lien de vérification?</router-link>
+        </div>
+        <div class="flex justify-center my-3 ml-auto mr-auto">
+          <vs-button
+            color="light"
+            text-color="grey"
+            @click="sendVerificationEmail"
+          >Renvoyer un e-mail de vérification</vs-button>
+        </div>
+      </vx-card>
     </div>
   </div>
 </template>
@@ -71,7 +81,3 @@ export default {
   }
 };
 </script>
-
-<style lang="scss">
-@import "../../../../../assets/css/login/verify.css";
-</style>
