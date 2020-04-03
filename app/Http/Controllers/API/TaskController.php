@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\TasksBundle;
 use App\Models\Project;
+use App\Models\TaskComment;
+use App\Models\TasksSkill;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
@@ -62,6 +64,9 @@ class TaskController extends Controller
         }
         $arrayRequest['tasks_bundle_id'] = $taskBundle->id;
         $item = Task::create($arrayRequest);
+        $this->storeComment($item->id, $arrayRequest['comment']);
+        $this->storeSkills($item->id, $arrayRequest['skills']);
+
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
@@ -136,5 +141,19 @@ class TaskController extends Controller
             }
         } 
         return $exist;
+    }
+
+    private function storeComment(int $task_id, $comment){
+        if($comment != '' && $task_id){
+            TaskComment::create(['description' => $comment, 'confirmed' => 1, 'task_id' => $task_id]);
+        }
+    }
+
+    private function storeSkills(int $task_id, $skills){
+        if(count($skills) > 0 && $task_id){
+            foreach ($skills as $skill_id) {
+                TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill_id]);
+            } 
+        }
     }
 }
