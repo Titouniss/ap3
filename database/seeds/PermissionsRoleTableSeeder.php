@@ -26,7 +26,9 @@ class PermissionsRoleTableSeeder extends Seeder
             ['companies', 'entreprises',false],
             ['workareas', 'îlots',true],
             ['skills', 'compétences',true],
-            ['projects', 'projets',true]
+            ['projects', 'projets',true],
+            ['tasks', 'tâches',true],
+            ['ranges', 'gammes',true],
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
