@@ -16,7 +16,7 @@
       <vs-dropdown-menu class="vx-navbar-dropdown">
         <ul style="min-width: 9rem">
 
-          <li class="flex py-2 px-4 cursor-pointer hover:bg-primary hover:text-white">
+          <li class="flex py-2 px-4 cursor-pointer hover:bg-primary hover:text-white" @click="profil">
             <feather-icon icon="UserIcon" svgClasses="w-4 h-4" />
             <span class="ml-2">Profil</span>
           </li>
@@ -44,10 +44,14 @@ export default {
   data () {
     return {
       company: null,
+      userId: null,
       displayName: ''
     }
   },
   computed: {
+    activeLink () {
+      return !!((this.to === this.$route.path || this.$route.meta.parent === this.slug) && this.to)
+    },
     activeUserInfo () {  
       const user = this.$store.state.AppActiveUser
       console.log(user);
@@ -56,6 +60,7 @@ export default {
              
         const lastname = user.lastname && user.lastname !== null ? user.lastname.toUpperCase() : ''
         this.displayName = user.firstname + ' ' + lastname
+        this.userId = user.id
         if (user.company) {
           this.company = user.company.name          
         }
@@ -91,6 +96,9 @@ export default {
             color: 'danger'
           })
         })
+    },
+    profil(){
+      this.$router.push('/users/user-edit/' + this.userId).catch(() => {})
     }
   }
 }

@@ -43,6 +43,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
+/////---USERS---/////
         {
           path: '/users',
           name: 'users',
@@ -54,6 +55,16 @@ const router = new Router({
           }
         },
         {
+          path: '/users/user-edit/:userId',
+          name: 'app-user-edit',
+          component: () => import('@/views/users/user-edit/UserEdit.vue'),
+          meta: {
+            pageTitle: 'Mon compte',
+            rule: 'editor'
+          }
+        },
+/////---COMPANIES---/////
+        {
           path: '/companies',
           name: 'companies',
           component: () => import('./views/companies/index.vue'),
@@ -63,6 +74,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
+/////---SKILLS---/////
         {
           path: '/skills',
           name: 'skills',
