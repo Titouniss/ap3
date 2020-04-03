@@ -12,30 +12,38 @@
   <div
     v-bind:style="cssProps"
     class="h-screen flex w-full vx-row no-gutter items-center justify-center"
-    id="page-forgor-password"
+    id="page-forgot-password"
   >
-    <div class="forgotpassword-container">
-      <div>
-        <h4>Récupération de mot de passe</h4>
-        <p
-          class="text"
-        >Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
-      </div>
+    <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
+      <vx-card>
+        <div class="vx-card__title mb-8">
+          <h4 class="mb-4 text-center">Récupération de mot de passe</h4>
+          <p
+            class="text-center"
+          >Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
+        </div>
 
-      <vs-input
-        type="email"
-        label-placeholder="Email"
-        v-model="value1"
-        class="w-full mb-8"
-        :danger-text="dangerText"
-        :danger="danger"
-        :success-text="successText"
-        :success="success"
-      />
-      <div class="btn-container">
-        <router-link to="/pages/login" class="back-link">Retour</router-link>
-        <button class="send-btn" @click="forgotPassword">Envoyer le lien</button>
-      </div>
+        <vs-input
+          type="email"
+          placeholder="Email"
+          v-model="value1"
+          class="w-full mb-8"
+          :danger-text="dangerText"
+          :danger="danger"
+          :success-text="successText"
+          :success="success"
+        />
+
+        <vs-row vs-align="center" vs-type="flex" vs-justify="space-around">
+          <router-link to="login" @click="goLogin" class="ml-2 mr-2">retour</router-link>
+          <vs-button
+            color="light"
+            text-color="grey"
+            class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0"
+            @click="forgotPassword"
+          >Envoyer le lien</vs-button>
+        </vs-row>
+      </vx-card>
     </div>
   </div>
 </template>
@@ -101,11 +109,11 @@ export default {
             color: "danger"
           });
         });
+    },
+    goLogin() {
+      if (!this.checkLogin()) return;
+      this.$router.push("/pages/login/login").catch(() => {});
     }
   }
 };
 </script>
-
-<style lang="scss">
-@import "../../../../assets/css/forgotPassword.css";
-</style>

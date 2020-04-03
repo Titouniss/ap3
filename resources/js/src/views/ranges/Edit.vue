@@ -1,6 +1,6 @@
 <!-- =========================================================================================
-  File Name: RoleAdd.vue
-  Description: role Add Page
+  File Name: RoleEdit.vue
+  Description: role Edit Page
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -8,16 +8,16 @@
 ========================================================================================== -->
 
 <template>
-  <div id="page-role-add">
-    <vx-card>
+  <div id="page-role-edit">
+    <vs-alert color="danger" title="role Not Found" :active.sync="role_not_found">
+      <span>Le rôle {{ $route.params.id }} est introuvable. </span>
+      <span>
+        <span>voir </span><router-link :to="{name:'ranges'}" class="text-inherit underline">Tout les rôles</router-link>
+      </span>
+    </vs-alert>
+
+    <vx-card v-if="role_data">
       <div slot="no-body" class="tabs-container px-6 pt-6">
-        <div class="vx-row" v-if="!disabled">
-          <vs-switch v-model="role_data.isPublic" name="isPublic">
-            <span slot="on">Publique</span>
-            <span slot="off">Privé</span>
-          </vs-switch>
-          <span class="text-danger text-sm"  v-show="errors.has('isPublic')">{{ errors.first('isPublic') }}</span>
-        </div>
         <div class="vx-row">
           <vs-input class="w-full mt-4" label="Titre" v-model="role_data.name" v-validate="'required'" name="name" />
           <span class="text-danger text-sm"  v-show="errors.has('name')">{{ errors.first('name') }}</span>
@@ -62,7 +62,7 @@
       <div class="vx-row">
         <div class="vx-col w-full">
           <div class="mt-8 flex flex-wrap items-center justify-end">
-            <vs-button class="ml-auto mt-2" @click="save_changes" :disabled="!validateForm">Ajouter</vs-button>
+            <vs-button class="ml-auto mt-2" @click="save_changes" :disabled="!validateForm">Modifier</vs-button>
             <vs-button class="ml-4 mt-2" type="border" color="warning" @click="back">Annuler</vs-button>
           </div>
         </div>
@@ -74,37 +74,23 @@
 <script>
 import lodash from 'lodash'
 // Store Module
-import moduleRoleManagement from '@/store/role-management/moduleRoleManagement.js'
+import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
 import modulePermissionManagement from '@/store/permission-management/modulePermissionManagement.js'
 var model = 'role'
-var modelPlurial = 'roles'
+var modelPlurial = 'ranges'
 var modelTitle = 'Rôle'
 
 export default {
   data () {
     return {
-      role_data: {
-        name: '',
-        guard_name: 'web',
-        description: '', 
-        isPublic: false,
-        company_id: null
-      },
+      role_data: null,
       selected: [],
       role_not_found: false,
     }
   },
   computed: {
-    disabled () { 
-      const user = this.$store.state.AppActiveUser 
-      if (user.roles && user.roles.length > 0) {
-        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
-          return false
-        } return true
-      } else return true
-    },
     permissions () {
-        const permissionsStore = this.$store.state.permissionManagement.permissions        
+        const permissionsStore = this.$store.state.permissionManagement.permissions
         let permissions =  []
         if (permissionsStore && permissionsStore.length > 0) {
                 permissions = permissionsStore.reduce(function(acc, valeurCourante){
@@ -131,6 +117,24 @@ export default {
     }
   },
   methods: {
+    fetch_data (id) {
+      this.$store.dispatch('roleManagement/fetchItem', id)
+        .then(res => { 
+            this.role_data = res.data.success
+            if (this.role_data && this.role_data.permissions.length) {
+                this.role_data.permissions.forEach(permission => {
+                    this.selected[permission.id] = true
+                });
+            }
+        })
+        .catch(err => {
+          if (err.response.status === 404) {
+            this.role_not_found = true
+            return
+          }
+          console.error(err) 
+        })
+    },
     save_changes () {
       /* eslint-disable */
       if (!this.validateForm) return
@@ -138,12 +142,12 @@ export default {
       this.role_data.permissions = _.keys(_.pickBy(this.selected ))
        
       const payload = {...this.role_data}      
-      this.$store.dispatch('roleManagement/addItem', payload)
-      .then(() => { 
-        this.$vs.loading.close() 
-        this.$vs.notify({
-          title: 'Ajout',
-          text: 'Rôle ajouté avec succès',
+      this.$store.dispatch('roleManagement/updateItem', payload)
+        .then(() => { 
+          this.$vs.loading.close() 
+          this.$vs.notify({
+          title: 'Modification',
+          text: 'Rôle modifier avec succès',
           iconPack: 'feather',
           icon: 'icon-alert-circle',
           color: 'success'
@@ -173,18 +177,19 @@ export default {
   },
   created () {
     // Register Module roleManagement Module
-    if (!moduleRoleManagement.isRegistered) {
-      this.$store.registerModule('roleManagement', moduleRoleManagement)
-      moduleRoleManagement.isRegistered = true
+    if (!moduleManagement.isRegistered) {
+      this.$store.registerModule('roleManagement', moduleManagement)
+      moduleManagement.isRegistered = true
     }
     if (!modulePermissionManagement.isRegistered) {
       this.$store.registerModule('permissionManagement', modulePermissionManagement)
       modulePermissionManagement.isRegistered = true
     }
+    this.fetch_data(this.$route.params.id)
     this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
-    moduleRoleManagement.isRegistered = false
+    moduleManagement.isRegistered = false
     modulePermissionManagement.isRegistered = false
     this.$store.unregisterModule('roleManagement')
     this.$store.unregisterModule('permissionManagement')

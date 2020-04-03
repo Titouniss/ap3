@@ -9,26 +9,27 @@
 
 // MAIN COLORS - VUESAX THEME COLORS
 export const colors = {
-  primary : '#2196f3',
-  success : '#2D8F7B',
-  danger  : '#CE645D',
-  warning : '#E8B92E',
-  dark    : '#424242'
+  primary: '#2196f3',
+  success: '#2D8F7B',
+  danger: '#CE645D',
+  warning: '#E8B92E',
+  dark: '#424242',
+  light: '#E3E3E3'
 }
 
 // CONFIGS
 const themeConfig = {
-  disableCustomizer : false,       // options[Boolean] : true, false(default)
-  disableThemeTour  : false,       // options[Boolean] : true, false(default)
-  footerType        : 'static',    // options[String]  : static(default) / sticky / hidden
-  hideScrollToTop   : false,       // options[Boolean] : true, false(default)
-  mainLayoutType    : 'vertical',  // options[String]  : vertical(default) / horizontal
-  navbarColor       : '#fff',      // options[String]  : HEX color / rgb / rgba / Valid HTML Color name - (default: #fff)
-  navbarType        : 'floating',  // options[String]  : floating(default) / static / sticky / hidden
-  routerTransition  : 'zoom-fade', // options[String]  : zoom-fade / slide-fade / fade-bottom / fade / zoom-out / none(default)
-  rtl               : false,       // options[Boolean] : true, false(default)
-  sidebarCollapsed  : false,       // options[Boolean] : true, false(default)
-  theme             : 'semi-dark',     // options[String]  : "light"(default), "dark", "semi-dark"
+  disableCustomizer: false,       // options[Boolean] : true, false(default)
+  disableThemeTour: false,       // options[Boolean] : true, false(default)
+  footerType: 'static',    // options[String]  : static(default) / sticky / hidden
+  hideScrollToTop: false,       // options[Boolean] : true, false(default)
+  mainLayoutType: 'vertical',  // options[String]  : vertical(default) / horizontal
+  navbarColor: '#fff',      // options[String]  : HEX color / rgb / rgba / Valid HTML Color name - (default: #fff)
+  navbarType: 'floating',  // options[String]  : floating(default) / static / sticky / hidden
+  routerTransition: 'zoom-fade', // options[String]  : zoom-fade / slide-fade / fade-bottom / fade / zoom-out / none(default)
+  rtl: false,       // options[Boolean] : true, false(default)
+  sidebarCollapsed: false,       // options[Boolean] : true, false(default)
+  theme: 'semi-dark',     // options[String]  : "light"(default), "dark", "semi-dark"
 
   // Not required yet - WIP
   userInfoLocalStorageKey: 'userInfo'
@@ -38,6 +39,6 @@ const themeConfig = {
 
 import Vue from 'vue'
 import Vuesax from 'vuesax'
-Vue.use(Vuesax, { theme:{ colors }, rtl: themeConfig.rtl })
+Vue.use(Vuesax, { theme: { colors }, rtl: themeConfig.rtl })
 
 export default themeConfig

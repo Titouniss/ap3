@@ -32,9 +32,14 @@
               <user-edit-tab-information class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
-          <vs-tab label="Social" icon-pack="feather" icon="icon-share-2">
+          <vs-tab label="Horaires" icon-pack="feather" icon="icon-clock">
             <div class="tab-text">
-              <user-edit-tab-social class="mt-4" :data="user_data" />
+              <user-edit-tab-planning class="mt-4" :data="user_data" />
+            </div>
+          </vs-tab>
+          <vs-tab label="Notifications" icon-pack="feather" icon="icon-alert-triangle">
+            <div class="tab-text">
+              <user-edit-tab-notifications class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
         </vs-tabs>
@@ -48,7 +53,8 @@
 <script>
 import UserEditTabAccount     from './UserEditTabAccount.vue'
 import UserEditTabInformation from './UserEditTabInformation.vue'
-import UserEditTabSocial      from './UserEditTabSocial.vue'
+import UserEditTabPlanning from './UserEditTabPlanning.vue'
+import UserEditTabNotifications from './UserEditTabNotifications.vue'
 
 // Store Module
 import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
@@ -57,7 +63,8 @@ export default {
   components: {
     UserEditTabAccount,
     UserEditTabInformation,
-    UserEditTabSocial
+    UserEditTabPlanning,
+    UserEditTabNotifications
   },
   data () {
     return {
@@ -79,7 +86,7 @@ export default {
   },
   methods: {
     fetch_user_data (userId) {
-      this.$store.dispatch('userManagement/fetchUser', userId)
+      this.$store.dispatch('userManagement/fetchItem', userId)
         .then(res => { this.user_data = res.data })
         .catch(err => {
           if (err.response.status === 404) {

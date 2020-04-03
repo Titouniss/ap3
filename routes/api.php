@@ -158,6 +158,24 @@ Route::group(['middleware' => 'auth:api'], function(){
     });
 
     /***********************************************************************************/
+    /********************************    RANGES    **************************************/
+    /***********************************************************************************/
+    Route::prefix('range-management')->group(function () {
+        Route::group(['middleware' => ['permission:read ranges']], function () {
+            Route::get('index', 'API\RangeController@index');
+            Route::get('show/{id}', 'API\RangeController@show');
+        });
+        Route::group(['middleware' => ['can:publish ranges']], function () {
+            Route::post('store', 'API\RangeController@store');
+        });
+        Route::group(['middleware' => ['can:edit ranges']], function () {
+            Route::post('update/{id}', 'API\RangeController@update');
+        });
+        Route::group(['middleware' => ['can:delete ranges']], function () {
+            Route::delete('destroy/{id}', 'API\RangeController@destroy');
+        });
+    });
+
     /***********************************   TASK   **************************************/
     /***********************************************************************************/
     Route::prefix('task-management')->group(function () {
@@ -172,4 +190,3 @@ Route::group(['middleware' => 'auth:api'], function(){
         // });
     });
 });
-
