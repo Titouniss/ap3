@@ -72,7 +72,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////-----/////
+/////---ROLES---/////
         {
           path: '/roles',
           name: 'roles',
@@ -103,7 +103,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////-----/////
+/////---WORKAREAS---/////
         {
           path: '/workareas',
           name: 'workareas',
@@ -113,7 +113,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////-----/////
+/////---PROJECTS---/////
         {
           path: '/projects',
           name: 'projects',
@@ -128,6 +128,36 @@ const router = new Router({
           name: 'projects-project-view',
           component: () => import('./views/projects/Read.vue'),
           meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+/////---RANGES---/////
+        {
+          path: '/ranges',
+          name: 'ranges',
+          component: () => import('./views/ranges/index.vue'),
+          meta: {
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/ranges/range-add',
+          name: 'ranges-range-add',
+          component: () => import('@/views/ranges/Add.vue'),
+          meta: {
+            pageTitle: 'Ajouter une gamme',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/ranges/range-edit/:id',
+          name: 'ranges-range-edit',
+          component: () => import('@/views/ranges/Edit.vue'),
+          meta: {
+            pageTitle: 'Edition de gamme',
             rule: 'admin',
             requiresAuth: true
           }

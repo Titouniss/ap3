@@ -121,34 +121,13 @@ export default {
         })
         .catch(err => {
           this.$vs.loading.close()
-          console.error(err) 
-          this.user_not_found = true
+          this.$router.push(`/pages/error-404`).catch(() => {})
           return
         })
     },
-    checkLogin () {
-      // If user is already logged in notify
-      if (this.$store.state.auth.isUserLoggedIn()) {
-
-        // Close animation if passed as payload
-        // this.$vs.loading.close()
-
-        this.$vs.notify({
-          title: 'Connexion',
-          text: 'Vous êtes déjà connecté!',
-          iconPack: 'feather',
-          icon: 'icon-alert-circle',
-          color: 'warning'
-        })
-
-        return false
-      }
-      return true
-    },
     updateUser () {
       // If form is not validated or user is already login return
-      if (!this.validateForm || !this.checkLogin()) return
-
+      if (!this.validateForm) return
       const payload = {
         userDetails: {
           firstname: this.user_data.firstname,
@@ -161,6 +140,7 @@ export default {
         },
         notify: this.$vs.notify
       }
+      
       this.$store.dispatch('auth/updateUserJWT', payload)
       .then(() => { this.$vs.loading.close() })
         .catch(error => {

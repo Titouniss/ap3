@@ -104,7 +104,7 @@ export default {
   },
   updateUserJWT ({ commit }, payload) {
 
-    const { firstname, lastname, email, password, confirmPassword , isTermsConditionAccepted} = payload.userDetails
+    const { firstname, lastname, email, password, confirmPassword , isTermsConditionAccepted, token} = payload.userDetails
 
     return new Promise((resolve, reject) => {
 

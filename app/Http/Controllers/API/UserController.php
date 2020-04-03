@@ -6,6 +6,7 @@ use App\Notifications\UserRegistration;
 
 use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Auth\Events\Verified;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -168,9 +169,9 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error'=>$validator->errors()], 401);
         }
-        $role = Role::where('name', 'clientAdmin');
+        $role = Role::where('name', 'Administrateur');
         if ($role != null) {
-            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits
+            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => 'Entreprise '.$user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);
@@ -200,7 +201,7 @@ class UserController extends Controller
             return response()->json(['error'=>$validator->errors()], 401);            
         }
         $input = $request->all(); 
-        $user = User::where('token', $token)->where('email', $input['email'])->first();
+        $user = User::where('register_token', $token)->where('email', $input['email'])->first();
         if (!isset($user)) return response()->json(['success'=>false], 404); 
         // get full data user before or after update
         $user->load(['roles' => function ($query) {
@@ -214,6 +215,7 @@ class UserController extends Controller
         $user->firstname = $input['firstname'];
         $user->lastname = $input['lastname'];
         $user->isTermsConditionAccepted = $input['isTermsConditionAccepted']; 
+        $user->register_token = null; 
         $user->markEmailAsVerified();
         $user->save();
 
@@ -222,7 +224,7 @@ class UserController extends Controller
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
 
-        return response()->json(['success'=>$success, 'userData' => $user, 'company' => $company], $this-> successStatus); 
+        return response()->json(['success'=>$success, 'userData' => $user], $this-> successStatus); 
     } 
 
     /** 

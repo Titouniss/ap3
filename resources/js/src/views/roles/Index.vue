@@ -44,26 +44,17 @@
             </div>
 
             <vs-dropdown-menu>
-
-              <vs-dropdown-item>
+              <vs-dropdown-item v-if="authorizedToDelete">
                 <span class="flex items-center">
                   <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                   <span>Supprimer</span>
                 </span>
               </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Archiver</span>
-                </span>
-              </vs-dropdown-item>
-
             </vs-dropdown-menu>
           </vs-dropdown>
       </div>
 
-      <div class="px-6 pb-2 pt-6">
+      <div class="px-6 pb-2 pt-6" v-if="authorizedToPublish">
         <vs-button @click="addRecord" class="w-full">Ajouter un rôle</vs-button>
       </div>
       <!-- AgGrid Table -->
@@ -96,10 +87,6 @@
 
 <script>
 
-var model = 'role'
-var modelPlurial = 'roles'
-var modelTitle = 'Rôle'
-
 import { AgGridVue } from 'ag-grid-vue'
 import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
@@ -109,6 +96,10 @@ import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
 
 // Cell Renderer
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
+
+var model = 'role'
+var modelPlurial = 'roles'
+var modelTitle = 'Rôle'
 
 export default {
   components: {
@@ -158,6 +149,15 @@ export default {
     }
   },
   computed: {
+    authorizedToPublish () {               
+      return this.$store.getters.userHasPermissionTo( `publish ${modelPlurial}`) > -1
+    },
+    authorizedToDelete () {               
+      return this.$store.getters.userHasPermissionTo( `delete ${modelPlurial}`) > -1
+    },
+    authorizedToEdit () {
+      return this.$store.getters.userHasPermissionTo( `edit ${modelPlurial}`) > -1
+    },
     itemIdToEdit () {
         return this.$store.state.roleManagement.role.id || 0
     },

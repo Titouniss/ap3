@@ -1,14 +1,15 @@
 <template>
-  <div id="page-users-list">
+
+  <div id="page-role-list">
+
     <div class="vx-card p-6">
-      <add-form   v-if="authorizedToPublish" />
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
           <vs-dropdown vs-trigger-click class="cursor-pointer">
             <div class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium">
-              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ usersData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : usersData.length }} of {{ usersData.length }}</span>
+              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ rangesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : rangesData.length }} of {{ rangesData.length }}</span>
               <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
             </div>
             <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -53,7 +54,9 @@
           </vs-dropdown>
       </div>
 
-
+      <div class="px-6 pb-2 pt-6" v-if="authorizedToPublish">
+        <vs-button @click="addRecord" class="w-full">Ajouter une gamme</vs-button>
+      </div>
       <!-- AgGrid Table -->
       <ag-grid-vue
         ref="agGridTable"
@@ -62,11 +65,11 @@
         class="ag-theme-material w-100 my-4 ag-grid-table"
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
-        :rowData="usersData"
+        :rowData="rangesData"
         rowSelection="multiple"
         colResizeDefault="shift"
         :animateRows="true"
-        :floatingFilter="true"
+        :floatingFilter="false"
         :pagination="true"
         :paginationPageSize="paginationPageSize"
         :suppressPaginationPanel="true"
@@ -77,49 +80,37 @@
         :total="totalPages"
         :max="7"
         v-model="currentPage" />
-
     </div>
-    <edit-form :itemId="itemIdToEdit"  v-if="itemIdToEdit && authorizedToEdit "/>
   </div>
 
 </template>
 
 <script>
+
 import { AgGridVue } from 'ag-grid-vue'
 import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
 import vSelect from 'vue-select'
 
 // Store Module
-import moduleUserManagement from '@/store/user-management/moduleUserManagement.js'
-import moduleRoleManagement from '@/store/role-management/moduleRoleManagement.js'
-import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moduleRangeManagement from '@/store/range-management/moduleRangeManagement.js'
 
-import AddForm from './AddForm.vue'
-import EditForm from './EditForm.vue'
 // Cell Renderer
-import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
 
-var model = 'user'
-var modelPlurial = 'users'
-var modelTitle = 'Utilisateurs'
+var model = 'range'
+var modelPlurial = 'ranges'
+var modelTitle = 'Gamme'
 
 export default {
   components: {
     AgGridVue,
     vSelect,
-    AddForm,
-    EditForm,
     // Cell Renderer
-    CellRendererLink,
-    CellRendererRelations,
     CellRendererActions
   },
   data () {
     return {
       searchQuery: '',
-
       // AgGrid
       gridApi: null,
       gridOptions: {},
@@ -132,73 +123,32 @@ export default {
         {
           filter: false,
           checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: true,
+          headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
           resizable: true
         },
         {
-          headerName: 'Nom',
-          field: 'lastname',
-          filter: true,
-          width: 200
+          headerName: 'Titre',
+          field: 'name'
         },
         {
-          headerName: 'Prénom',
-          field: 'firstname',
-          filter: true,
-          width: 150
-        },
-        {
-          headerName: 'Email',
-          field: 'email',
-          filter: true,
-          width: 225
-        },
-        {
-          headerName: 'Rôle',
-          field: 'roles',
-          filter: true,
-          width: 150,
-          cellRendererFramework: 'CellRendererRelations'
+          headerName: 'Description',
+          field: 'description'
         },
         {
           headerName: 'Actions',
           field: 'transactions',
-          width: 150,
           cellRendererFramework: 'CellRendererActions'
         }
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererLink,
-        CellRendererRelations,
-        CellRendererActions
+        CellRendererActions,
       }
     }
   },
-  watch: {
-    roleFilter (obj) {
-      this.setColumnFilter('role', obj.value)
-    },
-    statusFilter (obj) {
-      this.setColumnFilter('status', obj.value)
-    },
-    isVerifiedFilter (obj) {
-      const val = obj.value === 'all' ? 'all' : obj.value === 'yes' ? 'true' : 'false'
-      this.setColumnFilter('is_verified', val)
-    },
-    departmentFilter (obj) {
-      this.setColumnFilter('department', obj.value)
-    }
-  },
   computed: {
-    itemIdToEdit () {
-        return this.$store.state.userManagement.user.id || 0
-    },
-    usersData () {
-      return this.$store.state.userManagement.users
-    },
     authorizedToPublish () {               
       return this.$store.getters.userHasPermissionTo( `publish ${modelPlurial}`) > -1
     },
@@ -207,6 +157,12 @@ export default {
     },
     authorizedToEdit () {
       return this.$store.getters.userHasPermissionTo( `edit ${modelPlurial}`) > -1
+    },
+    itemIdToEdit () {
+        return this.$store.state.rangeManagement.range.id || 0
+    },
+    rangesData () {
+      return this.$store.state.rangeManagement.ranges
     },
     paginationPageSize () {
       if (this.gridApi) return this.gridApi.paginationGetPageSize()
@@ -251,11 +207,9 @@ export default {
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
     },
-    manageErrors(err){
-      if (err && err.request && err.request.status === 403) {
-        this.$router.push({ name: 'page-not-authorized'}).catch(() => {})
-      } else console.error(err)
-    }
+    addRecord () {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {})
+    },
   },
   mounted () {
     this.gridApi = this.gridOptions.api
@@ -271,44 +225,16 @@ export default {
     }
   },
   created () {
-    if (!moduleUserManagement.isRegistered) {
-      this.$store.registerModule('userManagement', moduleUserManagement)
-      moduleUserManagement.isRegistered = true
-    }
-
-    if (!moduleRoleManagement.isRegistered) {
-      this.$store.registerModule('roleManagement', moduleRoleManagement)
-      moduleRoleManagement.isRegistered = true
-    }
-    if (!moduleCompanyManagement.isRegistered) {
-      this.$store.registerModule('companyManagement', moduleCompanyManagement)
-      moduleCompanyManagement.isRegistered = true
-    }
-    this.$store.dispatch('userManagement/fetchItems').catch(err => { this.manageErrors(err) })
-    this.$store.dispatch('companyManagement/fetchItems').catch(err => { this.manageErrors(err) })
-    this.$store.dispatch('roleManagement/fetchItems').catch(err => { this.manageErrors(err)  })
+    if (!moduleRangeManagement.isRegistered) {
+      this.$store.registerModule('rangeManagement', moduleRangeManagement)
+      moduleRangeManagement.isRegistered = true
+    }    
+    this.$store.dispatch('rangeManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
-    moduleUserManagement.isRegistered = false
-    moduleRoleManagement.isRegistered = false
-    moduleCompanyManagement.isRegistered = false
-    this.$store.unregisterModule('userManagement')
-    this.$store.unregisterModule('roleManagement')
-    this.$store.unregisterModule('companyManagement')
+    moduleRangeManagement.isRegistered = false
+    this.$store.unregisterModule('rangeManagement')
   }
 }
 
 </script>
-
-<style lang="scss">
-#page-user-list {
-  .user-list-filters {
-    .vs__actions {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-58%);
-    }
-  }
-}
-</style>

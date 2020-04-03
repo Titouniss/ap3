@@ -48,5 +48,11 @@ export default [
     name: 'Projets',
     slug: 'project',
     icon: 'ActivityIcon'
+  },
+  {
+    url: '/ranges',
+    name: 'Gammes',
+    slug: 'ranges',
+    icon: 'ClipboardIcon'
   }
 ]

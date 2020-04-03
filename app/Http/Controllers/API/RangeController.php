@@ -4,13 +4,13 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request; 
 use App\Http\Controllers\Controller; 
 
-use App\User; 
+use App\Models\Range; 
 use Spatie\Permission\Models\Role;
 
 use Illuminate\Support\Facades\Auth; 
 use Validator;
 
-class RoleController extends Controller 
+class RangeController extends Controller 
 {
     public $successStatus = 200;
 
@@ -24,13 +24,9 @@ class RoleController extends Controller
         $user = Auth::user();
         $listObject = [];
         if ($user->hasRole('superAdmin')) {
-            $listObject = Role::all()->load('permissions');
+            $listObject = Range::all()->load('company');
         } else if ($user->company_id != null) {
-            $listObject = Role::where('company_id',$user->company_id)
-                            ->orWhere(function ($query) {
-                                $query->where('company_id', '=', null)
-                                    ->where('isPublic', true);
-                            })->get()->load('permissions');
+            $listObject = Range::where('company_id',$user->company_id);
         }
         return response()->json(['success' => $listObject], $this-> successStatus); 
     } 
@@ -42,7 +38,7 @@ class RoleController extends Controller
      */ 
     public function show($id) 
     { 
-        $item = Role::where('id',$id)->first()->load('permissions');
+        $item = Range::where('id',$id)->first()->with('repetitive_task');
         return response()->json(['success' => $item], $this-> successStatus); 
     } 
 
@@ -57,22 +53,25 @@ class RoleController extends Controller
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required'
-            ]);
-            if ($validator->fails()) { 
-                return response()->json(['error'=>$validator->errors()], 401);            
-            }
-        $permissions = $arrayRequest['permissions'];
-        unset($arrayRequest['permissions']);
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['error'=>$validator->errors()], 401);            
+        }
+
+        // TODO ADD repetitive_tasks
+        $repetitive_tasks = $arrayRequest['repetitive_tasks'];
+        // unset($arrayRequest['permissions']);
         if ($user != null) {
             $arrayRequest['company_id'] = $user->company_id;
-            $item = Role::create($arrayRequest);
+            $item = Range::create($arrayRequest);
             if ($item != null) {
-                if (isset($permissions)) {
-                    $item->syncPermissions($permissions);
+                if (isset($repetitive_tasks)) {
+                    $item->repetitive_tasks()->sync($repetitive_tasks);
                 }
             }
             return response()->json(['success' => $item], $this-> successStatus); 
         }
+
         return response()->json(['success' => 'notAuthentified'], 500);
     } 
 
@@ -87,18 +86,19 @@ class RoleController extends Controller
         
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required'
-            ]);
-            $role = Role::where('id',$id)->first();
-            if ($role != null) {
-                $role->name = $arrayRequest['name'];
-                $role->description = $arrayRequest['description'];
-                $role->isPublic = $arrayRequest['isPublic'];
-                if (isset($arrayRequest['permissions'])) {
-                    $role->syncPermissions($arrayRequest['permissions'] );
-                }
-                $role->save();
+        ]);
+        $item = Range::where('id',$id)->first();
+        if ($item != null) {
+            $item->name = $arrayRequest['name'];
+            $item->description = $arrayRequest['description'];
+        // TODO ADD repetitive_tasks
+            $repetitive_tasks = $arrayRequest['repetitive_tasks'];
+            if (isset($repetitive_tasks)) {
+                $item->repetitive_tasks()->sync($repetitive_tasks);
             }
-        return response()->json(['success' => true, 'item' => $role], $this-> successStatus); 
+            $role->save();
+        }
+        return response()->json(['success' => true, 'item' => $item], $this-> successStatus); 
     } 
 
     /** 
@@ -108,7 +108,7 @@ class RoleController extends Controller
      */ 
     public function destroy($id) 
     { 
-        $item = Role::where('id',$id)->delete();
+        $item = Range::where('id',$id)->delete();
         return response()->json(['success' => $item], $this-> successStatus); 
     } 
 }

@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth:api'], function(){
     /********************************    ROLES    **************************************/
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
-        Route::group(['middleware' => ['can:read roles']], function () {
+        Route::group(['middleware' => ['permission:read roles|publish users']], function () {
             Route::get('index', 'API\RoleController@index');
             Route::get('show/{id}', 'API\RoleController@show');
         });
@@ -156,5 +156,37 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::delete('{id}', 'API\ProjectController@destroy');
         // });
     });
-});
 
+    /***********************************************************************************/
+    /********************************    RANGES    **************************************/
+    /***********************************************************************************/
+    Route::prefix('range-management')->group(function () {
+        Route::group(['middleware' => ['permission:read ranges']], function () {
+            Route::get('index', 'API\RangeController@index');
+            Route::get('show/{id}', 'API\RangeController@show');
+        });
+        Route::group(['middleware' => ['can:publish ranges']], function () {
+            Route::post('store', 'API\RangeController@store');
+        });
+        Route::group(['middleware' => ['can:edit ranges']], function () {
+            Route::post('update/{id}', 'API\RangeController@update');
+        });
+        Route::group(['middleware' => ['can:delete ranges']], function () {
+            Route::delete('destroy/{id}', 'API\RangeController@destroy');
+        });
+    });
+
+    /***********************************   TASK   **************************************/
+    /***********************************************************************************/
+    Route::prefix('task-management')->group(function () {
+        Route::get('index/{id}', 'API\TaskController@index');
+        Route::get('show/{id}', 'API\TaskController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+            Route::post('store', 'API\TaskController@store');
+            Route::post('update/{id}', 'API\TaskController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+            Route::delete('{id}', 'API\TaskController@destroy');
+        // });
+    });
+});
