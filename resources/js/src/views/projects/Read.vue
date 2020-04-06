@@ -89,6 +89,7 @@
 import moduleProjectManagement from '@/store/project-management/moduleProjectManagement.js'
 import moduleWorkareaManagement from '@/store/workarea-management/moduleWorkareaManagement.js'
 import moduleTaskManagement from '@/store/task-management/moduleTaskManagement.js'
+import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
 
 import moment from 'moment'
 
@@ -155,10 +156,15 @@ export default {
       this.$store.registerModule('taskManagement', moduleTaskManagement)
       moduleTaskManagement.isRegistered = true
     }
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule('skillManagement', moduleSkillManagement)
+      moduleSkillManagement.isRegistered = true
+    }
     moment.locale('fr')
 
     const projectId = this.$route.params.id
     this.$store.dispatch('workareaManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('skillManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('taskManagement/fetchItems', projectId).catch(err => { console.error(err) })
     this.$store.dispatch('projectManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('projectManagement/fetchItem', projectId)
@@ -178,9 +184,11 @@ export default {
     moduleTaskManagement.isRegistered = false
     moduleProjectManagement.isRegistered = false
     moduleWorkareaManagement.isRegistered = false
+    moduleSkillManagement.isRegistered = false
     this.$store.unregisterModule('projectManagement')
     this.$store.unregisterModule('taskManagement')
     this.$store.unregisterModule('workareaManagement')
+    this.$store.unregisterModule('skillManagement')
   },
 }
 
