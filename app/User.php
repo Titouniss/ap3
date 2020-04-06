@@ -48,6 +48,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo('App\Models\Company');
     }
 
+    public function plannings()
+    {
+        return $this->hasMany('App\Models\Planning');
+    }
+
+    public function indisponibilities()
+    {
+        return $this->hasMany('App\Models\indisponibility');
+    }
+
     /**
      * Override the mail body for reset password notification mail.
      */
