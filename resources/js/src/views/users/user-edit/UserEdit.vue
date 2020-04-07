@@ -92,7 +92,7 @@ export default {
       this.$store
         .dispatch("userManagement/fetchItem", userId)
         .then(res => {
-          this.user_data = res.data;
+          this.user_data = res.data.success;
         })
         .catch(err => {
           if (err.response.status === 404) {
