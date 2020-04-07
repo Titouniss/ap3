@@ -35,8 +35,8 @@
         </div>
         <div class="flex justify-center my-3 ml-auto mr-auto">
           <vs-button
-            color="light"
-            text-color="grey"
+            color="primary"
+            text-color="white"
             @click="sendVerificationEmail"
           >Renvoyer un e-mail de vérification</vs-button>
         </div>

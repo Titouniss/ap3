@@ -88,8 +88,8 @@
             <vs-row vs-align="center" vs-type="flex" vs-justify="space-around" class="mt-10">
               <router-link to="login" @click="goLogin" class="ml-2 mr-2">retour</router-link>
               <vs-button
-                color="light"
-                text-color="grey"
+                color="primary"
+                text-color="white"
                 @click="registerUserJWt"
                 :disabled="!validateForm"
               >S'enregistrer</vs-button>

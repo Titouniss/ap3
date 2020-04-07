@@ -55,8 +55,8 @@
             <vs-row vs-align="center" vs-type="flex" vs-justify="space-around">
               <router-link to="register" @click="registerUser">Inscription</router-link>
               <vs-button
-                color="light"
-                text-color="grey"
+                color="primary"
+                text-color="white"
                 :disabled="!validateForm"
                 @click="loginJWT"
               >Connexion</vs-button>
