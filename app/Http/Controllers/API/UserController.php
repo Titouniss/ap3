@@ -287,7 +287,9 @@ class UserController extends Controller
      */ 
     public function show($id) 
     { 
-        $item = User::where('id',$id)->first()->load('roles:id,name','company:id,name');
+        $item = User::where('id',$id)
+                    ->with('roles:id,name','company:id,name','plannings','indisponibilities')
+                    ->first();
         return response()->json(['success' => $item], isset($item) ? $this-> successStatus : 404); 
     } 
 
