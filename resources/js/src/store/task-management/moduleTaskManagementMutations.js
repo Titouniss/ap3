@@ -13,6 +13,8 @@ var slug_singular = 'task'
 export default {
   ADD_ITEM (state, item) {
     state[slug].unshift(item)
+    console.log('ADDITEM')
+    console.log(state)
   },
 
   EDIT_ITEM (state, item) {

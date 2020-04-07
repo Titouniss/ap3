@@ -73,8 +73,7 @@
       <div class="vx-row">
         <div class="vx-col w-full">
           <vx-card title="Tâches" class="mb-base">
-            <add-task-form :project_data="this.project_data"/>
-            <div>RAF</div>
+            <index-tasks :project_data="this.project_data"/>
           </vx-card>
         </div>
       </div>
@@ -88,18 +87,19 @@
 <script>
 import moduleProjectManagement from '@/store/project-management/moduleProjectManagement.js'
 import moduleWorkareaManagement from '@/store/workarea-management/moduleWorkareaManagement.js'
-import moduleTaskManagement from '@/store/task-management/moduleTaskManagement.js'
 import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
 
 import moment from 'moment'
 
 import EditForm from './EditForm.vue'
 import AddTaskForm from './AddTaskForm.vue'
+import IndexTasks from '../tasks/index.vue'
 
 export default {
   components: {
     EditForm,
-    AddTaskForm
+    AddTaskForm,
+    IndexTasks
   },
   data () {
     return {
@@ -152,10 +152,6 @@ export default {
       this.$store.registerModule('workareaManagement', moduleWorkareaManagement)
       moduleWorkareaManagement.isRegistered = true
     }
-    if (!moduleTaskManagement.isRegistered) {
-      this.$store.registerModule('taskManagement', moduleTaskManagement)
-      moduleTaskManagement.isRegistered = true
-    }
     if (!moduleSkillManagement.isRegistered) {
       this.$store.registerModule('skillManagement', moduleSkillManagement)
       moduleSkillManagement.isRegistered = true
@@ -165,7 +161,6 @@ export default {
     const projectId = this.$route.params.id
     this.$store.dispatch('workareaManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('skillManagement/fetchItems').catch(err => { console.error(err) })
-    this.$store.dispatch('taskManagement/fetchItems', projectId).catch(err => { console.error(err) })
     this.$store.dispatch('projectManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('projectManagement/fetchItem', projectId)
       .then(res => { 
@@ -181,12 +176,10 @@ export default {
       })
   },
   beforeDestroy () {
-    moduleTaskManagement.isRegistered = false
     moduleProjectManagement.isRegistered = false
     moduleWorkareaManagement.isRegistered = false
     moduleSkillManagement.isRegistered = false
     this.$store.unregisterModule('projectManagement')
-    this.$store.unregisterModule('taskManagement')
     this.$store.unregisterModule('workareaManagement')
     this.$store.unregisterModule('skillManagement')
   },

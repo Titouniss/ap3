@@ -1,6 +1,6 @@
 <!-- =========================================================================================
-  File Name: ProjectsList.vue
-  Description: Projects List page
+  File Name: TasksList.vue
+  Description: Tasks List page
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -9,17 +9,17 @@
 
 <template>
 
-  <div id="page-projects-list">
+  <div id="page-tasks-list">
 
     <div class="vx-card p-6">
-      <add-form />
+      <add-form :project_data="this.project_data"/>
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
           <vs-dropdown vs-trigger-click class="cursor-pointer">
             <div class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium">
-              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ projectsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : projectsData.length }} of {{ projectsData.length }}</span>
+              <span class="mr-2">{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ tasksData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : tasksData.length }} of {{ tasksData.length }}</span>
               <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
             </div>
             <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -44,33 +44,6 @@
         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
           <vs-input class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4" v-model="searchQuery" @input="updateSearchQuery" placeholder="Search..." />
           <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
-
-          <!-- ACTION - DROPDOWN -->
-          <vs-dropdown vs-trigger-click class="cursor-pointer">
-
-            <div class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32">
-              <span class="mr-2 leading-none">Actions</span>
-              <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-            </div>
-
-            <vs-dropdown-menu>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Delete</span>
-                </span>
-              </vs-dropdown-item>
-
-              <vs-dropdown-item>
-                <span class="flex items-center">
-                  <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Archive</span>
-                </span>
-              </vs-dropdown-item>
-
-            </vs-dropdown-menu>
-          </vs-dropdown>
       </div>
 
 
@@ -82,7 +55,7 @@
         class="ag-theme-material w-100 my-4 ag-grid-table"
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
-        :rowData="projectsData"
+        :rowData="tasksData"
         rowSelection="multiple"
         colResizeDefault="shift"
         :animateRows="true"
@@ -100,7 +73,7 @@
 
     </div>
 
-    <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/>
+    <!-- <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/> -->
   </div>
 
 </template>
@@ -116,16 +89,21 @@ import AddForm from './AddForm.vue'
 import EditForm from './EditForm.vue'
 
 // Store Module
-import moduleProjectManagement from '@/store/project-management/moduleProjectManagement.js'
-import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moduleTaskManagement from '@/store/task-management/moduleTaskManagement.js'
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 import CellRendererRelations from './cell-renderer/CellRendererRelations.vue'
 import CellRendererActions from './cell-renderer/CellRendererActions.vue'
+import CellRendererStatus from './cell-renderer/CellRendererStatus.vue'
 
 
 export default {
+  props: {
+    project_data: {
+      required: true
+    }
+  },
   components: {
     AgGridVue,
     vSelect,
@@ -135,7 +113,8 @@ export default {
     // Cell Renderer
     CellRendererLink,
     CellRendererActions,
-    CellRendererRelations
+    CellRendererRelations,
+    CellRendererStatus
   },
   data () {
     return {
@@ -154,16 +133,16 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
+          width: 50,
         },
         {
           headerName: 'Name',
           field: 'name',
           filter: true,
-          cellRendererFramework: 'CellRendererLink'
         },
         {
-          headerName: 'Date de création',
-          field: 'created_at',
+          headerName: 'Plannifié le',
+          field: 'date',
           filter: true,
           cellRenderer: (data) => {
             moment.locale('fr')
@@ -171,15 +150,25 @@ export default {
           }
         },
         {
+          headerName: 'Estimation',
+          field: 'estimated_time',
+          filter: true,
+          width: 200,
+          cellRenderer: (data) => {
+            return data.value + 'h'
+          }
+        },
+        {
+          headerName: 'Ilôt',
+          field: 'workarea',
+          filter: true,
+          cellRendererFramework: 'CellRendererRelations'
+        },
+        {
           headerName: 'Avancement',
           field: 'status',
           filter: true,
-        },
-        {
-          headerName: 'Compagnie',
-          field: 'company',
-          filter: true,
-          cellRendererFramework: 'CellRendererRelations'
+          cellRendererFramework: 'CellRendererStatus'
         },
         {
           headerName: 'Actions',
@@ -197,8 +186,8 @@ export default {
     }
   },
   computed: {
-    projectsData() {
-      return this.$store.state.projectManagement.projects
+    tasksData() {
+      return this.$store.state.taskManagement.tasks
     },
     paginationPageSize () {
       if (this.gridApi) return this.gridApi.paginationGetPageSize()
@@ -209,7 +198,7 @@ export default {
       else return 0
     },
     itemIdToEdit () {
-      return this.$store.state.projectManagement.project.id || 0
+      return this.$store.state.taskManagement.task.id || 0
     },
     currentPage: {
       get () {
@@ -240,30 +229,23 @@ export default {
     }
   },
   created () {
-    if (!moduleProjectManagement.isRegistered) {
-      this.$store.registerModule('projectManagement', moduleProjectManagement)
-      moduleProjectManagement.isRegistered = true
+    if (!moduleTaskManagement.isRegistered) {
+      this.$store.registerModule('taskManagement', moduleTaskManagement)
+      moduleTaskManagement.isRegistered = true
     }
-    if (!moduleCompanyManagement.isRegistered) {
-      this.$store.registerModule('companyManagement', moduleCompanyManagement)
-      moduleCompanyManagement.isRegistered = true
-    }
-    this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
-    this.$store.dispatch('projectManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('taskManagement/fetchItemsByBundle', this.project_data.tasks_bundles[0].id).catch(err => { console.error(err) })
   },
   beforeDestroy () {
-    moduleProjectManagement.isRegistered = false
-    moduleCompanyManagement.isRegistered = false
-    this.$store.unregisterModule('projectManagement')
-    this.$store.unregisterModule('companyManagement')
-  },
+    moduleTaskManagement.isRegistered = false
+    this.$store.unregisterModule('taskManagement')
+  }
 }
 
 </script>
 
 <style lang="scss">
-#page-projects-list {
-  .projects-list-filters {
+#page-tasks-list {
+  .tasks-list-filters {
     .vs__actions {
       position: absolute;
       right: 0;

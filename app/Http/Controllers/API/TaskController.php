@@ -21,10 +21,16 @@ class TaskController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($project_id)
+    public function index()
     {
         $user = Auth::user();
         $items = Task::all();
+        return response()->json(['success' => $items], $this-> successStatus);  
+    }
+
+    public function getByBundle(int $bundle_id)
+    {
+        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea')->get();
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 

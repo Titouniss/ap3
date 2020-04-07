@@ -11,7 +11,6 @@ import axios from '@/axios.js'
 
 export default {
   addItem({ commit }, item) {
-    console.log('ouiii')
     return new Promise((resolve, reject) => {
       axios.post("/api/task-management/store", item)
         .then((response) => {
@@ -35,9 +34,19 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  fetchItems ({ commit }, project_id) {    
+  fetchItems ({ commit }) {    
     return new Promise((resolve, reject) => {
-      axios.get(`/api/task-management/index/${project_id}`)
+      axios.get(`/api/task-management/index`)
+        .then((response) => {          
+          commit('SET_ITEMS', response.data.success)
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  fetchItemsByBundle({ commit }, bundle_id) {    
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/task-management/bundle/${bundle_id}`)
         .then((response) => {          
           commit('SET_ITEMS', response.data.success)
           resolve(response)
