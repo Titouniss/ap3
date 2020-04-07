@@ -179,7 +179,8 @@ Route::group(['middleware' => 'auth:api'], function(){
     /***********************************   TASK   **************************************/
     /***********************************************************************************/
     Route::prefix('task-management')->group(function () {
-        Route::get('index/{id}', 'API\TaskController@index');
+        Route::get('index', 'API\TaskController@index');
+        Route::get('bundle/{id}', 'API\TaskController@getByBundle');
         Route::get('show/{id}', 'API\TaskController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
             Route::post('store', 'API\TaskController@store');
