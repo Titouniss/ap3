@@ -10,6 +10,7 @@ use Illuminate\Auth\Events\Verified;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 use Validator;
@@ -321,6 +322,59 @@ class UserController extends Controller
         }
         return response()->json(['success' => $user], $this-> successStatus); 
     } 
+
+    /** 
+     * update account item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function updateAccount(Request $request, $id) 
+    {
+        $arrayRequest = $request->all();
+
+        $validator = Validator::make($arrayRequest, [ 
+            'firstname' => 'required',
+            'lastname' => 'required',
+            'email' => 'email'
+        ]);
+            
+        $user = User::withTrashed()->find($id);
+        if ($user != null) {
+
+            $user->firstname = $arrayRequest['firstname'];
+            $user->lastname = $arrayRequest['lastname'];
+            $user->email = $arrayRequest['email'];
+            $user->save();
+        }
+        return response()->json(['success' => $user], $this-> successStatus);
+    }
+
+    /** 
+     * update password api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function updatePassword(Request $request) 
+    {
+        $arrayRequest = $request->all();
+        $user = User::where('id', $arrayRequest['id_user'])->first();
+        // Verify user exist
+        if ($user != null) {
+            // Verify old same password 
+            if( Hash::check($arrayRequest['old_password'], $user->password) ) {
+                // Verify password format
+                // Save password
+                $user->password = bcrypt($arrayRequest['new_password']);
+                $user->save();
+                return response()->json(['success' => $user]);
+            }
+            else {
+                return response()->json('error');
+            }
+        }
+
+    }
+
 
     /** 
      * delete item api 

@@ -19,7 +19,7 @@
         <img src="@assets/images/pages/500.png" alt="graphic-500" class="mx-auto mb-4" />
         <h4 class="mb-4 text-center">Vérification de votre e-mail confirmer.</h4>
         <div class="flex justify-center my-3 ml-auto mr-auto">
-          <vs-button color="light" text-color="grey" size="large" to="/pages/login">Se connnecter</vs-button>
+          <vs-button color="primary" text-color="white" size="large" to="/pages/login">Se connnecter</vs-button>
         </div>
       </vx-card>
     </div>

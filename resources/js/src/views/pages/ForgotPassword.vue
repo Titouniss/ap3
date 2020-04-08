@@ -37,8 +37,8 @@
         <vs-row vs-align="center" vs-type="flex" vs-justify="space-around">
           <router-link to="login" @click="goLogin" class="ml-2 mr-2">retour</router-link>
           <vs-button
-            color="light"
-            text-color="grey"
+            color="primary"
+            text-color="white"
             class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0"
             @click="forgotPassword"
           >Envoyer le lien</vs-button>

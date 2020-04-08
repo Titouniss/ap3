@@ -52,6 +52,8 @@ Route::group(['middleware' => 'auth:api'], function(){
         });
         Route::group(['middleware' => ['can:edit users']], function () {
             Route::post('update/{id}', 'API\UserController@update');
+            Route::post('updateAccount/{id}', 'API\UserController@updateAccount');
+            Route::post('updatePassword', 'API\UserController@updatePassword');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
             Route::delete('destroy/{id}', 'API\UserController@destroy');
