@@ -27,12 +27,23 @@
       label-placeholder="Confirm Password"
       v-model="confirm_new_password"
     />
-    <vs-alert :active.sync="active1" closable close-icon="close">{{this.message}}</vs-alert>
+
+    <vs-alert
+      :active.sync="active_error"
+      color="danger"
+      closable
+      close-icon="close"
+    >{{this.message}}</vs-alert>
+    <vs-alert
+      :active.sync="active_success"
+      color="success"
+      closable
+      close-icon="close"
+    >{{this.message}}</vs-alert>
 
     <!-- Save & Reset Button -->
     <div class="flex flex-wrap items-center justify-end">
       <vs-button class="ml-auto mt-2" @click="change_password">Sauvegarder</vs-button>
-      <vs-button class="ml-4 mt-2" type="border" color="warning">Réinitialiser</vs-button>
     </div>
   </vx-card>
 </template>
@@ -51,7 +62,8 @@ export default {
       new_password: "",
       confirm_new_password: "",
       data_local: JSON.parse(JSON.stringify(this.data)),
-      active1: false,
+      active_error: false,
+      active_success: false,
       message: ""
     };
   },
@@ -66,6 +78,8 @@ export default {
       return str.slice(0, 1).toUpperCase() + str.slice(1, str.length);
     },
     change_password() {
+      this.active_error = false;
+      this.active_success = false;
       //Check same new password's
       if (
         this.new_password !== "" &&
@@ -78,19 +92,28 @@ export default {
           old_password: this.old_password,
           new_password: this.new_password
         };
-        console.log(itemLocal);
-
         this.$store
           .dispatch("userManagement/updatePassword", itemLocal)
           .then(data => {
-            console.log(["data1", data]);
-            if (data.data !== "error" && data.status === 200) {
+            console.log(["data1", data.data]);
+            if (data.data === "success" && data.status === 200) {
               this.message = "Votre mot de passe à bien été changé !";
-              this.active1 = true;
-            } else {
+              this.active_success = true;
+            } else if (data.data === "error_format" && data.status === 200) {
+              this.message =
+                "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
+              this.active_error = true;
+            } else if (
+              data.data === "error_old_password" &&
+              data.status === 200
+            ) {
               this.message =
                 "Votre ancien mot de passe ne correspond pas. Veuillez réessayer.";
-              this.active1 = true;
+              this.active_error = true;
+            } else {
+              this.message =
+                "Une erreur est survenu, veuillez réessayer plus tard.";
+              this.active_error = true;
             }
           });
       } else {
@@ -100,11 +123,11 @@ export default {
           this.old_password === ""
         ) {
           this.message = "Tous les champs doivent être remplies.";
-          this.active1 = true;
+          this.active_error = true;
         } else {
           this.message =
             "Les champs du nouveau mot de passe ne sont pas identiques.";
-          this.active1 = true;
+          this.active_error = true;
         }
       }
     }

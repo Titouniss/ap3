@@ -3,6 +3,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller; 
 use App\Notifications\UserRegistration;
+use App\Rules\StrongPassword;
 
 use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Auth; 
@@ -12,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+
 
 use Validator;
 use Mail;
@@ -356,6 +358,8 @@ class UserController extends Controller
      */ 
     public function updatePassword(Request $request) 
     {
+        $rule = ['password' => [new StrongPassword]];
+
         $arrayRequest = $request->all();
         $user = User::where('id', $arrayRequest['id_user'])->first();
         // Verify user exist
@@ -363,13 +367,19 @@ class UserController extends Controller
             // Verify old same password 
             if( Hash::check($arrayRequest['old_password'], $user->password) ) {
                 // Verify password format
-                // Save password
-                $user->password = bcrypt($arrayRequest['new_password']);
-                $user->save();
-                return response()->json(['success' => $user]);
+                if(Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
+                    // Save password
+                    $user->password = bcrypt($arrayRequest['new_password']);
+                    $user->save();
+                    return response()->json('success');
+                }
+                else {
+                    Log::debug('ICI 3 :');
+                    return response()->json('error_format');
+                }
             }
             else {
-                return response()->json('error');
+                return response()->json('error_old_password');
             }
         }
 
