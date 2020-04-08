@@ -10,7 +10,7 @@ import moment from 'moment'
 
 export default {
   getItem: state => id => {
-    let item = state.tasks.find((item) => item.id === id)
+    let item = {...state.tasks.find((item) => item.id === id)}
     let skill_ids = []
     if(item.skills.length > 0){
       item.skills.forEach(element => {

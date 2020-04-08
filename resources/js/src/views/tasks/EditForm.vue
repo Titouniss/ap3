@@ -5,9 +5,9 @@
           accept-text= "Modifier"
           cancel-text= "Annuler"
           button-cancel = "border"
-          @cancel="init"
+          @cancel="clear"
           @accept="submitItem"
-          @close="init"
+          @close="clear"
           :is-valid="validateForm"
           :active.sync="activePrompt"
           class="task-compose">
@@ -127,10 +127,10 @@ export default {
     },
   },
   methods: {
-    init () {
-      console.log('test')
-      console.log(this.itemLocal)
-      this.itemLocal = Object.assign({}, this.$store.getters['taskManagement/getItem'](this.itemId))
+    clear () {
+      this.itemLocal= {}
+      this.workareasDataFiltered = [],
+      this.comments = []
     },
     submitItem () {
       this.$validator.validateAll().then(result => {
