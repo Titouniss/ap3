@@ -13,8 +13,6 @@ var slug_singular = 'task'
 export default {
   ADD_ITEM (state, item) {
     state[slug].unshift(item)
-    console.log('ADDITEM')
-    console.log(state)
   },
 
   EDIT_ITEM (state, item) {
@@ -22,8 +20,11 @@ export default {
   },
 
   UPDATE_ITEM (state, item) {
+    console.log(item)
+    console.log(state[slug])
     const index = state[slug].findIndex((r) => r.id === item.id)    
     state[slug].splice(index, 1, item)
+    console.log(state[slug])
   },
 
   SET_ITEMS (state, items) {

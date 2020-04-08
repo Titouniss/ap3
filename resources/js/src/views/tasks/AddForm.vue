@@ -48,7 +48,7 @@
                     </ul>
                     <div class="my-4 mt-5 mb-2">
                       <small class="date-label">Temps estimé (en h)</small>
-                      <vs-input name="estimatedTime" type="number" class="w-full mb-2 mt-1" v-model="itemLocal.estimated_time" 
+                      <vs-input v-validate="'required'" name="estimatedTime" type="number" class="w-full mb-2 mt-1" v-model="itemLocal.estimated_time" 
                         :color="validateForm ? 'success' : 'danger'" placeholder="Saisir une durée"/>
                     </div>
                     <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
@@ -145,8 +145,8 @@ export default {
     },
     addItem () {
       this.$validator.validateAll().then(result => {
-
-        this.itemLocal.date = moment(this.itemLocal.date).format('YYYY-MM-DD HH:mm')
+        
+        this.itemLocal.date = moment(this.itemLocal.date, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')
         this.itemLocal.workarea_id = this.itemLocal.workarea_id == 'null' ? null : this.itemLocal.workarea_id
 
         if (result) {

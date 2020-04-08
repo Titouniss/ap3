@@ -14,4 +14,13 @@ class Task extends Model
         return $this->belongsTo('App\Models\Workarea', 'workarea_id', 'id');
     }
 
+    public function skills()
+    {
+        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany('App\Models\TaskComment');
+    }
 }
