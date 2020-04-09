@@ -73,7 +73,7 @@
 
     </div>
 
-    <!-- <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/> -->
+    <edit-form :itemId="itemIdToEdit" :companyId="project_data.company_id" v-if="itemIdToEdit"/>
   </div>
 
 </template>

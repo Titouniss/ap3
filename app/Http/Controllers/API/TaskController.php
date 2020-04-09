@@ -30,7 +30,7 @@ class TaskController extends Controller
 
     public function getByBundle(int $bundle_id)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea')->get();
+        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments')->get();
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 
@@ -103,18 +103,24 @@ class TaskController extends Controller
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
             'date' => 'required',
-            'company_id' => 'required'
+            'status' => 'required',
+            'estimated_time' => 'required' 
             ]);
         
         $update = Task::where('id',$id)
             ->update([
                 'name' => $arrayRequest['name'], 
                 'date' => $arrayRequest['date'],
-                'company_id' => $arrayRequest['company_id']
+                'estimated_time' => $arrayRequest['estimated_time'],
+                'time_spent' => $arrayRequest['time_spent'],
+                'workarea_id' => $arrayRequest['workarea_id'],
+                'status' => $arrayRequest['status']
             ]);
+            
+        $this->updateSkills($id, $arrayRequest['skills']);
         
         if($update){
-            $item = Task::find($id)->load('company');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments');
             return response()->json(['success' => $item], $this-> successStatus); 
         }
         else{
@@ -156,6 +162,15 @@ class TaskController extends Controller
     }
 
     private function storeSkills(int $task_id, $skills){
+        if(count($skills) > 0 && $task_id){
+            foreach ($skills as $skill_id) {
+                TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill_id]);
+            } 
+        }
+    }
+
+    private function updateSkills(int $task_id, $skills){
+        TasksSkill::where('task_id', $task_id)->delete();
         if(count($skills) > 0 && $task_id){
             foreach ($skills as $skill_id) {
                 TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill_id]);
