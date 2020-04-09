@@ -12,7 +12,7 @@
           :active.sync="activePrompt"
           class="task-compose">
           <div>
-            <form>
+            <form class="edit-task-form">
               <div class="vx-row">
                 <!-- Left -->
                 <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
@@ -56,9 +56,26 @@
                 </div>
               </div>
               <div class="my-4">
-                <small class="date-label">Commentaires</small>
-                <vs-textarea rows="2" label="Ajouter un commentaire" name="comment" class="w-full mb-1 mt-1" v-model="itemLocal.comment" 
+                <div>
+                  <small class="date-label">Commentaires</small>
+                  <vs-button v-if="itemLocal.comment != null && itemLocal.comment != ''" color="success" type="filled" size="small" style="margin-left: 5px"
+                    v-on:click="addComment" id="button-with-loading" class="vs-con-loading__container">
+                    Ajouter
+                  </vs-button>
+                </div>
+                <vs-textarea rows="1" label="Ajouter un commentaire" name="comment" class="w-full mb-1 mt-1" v-model="itemLocal.comment" 
                   :color="validateForm ? 'success' : 'danger'"/>
+                <span class="no-comments" v-if="itemLocal.comments.length == 0"> Aucun commentaire</span>
+                <div v-for="(comment, index) in itemLocal.comments" :key="index">
+                  <div style="padding: 10px 0">
+                    <vs-avatar size="small" :text="comment.creator.firstname + ' ' + comment.creator.lastname" />
+                    <span class="comment-author">{{comment.creator.firstname + ' ' + comment.creator.lastname}}, </span>
+                    <span class="comment-created-at">
+                      {{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}
+                    </span>
+                    <div class="comment-content">{{comment.description}}</div>
+                  </div>
+                </div>
               </div>
             </form>
           </div>
@@ -98,7 +115,7 @@ export default {
       itemLocal: Object.assign({}, this.$store.getters['taskManagement/getItem'](this.itemId)),
 
       workareasDataFiltered: [],
-      comments: []
+      comments: [],
     }
   },
   computed: {
@@ -132,6 +149,14 @@ export default {
       this.workareasDataFiltered = [],
       this.comments = []
     },
+    moment: function (date) {
+      moment.locale('fr')
+      return moment(date, "YYYY-MM-DD HH:mm:ss").format('DD MMMM YYYY');
+    },
+    momentTime: function (date) {
+      moment.locale('fr')
+      return moment(date, "YYYY-MM-DD HH:mm:ss").format('HH:mm');
+    },
     submitItem () {
       this.$validator.validateAll().then(result => {
 
@@ -163,6 +188,20 @@ export default {
         }
       })
     },
+    addComment(){
+      this.$vs.loading({
+        background: 'success',
+        color: '#fff',
+        container: "#button-with-loading",
+        scale: 0.30
+      })
+      this.$store.dispatch('taskManagement/addComment', Object.assign({}, this.itemLocal))
+      .then((response) => {
+        this.itemLocal.comments = response
+        this.$vs.loading.close("#button-with-loading > .con-vs-loading")
+        this.itemLocal.comment = ''
+      })      
+    },
     updateWorkareasList(ids) {      
       this.workareasDataFiltered = this.workareasData.filter(function(workarea) {
         for (let i = 0; i < ids.length; i ++) {
@@ -191,6 +230,34 @@ export default {
 </script>
 <style>
 .con-vs-dialog.task-compose .vs-dialog{
-  max-width: 700px
+  max-width: 700px;
+}
+.edit-task-form{
+  max-height: 450px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.no-comments{
+  font-size: 0.9em;
+  font-style: italic;
+  margin-left: 1em;
+}
+.comment-author{
+  font-size: 1em;
+  font-weight: bold;
+  vertical-align: top;
+}
+.comment-created-at{
+  font-size: 0.8em;
+  line-height: 2;
+  vertical-align: top;
+}
+.comment-content{
+  border: 1px solid #c3c3c3;
+  border-radius: 5px;
+  padding: 3px;
+  font-size: 0.9em;
+  margin: -17px 35px 0 35px;
+  display: table;
 }
 </style>

@@ -68,6 +68,8 @@ class TaskController extends Controller
         if (!$taskBundle) {
             return response()->json(['error'=> 'error'], 401);            
         }
+        $user = Auth::user();
+        $arrayRequest['created_by'] = $user->id;
         $arrayRequest['tasks_bundle_id'] = $taskBundle->id;
         $item = Task::create($arrayRequest);
         $this->storeComment($item->id, $arrayRequest['comment']);
@@ -76,7 +78,21 @@ class TaskController extends Controller
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addComment(Request $request, $id)
+    {
+        $item = Task::find($id);
+        $arrayRequest = $request->all();
+        $this->storeComment($id, $arrayRequest['comment']);
+        $item = Task::find($id)->load('comments');
 
+        return response()->json(['success' => $item], $this-> successStatus); 
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -157,7 +173,8 @@ class TaskController extends Controller
 
     private function storeComment(int $task_id, $comment){
         if($comment != '' && $task_id){
-            TaskComment::create(['description' => $comment, 'confirmed' => 1, 'task_id' => $task_id]);
+            $user = Auth::user();
+            TaskComment::create(['description' => $comment, 'confirmed' => 1, 'task_id' => $task_id, 'created_by' => $user->id]);
         }
     }
 
