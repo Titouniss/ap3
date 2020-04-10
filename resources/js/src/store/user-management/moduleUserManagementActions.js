@@ -43,11 +43,11 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  updateAccountItem({ commit }, payload) {
+  updateAccountItem({ commit }, item) {
     return new Promise((resolve, reject) => {
-      axios.post(`/api/user-management/updateAccount/${payload.id}`, payload)
+      axios.post(`/api/user-management/updateAccount/${item.id}`, item)
         .then((response) => {
-          commit('UPDATE_ITEM', payload)
+          commit('UPDATE_USER_INFO', response.data.success, { root: true })
           resolve(response)
         })
         .catch((error) => { reject(error) })

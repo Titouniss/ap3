@@ -14,36 +14,40 @@
       class="w-full mb-base"
       label-placeholder="Old Password"
       v-model="old_password"
+      v-validate="'required'"
+      name="old_password"
     />
+    <span
+      class="text-danger text-sm"
+      v-show="errors.has('old_password')"
+    >{{ errors.first('old_password') }}</span>
+
     <vs-input
       type="password"
       class="w-full mb-base"
       label-placeholder="New Password"
       v-model="new_password"
+      v-validate="'required'"
+      name="password"
     />
+    <span class="text-danger text-sm" v-show="errors.has('password')">{{ errors.first('password') }}</span>
+
     <vs-input
       type="password"
       class="w-full mb-base"
       label-placeholder="Confirm Password"
       v-model="confirm_new_password"
+      v-validate="'required'"
+      name="password_confirm"
     />
-
-    <vs-alert
-      :active.sync="active_error"
-      color="danger"
-      closable
-      close-icon="close"
-    >{{this.message}}</vs-alert>
-    <vs-alert
-      :active.sync="active_success"
-      color="success"
-      closable
-      close-icon="close"
-    >{{this.message}}</vs-alert>
+    <span
+      class="text-danger text-sm"
+      v-show="errors.has('password_confirm')"
+    >{{ errors.first('password_confirm') }}</span>
 
     <!-- Save & Reset Button -->
     <div class="flex flex-wrap items-center justify-end">
-      <vs-button class="ml-auto mt-2" @click="change_password">Sauvegarder</vs-button>
+      <vs-button class="ml-auto mt-2" @click="change_password" :disabled="!validateForm">Sauvegarder</vs-button>
     </div>
   </vx-card>
 </template>
@@ -62,14 +66,20 @@ export default {
       new_password: "",
       confirm_new_password: "",
       data_local: JSON.parse(JSON.stringify(this.data)),
-      active_error: false,
-      active_success: false,
       message: ""
     };
   },
   computed: {
     activeUserInfo() {
       return this.$store.state.AppActiveUser;
+    },
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.new_password !== "" &&
+        this.confirm_new_password !== "" &&
+        this.old_password !== ""
+      );
     }
   },
   methods: {
@@ -95,40 +105,67 @@ export default {
         this.$store
           .dispatch("userManagement/updatePassword", itemLocal)
           .then(data => {
-            console.log(["data1", data.data]);
+            console.log(["1", data]);
+
             if (data.data === "success" && data.status === 200) {
-              this.message = "Votre mot de passe à bien été changé !";
-              this.active_success = true;
-            } else if (data.data === "error_format" && data.status === 200) {
+              console.log("2");
+
+              this.$vs.loading.close();
+              this.$vs.notify({
+                title: "Modification du mot de passe",
+                text: "Votre mot de passe a bien été changé.",
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success"
+              });
+            }
+          })
+          .catch(error => {
+            console.log(["3", error.response]);
+
+            // Wrong format message
+            if (error.response.data === "error_format") {
+              console.log("4");
+
               this.message =
                 "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
-              this.active_error = true;
-            } else if (
-              data.data === "error_old_password" &&
-              data.status === 200
-            ) {
+            }
+            // Wrong old password message
+            else if (error.response.data === "error_old_password") {
+              console.log("5");
+
               this.message =
                 "Votre ancien mot de passe ne correspond pas. Veuillez réessayer.";
-              this.active_error = true;
-            } else {
+            }
+            // Unknown error message
+            else {
+              console.log("6");
+
               this.message =
                 "Une erreur est survenu, veuillez réessayer plus tard.";
-              this.active_error = true;
             }
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Modification du mot de passe",
+              text: this.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
           });
       } else {
-        if (
-          this.new_password === "" ||
-          this.confirm_new_password === "" ||
-          this.old_password === ""
-        ) {
-          this.message = "Tous les champs doivent être remplies.";
-          this.active_error = true;
-        } else {
-          this.message =
-            "Les champs du nouveau mot de passe ne sont pas identiques.";
-          this.active_error = true;
-        }
+        console.log("7");
+
+        this.message =
+          "Les champs du nouveau mot de passe no sont pas identiques.";
+        this.$vs.loading.close();
+        this.$vs.notify({
+          title: "Modification du mot de passe",
+          text: this.message,
+          iconPack: "feather",
+          icon: "icon-alert-circle",
+          color: "danger"
+        });
       }
     }
   }

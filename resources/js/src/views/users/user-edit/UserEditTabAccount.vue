@@ -188,7 +188,31 @@ export default {
 
       // Here will go your API call for updating data
       // You can get data in "this.data_local"
-      this.$store.dispatch("userManagement/updateAccountItem", this.data_local);
+      console.log(["data_local", this.data_local]);
+
+      this.$store
+        .dispatch("userManagement/updateAccountItem", this.data_local)
+        .then(() => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Modification du compte",
+            text: "Vos données ont étés modifiées avec succès",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
+        })
+        .catch(error => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Error",
+            text: "Une erreur est survenue, veuillez réessayer plus tard.",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
+        });
+      console.log(["Store", this.$store]);
 
       /* eslint-enable */
     },

@@ -55,7 +55,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function indisponibilities()
     {
-        return $this->hasMany('App\Models\indisponibility');
+        return $this->hasMany('App\Models\Indisponibility');
     }
 
     /**
