@@ -17,7 +17,8 @@
               <form>
                   <div class="vx-row">
                       <div class="vx-col w-full">
-                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" :color="validateForm ? 'success' : 'danger'" />
+                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
+                        <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
                         <div class="my-4">
                           <small class="date-label">Date de livraison prévue</small>
                           <datepicker class="pickadate" :language="langFr" name="date" v-model="itemLocal.date" :color="validateForm ? 'success' : 'danger'" ></datepicker>
@@ -49,6 +50,11 @@
 import Datepicker from 'vuejs-datepicker'
 import { fr } from 'vuejs-datepicker/src/locale'
 import moment from 'moment'
+import { Validator } from 'vee-validate';
+import errorMessage from './errorValidForm';
+
+// register custom messages
+Validator.localize('fr', errorMessage);
 
 export default {
   components: {
@@ -70,7 +76,7 @@ export default {
   },
   computed: {
     validateForm () {
-      return !this.errors.any()
+      return !this.errors.any() && this.itemLocal.name != '' && this.itemLocal.company_id != null
     },
     companiesData() {
       return this.$store.state.companyManagement.companies
