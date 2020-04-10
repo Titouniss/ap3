@@ -23,7 +23,8 @@
             <form>
               <div class="vx-row">
                   <div class="vx-col w-full">
-                    <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" />
+                    <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
+                    <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
                     <div class="vx-row mt-4" v-if="!disabled">
                         <div class="vx-col w-full">
                           <div class="flex items-end px-3">
@@ -46,6 +47,11 @@
 </template>
 
 <script>
+import { Validator } from 'vee-validate';
+import errorMessage from './errorValidForm';
+
+// register custom messages
+Validator.localize('fr', errorMessage);
 
 export default {
   props: {
@@ -88,7 +94,7 @@ export default {
       } else return true
     },
     validateForm () {
-      return !this.errors.any() && this.itemLocal.name !== ''
+      return !this.errors.any() && this.itemLocal.name != '' && this.itemLocal.company_id != null 
     }
   },
   methods: {
