@@ -375,11 +375,11 @@ class UserController extends Controller
                 }
                 else {
                     Log::debug('ICI 3 :');
-                    return response()->json('error_format');
+                    return response()->json('error_format', 400);
                 }
             }
             else {
-                return response()->json('error_old_password');
+                return response()->json('error_old_password', 400);
             }
         }
 
