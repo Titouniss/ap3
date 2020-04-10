@@ -24,8 +24,9 @@
 
                 <div class="vx-row">
                     <div class="vx-col w-full">
-                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Titre" v-model="itemLocal.name" />
-                        <vs-input v-validate="'required'" name="siret" class="w-full mb-4 mt-5" placeholder="Siret" v-model="itemLocal.siret" :color="validateForm ? 'success' : 'danger'" />
+                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom de la compagnie" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
+                        <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
+                        <vs-input name="siret" class="w-full mb-4 mt-5" placeholder="Siret" v-model="itemLocal.siret" />
                     </div>
                 </div>
 
@@ -35,6 +36,12 @@
 </template>
 
 <script>
+import { Validator } from 'vee-validate';
+import errorMessage from './errorValidForm';
+
+// register custom messages
+Validator.localize('fr', errorMessage);
+
 export default {
   props: {
     itemId: {
