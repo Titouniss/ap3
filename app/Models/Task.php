@@ -21,6 +21,6 @@ class Task extends Model
 
     public function comments()
     {
-        return $this->hasMany('App\Models\TaskComment');
+        return $this->hasMany('App\Models\TaskComment')->orderBy('created_at', 'DESC');
     }
 }

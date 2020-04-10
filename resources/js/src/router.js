@@ -148,7 +148,7 @@ const router = new Router({
         {
           path: '/ranges',
           name: 'ranges',
-          component: () => import('./views/ranges/index.vue'),
+          component: () => import('./views/ranges/Index.vue'),
           meta: {
             rule: 'admin',
             requiresAuth: true

@@ -186,6 +186,7 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('show/{id}', 'API\TaskController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
             Route::post('store', 'API\TaskController@store');
+            Route::post('store-comment/{id}', 'API\TaskController@addComment');
             Route::post('update/{id}', 'API\TaskController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {

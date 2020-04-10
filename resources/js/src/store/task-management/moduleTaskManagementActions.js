@@ -20,6 +20,16 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  addComment({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/task-management/store-comment/${item.id}`, item)
+        .then((response) => {
+          commit('UPDATE_ITEM', Object.assign(item, {comments: response.data.success.comments, comment: null}))
+          resolve(response.data.success.comments)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   editItem({ commit }, item) {  
     commit('EDIT_ITEM', item)
     return

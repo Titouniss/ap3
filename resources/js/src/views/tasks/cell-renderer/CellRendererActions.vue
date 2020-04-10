@@ -6,7 +6,7 @@
 </template>
 
 <script>
-var modelTitle = 'Task'
+var modelTitle = 'Tâche'
 export default {
   name: 'CellRendererActions',
   methods: {
