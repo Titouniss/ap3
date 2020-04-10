@@ -17,9 +17,12 @@
               <form>
                   <div class="vx-row">
                       <div class="vx-col w-full">
-                        <vs-input v-validate="'required'" name="lastname" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.lastname" :color="validateForm ? 'success' : 'danger'" />
-                        <vs-input v-validate="'required'" name="firstname" class="w-full mb-4 mt-5" placeholder="Prénom" v-model="itemLocal.firstname" :color="validateForm ? 'success' : 'danger'" />
-                        <vs-input v-validate="'required'" name="email" class="w-full mb-4 mt-5" placeholder="E-mail" v-model="itemLocal.email" :color="validateForm ? 'success' : 'danger'" />
+                        <vs-input v-validate="'required'" name="lastname" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.lastname" :color="!errors.has('lastname') ? 'success' : 'danger'" />
+                         <span class="text-danger text-sm"  v-show="errors.has('lastname')">{{ errors.first('lastname') }}</span>
+                        <vs-input v-validate="'required'" name="firstname" class="w-full mb-4 mt-5" placeholder="Prénom" v-model="itemLocal.firstname" :color="!errors.has('firstname') ? 'success' : 'danger'" />
+                         <span class="text-danger text-sm"  v-show="errors.has('firstname')">{{ errors.first('firstname') }}</span>
+                        <vs-input v-validate="'required|email'" name="email" class="w-full mb-4 mt-5" placeholder="E-mail" v-model="itemLocal.email" :color="!errors.has('email') ? 'success' : 'danger'" />
+                         <span class="text-danger text-sm"  v-show="errors.has('email')">{{ errors.first('email') }}</span>
 
                         <div class="vx-row mt-4" v-if="!disabled">
                           <div class="vx-col w-full">
@@ -54,6 +57,12 @@
 </template>
 
 <script>
+import { Validator } from 'vee-validate';
+import errorMessage from './errorValidForm';
+
+// register custom messages
+Validator.localize('fr', errorMessage);
+
 var model = 'user'
 var modelPlurial = 'users'
 
@@ -90,6 +99,11 @@ export default {
     },
     validateForm () {
       return !this.errors.any()
+        && this.itemLocal.name != ''
+        && this.itemLocal.firstname != ''
+        && this.itemLocal.email != ''
+        && this.itemLocal.company_id != null
+        && this.itemLocal.roles.length > 0
     },
   },
   methods: {
