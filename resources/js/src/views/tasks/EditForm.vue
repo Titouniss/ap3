@@ -16,14 +16,19 @@
               <div class="vx-row">
                 <!-- Left -->
                 <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
-                  <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-1" placeholder="Nom" v-model="itemLocal.name" :color="validateForm ? 'success' : 'danger'" />
+                  <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-1" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
+                  <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
                   <div class="my-3">
                     <small class="date-label mb-1" style="display: block;">Date</small>
                     <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
                   </div>
-                  <vs-select label="Compétences" v-on:change="updateWorkareasList" v-model="itemLocal.skills" class="w-full mt-5" multiple autocomplete>
+
+                  <vs-select label="Compétences" v-on:change="updateWorkareasList" v-model="itemLocal.skills" class="w-full mt-5" multiple autocomplete
+                    v-validate="'required'" name='skills'>
                     <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in skillsData" />
                   </vs-select>
+                  <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
+                  
                   <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
                     <vs-select name="workarea" label="Ilot" v-model="itemLocal.workarea_id" class="w-full mt-3">
                         <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
@@ -45,13 +50,14 @@
                   </ul>
                   <div class="my-4 mt-5 mb-2">
                     <small class="date-label">Temps estimé (en h)</small>
-                    <vs-input name="estimatedTime" type="number" class="w-full mb-2 mt-1" v-model="itemLocal.estimated_time" 
-                      :color="validateForm ? 'success' : 'danger'" placeholder="Saisir une durée"/>
+                    <vs-input v-validate="'required|numeric'" name="estimatedTime" type="number" class="w-full mb-2 mt-1" v-model="itemLocal.estimated_time" 
+                      :color="!errors.has('estimatedTime') ? 'success' : 'danger'" placeholder="Saisir une durée"/>
+                    <span class="text-danger text-sm" v-show="errors.has('estimatedTime')">{{ errors.first('estimatedTime') }}</span>
                   </div>
                   <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
                     <small class="date-label">Temps passé (en h)</small>
                     <vs-input name="timeSpent" type="number" class="w-full mb-0 mt-1" v-model="itemLocal.time_spent" 
-                      :color="validateForm ? 'success' : 'danger'" placeholder="Saisir une durée" />
+                      :color="!errors.has('timeSpent') ? 'success' : 'danger'" placeholder="Saisir une durée" />
                   </div>
                 </div>
               </div>
@@ -88,6 +94,12 @@ import flatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import {French as FrenchLocale} from 'flatpickr/dist/l10n/fr.js';
 import moment from 'moment'
+import { Validator } from 'vee-validate';
+import errorMessage from './errorValidForm';
+
+// register custom messages
+Validator.localize('fr', errorMessage);
+
 
 export default {
   components: {
@@ -121,6 +133,10 @@ export default {
   computed: {
     validateForm () {
       return !this.errors.any()
+        && this.itemLocal.name != ''
+        && this.itemLocal.date != ''
+        && this.itemLocal.estimated_time != ''
+        && this.itemLocal.skills.length > 0 
     },
     activePrompt: {
       get () {

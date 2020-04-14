@@ -76,6 +76,11 @@ import lodash from 'lodash'
 // Store Module
 import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
 import modulePermissionManagement from '@/store/permission-management/modulePermissionManagement.js'
+import { Validator } from 'vee-validate';
+import errorMessage from './errorValidForm';
+
+// register custom messages
+Validator.localize('fr', errorMessage);
 var model = 'role'
 var modelPlurial = 'roles'
 var modelTitle = 'Rôle'

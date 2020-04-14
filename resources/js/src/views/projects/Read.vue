@@ -93,13 +93,11 @@ import moduleCompanyManagement from '@/store/company-management/moduleCompanyMan
 import moment from 'moment'
 
 import EditForm from './EditForm.vue'
-import AddTaskForm from './AddTaskForm.vue'
-import IndexTasks from '../tasks/index.vue'
+import IndexTasks from '../tasks/Index.vue'
 
 export default {
   components: {
     EditForm,
-    AddTaskForm,
     IndexTasks
   },
   data () {
