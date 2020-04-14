@@ -352,6 +352,34 @@ class UserController extends Controller
     }
 
     /** 
+     * update information item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */ 
+    public function updateInformation(Request $request, $id) 
+    {
+        $arrayRequest = $request->all();
+
+        $validator = Validator::make($arrayRequest, [ 
+            'birth_date' => 'required',
+            'phone_number' => 'required',
+            'genre' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error'=>$validator->errors()], 401);            
+        }
+
+        $user = User::withTrashed()->find($id);
+        if ($user != null) {
+            $user->birth_date = $arrayRequest['birth_date'];
+            $user->phone_number = $arrayRequest['phone_number'];
+            $user->genre = $arrayRequest['genre'];
+            $user->save();
+        }
+        return response()->json(['success' => $user], $this-> successStatus);
+    }
+
+    /** 
      * update password api 
      * 
      * @return \Illuminate\Http\Response 
