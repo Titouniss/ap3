@@ -1,62 +1,77 @@
 <!-- =========================================================================================
   File Name: RoleEdit.vue
-  Description: role Edit Page
+  Description: range Edit Page
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
-  Author URL: http://www.themeforest.net/role/pixinvent
+  Author URL: http://www.themeforest.net/range/pixinvent
 ========================================================================================== -->
 
 <template>
-  <div id="page-role-edit">
-    <vs-alert color="danger" title="role Not Found" :active.sync="role_not_found">
-      <span>Le rôle {{ $route.params.id }} est introuvable. </span>
+  <div id="page-range-edit">
+    <vs-alert color="danger" title="range Not Found" :active.sync="range_not_found">
+      <span>La gamme {{ $route.params.id }} est introuvable. </span>
       <span>
-        <span>voir </span><router-link :to="{name:'ranges'}" class="text-inherit underline">Tout les rôles</router-link>
+        <span>voir </span><router-link :to="{name:'ranges'}" class="text-inherit underline">Toutes les games</router-link>
       </span>
     </vs-alert>
 
-    <vx-card v-if="role_data">
+    <vx-card v-if="range_data">
       <div slot="no-body" class="tabs-container px-6 pt-6">
         <div class="vx-row">
-          <vs-input class="w-full mt-4" label="Titre" v-model="role_data.name" v-validate="'required'" name="name" />
+          <vs-input class="w-full mt-4" label="Titre" v-model="range_data.name" v-validate="'required'" name="name" />
           <span class="text-danger text-sm"  v-show="errors.has('name')">{{ errors.first('name') }}</span>
         </div>
         <div class="vx-row">
-          <vs-textarea class="w-full mt-4" rows="5" label="Ajouter description" v-model="role_data.description" name="description"/>
+          <vs-textarea class="w-full mt-4" rows="5" label="Ajouter description" v-model="range_data.description" name="description"/>
           <span class="text-danger text-sm"  v-show="errors.has('description')">{{ errors.first('description') }}</span>
         </div>
         <!-- Permissions -->
         <div class="vx-row mt-4">
             <div class="vx-col w-full">
-            <div class="flex items-end px-3">
-                <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
-                <span class="font-medium text-lg leading-none">Permissions</span>
-            </div>
-            <vs-divider />
+              <div class="flex items-end px-3">
+                <feather-icon svgClasses="w-6 h-6" icon="PackageIcon" class="mr-2" />
+                <span class="font-medium text-lg leading-none">Liste des étapes de la gamme</span>
+                <add-form v-if="range_data.company_id != null" :company_id="range_data.company_id"></add-form>
+              </div>
+              <vs-divider />
+              <vs-table :data="repetitiveTasksData">
+
+                <template slot="thead">
+                  <vs-th>Ordre</vs-th>
+                  <vs-th>Intitulé</vs-th>
+                  <vs-th>Ilot</vs-th>
+                  <vs-th>Temps</vs-th>
+                  <vs-th></vs-th>
+                </template>
+
+                <template slot-scope="{data}">
+                  <vs-tr :key="indextr" v-for="(tr, indextr) in data">
+
+                    <vs-td :data="data[indextr].order">
+                      {{ data[indextr].order }}
+                    </vs-td>
+
+                    <vs-td :data="data[indextr].name">
+                      {{ data[indextr].name }}
+                    </vs-td>
+
+                    <vs-td :data="data[indextr].workarea">
+                      {{ data[indextr].workarea ? data[indextr].workarea.name : 'Aucun' }}
+                    </vs-td>
+
+                    <vs-td :data="data[indextr].estimated_time">
+                       {{ data[indextr].estimated_time }}
+                    </vs-td>
+
+                    <vs-td :data="data[indextr]">
+                      <CellRendererActions :item="data[indextr]"></CellRendererActions>
+                    </vs-td>
+                  </vs-tr>
+                </template>
+              </vs-table>
             </div>
         </div>
-
-        <div class="block overflow-x-auto">
-            <table class="w-full">
-            <tr>
-                <!--
-                You can also use `Object.keys(Object.values(data_local.permissions)[0])` this logic if you consider,
-                our data structure. You just have to loop over above variable to get table headers.
-                Below we made it simple. So, everyone can understand.
-                -->
-                <th class="font-semibold text-base text-left px-3 py-2" v-for="heading in ['Module', 'Consulter','Créer', 'Editer',  'Supprimer']" :key="heading">{{ heading }}</th>
-            </tr>
-            <tr v-for="(items,index) in permissions" :key="index">
-                <td class="px-3 py-2">{{ capitalizeFirstLetter(index) }}</td>
-                <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
-                    <vs-checkbox v-model="selected[item.id]" />
-                </td>
-            </tr>
-            </table>
-        </div>
-         
-
       </div>
       <!-- Save & Reset Button -->
       <div class="vx-row">
@@ -68,68 +83,62 @@
         </div>
       </div>
     </vx-card>
+    <edit-form :itemId="itemIdToEdit" :companyId="range_data.company_id" v-if="itemIdToEdit"/>
   </div>
 </template>
 
 <script>
 import lodash from 'lodash'
+
+//Repetitive Task
+import AddForm from './repetitives-tasks/AddForm.vue'
+import EditForm from './repetitives-tasks/EditForm.vue'
+import CellRendererActions from './repetitives-tasks/cell-renderer/CellRendererActions.vue'
+
 // Store Module
-import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
-import modulePermissionManagement from '@/store/permission-management/modulePermissionManagement.js'
-var model = 'role'
+import moduleRangeManagement from '@/store/range-management/moduleRangeManagement.js'
+import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moduleWorkareaManagement from '@/store/workarea-management/moduleWorkareaManagement.js'
+import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
+import moduleRepetitiveTaskManagement from '@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js'
+
+var model = 'range'
 var modelPlurial = 'ranges'
-var modelTitle = 'Rôle'
+var modelTitle = 'Gamme'
 
 export default {
+  components: {
+    AddForm,
+    EditForm,
+    CellRendererActions
+  },
   data () {
     return {
-      role_data: null,
+      range_data: null,
       selected: [],
-      role_not_found: false,
+      range_not_found: false,
     }
   },
   computed: {
-    permissions () {
-        const permissionsStore = this.$store.state.permissionManagement.permissions
-        let permissions =  []
-        if (permissionsStore && permissionsStore.length > 0) {
-                permissions = permissionsStore.reduce(function(acc, valeurCourante){
-                  let permissionName = valeurCourante.name
-                  let titles = permissionName.split(" ")
-                  
-                  if (!acc) {
-                      acc = {}
-                  }
-                  if (titles.length > 1) {
-                      if (!acc[valeurCourante.name_fr]) {
-                          acc[valeurCourante.name_fr] = {}
-                      }
-                      acc[valeurCourante.name_fr][titles[0]] = valeurCourante
-                  }             
-              return acc;
-              }, {});
-        }
-
-      return permissions
+    repetitiveTasksData() {
+      return this.$store.state.repetitiveTaskManagement.repetitivesTasks
     },
     validateForm () {
       return !this.errors.any()
-    }
+    },
+    itemIdToEdit () {
+      return this.$store.state.repetitiveTaskManagement.repetitivesTask.id || 0
+    },
   },
   methods: {
     fetch_data (id) {
-      this.$store.dispatch('roleManagement/fetchItem', id)
+      this.$store.dispatch('rangeManagement/fetchItem', id)
         .then(res => { 
-            this.role_data = res.data.success
-            if (this.role_data && this.role_data.permissions.length) {
-                this.role_data.permissions.forEach(permission => {
-                    this.selected[permission.id] = true
-                });
-            }
+            this.range_data = res.data.success
         })
         .catch(err => {
           if (err.response.status === 404) {
-            this.role_not_found = true
+            this.range_not_found = true
             return
           }
           console.error(err) 
@@ -139,15 +148,15 @@ export default {
       /* eslint-disable */
       if (!this.validateForm) return
       this.$vs.loading()
-      this.role_data.permissions = _.keys(_.pickBy(this.selected ))
        
-      const payload = {...this.role_data}      
-      this.$store.dispatch('roleManagement/updateItem', payload)
+      const payload = {...this.range_data}  
+      payload.repetitive_tasks = this.repetitiveTasksData    
+      this.$store.dispatch('rangeManagement/updateItem', payload)
         .then(() => { 
           this.$vs.loading.close() 
           this.$vs.notify({
           title: 'Modification',
-          text: 'Rôle modifier avec succès',
+          text: 'Gamme modifiée avec succès',
           iconPack: 'feather',
           icon: 'icon-alert-circle',
           color: 'success'
@@ -176,23 +185,38 @@ export default {
     }
   },
   created () {
-    // Register Module roleManagement Module
-    if (!moduleManagement.isRegistered) {
-      this.$store.registerModule('roleManagement', moduleManagement)
-      moduleManagement.isRegistered = true
+     // Register Module rangeManagement Module
+    if (!moduleRangeManagement.isRegistered) {
+      this.$store.registerModule('rangeManagement', moduleRangeManagement)
+      moduleRangeManagement.isRegistered = true
     }
-    if (!modulePermissionManagement.isRegistered) {
-      this.$store.registerModule('permissionManagement', modulePermissionManagement)
-      modulePermissionManagement.isRegistered = true
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule('skillManagement', moduleSkillManagement)
+      moduleCompanyManagement.isRegistered = true
+    }
+    if (!moduleWorkareaManagement.isRegistered) {
+      this.$store.registerModule('workareaManagement', moduleWorkareaManagement)
+      moduleWorkareaManagement.isRegistered = true
+    }
+    if (!moduleRepetitiveTaskManagement.isRegistered) {
+      this.$store.registerModule('repetitiveTaskManagement', moduleRepetitiveTaskManagement)
+      moduleRepetitiveTaskManagement.isRegistered = true
     }
     this.fetch_data(this.$route.params.id)
-    this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('skillManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('workareaManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('repetitiveTaskManagement/cleanItems').catch(err => { console.error(err) })
+    this.$store.dispatch('repetitiveTaskManagement/fetchItemsByRange', this.$route.params.id).catch(err => { console.error(err) })
   },
   beforeDestroy () {
-    moduleManagement.isRegistered = false
-    modulePermissionManagement.isRegistered = false
-    this.$store.unregisterModule('roleManagement')
-    this.$store.unregisterModule('permissionManagement')
+    moduleRangeManagement.isRegistered = false
+    moduleSkillManagement.isRegistered = false
+    moduleWorkareaManagement.isRegistered = false
+    moduleRepetitiveTaskManagement.isRegistered = false
+    this.$store.unregisterModule('rangeManagement')
+    this.$store.unregisterModule('skillManagement')
+    this.$store.unregisterModule('workareaManagement')
+    this.$store.unregisterModule('repetitiveTaskManagement')
   }
 }
 

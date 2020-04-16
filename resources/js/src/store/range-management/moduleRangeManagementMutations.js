@@ -13,7 +13,7 @@ export default {
     state.ranges.unshift(item)
   },
   EDIT_ITEM (state, item) {
-    state.role = item
+    state.range = item
   },
   SET_RANGES (state, ranges) {
     state.ranges = ranges

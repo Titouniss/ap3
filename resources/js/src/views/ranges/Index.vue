@@ -105,6 +105,7 @@ export default {
   components: {
     AgGridVue,
     vSelect,
+    
     // Cell Renderer
     CellRendererActions
   },
@@ -149,7 +150,7 @@ export default {
     }
   },
   computed: {
-    authorizedToPublish () {               
+    authorizedToPublish () {              
       return this.$store.getters.userHasPermissionTo( `publish ${modelPlurial}`) > -1
     },
     authorizedToDelete () {               

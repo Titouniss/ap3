@@ -193,4 +193,11 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::delete('{id}', 'API\TaskController@destroy');
         // });
     });
+
+    /***********************************   TASK   **************************************/
+    /***********************************************************************************/
+    Route::prefix('repetitive-task-management')->group(function () {
+        Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
+
+    });
 });

@@ -6,9 +6,9 @@
 </template>
 
 <script>
-var model = 'role'
+var model = 'range'
 var modelPlurial = 'ranges'
-var modelTitle = 'Rôle'
+var modelTitle = 'Gamme'
 export default {
   name: 'CellRendererActions',
   computed:{
@@ -38,7 +38,7 @@ export default {
       })
     },
     deleteRecord () {
-      this.$store.dispatch("roleManagement/removeRecord", this.params.data.id)
+      this.$store.dispatch("rangeManagement/removeRecord", this.params.data.id)
         .then(()   => { this.showDeleteSuccess() })
         .catch(err => { console.error(err)       })
     },
