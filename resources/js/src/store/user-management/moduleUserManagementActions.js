@@ -53,6 +53,17 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  updateInformationItem({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/user-management/updateInformation/${item.id}`, item)
+        .then(response => {
+          console.log(['response', response])
+          commit('UPDATE_USER_INFO', response.data.success, { root: true })
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   updatePassword({ commit }, payload) {
     return new Promise((resolve, reject) => {
       axios.post(`/api/user-management/updatePassword/`, payload).then((response) => {
