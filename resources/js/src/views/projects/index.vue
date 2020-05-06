@@ -118,6 +118,7 @@ import EditForm from './EditForm.vue'
 // Store Module
 import moduleProjectManagement from '@/store/project-management/moduleProjectManagement.js'
 import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moduleRangeManagement from '@/store/range-management/moduleRangeManagement.js'
 
 // Cell Renderer
 import CellRendererLink from './cell-renderer/CellRendererLink.vue'
@@ -224,7 +225,7 @@ export default {
   methods: {
     updateSearchQuery (val) {
       this.gridApi.setQuickFilter(val)
-    }
+    },
   },
   mounted () {
     this.gridApi = this.gridOptions.api
@@ -248,14 +249,21 @@ export default {
       this.$store.registerModule('companyManagement', moduleCompanyManagement)
       moduleCompanyManagement.isRegistered = true
     }
+    if (!moduleRangeManagement.isRegistered) {
+      this.$store.registerModule('rangeManagement', moduleRangeManagement)
+      moduleRangeManagement.isRegistered = true
+    }
     this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
+    this.$store.dispatch('rangeManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('projectManagement/fetchItems').catch(err => { console.error(err) })
   },
   beforeDestroy () {
     moduleProjectManagement.isRegistered = false
     moduleCompanyManagement.isRegistered = false
+    moduleRangeManagement.isRegistered = false
     this.$store.unregisterModule('projectManagement')
     this.$store.unregisterModule('companyManagement')
+    this.$store.unregisterModule('rangeManagement')
   },
 }
 

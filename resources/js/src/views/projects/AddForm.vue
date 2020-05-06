@@ -23,8 +23,18 @@
                           <small class="date-label">Date de livraison prévue</small>
                           <datepicker class="pickadate" :language="langFr" name="date" v-model="itemLocal.date" :color="validateForm ? 'success' : 'danger'" ></datepicker>
                         </div>
-                        <vs-input name="client" class="w-full mb-4 mt-5" placeholder="Client (RAF)" v-model="itemLocal.client" :color="validateForm ? 'success' : 'danger'" />
-                        <vs-input name="gammes" class="w-full mb-4 mt-5" placeholder="Gammes (RAF)" v-model="itemLocal.gammes" :color="validateForm ? 'success' : 'danger'" />
+                        <div class="my-4">
+                          <small class="date-label">Client</small>
+                          <vs-input name="client" class="w-full mb-4" placeholder="Client (RAF)" v-model="itemLocal.client" />
+                        </div>
+                        <div class="my-4" v-if="itemLocal.company_id != null">
+                          <small class="date-label">Gammes</small>
+                          <vs-select v-if="rangesData.length > 0" v-model="itemLocal.ranges" class="w-full" multiple autocomplete
+                            v-validate="'required'" name='ranges'>
+                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in rangesData" />
+                          </vs-select>
+                          <small v-if="rangesData.length == 0" style="font-style: italic; color: #C8C8C8">Aucunes gammes trouvées</small>
+                        </div>
                         <div class="vx-row mt-4" v-if="!disabled">
                           <div class="vx-col w-full">
                             <div class="flex items-end px-3">
@@ -81,6 +91,9 @@ export default {
     companiesData() {
       return this.$store.state.companyManagement.companies
     },
+    rangesData() {
+      return this.filterItemsAdmin(this.$store.state.rangeManagement.ranges)
+    },
     disabled () { 
       const user = this.$store.state.AppActiveUser 
       if (user.roles && user.roles.length > 0) {
@@ -130,6 +143,19 @@ export default {
           })
         }
       })
+    },
+    filterItemsAdmin (items) {
+      let filteredItems = []
+      const user = this.$store.state.AppActiveUser 
+      if (user.roles && user.roles.length > 0) {
+        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
+          filteredItems = items.filter((item) => item.company.id === this.itemLocal.company_id)
+        }
+        else{
+          filteredItems = items
+        }
+      }
+      return filteredItems
     }
   }
 }

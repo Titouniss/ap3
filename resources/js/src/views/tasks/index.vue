@@ -12,7 +12,7 @@
   <div id="page-tasks-list">
 
     <div class="vx-card p-6">
-      <add-form :project_data="this.project_data"/>
+      <add-form :project_data="this.project_data" :tasks_list="tasksData"/>
       <div class="flex flex-wrap items-center">
 
         <!-- ITEMS PER PAGE -->
@@ -73,7 +73,7 @@
 
     </div>
 
-    <edit-form :itemId="itemIdToEdit" :companyId="project_data.company_id" v-if="itemIdToEdit"/>
+    <edit-form :itemId="itemIdToEdit" :companyId="project_data.company_id" v-if="itemIdToEdit" :tasks_list="tasksData"/>
   </div>
 
 </template>

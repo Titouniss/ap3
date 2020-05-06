@@ -15,60 +15,86 @@
           :active.sync="activePrompt"
           class="task-compose">
           <div>
-              <form>
+              <form class="add-task-form">
                 <div class="vx-row">
                   <!-- Left -->
                   <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
                     <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-1" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
                     <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
+                    
                     <div class="my-3">
+                      <div v-if="descriptionDisplay">
+                        <small class="date-label">Description</small>
+                        <vs-textarea rows="2" label="Ajouter une description" name="description" class="w-full mb-1 mt-1" v-model="itemLocal.description" />  
+                      </div>
+                    </div>
+                    <div class="my-3" v-if="previousTasks.length > 0">
+                       <span> Tache dépendante de : </span> 
+                        <li :key="index" v-for="(item, index) in previousTasks">
+                          {{ item }}
+                        </li>
+                    </div>
+                    <div class="my-3" style="font-size: 0.9em;">
                       <small class="date-label mb-1" style="display: block;">Date</small>
                       <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
                     </div>
 
-                    <vs-select label="Compétences" v-on:change="updateWorkareasList" v-model="itemLocal.skills" class="w-full mt-5" multiple autocomplete
-                      v-validate="'required'" name='skills'>
-                      <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in skillsData" />
-                    </vs-select>
-                    <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
-                    
-                    <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
-                      <vs-select name="workarea" label="Ilot" v-model="itemLocal.workarea_id" class="w-full mt-3">
-                          <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
+                    <div class="my-3">
+                      <small class="date-label">Compétences</small>
+                      <vs-select v-on:change="updateWorkareasList" v-model="itemLocal.skills" class="w-full" multiple autocomplete
+                        v-validate="'required'" name='skills'>
+                        <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in skillsData" />
                       </vs-select>
+                      <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
+                    </div>
+                    
+                    <div class="my-3" v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                      <small class="date-label">Ilot</small>
+                        <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
+                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
+                        </vs-select>
                     </div>
                   </div>
                   <!-- Right -->
-                  <div class="vx-col flex-1">
-                    <ul style="display: flex" class="mt-3">
+                  <div class="vx-col flex-5">
+                    <div class="mb-3" style="flex-direction: column; display: flex;">
+                      <add-previous-task :addPreviousTask="addPreviousTask" :tasks_list="tasks_list" :previousTasksIds="itemLocal.previousTasksIds"/> 
+                      <span v-if="!descriptionDisplay" v-on:click="showDescription" class="linkTxt"> + Ajouter une description </span>
+                      <span v-if="!commentDisplay" v-on:click="showComment" class="linkTxt"> + Ajouter un commentaire </span>
+                    </div>
+                    <div class="mb-4">
+                      <div v-if="orderDisplay">
+                        <small class="date-label">Ordre</small>
+                        <vs-input-number min="1" name="order" class="inputNumber" v-model="itemLocal.order" />
+                      </div>
+                    </div>
+                    <ul class="mt-3">
                       <li class="mr-3">
                         <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
                       </li>
                       <li class="mr-3">
                         <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
                       </li>
-                      <li>
+                      <li v-on:click="setTimeSpent">
                         <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
                       </li>
                     </ul>
-                    <div class="my-4 mt-5 mb-2">
+                    <div class="my-4 mt-3 mb-2">
                       <small class="date-label">Temps estimé (en h)</small>
-                      <vs-input v-validate="'required|numeric'" name="estimatedTime" type="number" class="w-full mb-2 mt-1" v-model="itemLocal.estimated_time" 
-                        :color="!errors.has('estimatedTime') ? 'success' : 'danger'" placeholder="Saisir une durée"/>
-                      <span class="text-danger text-sm" v-show="errors.has('estimatedTime')">{{ errors.first('estimatedTime') }}</span>
+                      <vs-input-number min="1" name="estimatedTime" class="inputNumber" v-model="itemLocal.estimated_time" />
                     </div>
                     <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
                       <small class="date-label">Temps passé (en h)</small>
-                      <vs-input name="timeSpent" type="number" class="w-full mb-0 mt-1" v-model="itemLocal.time_spent" 
-                        :color="!errors.has('timeSpent') ? 'success' : 'danger'" placeholder="Saisir une durée" />
+                      <vs-input-number min="1" name="timeSpent" class="inputNumber" v-model="itemLocal.time_spent" />
                     </div>
                   </div>
                 </div>
 
-                <div class="my-4">
-                  <small class="date-label">Commentaires</small>
-                  <vs-textarea rows="2" label="Ajouter un commentaire" name="comment" class="w-full mb-1 mt-1" v-model="itemLocal.comment" 
-                    :color="validateForm ? 'success' : 'danger'"/>
+                <div class="my-3">
+                  <div v-if="commentDisplay">
+                    <small class="date-label">Commentaires</small>
+                    <vs-textarea rows="2" label="Ajouter un commentaire" name="comment" class="w-full mb-1 mt-1" v-model="itemLocal.comment" />
+                  </div>
                 </div>
               </form>
           </div>
@@ -84,17 +110,21 @@ import moment from 'moment'
 import { Validator } from 'vee-validate';
 import errorMessage from './errorValidForm';
 
+import AddPreviousTask from './AddPreviousTasks.vue'
+
 // register custom messages
 Validator.localize('fr', errorMessage);
 
 export default {
   components: {
-    flatPickr
+    flatPickr,
+    AddPreviousTask
   },
   props: {
     project_data: {
       required: true
-    }
+    },
+    tasks_list : { required: true}
   },
   data () {
     return {
@@ -108,8 +138,10 @@ export default {
 
       itemLocal: {
         name: '',
+        order: '',
+        description: '',
         date: new Date(),
-        estimated_time: '',
+        estimated_time: 1,
         time_spent: '',
         task_bundle_id: null,
         workarea_id: 'null',
@@ -118,10 +150,17 @@ export default {
         project_id: this.project_data.id,
         comment: '',
         skills: [],
+        previousTasksIds: [],
       },
 
       workareasDataFiltered: [],
-      comments: []
+      comments: [],
+
+      orderDisplay: false,
+      descriptionDisplay: false,
+      commentDisplay: false,
+      have_setTimeSpent: false,
+      previousTasks: [],
     }
   },
   computed: {
@@ -146,8 +185,10 @@ export default {
     clearFields () {
       Object.assign(this.itemLocal, {
         name: '',
+        order: '',
+        description: '',
         date: new Date(),
-        estimated_time: '',
+        estimated_time: 1,
         time_spent: '',
         task_bundle_id: null,
         workarea_id: 'null',
@@ -155,8 +196,14 @@ export default {
         status: 'todo',
         skills: [],
         project_id: this.project_data.id,
-        comment: ''
+        comment: '',
+        previousTasksIds: [],
       })
+      this.orderDisplay = false
+      this.descriptionDisplay = false
+      this.commentDisplay = false
+      this.have_setTimeSpent = false
+      this.previousTasks = [],
       Object.assign(this.workareasDataFiltered, [])
     },
     addItem () {
@@ -213,6 +260,24 @@ export default {
         }
       }
       return $filteredItems
+    },
+    showComment () { this.commentDisplay = true },
+    showDescription () { this.descriptionDisplay = true },
+    addPreviousTask (taskIds) { 
+      this.itemLocal.previousTasksIds= taskIds
+      let previousTasks_local = []
+      
+      taskIds.forEach(id => {
+        let task = this.tasks_list.filter(t => t.id == id)
+        previousTasks_local.push(task[0].name)
+      });
+      this.previousTasks = previousTasks_local
+    },
+    setTimeSpent(){
+      if(!this.have_setTimeSpent){
+        this.itemLocal.time_spent = this.itemLocal.estimated_time
+        this.have_setTimeSpent = true
+      }
     }
   }
 }
@@ -220,5 +285,27 @@ export default {
 <style>
 .con-vs-dialog.task-compose .vs-dialog{
   max-width: 700px
+}
+.add-task-form{
+  max-height: 450px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.inputNumber{
+  justify-content: start;
+  max-width: 97px;
+}
+.linkTxt{
+    font-size: 0.8em;
+    color: #2196f3;
+    background-color: #e9e9ff;
+    border-radius: 4px;
+    margin: 3px;
+    padding: 3px 4px;
+    font-weight: 500;
+}
+.linkTxt:hover{
+  cursor: pointer;
+  background-color: #efefef;
 }
 </style>

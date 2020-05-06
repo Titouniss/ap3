@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\TasksBundle;
 use App\Models\Project;
 use App\Models\TaskComment;
+use App\Models\PreviousTask;
 use App\Models\TasksSkill;
 use Illuminate\Support\Facades\Auth;
 use Validator;
@@ -30,7 +31,7 @@ class TaskController extends Controller
 
     public function getByBundle(int $bundle_id)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments')->get();
+        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks')->get();
         return response()->json(['success' => $items], $this-> successStatus);  
     }
 
@@ -74,6 +75,7 @@ class TaskController extends Controller
         $item = Task::create($arrayRequest);
         $this->storeComment($item->id, $arrayRequest['comment']);
         $this->storeSkills($item->id, $arrayRequest['skills']);
+        $this->storePreviousTask($item->id, $arrayRequest['previousTasksIds']);
 
         return response()->json(['success' => $item], $this-> successStatus); 
     }
@@ -128,15 +130,18 @@ class TaskController extends Controller
                 'name' => $arrayRequest['name'], 
                 'date' => $arrayRequest['date'],
                 'estimated_time' => $arrayRequest['estimated_time'],
+                'order' => $arrayRequest['order'],
+                'description' => $arrayRequest['description'],
                 'time_spent' => $arrayRequest['time_spent'],
                 'workarea_id' => $arrayRequest['workarea_id'],
                 'status' => $arrayRequest['status']
             ]);
             
         $this->updateSkills($id, $arrayRequest['skills']);
+        $this->updatePreviousTasks($id, $arrayRequest['previousTasksIds']);
         
         if($update){
-            $item = Task::find($id)->load('workarea', 'skills', 'comments');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
             return response()->json(['success' => $item], $this-> successStatus); 
         }
         else{
@@ -186,11 +191,28 @@ class TaskController extends Controller
         }
     }
 
+    private function storePreviousTask(int $task_id, $previousTaskIds){
+        if(count($previousTaskIds) > 0 && $task_id){
+            foreach ($previousTaskIds as $id) {
+                PreviousTask::create(['task_id' => $task_id, 'previous_task_id' => $id]);
+            } 
+        }
+    }
+
     private function updateSkills(int $task_id, $skills){
         TasksSkill::where('task_id', $task_id)->delete();
         if(count($skills) > 0 && $task_id){
             foreach ($skills as $skill_id) {
                 TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill_id]);
+            } 
+        }
+    }
+
+    private function updatePreviousTasks(int $task_id, $previousTasksIds){
+        PreviousTask::where('task_id', $task_id)->delete();
+        if(count($previousTasksIds) > 0 && $task_id){
+            foreach ($previousTasksIds as $id) {
+                PreviousTask::create(['task_id' => $task_id, 'previous_task_id' => $id]);
             } 
         }
     }
