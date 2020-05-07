@@ -153,6 +153,7 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('show/{id}', 'API\ProjectController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
             Route::post('store', 'API\ProjectController@store');
+            Route::post('store-range/{id}', 'API\ProjectController@addRange');
             Route::post('update/{id}', 'API\ProjectController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
@@ -195,7 +196,7 @@ Route::group(['middleware' => 'auth:api'], function(){
         // });
     });
 
-    /***********************************   TASK   **************************************/
+    /*****************************   REPETITIVE - TASK   ********************************/
     /***********************************************************************************/
     Route::prefix('repetitive-task-management')->group(function () {
         Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
