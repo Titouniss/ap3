@@ -24,7 +24,7 @@ Route::prefix('auth')->group(function () {
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
     Route::post('register/{token}', 'API\UserController@registerWithToken');
-    
+
     // handle reset password form process
     Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
     Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
@@ -38,7 +38,7 @@ Route::prefix('auth')->group(function () {
 /*****************************    AUTHENTICATED ************************************/
 /***********************************************************************************/
 
-Route::group(['middleware' => 'auth:api'], function(){
+Route::group(['middleware' => 'auth:api'], function () {
     /***********************************************************************************/
     /********************************    USERS    **************************************/
     /***********************************************************************************/
@@ -55,6 +55,7 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::post('updateAccount/{id}', 'API\UserController@updateAccount');
             Route::post('updateInformation/{id}', 'API\UserController@updateInformation');
             Route::post('updatePassword', 'API\UserController@updatePassword');
+            Route::post('updateWorkHours/{id}', 'API\UserController@updateWorkHours');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
             Route::delete('destroy/{id}', 'API\UserController@destroy');
@@ -107,11 +108,11 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('index', 'API\CompanyController@index');
         Route::get('show/{id}', 'API\CompanyController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
-            Route::post('store', 'API\CompanyController@store');
-            Route::post('update/{id}', 'API\CompanyController@update');
+        Route::post('store', 'API\CompanyController@store');
+        Route::post('update/{id}', 'API\CompanyController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('{id}', 'API\CompanyController@destroy');
+        Route::delete('{id}', 'API\CompanyController@destroy');
         // });
     });
 
@@ -122,11 +123,11 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('index', 'API\SkillController@index');
         Route::get('show/{id}', 'API\SkillController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
-            Route::post('store', 'API\SkillController@store');
-            Route::post('update/{id}', 'API\SkillController@update');
+        Route::post('store', 'API\SkillController@store');
+        Route::post('update/{id}', 'API\SkillController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('{id}', 'API\SkillController@destroy');
+        Route::delete('{id}', 'API\SkillController@destroy');
         // });
     });
 
@@ -137,11 +138,11 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('index', 'API\WorkareaController@index');
         Route::get('show/{id}', 'API\WorkareaController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
-            Route::post('store', 'API\WorkareaController@store');
-            Route::post('update/{id}', 'API\WorkareaController@update');
+        Route::post('store', 'API\WorkareaController@store');
+        Route::post('update/{id}', 'API\WorkareaController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('{id}', 'API\WorkareaController@destroy');
+        Route::delete('{id}', 'API\WorkareaController@destroy');
         // });
     });
 
@@ -157,7 +158,7 @@ Route::group(['middleware' => 'auth:api'], function(){
             Route::post('update/{id}', 'API\ProjectController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('{id}', 'API\ProjectController@destroy');
+        Route::delete('{id}', 'API\ProjectController@destroy');
         // });
     });
 
@@ -187,12 +188,12 @@ Route::group(['middleware' => 'auth:api'], function(){
         Route::get('bundle/{id}', 'API\TaskController@getByBundle');
         Route::get('show/{id}', 'API\TaskController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
-            Route::post('store', 'API\TaskController@store');
-            Route::post('store-comment/{id}', 'API\TaskController@addComment');
-            Route::post('update/{id}', 'API\TaskController@update');
+        Route::post('store', 'API\TaskController@store');
+        Route::post('store-comment/{id}', 'API\TaskController@addComment');
+        Route::post('update/{id}', 'API\TaskController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-            Route::delete('{id}', 'API\TaskController@destroy');
+        Route::delete('{id}', 'API\TaskController@destroy');
         // });
     });
 
@@ -200,6 +201,5 @@ Route::group(['middleware' => 'auth:api'], function(){
     /***********************************************************************************/
     Route::prefix('repetitive-task-management')->group(function () {
         Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
-
     });
 });

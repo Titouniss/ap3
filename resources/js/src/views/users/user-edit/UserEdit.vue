@@ -32,7 +32,7 @@
           </vs-tab>
           <vs-tab label="Horaires" icon-pack="feather" icon="icon-clock">
             <div class="tab-text">
-              <user-edit-tab-planning class="mt-4" :data="user_data" />
+              <user-edit-tab-work-hours class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
           <vs-tab label="Notifications" icon-pack="feather" icon="icon-alert-triangle">
@@ -54,7 +54,7 @@
 <script>
 import UserEditTabAccount from "./UserEditTabAccount.vue";
 import UserEditTabInformation from "./UserEditTabInformation.vue";
-import UserEditTabPlanning from "./UserEditTabPlanning.vue";
+import UserEditTabWorkHours from "./UserEditTabWorkHours.vue";
 import UserEditTabNotifications from "./UserEditTabNotifications.vue";
 import UserEditTabPassword from "./UserEditTabPassword.vue";
 
@@ -65,7 +65,7 @@ export default {
   components: {
     UserEditTabAccount,
     UserEditTabInformation,
-    UserEditTabPlanning,
+    UserEditTabWorkHours,
     UserEditTabNotifications,
     UserEditTabPassword
   },

@@ -13,7 +13,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    
+
     use  HasRoles, HasApiTokens, Notifiable, SoftDeletes;
 
     /**
@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'firstname','lastname','email', 'password', 'isTermsConditionAccepted', 'company_id', 'register_token'
+        'firstname', 'lastname', 'email', 'password', 'isTermsConditionAccepted', 'company_id', 'register_token'
     ];
 
     /**
@@ -42,15 +42,15 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-    
+
     public function company()
     {
         return $this->belongsTo('App\Models\Company');
     }
 
-    public function plannings()
+    public function workHours()
     {
-        return $this->hasMany('App\Models\Planning');
+        return $this->hasMany('App\Models\WorkHours');
     }
 
     public function indisponibilities()
@@ -72,5 +72,4 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\MailVerifyEmailNotification());
     }
-
 }
