@@ -201,4 +201,19 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('repetitive-task-management')->group(function () {
         Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
     });
+
+    /***********************************************************************************/
+    /*****************************   UNAVAILABILITIES   ********************************/
+    /***********************************************************************************/
+    Route::prefix('unavailability-management')->group(function () {
+        Route::get('index', 'API\UnavailabilityController@index');
+        Route::get('show/{id}', 'API\UnavailabilityController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+        Route::post('store', 'API\UnavailabilityController@store');
+        Route::post('update/{id}', 'API\UnavailabilityController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+        Route::delete('destroy/{id}', 'API\UnavailabilityController@destroy');
+        // });
+    });
 });

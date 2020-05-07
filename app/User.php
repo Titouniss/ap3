@@ -53,9 +53,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany('App\Models\WorkHours');
     }
 
-    public function indisponibilities()
+    public function unavailabilities()
     {
-        return $this->hasMany('App\Models\Indisponibility');
+        return $this->hasMany('App\Models\Unavailability');
     }
 
     /**

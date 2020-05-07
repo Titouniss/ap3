@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Unavailability;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Company;
 use Validator;
 
-
-class CompanyController extends Controller
+class UnavailabilityController extends Controller
 {
     public $successStatus = 200;
+
     /**
      * Display a listing of the resource.
      *
@@ -19,15 +20,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        $items = [];
-        if ($user->hasRole('superAdmin')) {
-            $items = Company::all()->load('skills');
-        } else if ($user->company_id != null) {
-            $items = Company::where('id', $user->company_id)->get()->load('skills');
-        }
-
-        return response()->json(['success' => $items], $this->successStatus);
+        return response()->json(['success' => Unavailability::where('user_id', Auth::user()->id)->orderby('starts_at', 'asc')->get()], $this->successStatus);
     }
 
     /**
@@ -51,14 +44,16 @@ class CompanyController extends Controller
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'siret' => 'required'
+            'starts_at' => 'required|date',
+            'ends_at' => 'required|date',
+            'reason' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $item = Company::create($arrayRequest);
-        return response()->json(['success' => $item], $this->successStatus);
+
+        $arrayRequest['user_id'] = Auth::user()->id;
+        return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
     }
 
     /**
@@ -82,14 +77,17 @@ class CompanyController extends Controller
     public function update(Request $request, $id)
     {
         $arrayRequest = $request->all();
-
         $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'siret' => 'required'
+            'starts_at' => 'required|date',
+            'ends_at' => 'required|date',
+            'reason' => 'required'
         ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
+        }
 
-        $item = Company::where('id', $id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
-        return response()->json(['success' => $item], $this->successStatus);
+        Unavailability::where('id', $id)->update(['starts_at' => $arrayRequest['starts_at'], 'ends_at' => $arrayRequest['ends_at'], 'reason' => $arrayRequest['reason']]);
+        return response()->json(['success' => Unavailability::find($id)], $this->successStatus);
     }
 
     /**
@@ -100,8 +98,8 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
-        $item = Company::findOrFail($id);
+        $item = Unavailability::findOrFail($id);
         $item->delete();
-        return '';
+        return response()->json([], $this->successStatus);
     }
 }

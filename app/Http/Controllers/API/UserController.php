@@ -294,7 +294,7 @@ class UserController extends Controller
     public function show($id)
     {
         $item = User::where('id', $id)
-            ->with('roles:id,name', 'company:id,name', 'workHours', 'indisponibilities')
+            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities')
             ->first();
         return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
     }
@@ -420,49 +420,45 @@ class UserController extends Controller
      */
     public function updateWorkHours(Request $request, $id)
     {
-        try {
-            $arrayRequest = $request->all();
+        $arrayRequest = $request->all();
 
-            foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                if (!in_array(strtolower($day), WorkHours::$days)) {
-                    return response()->json(['error' => 'Invalid index'], 401);
-                }
-                $validator = Validator::make($hours, [
-                    'is_active' => 'required',
-                ]);
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 401);
-                }
+        foreach ($arrayRequest['work_hours'] as $day => $hours) {
+            if (!in_array(strtolower($day), WorkHours::$days)) {
+                return response()->json(['error' => 'Invalid index'], 401);
             }
-
-            if (User::withTrashed()->where('id', $id)->exists()) {
-                foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                    $lowerDay = strtolower($day);
-                    $previousHours = WorkHours::where('user_id', $id)->where('day', $lowerDay)->first();
-                    if ($previousHours) {
-                        $previousHours->is_active = $hours['is_active'];
-                        $previousHours->morning_starts_at = $hours['morning_starts_at'];
-                        $previousHours->morning_ends_at = $hours['morning_ends_at'];
-                        $previousHours->afternoon_starts_at = $hours['afternoon_starts_at'];
-                        $previousHours->afternoon_ends_at = $hours['afternoon_ends_at'];
-                        $previousHours->save();
-                    } else {
-                        WorkHours::create([
-                            'day' => $lowerDay,
-                            'is_active' => $hours['is_active'],
-                            'morning_starts_at' => $hours['morning_starts_at'],
-                            'morning_ends_at' => $hours['morning_ends_at'],
-                            'afternoon_starts_at' => $hours['afternoon_starts_at'],
-                            'afternoon_ends_at' => $hours['afternoon_ends_at'],
-                            'user_id' => $id
-                        ]);
-                    }
-                }
+            $validator = Validator::make($hours, [
+                'is_active' => 'required',
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 401);
             }
-            return response()->json(['success' => User::where('id', $id)->with('workHours', 'indisponibilities')->first()], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['errorMessage' => $th->getMessage()], 401);
         }
+
+        if (User::withTrashed()->where('id', $id)->exists()) {
+            foreach ($arrayRequest['work_hours'] as $day => $hours) {
+                $lowerDay = strtolower($day);
+                $previousHours = WorkHours::where('user_id', $id)->where('day', $lowerDay)->first();
+                if ($previousHours) {
+                    $previousHours->is_active = $hours['is_active'];
+                    $previousHours->morning_starts_at = $hours['morning_starts_at'];
+                    $previousHours->morning_ends_at = $hours['morning_ends_at'];
+                    $previousHours->afternoon_starts_at = $hours['afternoon_starts_at'];
+                    $previousHours->afternoon_ends_at = $hours['afternoon_ends_at'];
+                    $previousHours->save();
+                } else {
+                    WorkHours::create([
+                        'day' => $lowerDay,
+                        'is_active' => $hours['is_active'],
+                        'morning_starts_at' => $hours['morning_starts_at'],
+                        'morning_ends_at' => $hours['morning_ends_at'],
+                        'afternoon_starts_at' => $hours['afternoon_starts_at'],
+                        'afternoon_ends_at' => $hours['afternoon_ends_at'],
+                        'user_id' => $id
+                    ]);
+                }
+            }
+        }
+        return response()->json(['success' => User::where('id', $id)->with('workHours', 'unavailabilities')->first()], $this->successStatus);
     }
 
     /**
