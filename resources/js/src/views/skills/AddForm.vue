@@ -63,7 +63,7 @@ export default {
   },
   computed: {
     validateForm () {
-      return !this.errors.any() && this.itemLocal.name != '' && this.itemLocal.company != null
+      return !this.errors.any() && this.itemLocal.name != '' && this.itemLocal.company_id != null
     },
     companiesData() {
       return this.$store.state.companyManagement.companies
@@ -112,6 +112,7 @@ export default {
             })
           })
         }
+        this.clearFields()
       })
     }
   }
