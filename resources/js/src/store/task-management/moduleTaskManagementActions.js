@@ -30,6 +30,17 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  addItemRange({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/project-management/store-range/${item.rangeId}`, item)
+        .then((response) => {
+          console.log(response)
+          commit('SET_ITEMS', response.data.success)
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   editItem({ commit }, item) {  
     commit('EDIT_ITEM', item)
     return

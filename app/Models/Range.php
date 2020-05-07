@@ -15,6 +15,6 @@ class Range extends Model
     
     public function repetitive_tasks()
     {
-        return $this->hasMany('App\Models\RepetitiveTask', 'range_id');
+        return $this->hasMany('App\Models\RepetitiveTask', 'range_id')->orderBy('order')->with('skills');
     }
 }

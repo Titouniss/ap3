@@ -36,8 +36,8 @@
                 <td>{{ project_data.date }}</td>
               </tr>
               <tr>
-                <td class="font-semibold">Gammes sélectionnées : </td>
-                <td>RAF</td>
+                <td class="font-semibold" style="padding-bottom: 0; vertical-align: inherit;">Ajouter une gamme : </td>
+                <add-range-form :company_id="this.project_data.company_id" :project_id="this.project_data.id"></add-range-form>
               </tr>
             </table>
           </div>
@@ -89,15 +89,18 @@ import moduleProjectManagement from '@/store/project-management/moduleProjectMan
 import moduleWorkareaManagement from '@/store/workarea-management/moduleWorkareaManagement.js'
 import moduleSkillManagement from '@/store/skill-management/moduleSkillManagement.js'
 import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moduleRangeManagement from '@/store/range-management/moduleRangeManagement.js'
 
 import moment from 'moment'
 
 import EditForm from './EditForm.vue'
+import AddRangeForm from './AddRangeForm.vue'
 import IndexTasks from '../tasks/Index.vue'
 
 export default {
   components: {
     EditForm,
+    AddRangeForm,
     IndexTasks
   },
   data () {
@@ -151,6 +154,10 @@ export default {
       this.$store.registerModule('workareaManagement', moduleWorkareaManagement)
       moduleWorkareaManagement.isRegistered = true
     }
+    if (!moduleRangeManagement.isRegistered) {
+      this.$store.registerModule('rangeManagement', moduleRangeManagement)
+      moduleRangeManagement.isRegistered = true
+    }
     if (!moduleSkillManagement.isRegistered) {
       this.$store.registerModule('skillManagement', moduleSkillManagement)
       moduleSkillManagement.isRegistered = true
@@ -162,6 +169,7 @@ export default {
     moment.locale('fr')
 
     const projectId = this.$route.params.id
+    this.$store.dispatch('rangeManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('workareaManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('companyManagement/fetchItems').catch(err => { console.error(err) })
     this.$store.dispatch('skillManagement/fetchItems').catch(err => { console.error(err) })
@@ -184,10 +192,12 @@ export default {
     moduleWorkareaManagement.isRegistered = false
     moduleCompanyManagement.isRegistered = false
     moduleSkillManagement.isRegistered = false
+    moduleRangeManagement.isRegistered = false
     this.$store.unregisterModule('projectManagement')
     this.$store.unregisterModule('companyManagement')
     this.$store.unregisterModule('workareaManagement')
     this.$store.unregisterModule('skillManagement')
+    this.$store.unregisterModule('rangeManagement')
   },
 }
 

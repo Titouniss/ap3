@@ -1,21 +1,19 @@
 <template>
     <div class="mb-1">
-      <span v-on:click="activePromptPrevious = true" class="linkTxt"> + Ajouter un ordre </span>
+      <span v-if="previousTasksIds.length > 0" v-on:click="activePromptPrevious = true" class="linkTxtWarning"> - Modifier l'ordre </span>
+      <span v-if="previousTasksIds.length == 0" v-on:click="activePromptPrevious = true" class="linkTxt"> + Ajouter un ordre </span>
       
         <vs-prompt
             title="Ajouter un ordre"
             accept-text= "Valider"
             cancel-text= "Annuler"
             button-cancel = "border"
-            @cancel="clearFields"
-            @close="clearFields"
             @accept="addPreviousTask(previousTasksIds_local)"
             :active.sync="activePromptPrevious"
             class="previous-task-compose">
             <div>
 
-              <vs-select v-model="previousTasksIds_local" class="w-full mt-3" multiple autocomplete
-                v-validate="'required'" name='tasks'>
+              <vs-select v-model="previousTasksIds_local" class="w-full mt-3" multiple autocomplete name='tasks'>
                 <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in TasksData"/>
               </vs-select>
 
@@ -68,6 +66,15 @@ export default {
 .linkTxt{
     font-size: 0.8em;
     color: #2196f3;
+    background-color: #e9e9ff;
+    border-radius: 4px;
+    margin: 3px;
+    padding: 3px 4px;
+    font-weight: 500;
+}
+.linkTxtWarning{
+    font-size: 0.8em;
+    color: #ff6600;
     background-color: #e9e9ff;
     border-radius: 4px;
     margin: 3px;
