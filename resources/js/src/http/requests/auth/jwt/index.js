@@ -5,16 +5,16 @@ import store from '../../../../store/store.js'
 let isAlreadyFetchingAccessToken = false
 let subscribers = []
 
-function onAccessTokenFetched (access_token) {
+function onAccessTokenFetched(access_token) {
   subscribers = subscribers.filter(callback => callback(access_token))
 }
 
-function addSubscriber (callback) {
+function addSubscriber(callback) {
   subscribers.push(callback)
 }
 
 export default {
-  init () {
+  init() {
     axios.interceptors.response.use(function (response) {
       return response
     }, function (error) {
@@ -44,23 +44,25 @@ export default {
       return Promise.reject(error)
     })
   },
-  login (email, pwd) {
+  login(email, pwd) {
     return axios.post('/api/auth/login', {
       email,
       password: pwd
     })
   },
-  registerUser (firstname,lastname, email, pwd, c_password,isTermsConditionAccepted) {
+  registerUser(genre, firstname, lastname, email, phone_number, pwd, c_password, isTermsConditionAccepted) {
     return axios.post('/api/auth/register', {
+      genre: genre,
       firstname: firstname,
       lastname: lastname,
       email,
+      phone_number: phone_number,
       password: pwd,
       c_password: c_password,
       isTermsConditionAccepted: isTermsConditionAccepted
     })
   },
-  registerUserWithToken (firstname,lastname,email, pwd, c_password,isTermsConditionAccepted,token) {
+  registerUserWithToken(firstname, lastname, email, pwd, c_password, isTermsConditionAccepted, token) {
     return axios.post('/api/auth/register/' + token, {
       firstname: firstname,
       lastname: lastname,
@@ -70,19 +72,19 @@ export default {
       isTermsConditionAccepted: isTermsConditionAccepted
     })
   },
-  refreshToken () {
-    return axios.post('/api/auth/refresh-token', {token: localStorage.getItem('token')})
+  refreshToken() {
+    return axios.post('/api/auth/refresh-token', { token: localStorage.getItem('token') })
   },
-  forgotPassword (email) {
-    return axios.post('/api/auth/forget', {email: email})
+  forgotPassword(email) {
+    return axios.post('/api/auth/forget', { email: email })
   },
-  resetPassword (email, pwd, c_password, token) {        
-    return axios.post('/api/auth/reset/password', {email: email, password: pwd, password_confirmation: c_password, token: token})
+  resetPassword(email, pwd, c_password, token) {
+    return axios.post('/api/auth/reset/password', { email: email, password: pwd, password_confirmation: c_password, token: token })
   },
-  logout () {
+  logout() {
     return axios.get('/api/auth/logout')
   },
-  verify (email) {
-    return axios.post('/api/auth/email/resend', {email: email})
+  verify(email) {
+    return axios.post('/api/auth/email/resend', { email: email })
   },
 }

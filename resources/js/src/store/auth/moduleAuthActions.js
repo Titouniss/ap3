@@ -12,7 +12,7 @@ import router from '@/router'
 import moment from 'moment'
 import axios from '@/axios.js'
 export default {
-  updateUsername ({ commit }, payload) {
+  updateUsername({ commit }, payload) {
     payload.user.updateProfile({
       displayName: payload.displayName
     }).then(() => {
@@ -21,7 +21,7 @@ export default {
       // update in localstorage
       const newUserData = Object.assign({}, payload.user.providerData[0])
       newUserData.displayName = payload.displayName
-      commit('UPDATE_USER_INFO', newUserData, {root: true})
+      commit('UPDATE_USER_INFO', newUserData, { root: true })
 
       // If reload is required to get fresh data after update
       // Reload current page
@@ -40,17 +40,17 @@ export default {
     })
   },
   // JWT
-  loginJWT ({ commit }, payload) {
+  loginJWT({ commit }, payload) {
     return new Promise((resolve, reject) => {
       jwt.login(payload.userDetails.email, payload.userDetails.password)
-        .then(response => {  
-          const data = response.data               
+        .then(response => {
+          const data = response.data
           // If there's user data in response           
           if (data && data.success) {
             // Set accessToken
             if (data.userData) {
               // Update user details              
-              commit('UPDATE_USER_INFO', data.userData, {root: true})
+              commit('UPDATE_USER_INFO', data.userData, { root: true })
             }
             if (data.success.token) {
               // Set bearer token in axios
@@ -63,28 +63,29 @@ export default {
             router.push(router.currentRoute.query.to || '/')
             resolve(response)
           } else if (data && data.verify === false) {
-            reject({ message: 'Veuillez valider votre adresse e-mail avant de vous connecter.',activeResend: true })
+            reject({ message: 'Veuillez valider votre adresse e-mail avant de vous connecter.', activeResend: true })
           } else {
-            reject({message: 'Connexion impossible l’identifiant ou le mot de passe est incorrect.'})
+            reject({ message: 'Connexion impossible l’identifiant ou le mot de passe est incorrect.' })
           }
         })
-        .catch(error => { 
+        .catch(error => {
           let message = 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
           let activeResend = false
-          if (error.response.data.message === "Your email address is not verified." ) {
+          if (error.response.data.message === "Your email address is not verified.") {
             activeResend = true
             message = 'Veuillez valider votre adresse e-mail avant de vous connecter.'
           }
-         reject({message: message, activeResend: activeResend}) })
+          reject({ message: message, activeResend: activeResend })
+        })
     })
   },
-  registerUserJWT ({ commit }, payload) {
+  registerUserJWT({ commit }, payload) {
 
-    const { firstname, lastname, email, password, confirmPassword , isTermsConditionAccepted} = payload.userDetails
+    const { genre, firstname, lastname, email, phone_number, password, confirmPassword, isTermsConditionAccepted } = payload.userDetails
 
     return new Promise((resolve, reject) => {
 
-      jwt.registerUser(firstname,lastname, email, password, confirmPassword,isTermsConditionAccepted)
+      jwt.registerUser(genre, firstname, lastname, email, phone_number, password, confirmPassword, isTermsConditionAccepted)
         .then(response => {
           const data = response.data
           // Redirect User
@@ -93,7 +94,7 @@ export default {
             localStorage.setItem('token', data.success.token)
             localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date())
             commit('SET_BEARER', data.success.token)
-            commit('UPDATE_USER_INFO', data.userData, {root: true})
+            commit('UPDATE_USER_INFO', data.userData, { root: true })
             // Update data in localStorage
             router.push(router.currentRoute.query.to || '/')
           }
@@ -102,13 +103,13 @@ export default {
         .catch(error => { reject(error) })
     })
   },
-  updateUserJWT ({ commit }, payload) {
+  updateUserJWT({ commit }, payload) {
 
-    const { firstname, lastname, email, password, confirmPassword , isTermsConditionAccepted, token} = payload.userDetails
+    const { firstname, lastname, email, password, confirmPassword, isTermsConditionAccepted, token } = payload.userDetails
 
     return new Promise((resolve, reject) => {
 
-      jwt.registerUserWithToken(firstname,lastname,email, password, confirmPassword,isTermsConditionAccepted, token)
+      jwt.registerUserWithToken(firstname, lastname, email, password, confirmPassword, isTermsConditionAccepted, token)
         .then(response => {
           const data = response.data
           // Redirect User
@@ -117,7 +118,7 @@ export default {
             localStorage.setItem('token', data.success.token)
             localStorage.setItem('tokenExpires', data.success.tokenExpires || new Date())
             commit('SET_BEARER', data.success.token)
-            commit('UPDATE_USER_INFO', data.userData, {root: true})
+            commit('UPDATE_USER_INFO', data.userData, { root: true })
             // Update data in localStorage
             router.push(router.currentRoute.query.to || '/')
           }
@@ -126,12 +127,12 @@ export default {
         .catch(error => { reject(error) })
     })
   },
-  fetchAccessToken () {
+  fetchAccessToken() {
     return new Promise((resolve) => {
       jwt.refreshToken().then(response => { resolve(response) })
     })
   },
-  fetchItemWithToken (context, token) {
+  fetchItemWithToken(context, token) {
     return new Promise((resolve, reject) => {
       axios.get(`/api/auth/user/registration/${token}`)
         .then((response) => {
@@ -140,48 +141,50 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  forgotPassword ({ commit }, payload) {    
+  forgotPassword({ commit }, payload) {
     return new Promise((resolve) => {
       jwt.forgotPassword(payload.email)
-      .then(response => {resolve(response) })
-      .catch(error => { reject(error)})
+        .then(response => { resolve(response) })
+        .catch(error => { reject(error) })
     })
   },
-  resetPassword ({ commit }, payload) {
+  resetPassword({ commit }, payload) {
     return new Promise((resolve, reject) => {
       jwt.resetPassword(payload.email, payload.password, payload.c_password, payload.token)
-      .then(response => { resolve(response) })
-      .catch(error => { reject(error)})
+        .then(response => { resolve(response) })
+        .catch(error => { reject(error) })
     })
   },
-  logoutJWT ({ commit }) {
+  logoutJWT({ commit }) {
     return new Promise((resolve, reject) => {
       jwt.logout()
-        .then(response => {  
-          commit('CLEAN_USER_INFO', {}, {root: true})
+        .then(response => {
+          commit('CLEAN_USER_INFO', {}, { root: true })
           localStorage.removeItem('loggedIn')
           localStorage.removeItem('token')
           localStorage.removeItem('tokenExpires')
-          localStorage.removeItem('userInfo')          
+          localStorage.removeItem('userInfo')
           resolve(response)
         })
-        .catch(error => { 
+        .catch(error => {
           let message = 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
-         reject({message: message}) })
+          reject({ message: message })
+        })
     })
   },
-  verify ({ commit },payload) {
+  verify({ commit }, payload) {
     return new Promise((resolve, reject) => {
       jwt.verify(payload.email)
-        .then(response => {           
+        .then(response => {
           resolve(response)
         })
-        .catch(error => { 
+        .catch(error => {
           let message = 'Connexion au serveur impossible, Veuillez réessayer ultérieurement.'
-          if (error.response.data.message === "Your email address is not verified." ) {
+          if (error.response.data.message === "Your email address is not verified.") {
             message = 'Veuillez valider votre adresse e-mail avant de vous connecter.'
           }
-         reject({message: message}) })
+          reject({ message: message })
+        })
     })
   },
 }

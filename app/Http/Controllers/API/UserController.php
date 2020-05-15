@@ -162,6 +162,7 @@ class UserController extends Controller
             'firstname' => 'required',
             'lastname' => 'required',
             'email' => 'required|email',
+            'phone_number' => 'required',
             'password' => 'required',
             'c_password' => 'required|same:password',
             'isTermsConditionAccepted' => 'required',
@@ -175,14 +176,14 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $role = Role::where('name', 'Administrateur');
+        $role = Role::where('name', 'superAdmin');
         if ($role != null) {
-            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+            $user->assignRole('superAdmin'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => 'Entreprise ' . $user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);
         $user->save();
-        $user->sendEmailVerificationNotification();
+        //$user->sendEmailVerificationNotification();
         $token =  $user->createToken('ProjetX');
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
@@ -197,6 +198,7 @@ class UserController extends Controller
     public function registerWithToken(Request $request, $token)
     {
         $validator = Validator::make($request->all(), [
+            'genre' => 'required',
             'firstname' => 'required',
             'lastname' => 'required',
             'password' => 'required',
@@ -260,8 +262,10 @@ class UserController extends Controller
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
+            'genre' => 'required',
             'lastname' => 'required',
             'firstname' => 'required',
+            'phone_number' => 'phone_number',
             'email' => 'required',
             'company_id' => 'required'
         ]);
