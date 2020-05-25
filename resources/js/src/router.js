@@ -18,15 +18,15 @@ Vue.use(Router)
 const router = new Router({
   mode: 'history',
   base: '/',
-  scrollBehavior () {
+  scrollBehavior() {
     return { x: 0, y: 0 }
   },
   routes: [
 
     {
-    // =============================================================================
-    // MAIN LAYOUT ROUTES
-    // =============================================================================
+      // =============================================================================
+      // MAIN LAYOUT ROUTES
+      // =============================================================================
       path: '',
       component: () => import('./layouts/main/Main.vue'),
       children: [
@@ -43,7 +43,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////---USERS---/////
+        /////---USERS---/////
         {
           path: '/users',
           name: 'users',
@@ -63,18 +63,18 @@ const router = new Router({
             rule: 'editor'
           }
         },
-/////---COMPANIES---/////
+        /////---COMPANIES---/////
         {
           path: '/companies',
           name: 'companies',
           component: () => import('./views/companies/index.vue'),
           meta: {
-            pageTitle: 'Gestion des compagnies',
+            pageTitle: 'Gestion des sociétés',
             rule: 'admin',
             requiresAuth: true
           }
         },
-/////---SKILLS---/////
+        /////---SKILLS---/////
         {
           path: '/skills',
           name: 'skills',
@@ -84,7 +84,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////---ROLES---/////
+        /////---ROLES---/////
         {
           path: '/roles',
           name: 'roles',
@@ -115,7 +115,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////---WORKAREAS---/////
+        /////---WORKAREAS---/////
         {
           path: '/workareas',
           name: 'workareas',
@@ -125,7 +125,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////---PROJECTS---/////
+        /////---PROJECTS---/////
         {
           path: '/projects',
           name: 'projects',
@@ -144,7 +144,7 @@ const router = new Router({
             requiresAuth: true
           }
         },
-/////---RANGES---/////
+        /////---RANGES---/////
         {
           path: '/ranges',
           name: 'ranges',
@@ -170,6 +170,27 @@ const router = new Router({
           component: () => import('@/views/ranges/Edit.vue'),
           meta: {
             pageTitle: 'Edition de gamme',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        /////---SCHEDULE---/////
+        {
+          path: '/schedules',
+          name: 'schedules',
+          component: () => import('./views/schedules/Index.vue'),
+          meta: {
+            PageTitle: 'Listes des plannings',
+            rule: 'admin',
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/schedules/schedules-read/:id',
+          name: 'schedules-schedule-read',
+          component: () => import('@/views/schedules/Read.vue'),
+          meta: {
+            pageTitle: 'Détail du planning',
             rule: 'admin',
             requiresAuth: true
           }
@@ -308,39 +329,39 @@ const router = new Router({
   ]
 })
 
-router.beforeEach((to, from, next) => { 
-  
-    let isAuthenticated = false
-    const expiresAt = localStorage.getItem('tokenExpires')      
-    if (expiresAt && expiresAt !== null) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('token')}`
-      isAuthenticated = (
-        moment().unix() < expiresAt &&
-            localStorage.getItem('loggedIn') === 'true'
-      )
-    }
+router.beforeEach((to, from, next) => {
 
-    if (
-        (to.path === "/pages/login" ||
-        to.path === "/pages/forgot-password" ||
-        to.path === "/pages/register") &&
-        isAuthenticated
-    ) {      
-        router.push({ path: '/', query: { to: '/' } })
-        return next();
-    }
+  let isAuthenticated = false
+  const expiresAt = localStorage.getItem('tokenExpires')
+  if (expiresAt && expiresAt !== null) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('token')}`
+    isAuthenticated = (
+      moment().unix() < expiresAt &&
+      localStorage.getItem('loggedIn') === 'true'
+    )
+  }
 
-    // If auth required, check login. If login fails redirect to login page  
-    if (to.meta.requiresAuth) {
-      if (!isAuthenticated) {      
-        router.push({ path: '/pages/login', query: { to: to.path } })
-      }
-    }
+  if (
+    (to.path === "/pages/login" ||
+      to.path === "/pages/forgot-password" ||
+      to.path === "/pages/register") &&
+    isAuthenticated
+  ) {
+    router.push({ path: '/', query: { to: '/' } })
+    return next();
+  }
 
-    return next()
-    // Specify the current path as the customState parameter, meaning it
-    // will be returned to the application after auth
-    // auth.login({ target: to.path });
+  // If auth required, check login. If login fails redirect to login page  
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated) {
+      router.push({ path: '/pages/login', query: { to: to.path } })
+    }
+  }
+
+  return next()
+  // Specify the current path as the customState parameter, meaning it
+  // will be returned to the application after auth
+  // auth.login({ target: to.path });
 
 })
 
