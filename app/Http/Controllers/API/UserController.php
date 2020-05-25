@@ -24,6 +24,9 @@ use App\Models\Company;
 use App\Models\WorkHours;
 use Spatie\Permission\Models\Role;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 class UserController extends Controller
 {
     public $successStatus = 200;
@@ -176,9 +179,9 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $role = Role::where('name', 'superAdmin');
+        $role = Role::where('name', 'clientAdmin');
         if ($role != null) {
-            $user->assignRole('superAdmin'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => 'Entreprise ' . $user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);
@@ -265,7 +268,7 @@ class UserController extends Controller
             'genre' => 'required',
             'lastname' => 'required',
             'firstname' => 'required',
-            'phone_number' => 'phone_number',
+            'phone_number' => 'required',
             'email' => 'required',
             'company_id' => 'required'
         ]);
@@ -283,7 +286,7 @@ class UserController extends Controller
             $item->assignRole('basicUsers');
         }
 
-        $item->notify(new UserRegistration($item));
+        //$item->notify(new UserRegistration($item));
 
         return response()->json(['success' => $arrayRequest], $this->successStatus);
         //Il faut envoyer un email avec lien d'inscription
@@ -314,11 +317,14 @@ class UserController extends Controller
 
         $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
-            'lastname' => 'required'
+            'lastname' => 'required',
+            'genre' => 'required', 
+            'phone_number' => 'required', 
+            'email' => 'required', 
         ]);
         $user = User::withTrashed()->find($id);
         if ($user != null) {
-            if (isset($arrayRequest['roles'])) {
+            if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null ) {
                 $roles = array();
                 foreach ($arrayRequest['roles'] as $role) {
                     array_push($roles, $role['id']);
@@ -327,6 +333,9 @@ class UserController extends Controller
             }
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
+            $user->genre = $arrayRequest['genre'];
+            $user->phone_number = $arrayRequest['phone_number'];
+            $user->email = $arrayRequest['email'];
             $user->save();
         }
         return response()->json(['success' => $user], $this->successStatus);
@@ -473,6 +482,9 @@ class UserController extends Controller
     public function destroy($id)
     {
         $item = User::where('id', $id)->delete();
+        $controllerLog = new Logger('user');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('user', ['response', $item]);
         return response()->json(['success' => $item], $this->successStatus);
     }
 }
