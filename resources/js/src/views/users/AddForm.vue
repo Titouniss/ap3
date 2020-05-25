@@ -16,8 +16,28 @@
         <form>
           <div class="vx-row">
             <div class="vx-col w-full">
+              <div class="mt-4">
+                <label class="text-sm">Sexe</label>
+                <div class="mt-2">
+                  <vs-radio
+                    v-model="itemLocal.genre"
+                    vs-value="H"
+                    color="primary"
+                    vs-name="radio_genre"
+                    class="mr-4"
+                  >Homme</vs-radio>
+                  <vs-radio
+                    v-model="itemLocal.genre"
+                    vs-value="F"
+                    color="primary"
+                    vs-name="radio_genre"
+                    class="mr-4"
+                  >Femme</vs-radio>
+                </div>
+              </div>
+
               <vs-input
-                v-validate="'required'"
+                v-validate="'required|max:255'"
                 name="lastname"
                 class="w-full mb-4 mt-5"
                 placeholder="Nom"
@@ -29,7 +49,7 @@
                 v-show="errors.has('lastname')"
               >{{ errors.first('lastname') }}</span>
               <vs-input
-                v-validate="'required'"
+                v-validate="'required|max:255'"
                 name="firstname"
                 class="w-full mb-4 mt-5"
                 placeholder="Prénom"
@@ -53,28 +73,8 @@
                 v-show="errors.has('email')"
               >{{ errors.first('email') }}</span>
 
-              <div class="mt-4">
-                <label class="text-sm">Sexe</label>
-                <div class="mt-2">
-                  <vs-radio
-                    v-model="itemLocal.genre"
-                    vs-value="H"
-                    color="primary"
-                    vs-name="radio_genre"
-                    class="mr-4"
-                  >Homme</vs-radio>
-                  <vs-radio
-                    v-model="itemLocal.genre"
-                    vs-value="F"
-                    color="primary"
-                    vs-name="radio_genre"
-                    class="mr-4"
-                  >Femme</vs-radio>
-                </div>
-              </div>
-
               <vs-input
-                v-validate="'min:10|max:10|required'"
+                v-validate="'required|numeric|min:10|max:10'"
                 data-vv-validate-on="blur"
                 name="phone_number"
                 type="phone_number"
@@ -83,7 +83,10 @@
                 v-model="itemLocal.phone_number"
                 class="w-full mt-8"
               />
-              <span class="text-danger text-sm">{{ errors.first('phone_number') }}</span>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('phone_number')"
+              >{{ errors.first('phone_number') }}</span>
 
               <div class="vx-row mt-4" v-if="!disabled">
                 <div class="vx-col w-full">
