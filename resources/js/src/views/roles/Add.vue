@@ -23,7 +23,6 @@
         </div>
         <div class="vx-row">
           <vs-input
-            :max="10"
             class="w-full mt-4"
             label="Titre"
             v-model="role_data.name"
