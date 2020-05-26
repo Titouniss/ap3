@@ -112,7 +112,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\CompanyController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\CompanyController@destroy');
+        Route::delete('destroy/{id}', 'API\CompanyController@destroy');
+        Route::delete('forceDelete/{id}', 'API\CompanyController@forceDelete');
         // });
     });
 
@@ -127,7 +128,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\SkillController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\SkillController@destroy');
+        Route::delete('destroy/{id}', 'API\SkillController@destroy');
+        Route::delete('forceDelete/{id}', 'API\SkillController@forceDelete');
         // });
     });
 

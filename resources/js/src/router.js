@@ -365,6 +365,7 @@ router.beforeEach((to, from, next) => {
         if (!isAuthenticated) {
             router.push({ path: '/pages/login', query: { to: to.path } })
         }
+
     }
 
     return next()

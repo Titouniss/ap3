@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class CompanyController extends Controller
 {
+    use SoftDeletes;
+    
     public $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -100,8 +105,32 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
+        $controllerLog = new Logger('company');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('company', ['destroy']);
+
         $item = Company::findOrFail($id);
         $item->delete();
+        return '';
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = Company::findOrFail($id);
+        $item->delete();
+        
+        $controllerLog = new Logger('company');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('company', ['forceDelete']);
+
+        $item = Company::withTrashed()->findOrFail($id);
+        $item->forceDelete();
         return '';
     }
 }

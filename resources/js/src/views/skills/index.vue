@@ -60,17 +60,17 @@
           </div>
 
           <vs-dropdown-menu>
-            <vs-dropdown-item>
+            <vs-dropdown-item @click="confirmDeleteRecord('delete')">
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Delete</span>
+                <span>Supprimer</span>
               </span>
             </vs-dropdown-item>
 
-            <vs-dropdown-item>
+            <vs-dropdown-item @click="confirmDeleteRecord('archive')">
               <span class="flex items-center">
                 <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Archive</span>
+                <span>Archiver</span>
               </span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
@@ -90,7 +90,7 @@
         colResizeDefault="shift"
         :animateRows="true"
         :floatingFilter="false"
-        :pagination="true"
+        :pagination="false"
         :paginationPageSize="paginationPageSize"
         :suppressPaginationPanel="true"
         :enableRtl="$vs.rtl"
@@ -121,6 +121,8 @@ import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
 
+var modelTitle = "Compétence";
+
 export default {
   components: {
     AgGridVue,
@@ -147,22 +149,20 @@ export default {
       },
       columnDefs: [
         {
-          headerName: "ID",
-          field: "id",
-          width: 125,
-          filter: true,
+          filter: false,
           checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelectionFilteredOnly: false,
+          headerCheckboxSelection: true,
+          resizable: true
         },
         {
-          headerName: "Name",
+          headerName: "Nom",
           field: "name",
           filter: true,
           width: 200
         },
         {
-          headerName: "Compagnie",
+          headerName: "Société",
           field: "company",
           filter: true,
           width: 150,
@@ -213,6 +213,75 @@ export default {
   methods: {
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
+    },
+    confirmDeleteRecord(type) {
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title:
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+        text:
+          type === "delete" && this.gridApi.getSelectedRows().length > 1
+            ? `Voulez vous vraiment supprimer ces compétences ?`
+            : type === "delete" && this.gridApi.getSelectedRows().length === 1
+            ? `Voulez vous vraiment supprimer cette compétence ?`
+            : this.gridApi.getSelectedRows().length > 1
+            ? `Voulez vous vraiment archiver ces compétences ?`
+            : `Voulez vous vraiment archiver cette compétence ?`,
+        accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
+        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+        cancelText: "Annuler"
+      });
+    },
+    deleteRecord() {
+      const selectedRowLength = this.gridApi.getSelectedRows().length;
+      this.gridApi.getSelectedRows().map(selectRow => {
+        this.$store
+          .dispatch("skillManagement/forceRemoveItem", selectRow.id)
+          .then(data => {
+            if (selectedRowLength === 1) {
+              this.showDeleteSuccess("delete", selectedRowLength);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+      if (selectedRowLength > 1) {
+        this.showDeleteSuccess("delete", selectedRowLength);
+      }
+    },
+    archiveRecord() {
+      const selectedRowLength = this.gridApi.getSelectedRows().length;
+      this.gridApi.getSelectedRows().map(selectRow => {
+        this.$store
+          .dispatch("skillManagement/removeItem", selectRow.id)
+          .then(data => {
+            if (selectedRowLength === 1) {
+              this.showDeleteSuccess("archive", selectedRowLength);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+      if (selectedRowLength > 1) {
+        this.showDeleteSuccess("archive", selectedRowLength);
+      }
+    },
+    showDeleteSuccess(type, selectedRowLength) {
+      this.$vs.notify({
+        color: "success",
+        title: modelTitle,
+        text:
+          type === "delete" && selectedRowLength > 1
+            ? `Compétences supprimées`
+            : type === "delete" && selectedRowLength === 1
+            ? `Compétence supprimée`
+            : selectedRowLength > 1
+            ? `Compétences archivées`
+            : `Compétence archivée`
+      });
     }
   },
   mounted() {

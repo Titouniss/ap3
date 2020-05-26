@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\Skill;
 use Illuminate\Support\Facades\Auth;
 use Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class SkillController extends Controller
 {
+    use SoftDeletes;
+
     public $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -106,8 +111,34 @@ class SkillController extends Controller
      */
     public function destroy($id)
     {
+        $controllerLog = new Logger('skill');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('skill', ['destroy']);
+
         $item = Skill::findOrFail($id);
         $item->delete();
+        return '';
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = Skill::findOrFail($id);
+        $item->delete();
+
+
+        $controllerLog = new Logger('skill');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('skill', ['forceDelete']);
+
+
+        $item = Skill::withTrashed()->findOrFail($id);
+        $item->forceDelete();
         return '';
     }
 }

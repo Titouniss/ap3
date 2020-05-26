@@ -50,7 +50,7 @@
           </div>
 
           <vs-dropdown-menu>
-            <vs-dropdown-item v-if="authorizedToDelete">
+            <vs-dropdown-item @click="this.confirmDeleteRecord" v-if="authorizedToDelete">
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                 <span>Supprimer</span>
@@ -216,6 +216,43 @@ export default {
     },
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
+    },
+    confirmDeleteRecord() {
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text:
+          this.gridApi.getSelectedRows().length > 1
+            ? `Vous vous vraiment supprimer ces utilisateurs ?`
+            : `Vous vous vraiment supprimer cet utilisateur ?`,
+        accept: this.deleteRecord,
+        acceptText: "Supprimer !",
+        cancelText: "Annuler"
+      });
+    },
+    deleteRecord() {
+      this.gridApi.getSelectedRows().map(selectRow => {
+        this.$store
+          .dispatch("roleManagement/removeRecord", selectRow.id)
+          .then(data => {
+            console.log(["data_1", data]);
+            this.showDeleteSuccess();
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+    },
+    showDeleteSuccess() {
+      this.$vs.notify({
+        color: "success",
+        title: modelTitle,
+        text:
+          this.gridApi.getSelectedRows().length > 1
+            ? `Utilisateurs supprimés?`
+            : `Utilisateur supprimé`
+      });
     },
     onResize(event) {
       if (this.gridApi) {
