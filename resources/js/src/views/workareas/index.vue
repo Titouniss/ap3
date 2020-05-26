@@ -63,14 +63,14 @@
             <vs-dropdown-item>
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Delete</span>
+                <span>Supprimer</span>
               </span>
             </vs-dropdown-item>
 
             <vs-dropdown-item>
               <span class="flex items-center">
                 <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Archive</span>
+                <span>Archiver</span>
               </span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
@@ -155,20 +155,19 @@ export default {
       },
       columnDefs: [
         {
-          headerName: "ID",
-          field: "id",
-          filter: true,
+          filter: false,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
+          resizable: true
         },
         {
-          headerName: "Name",
+          headerName: "Nom",
           field: "name",
           filter: true
         },
         {
-          headerName: "Compagnie",
+          headerName: "Société",
           field: "company",
           filter: true,
           cellRendererFramework: "CellRendererRelations"
