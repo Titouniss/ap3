@@ -19,25 +19,26 @@ class PermissionsRoleTableSeeder extends Seeder
 
         // [name, name_fr, isPublic]
         $Permkeys = [
-            ['users', 'utilisateurs',true],
-            ['roles', 'roles',true],
+            ['users', 'utilisateurs', true],
+            ['roles', 'roles', true],
 
-            ['permissions', 'permissions',false],
-            ['companies', 'entreprises',false],
-            ['workareas', 'îlots',true],
-            ['skills', 'compétences',true],
-            ['projects', 'projets',true],
-            ['tasks', 'tâches',true],
-            ['ranges', 'gammes',true],
+            ['permissions', 'permissions', false],
+            ['companies', 'entreprises', false],
+            ['workareas', 'îlots', true],
+            ['skills', 'compétences', true],
+            ['projects', 'projets', true],
+            ['tasks', 'tâches', true],
+            ['ranges', 'gammes', true],
+            ['hours', 'heures', true],
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
-            Permission::firstOrCreate(['name' => 'read '.$Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'edit '.$Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'delete '.$Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'publish '.$Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'read ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'edit ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'delete ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'publish ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
         }
-        
+
         $Rolekeys = [
             ['superAdmin', false],
             ['littleAdmin', false],
@@ -55,14 +56,13 @@ class PermissionsRoleTableSeeder extends Seeder
                     $Permkey = $PermkeyArray[0]; //get name only
                     if ($Permkey == 'permissions' || $Permkey == 'companies') {
                         if ($key == 'littleAdmin') {
-                            $role->givePermissionTo(['read '.$Permkey,'edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
+                            $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
                         }
                     } else {
-                        $role->givePermissionTo(['read '.$Permkey,'edit '.$Permkey, 'delete '.$Permkey, 'publish '.$Permkey]);
+                        $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
                     }
                 }
             }
-
         }
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
