@@ -245,7 +245,7 @@ export default {
           });
       });
       if (selectedRowLength > 1) {
-        this.showDeleteSuccess("archive", selectedRowLength);
+        this.showDeleteSuccess("delete", selectedRowLength);
       }
     },
     archiveRecord() {

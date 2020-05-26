@@ -19,7 +19,7 @@
 </template>
 
 <script>
-var modelTitle = "Compagnie";
+var modelTitle = "Société";
 export default {
   name: "CellRendererActions",
   methods: {
@@ -51,7 +51,6 @@ export default {
       });
     },
     deleteRecord() {
-      console.log("DELETE");
       this.$store
         .dispatch("companyManagement/forceRemoveItem", this.params.data.id)
         .then(() => {
@@ -62,7 +61,6 @@ export default {
         });
     },
     archiveRecord() {
-      console.log("ARCHIVE");
       this.$store
         .dispatch("companyManagement/removeItem", this.params.data.id)
         .then(data => {
@@ -72,9 +70,7 @@ export default {
           console.error(err);
         });
     },
-    showDeleteSuccess(type, selectedRowLength) {
-      console.log("SUCCESS");
-
+    showDeleteSuccess(type) {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
