@@ -161,7 +161,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\ProjectController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\ProjectController@destroy');
+        Route::delete('destroy/{id}', 'API\ProjectController@destroy');
+        Route::delete('forceDelete/{id}', 'API\ProjectController@forceDelete');
         // });
     });
 
