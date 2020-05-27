@@ -131,6 +131,7 @@
                 <small class="date-label">Temps estimé (en h)</small>
                 <vs-input-number
                   min="1"
+                  max="200"
                   name="estimatedTime"
                   class="inputNumber"
                   v-model="itemLocal.estimated_time"
@@ -297,6 +298,8 @@ export default {
       return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
     },
     submitItem() {
+      console.log(["item_local", this.itemLocal]);
+
       this.$validator.validateAll().then(result => {
         this.itemLocal.date = moment(
           this.itemLocal.date,

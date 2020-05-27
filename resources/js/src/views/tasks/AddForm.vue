@@ -136,6 +136,7 @@
                 <small class="date-label">Temps estimé (en h)</small>
                 <vs-input-number
                   min="1"
+                  max="200"
                   name="estimatedTime"
                   class="inputNumber"
                   v-model="itemLocal.estimated_time"
