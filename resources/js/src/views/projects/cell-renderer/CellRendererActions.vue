@@ -3,7 +3,7 @@
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
-      @click="editRecord"
+      @click="$router.push(url)"
     />
     <feather-icon
       icon="ArchiveIcon"
@@ -19,9 +19,16 @@
 </template>
 
 <script>
+var model = "project";
+var modelPlurial = "projects";
 var modelTitle = "Projet";
 export default {
   name: "CellRendererActions",
+  computed: {
+    url() {
+      return `/${modelPlurial}/${model}-view/${this.params.data.id}`;
+    }
+  },
   methods: {
     editRecord() {
       this.$store

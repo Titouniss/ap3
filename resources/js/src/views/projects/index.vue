@@ -119,7 +119,6 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
 
 // Cell Renderer
-import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
 
@@ -133,7 +132,6 @@ export default {
     EditForm,
 
     // Cell Renderer
-    CellRendererLink,
     CellRendererActions,
     CellRendererRelations
   },
@@ -158,8 +156,7 @@ export default {
         {
           headerName: "Nom",
           field: "name",
-          filter: true,
-          cellRendererFramework: "CellRendererLink"
+          filter: true
         },
         {
           headerName: "Date de création",
@@ -190,7 +187,6 @@ export default {
 
       // Cell Renderer Components
       components: {
-        CellRendererLink,
         CellRendererActions,
         CellRendererRelations
       }
