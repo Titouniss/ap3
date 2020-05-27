@@ -9,58 +9,86 @@
 
 
 <template>
-    <vs-prompt
-        title="Edition d'un projet"
-        accept-text= "Modifier"
-        cancel-text = "Annuler"
-        button-cancel = "border"
-        @cancel="init"
-        @accept="submitItem"
-        @close="init"
-        :is-valid="validateForm"
-        :active.sync="activePrompt">
-        <div>
-            <form>
-
-                <div class="vx-row">
-                    <div class="vx-col w-full">
-                        <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-5" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
-                        <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
-                        <div class="my-4">
-                          <small class="date-label">Date de livraison prévue</small>
-                          <datepicker class="pickadate" :language="langFr" name="date" v-model="itemLocal.date" :color="validateForm ? 'success' : 'danger'" ></datepicker>
-                        </div>
-                        <vs-input name="client" class="w-full mb-4 mt-5" placeholder="Client (RAF)" v-model="itemLocal.client" :color="validateForm ? 'success' : 'danger'" />
-                        <vs-input name="gammes" class="w-full mb-4 mt-5" placeholder="Gammes (RAF)" v-model="itemLocal.gammes" :color="validateForm ? 'success' : 'danger'" />
-                        <div class="vx-row mt-4">
-                          <div class="vx-col w-full">
-                            <div class="flex items-end px-3">
-                                <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
-                                <span class="font-medium text-lg leading-none">Admin</span>
-                            </div>
-                            <vs-divider />
-                            <vs-select v-validate="'required'" label="Compagnie" v-model="itemLocal.company_id" class="w-full mt-5">
-                              <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in companiesData" />
-                            </vs-select>
-                          </div>
-                        </div>
-                    </div>
+  <vs-prompt
+    title="Edition d'un projet"
+    accept-text="Modifier"
+    cancel-text="Annuler"
+    button-cancel="border"
+    @cancel="init"
+    @accept="submitItem"
+    @close="init"
+    :is-valid="validateForm"
+    :active.sync="activePrompt"
+  >
+    <div>
+      <form>
+        <div class="vx-row">
+          <div class="vx-col w-full">
+            <vs-input
+              v-validate="'required|max:255'"
+              name="name"
+              class="w-full mb-4 mt-5"
+              placeholder="Nom"
+              v-model="itemLocal.name"
+              :color="!errors.has('name') ? 'success' : 'danger'"
+            />
+            <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
+            <div class="my-4">
+              <small class="date-label">Date de livraison prévue</small>
+              <datepicker
+                class="pickadate"
+                :disabledDates="{ to: new Date(Date.now() - 8640000) }"
+                :language="langFr"
+                name="date"
+                v-model="itemLocal.date"
+                :color="validateForm ? 'success' : 'danger'"
+              ></datepicker>
+            </div>
+            <vs-input
+              name="client"
+              class="w-full mb-4 mt-5"
+              placeholder="Client (RAF)"
+              v-model="itemLocal.client"
+              :color="validateForm ? 'success' : 'danger'"
+            />
+            <div class="vx-row mt-4">
+              <div class="vx-col w-full">
+                <div class="flex items-end px-3">
+                  <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
+                  <span class="font-medium text-lg leading-none">Admin</span>
                 </div>
-
-            </form>
+                <vs-divider />
+                <vs-select
+                  v-validate="'required'"
+                  label="Compagnie"
+                  v-model="itemLocal.company_id"
+                  class="w-full mt-5"
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in companiesData"
+                  />
+                </vs-select>
+              </div>
+            </div>
+          </div>
         </div>
-    </vs-prompt>
+      </form>
+    </div>
+  </vs-prompt>
 </template>
 
 <script>
-import Datepicker from 'vuejs-datepicker'
-import { fr } from 'vuejs-datepicker/src/locale'
-import moment from 'moment'
-import { Validator } from 'vee-validate';
-import errorMessage from './errorValidForm';
+import Datepicker from "vuejs-datepicker";
+import { fr } from "vuejs-datepicker/src/locale";
+import moment from "moment";
+import { Validator } from "vee-validate";
+import errorMessage from "./errorValidForm";
 
 // register custom messages
-Validator.localize('fr', errorMessage);
+Validator.localize("fr", errorMessage);
 
 export default {
   components: {
@@ -72,61 +100,75 @@ export default {
       required: true
     }
   },
-  data () {
+  data() {
     return {
-      itemLocal: Object.assign({}, this.$store.getters['projectManagement/getItem'](this.itemId)),
-      langFr: fr,
-    }
+      itemLocal: Object.assign(
+        {},
+        this.$store.getters["projectManagement/getItem"](this.itemId)
+      ),
+      langFr: fr
+    };
   },
   computed: {
     activePrompt: {
-      get () {
-        return this.itemId && this.itemId > 0 ? true : false
+      get() {
+        return this.itemId && this.itemId > 0 ? true : false;
       },
-      set (value) {
-        this.$store.dispatch("projectManagement/editItem", {})
-          .then(()   => {  })
-          .catch(err => { console.error(err)       })
+      set(value) {
+        this.$store
+          .dispatch("projectManagement/editItem", {})
+          .then(() => {})
+          .catch(err => {
+            console.error(err);
+          });
       }
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies
+      return this.$store.state.companyManagement.companies;
     },
-    permissions () {
-      return this.$store.state.roleManagement.permissions
+    permissions() {
+      return this.$store.state.roleManagement.permissions;
     },
-    validateForm () {
-      return !this.errors.any()  && this.itemLocal.name != '' && this.itemLocal.company_id != null
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.name != "" &&
+        this.itemLocal.company_id != null
+      );
     }
   },
   methods: {
-    init () {
-      this.itemLocal = Object.assign({}, this.$store.getters['projectManagement/getItem'](this.itemId))
+    init() {
+      this.itemLocal = Object.assign(
+        {},
+        this.$store.getters["projectManagement/getItem"](this.itemId)
+      );
     },
-    submitItem () {
-      this.itemLocal.date = moment(this.itemLocal.date).format('YYYY-MM-DD')
-      this.$store.dispatch('projectManagement/updateItem', this.itemLocal)
-      .then(() => { 
-        this.$vs.loading.close() 
-        this.$vs.notify({
-          title: 'Modification d\'un projet',
-          text: `"${this.itemLocal.name}" modifiée avec succès`,
-          iconPack: 'feather',
-          icon: 'icon-alert-circle',
-          color: 'success'
+    submitItem() {
+      this.itemLocal.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
+      this.$store
+        .dispatch("projectManagement/updateItem", this.itemLocal)
+        .then(() => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Modification d'un projet",
+            text: `"${this.itemLocal.name}" modifiée avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
         })
-      })
-      .catch(error => {            
-        this.$vs.loading.close()
-        this.$vs.notify({
-          title: 'Error',
-          text: error.message,
-          iconPack: 'feather',
-          icon: 'icon-alert-circle',
-          color: 'danger'
-        })
-      })
+        .catch(error => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Error",
+            text: error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
+        });
     }
-  },
-}
+  }
+};
 </script>
