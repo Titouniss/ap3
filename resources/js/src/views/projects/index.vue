@@ -63,14 +63,14 @@
             <vs-dropdown-item>
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Delete</span>
+                <span>Supprimer</span>
               </span>
             </vs-dropdown-item>
 
             <vs-dropdown-item>
               <span class="flex items-center">
                 <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Archive</span>
+                <span>Archiver</span>
               </span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
@@ -154,7 +154,7 @@ export default {
           headerCheckboxSelection: true
         },
         {
-          headerName: "Name",
+          headerName: "Nom",
           field: "name",
           filter: true,
           cellRendererFramework: "CellRendererLink"
@@ -174,7 +174,7 @@ export default {
           filter: true
         },
         {
-          headerName: "Compagnie",
+          headerName: "Société",
           field: "company",
           filter: true,
           cellRendererFramework: "CellRendererRelations"
