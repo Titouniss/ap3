@@ -136,12 +136,14 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
-          width: 50
+          width: 50,
+          resizable: true
         },
         {
           headerName: "Nom",
           field: "name",
-          filter: true
+          filter: true,
+          resizable: true
         },
         {
           headerName: "Plannifié le",
@@ -150,7 +152,8 @@ export default {
           cellRenderer: data => {
             moment.locale("fr");
             return moment(data.value).format("DD MMMM YYYY");
-          }
+          },
+          resizable: true
         },
         {
           headerName: "Estimation",
@@ -159,24 +162,28 @@ export default {
           width: 200,
           cellRenderer: data => {
             return data.value + "h";
-          }
+          },
+          resizable: true
         },
         {
           headerName: "Ilôt",
           field: "workarea",
           filter: true,
-          cellRendererFramework: "CellRendererRelations"
+          cellRendererFramework: "CellRendererRelations",
+          resizable: true
         },
         {
           headerName: "Avancement",
           field: "status",
           filter: true,
-          cellRendererFramework: "CellRendererStatus"
+          cellRendererFramework: "CellRendererStatus",
+          resizable: true
         },
         {
           headerName: "Actions",
           field: "transactions",
-          cellRendererFramework: "CellRendererActions"
+          cellRendererFramework: "CellRendererActions",
+          resizable: true
         }
       ],
 
