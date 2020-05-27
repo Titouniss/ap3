@@ -144,7 +144,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\WorkareaController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\WorkareaController@destroy');
+        Route::delete('destroy/{id}', 'API\WorkareaController@destroy');
+        Route::delete('forceDelete/{id}', 'API\WorkareaController@forceDelete');
         // });
     });
 

@@ -60,14 +60,14 @@
           </div>
 
           <vs-dropdown-menu>
-            <vs-dropdown-item>
+            <vs-dropdown-item @click="confirmDeleteRecord('delete')">
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                 <span>Supprimer</span>
               </span>
             </vs-dropdown-item>
 
-            <vs-dropdown-item>
+            <vs-dropdown-item @click="confirmDeleteRecord('archive')">
               <span class="flex items-center">
                 <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
                 <span>Archiver</span>
@@ -126,6 +126,8 @@ import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkills.vue";
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+
+var modelTitle = "Ilot";
 
 export default {
   components: {
@@ -225,6 +227,81 @@ export default {
     },
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
+    },
+    confirmDeleteRecord(type) {
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title:
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+        text:
+          type === "delete" && this.gridApi.getSelectedRows().length > 1
+            ? `Voulez vous vraiment supprimer ces îlots ?`
+            : type === "delete" && this.gridApi.getSelectedRows().length === 1
+            ? `Voulez vous vraiment supprimer cet îlot ?`
+            : this.gridApi.getSelectedRows().length > 1
+            ? `Voulez vous vraiment archiver ces îlots ?`
+            : `Voulez vous vraiment archiver cet îlot ?`,
+        accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
+        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+        cancelText: "Annuler"
+      });
+    },
+    deleteRecord() {
+      console.log("DELETE");
+      const selectedRowLength = this.gridApi.getSelectedRows().length;
+
+      this.gridApi.getSelectedRows().map(selectRow => {
+        this.$store
+          .dispatch("workareaManagement/forceRemoveItem", selectRow.id)
+          .then(data => {
+            if (selectedRowLength === 1) {
+              this.showDeleteSuccess("delete", selectedRowLength);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+      if (selectedRowLength > 1) {
+        this.showDeleteSuccess("delete", selectedRowLength);
+      }
+    },
+    archiveRecord() {
+      console.log("ARCHIVE");
+      const selectedRowLength = this.gridApi.getSelectedRows().length;
+      this.gridApi.getSelectedRows().map(selectRow => {
+        this.$store
+          .dispatch("workareaManagement/removeItem", selectRow.id)
+          .then(data => {
+            if (selectedRowLength === 1) {
+              this.showDeleteSuccess("archive", selectedRowLength);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+      if (selectedRowLength > 1) {
+        this.showDeleteSuccess("archive", selectedRowLength);
+      }
+    },
+    showDeleteSuccess(type, selectedRowLength) {
+      console.log("SUCCESS");
+      console.log(["length show", selectedRowLength]);
+
+      this.$vs.notify({
+        color: "success",
+        title: modelTitle,
+        text:
+          type === "delete" && selectedRowLength > 1
+            ? `Îlots supprimés`
+            : type === "delete" && selectedRowLength === 1
+            ? `Îlot supprimé`
+            : selectedRowLength > 1
+            ? `Îlots archivés`
+            : `Îlot archivé`
+      });
     },
     onResize(event) {
       if (this.gridApi) {
