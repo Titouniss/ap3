@@ -299,6 +299,7 @@ export default {
   mounted() {
     this.gridApi = this.gridOptions.api;
 
+    window.addEventListener("resize", this.onResize);
     if (this.gridApi) {
       // refresh the grid
       this.gridApi.refreshView();
@@ -338,6 +339,8 @@ export default {
     });
   },
   beforeDestroy() {
+    window.removeEventListener("resize", this.onResize());
+
     moduleSkillManagement.isRegistered = false;
     moduleCompanyManagement.isRegistered = false;
     this.$store.unregisterModule("skillManagement");
