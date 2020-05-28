@@ -159,19 +159,22 @@ export default {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 200
+          width: 200,
+          resizable: true
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
           width: 150,
+          resizable: true,
           cellRendererFramework: "CellRendererRelations"
         },
         {
           headerName: "Actions",
           field: "transactions",
           width: 150,
+          resizable: true,
           cellRendererFramework: "CellRendererActions"
         }
       ],
@@ -282,6 +285,15 @@ export default {
             ? `Compétences archivées`
             : `Compétence archivée`
       });
+    },
+    onResize(event) {
+      if (this.gridApi) {
+        // refresh the grid
+        this.gridApi.redrawRows();
+
+        // resize columns in the grid to fit the available space
+        this.gridApi.sizeColumnsToFit();
+      }
     }
   },
   mounted() {
