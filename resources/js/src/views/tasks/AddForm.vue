@@ -65,7 +65,6 @@
                   class="w-full"
                   multiple
                   autocomplete
-                  v-validate="'required'"
                   name="skills"
                 >
                   <vs-select-item
@@ -146,6 +145,7 @@
                 <small class="date-label">Temps passé (en h)</small>
                 <vs-input-number
                   min="1"
+                  max="200"
                   name="timeSpent"
                   class="inputNumber"
                   v-model="itemLocal.time_spent"
@@ -239,8 +239,7 @@ export default {
         !this.errors.any() &&
         this.itemLocal.name != "" &&
         this.itemLocal.date != "" &&
-        this.itemLocal.estimated_time != "" &&
-        this.itemLocal.skills.length > 0
+        this.itemLocal.estimated_time != ""
       );
     },
     workareasData() {
