@@ -87,7 +87,6 @@
                     >Ajouter une compétence</router-link>
                     <vs-select
                       v-if="companySkills.length > 0"
-                      v-validate="'required'"
                       label="Compétences"
                       v-model="itemLocal.skills"
                       class="w-full"
@@ -159,11 +158,7 @@ export default {
       } else return true;
     },
     validateForm() {
-      return (
-        !this.errors.any() &&
-        this.itemLocal.name != "" &&
-        this.itemLocal.skills.length > 0
-      );
+      return !this.errors.any() && this.itemLocal.name != "";
     }
   },
   methods: {
