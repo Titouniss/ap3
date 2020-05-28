@@ -133,13 +133,6 @@ export default {
       },
       columnDefs: [
         {
-          checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true,
-          width: 50,
-          resizable: true
-        },
-        {
           headerName: "Nom",
           field: "name",
           filter: true,
@@ -149,9 +142,12 @@ export default {
           headerName: "Plannifié le",
           field: "date",
           filter: true,
+          width: 300,
           cellRenderer: data => {
             moment.locale("fr");
-            return moment(data.value).format("DD MMMM YYYY");
+            console.log(["data.value", data.value]);
+
+            return moment(data.value).format("DD MMMM YYYY, HH:mm");
           },
           resizable: true
         },
