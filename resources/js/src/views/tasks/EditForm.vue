@@ -64,7 +64,6 @@
                   class="w-full"
                   multiple
                   autocomplete
-                  v-validate="'required'"
                   name="skills"
                 >
                   <vs-select-item
@@ -152,6 +151,16 @@
           <div class="my-3">
             <div>
               <small class="date-label">Commentaires</small>
+            </div>
+            <vs-textarea
+              rows="1"
+              label="Ajouter un commentaire"
+              name="comment"
+              class="w-full mb-1 mt-1"
+              v-model="itemLocal.comment"
+              :color="validateForm ? 'success' : 'danger'"
+            />
+            <div class="mt-2">
               <vs-button
                 v-if="itemLocal.comment != null && itemLocal.comment != ''"
                 color="success"
@@ -163,14 +172,6 @@
                 class="vs-con-loading__container"
               >Ajouter</vs-button>
             </div>
-            <vs-textarea
-              rows="1"
-              label="Ajouter un commentaire"
-              name="comment"
-              class="w-full mb-1 mt-1"
-              v-model="itemLocal.comment"
-              :color="validateForm ? 'success' : 'danger'"
-            />
             <span
               class="no-comments"
               v-if="itemLocal.comments && itemLocal.comments.length == 0"
@@ -255,8 +256,7 @@ export default {
         !this.errors.any() &&
         this.itemLocal.name != "" &&
         this.itemLocal.date != "" &&
-        this.itemLocal.estimated_time != "" &&
-        this.itemLocal.skills.length > 0
+        this.itemLocal.estimated_time != ""
       );
     },
     activePrompt: {
@@ -298,7 +298,9 @@ export default {
       return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
     },
     submitItem() {
-      console.log(["item_local", this.itemLocal]);
+      if (this.itemLocal.comment != null && this.itemLocal.comment != "") {
+        this.addComment();
+      }
 
       this.$validator.validateAll().then(result => {
         this.itemLocal.date = moment(
