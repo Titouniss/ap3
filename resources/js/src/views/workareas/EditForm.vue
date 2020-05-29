@@ -15,7 +15,7 @@
         <div class="vx-row">
           <div class="vx-col w-full">
             <vs-input
-              v-validate="'required|max:2'"
+              v-validate="'required|max:255'"
               name="name"
               class="w-full mb-4 mt-5"
               placeholder="Nom"
@@ -74,7 +74,6 @@
                 </div>
                 <div v-if="itemLocal.company_id">
                   <vs-select
-                    v-validate="'required'"
                     label="Compétences"
                     v-model="itemLocal.skills"
                     class="w-full mt-5"
@@ -164,11 +163,7 @@ export default {
       } else return true;
     },
     validateForm() {
-      return (
-        !this.errors.any() &&
-        this.itemLocal.name != "" &&
-        this.itemLocal.skills.length > 0
-      );
+      return !this.errors.any() && this.itemLocal.name != "";
     }
   },
   methods: {
