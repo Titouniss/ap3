@@ -182,6 +182,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:delete ranges']], function () {
             Route::delete('destroy/{id}', 'API\RangeController@destroy');
+            Route::delete('forceDelete/{id}', 'API\RangeController@forceDelete');
         });
     });
 

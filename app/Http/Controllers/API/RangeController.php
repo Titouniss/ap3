@@ -11,9 +11,12 @@ use Spatie\Permission\Models\Role;
 
 use Illuminate\Support\Facades\Auth; 
 use Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RangeController extends Controller 
 {
+    use SoftDeletes;
+
     public $successStatus = 200;
 
     /** 
@@ -114,7 +117,23 @@ class RangeController extends Controller
     { 
         $item = Range::where('id',$id)->delete();
         return response()->json(['success' => $item], $this-> successStatus); 
-    } 
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = Range::findOrFail($id);
+        $item->delete();
+
+        $item = Range::withTrashed()->findOrFail($id);
+        $item->forceDelete();
+        return '';
+    }
 
     public function getRepetitiveTasks($range_id){
         if($range_id){
