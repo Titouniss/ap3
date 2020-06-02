@@ -56,6 +56,12 @@ export default [
         icon: 'ClipboardIcon'
     },
     {
+        url: '/schedules',
+        name: 'Plannings',
+        slug: 'schedules',
+        icon: 'CalendarIcon'
+    },
+    {
         url: '/hours',
         name: 'Heures',
         slug: 'hours',

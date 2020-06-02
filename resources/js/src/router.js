@@ -204,6 +204,25 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                /////---Schedules---/////
+                {
+                    path: '/schedules',
+                    name: 'schedules',
+                    component: () => import('./views/schedules/Index.vue'),
+                    meta: {
+                        rule: 'admin',
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: '/schedules/schedules-read/:id',
+                    name: 'schedules',
+                    component: () => import('./views/schedules/Read.vue'),
+                    meta: {
+                        rule: 'admin',
+                        requiresAuth: true
+                    }
+                },
             ]
         },
         // =============================================================================
