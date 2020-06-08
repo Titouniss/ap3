@@ -39,7 +39,11 @@
           <vs-list>
             <vs-list-item v-bind:key="workarea.id" v-for="workarea in workareasData">
               {{workarea.name}}
-              <vs-button @click="goDetail(workarea.id)" color="success" class="ml-10">Visualiser</vs-button>
+              <vs-button
+                @click="goDetail(workarea.id, 'workarea')"
+                color="success"
+                class="ml-10"
+              >Visualiser</vs-button>
             </vs-list-item>
           </vs-list>
           <h4 v-if="!workareasData" color="red">Aucun utilisateur</h4>
@@ -49,7 +53,11 @@
           <vs-list>
             <vs-list-item v-bind:key="user.id" v-for="user in usersData">
               {{user.firstname}} {{user.lastname}}
-              <vs-button @click="goDetail(user.id)" color="success" class="ml-10">Visualiser</vs-button>
+              <vs-button
+                @click="goDetail(user.id, 'users')"
+                color="success"
+                class="ml-10"
+              >Visualiser</vs-button>
             </vs-list-item>
           </vs-list>
           <h4 v-if="!usersData" color="red">Aucun utilisateur</h4>
@@ -59,7 +67,11 @@
           <vs-list vs-j>
             <vs-list-item v-bind:key="project.name" v-for="project in projectsData">
               {{project.name}}
-              <vs-button @click="goDetail(project.id)" color="success" class="ml-10">Visualiser</vs-button>
+              <vs-button
+                @click="goDetail(project.id, 'projects')"
+                color="success"
+                class="ml-10"
+              >Visualiser</vs-button>
             </vs-list-item>
           </vs-list>
           <h4 v-if="!projectsData" color="red">Aucun utilisateur</h4>
@@ -104,8 +116,10 @@ export default {
       this.schedulList = value;
       this.activeItem = value;
     },
-    goDetail(id) {
-      this.$router.push("/schedules/schedules-read/:" + id).catch(() => {});
+    goDetail(id, origin) {
+      this.$router
+        .push("/schedules/schedules-read/:" + origin + "/:" + id)
+        .catch(() => {});
     }
   },
   created() {
