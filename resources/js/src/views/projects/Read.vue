@@ -80,6 +80,8 @@
 
     <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit"/>
 
+    
+
     </div>
   </div>
 </template>
@@ -95,7 +97,7 @@ import moment from 'moment'
 
 import EditForm from './EditForm.vue'
 import AddRangeForm from './AddRangeForm.vue'
-import IndexTasks from '../tasks/Index.vue'
+import IndexTasks from '../tasks/index.vue'
 
 export default {
   components: {

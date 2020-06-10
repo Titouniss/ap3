@@ -101,4 +101,8 @@ export default {
   cursor: pointer;
   background-color: #efefef;
 }
+.linkTxtWarning:hover{
+  cursor: pointer;
+  background-color: #efefef;
+}
 </style>

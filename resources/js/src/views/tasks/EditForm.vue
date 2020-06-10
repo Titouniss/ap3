@@ -1,197 +1,135 @@
 <template>
-  <div class="p-3 mb-4 mr-4">
-    <vs-prompt
-      title="Mofidier une tâche"
-      accept-text="Modifier"
-      cancel-text="Annuler"
-      button-cancel="border"
-      @cancel="clear"
-      @accept="submitItem"
-      @close="clear"
-      :is-valid="validateForm"
-      :active.sync="activePrompt"
-      class="task-compose"
-    >
-      <div>
-        <form class="edit-task-form">
-          <div class="vx-row">
-            <!-- Left -->
-            <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
-              <vs-input
-                v-validate="'required|max:255'"
-                name="name"
-                class="w-full mb-4 mt-1"
-                placeholder="Nom"
-                v-model="itemLocal.name"
-                :color="!errors.has('name') ? 'success' : 'danger'"
-              />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('name')"
-              >{{ errors.first('name') }}</span>
+    <div class="p-3 mb-4 mr-4">
+      <vs-prompt
+          title="Mofidier une tâche"
+          accept-text= "Modifier"
+          cancel-text= "Annuler"
+          button-cancel = "border"
+          @cancel="clear"
+          @accept="submitItem"
+          @close="clear"
+          :is-valid="validateForm"
+          :active.sync="activePrompt"
+          class="task-compose">
+          <div>
+            <form class="edit-task-form">
+                <div class="vx-row">
+                  <!-- Left -->
+                  <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
+                    <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-1" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
+                    <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
+                    
+                    <div class="my-3">
+                      <div v-if="descriptionDisplay || (itemLocal.description != null && itemLocal.description != '')">
+                        <small class="date-label">Description</small>
+                        <vs-textarea rows="2" label="Ajouter une description" name="description" class="w-full mb-1 mt-1" v-model="itemLocal.description" />  
+                      </div>
+                    </div>
+                    <div class="my-3" v-if="previousTasks.length > 0">
+                       <span> Tache dépendante de : </span> 
+                        <li :key="index" v-for="(item, index) in previousTasks">
+                          {{ item }}
+                        </li>
+                    </div>
+                    <div class="my-3" style="font-size: 0.9em;">
+                      <small class="date-label mb-1" style="display: block;">Date</small>
+                      <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
+                    </div>
 
-              <div class="my-3">
-                <div>
-                  <small class="date-label">Description</small>
+                    <div class="my-3">
+                      <small class="date-label">Compétences</small>
+                      <vs-select v-on:change="updateWorkareasList" v-model="itemLocal.skills" class="w-full" multiple autocomplete
+                        v-validate="'required'" name='skills'>
+                        <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in skillsData" />
+                      </vs-select>
+                      <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
+                    </div>
+                    
+                    <div class="my-3" v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                      <small class="date-label">Ilot</small>
+                        <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
+                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
+                        </vs-select>
+                    </div>
+                  </div>
+                  <!-- Right -->
+                  <div class="vx-col flex-5">
+                    <div class="mb-3" style="flex-direction: column; display: flex;">
+                      <add-previous-task :addPreviousTask="addPreviousTask" :tasks_list="tasks_list" :previousTasksIds="itemLocal.previousTasksIds" :current_task_id="this.itemId"/> 
+                      <span v-if="!descriptionDisplay && (itemLocal.description == null || itemLocal.description == '')" v-on:click="showDescription" class="linkTxt"> + Ajouter une description </span>
+                    </div>
+                    <div class="mb-4">
+                      <div v-if="orderDisplay">
+                        <small class="date-label">Ordre</small>
+                        <vs-input-number min="1" name="order" class="inputNumber" v-model="itemLocal.order" />
+                      </div>
+                    </div>
+                    <ul class="mt-3">
+                      <li class="mr-3">
+                        <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
+                      </li>
+                      <li class="mr-3">
+                        <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
+                      </li>
+                      <li v-on:click="setTimeSpent">
+                        <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
+                      </li>
+                    </ul>
+                    <div class="my-4 mt-3 mb-2">
+                      <small class="date-label">Temps estimé (en h)</small>
+                      <vs-input-number min="1" name="estimatedTime" class="inputNumber" v-model="itemLocal.estimated_time" />
+                    </div>
+                    <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
+                      <small class="date-label">Temps passé (en h)</small>
+                      <vs-input-number min="1" name="timeSpent" class="inputNumber" v-model="itemLocal.time_spent" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="my-3">
+                  <div>
+                    <small class="date-label">Commentaires</small>
+                  </div>
                   <vs-textarea
-                    rows="2"
-                    placeholder="Ajouter une description"
-                    name="description"
+                    rows="1"
+                    label="Ajouter un commentaire"
+                    name="comment"
                     class="w-full mb-1 mt-1"
-                    v-model="itemLocal.description"
+                    v-model="itemLocal.comment"
+                    :color="validateForm ? 'success' : 'danger'"
                   />
+                  <div class="mt-2">
+                    <vs-button
+                      v-if="itemLocal.comment != null && itemLocal.comment != ''"
+                      color="success"
+                      type="filled"
+                      size="small"
+                      style="margin-left: 5px"
+                      v-on:click="addComment"
+                      id="button-with-loading"
+                      class="vs-con-loading__container"
+                    >Ajouter</vs-button>
+                  </div>
+                  <span
+                    class="no-comments"
+                    v-if="itemLocal.comments && itemLocal.comments.length == 0"
+                  >Aucun commentaire</span>
+                  <div v-for="(comment, index) in itemLocal.comments" :key="index">
+                    <div style="padding: 10px 0">
+                      <vs-avatar
+                        size="small"
+                        :text="comment.creator.firstname + ' ' + comment.creator.lastname"
+                      />
+                      <span
+                        class="comment-author"
+                      >{{comment.creator.firstname + ' ' + comment.creator.lastname}},</span>
+                      <span
+                        class="comment-created-at"
+                      >{{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}</span>
+                      <div class="comment-content">{{comment.description}}</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="my-3" v-if="previousTasks.length > 0">
-                <span>Tache dépendante de :</span>
-                <li :key="index" v-for="(item, index) in previousTasks">{{ item }}</li>
-              </div>
-              <div class="my-3" style="font-size: 0.9em;">
-                <small class="date-label mb-1" style="display: block;">Date</small>
-                <flat-pickr
-                  :config="configdateTimePicker"
-                  v-model="itemLocal.date"
-                  placeholder="Date"
-                  class="w-full"
-                />
-              </div>
-
-              <div class="my-3">
-                <small class="date-label">Compétences</small>
-                <vs-select
-                  v-on:change="updateWorkareasList"
-                  v-model="itemLocal.skills"
-                  class="w-full"
-                  multiple
-                  autocomplete
-                  name="skills"
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in skillsData"
-                  />
-                </vs-select>
-                <span
-                  class="text-danger text-sm"
-                  v-show="errors.has('skills')"
-                >{{ errors.first('skills') }}</span>
-              </div>
-
-              <div
-                class="my-3"
-                v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0"
-              >
-                <small class="date-label">Ilot</small>
-                <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in workareasDataFiltered"
-                  />
-                </vs-select>
-              </div>
-            </div>
-            <!-- Right -->
-            <div class="vx-col flex-5">
-              <div class="mb-3" style="flex-direction: column; display: flex;">
-                <add-previous-task
-                  :addPreviousTask="addPreviousTask"
-                  :tasks_list="tasks_list"
-                  :previousTasksIds="itemLocal.previousTasksIds"
-                  :current_task_id="this.itemId"
-                />
-              </div>
-              <div class="mb-4">
-                <div v-if="orderDisplay">
-                  <small class="date-label">Ordre</small>
-                  <vs-input-number
-                    min="1"
-                    name="order"
-                    class="inputNumber"
-                    v-model="itemLocal.order"
-                  />
-                </div>
-              </div>
-              <ul class="mt-3">
-                <li class="mr-3">
-                  <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
-                </li>
-                <li class="mr-3">
-                  <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
-                </li>
-                <li v-on:click="setTimeSpent">
-                  <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
-                </li>
-              </ul>
-              <div class="my-4 mt-3 mb-2">
-                <small class="date-label">Temps estimé (en h)</small>
-                <vs-input-number
-                  min="1"
-                  max="200"
-                  name="estimatedTime"
-                  class="inputNumber"
-                  v-model="itemLocal.estimated_time"
-                />
-              </div>
-              <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
-                <small class="date-label">Temps passé (en h)</small>
-                <vs-input-number
-                  min="1"
-                  name="timeSpent"
-                  class="inputNumber"
-                  v-model="itemLocal.time_spent"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="my-3">
-            <div>
-              <small class="date-label">Commentaires</small>
-            </div>
-            <vs-textarea
-              rows="1"
-              label="Ajouter un commentaire"
-              name="comment"
-              class="w-full mb-1 mt-1"
-              v-model="itemLocal.comment"
-              :color="validateForm ? 'success' : 'danger'"
-            />
-            <div class="mt-2">
-              <vs-button
-                v-if="itemLocal.comment != null && itemLocal.comment != ''"
-                color="success"
-                type="filled"
-                size="small"
-                style="margin-left: 5px"
-                v-on:click="addComment"
-                id="button-with-loading"
-                class="vs-con-loading__container"
-              >Ajouter</vs-button>
-            </div>
-            <span
-              class="no-comments"
-              v-if="itemLocal.comments && itemLocal.comments.length == 0"
-            >Aucun commentaire</span>
-            <div v-for="(comment, index) in itemLocal.comments" :key="index">
-              <div style="padding: 10px 0">
-                <vs-avatar
-                  size="small"
-                  :text="comment.creator.firstname + ' ' + comment.creator.lastname"
-                />
-                <span
-                  class="comment-author"
-                >{{comment.creator.firstname + ' ' + comment.creator.lastname}},</span>
-                <span
-                  class="comment-created-at"
-                >{{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}</span>
-                <div class="comment-content">{{comment.description}}</div>
-              </div>
-            </div>
-          </div>
         </form>
       </div>
     </vs-prompt>
