@@ -20,7 +20,7 @@
                     <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
                     
                     <div class="my-3">
-                      <div v-if="descriptionDisplay">
+                      <div v-if="descriptionDisplay || (itemLocal.description != null && itemLocal.description != '')">
                         <small class="date-label">Description</small>
                         <vs-textarea rows="2" label="Ajouter une description" name="description" class="w-full mb-1 mt-1" v-model="itemLocal.description" />  
                       </div>
@@ -56,7 +56,7 @@
                   <div class="vx-col flex-5">
                     <div class="mb-3" style="flex-direction: column; display: flex;">
                       <add-previous-task :addPreviousTask="addPreviousTask" :tasks_list="tasks_list" :previousTasksIds="itemLocal.previousTasksIds" :current_task_id="this.itemId"/> 
-                      <span v-if="!descriptionDisplay" v-on:click="showDescription" class="linkTxt"> + Ajouter une description </span>
+                      <span v-if="!descriptionDisplay && (itemLocal.description == null || itemLocal.description == '')" v-on:click="showDescription" class="linkTxt"> + Ajouter une description </span>
                     </div>
                     <div class="mb-4">
                       <div v-if="orderDisplay">

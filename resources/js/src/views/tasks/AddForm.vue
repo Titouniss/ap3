@@ -1,8 +1,13 @@
 <template>
-    <div class="p-3 mb-4 mr-4">
-      <vs-button @click="activePrompt = true" class="w-full">
+
+    <div>
+      <vs-button v-if="customTask == false" @click="activePrompt = true" class="w-full">
           Ajouter une tâche
       </vs-button>
+      <div v-if="customTask == true" @click="activePrompt = true" class="card-task-add p-2 m-3">
+        <feather-icon icon="PlusIcon" svgClasses="h-10 w-10" style="color: #fff" />
+        <div style="font-size: 1.1em; color: #fff">Ajouter une tâche</div>
+      </div>
       <vs-prompt
           title="Ajouter une tâche"
           accept-text= "Ajouter"
@@ -124,7 +129,8 @@ export default {
     project_data: {
       required: true
     },
-    tasks_list : { required: true}
+    tasks_list : { required: true},
+    customTask : { type: Boolean}
   },
   data () {
     return {
