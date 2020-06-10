@@ -117,9 +117,7 @@ export default {
       this.activeItem = value;
     },
     goDetail(id, origin) {
-      this.$router
-        .push("/schedules/schedules-read/:" + origin + "/:" + id)
-        .catch(() => {});
+      this.$router.push("/schedules/schedules-read/:" + id).catch(() => {});
     }
   },
   created() {

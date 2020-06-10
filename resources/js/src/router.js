@@ -215,7 +215,7 @@ const router = new Router({
                     }
                 },
                 {
-                    path: '/schedules/schedules-read/:origin/:id',
+                    path: '/schedules/schedules-read/:id',
                     name: 'schedules',
                     component: () => import('./views/schedules/Read.vue'),
                     meta: {
