@@ -89,44 +89,65 @@
                 <div class="my-3">
                   <div>
                     <small class="date-label">Commentaires</small>
-                    <vs-button v-if="itemLocal.comment != null && itemLocal.comment != ''" color="success" type="filled" size="small" style="margin-left: 5px"
-                      v-on:click="addComment" id="button-with-loading" class="vs-con-loading__container">
-                      Ajouter
-                    </vs-button>
                   </div>
-                  <vs-textarea rows="1" label="Ajouter un commentaire" name="comment" class="w-full mb-1 mt-1" v-model="itemLocal.comment" 
-                    :color="validateForm ? 'success' : 'danger'"/>
-                  <span class="no-comments" v-if="itemLocal.comments && itemLocal.comments.length == 0"> Aucun commentaire</span>
+                  <vs-textarea
+                    rows="1"
+                    label="Ajouter un commentaire"
+                    name="comment"
+                    class="w-full mb-1 mt-1"
+                    v-model="itemLocal.comment"
+                    :color="validateForm ? 'success' : 'danger'"
+                  />
+                  <div class="mt-2">
+                    <vs-button
+                      v-if="itemLocal.comment != null && itemLocal.comment != ''"
+                      color="success"
+                      type="filled"
+                      size="small"
+                      style="margin-left: 5px"
+                      v-on:click="addComment"
+                      id="button-with-loading"
+                      class="vs-con-loading__container"
+                    >Ajouter</vs-button>
+                  </div>
+                  <span
+                    class="no-comments"
+                    v-if="itemLocal.comments && itemLocal.comments.length == 0"
+                  >Aucun commentaire</span>
                   <div v-for="(comment, index) in itemLocal.comments" :key="index">
                     <div style="padding: 10px 0">
-                      <vs-avatar size="small" :text="comment.creator.firstname + ' ' + comment.creator.lastname" />
-                      <span class="comment-author">{{comment.creator.firstname + ' ' + comment.creator.lastname}}, </span>
-                      <span class="comment-created-at">
-                        {{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}
-                      </span>
+                      <vs-avatar
+                        size="small"
+                        :text="comment.creator.firstname + ' ' + comment.creator.lastname"
+                      />
+                      <span
+                        class="comment-author"
+                      >{{comment.creator.firstname + ' ' + comment.creator.lastname}},</span>
+                      <span
+                        class="comment-created-at"
+                      >{{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}</span>
                       <div class="comment-content">{{comment.description}}</div>
                     </div>
                   </div>
                 </div>
-              </form>
-          </div>
-      </vs-prompt>
-    </div>
+        </form>
+      </div>
+    </vs-prompt>
+  </div>
 </template>
 
 <script>
-import flatPickr from 'vue-flatpickr-component';
-import 'flatpickr/dist/flatpickr.css';
-import {French as FrenchLocale} from 'flatpickr/dist/l10n/fr.js';
-import moment from 'moment'
-import { Validator } from 'vee-validate';
-import errorMessage from './errorValidForm';
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
+import moment from "moment";
+import { Validator } from "vee-validate";
+import errorMessage from "./errorValidForm";
 
-import AddPreviousTask from './AddPreviousTasks.vue'
+import AddPreviousTask from "./AddPreviousTasks.vue";
 
 // register custom messages
-Validator.localize('fr', errorMessage);
-
+Validator.localize("fr", errorMessage);
 
 export default {
   components: {
@@ -142,18 +163,21 @@ export default {
       type: Number,
       required: true
     },
-    tasks_list : { required: true }
+    tasks_list: { required: true }
   },
-  data () {
+  data() {
     return {
       configdateTimePicker: {
         disableMobile: "true",
         enableTime: true,
-        dateFormat: 'd-m-Y H:i',
+        dateFormat: "d-m-Y H:i",
         locale: FrenchLocale
       },
 
-      itemLocal: Object.assign({}, this.$store.getters['taskManagement/getItem'](this.itemId)),
+      itemLocal: Object.assign(
+        {},
+        this.$store.getters["taskManagement/getItem"](this.itemId)
+      ),
 
       workareasDataFiltered: [],
       comments: [],
@@ -162,165 +186,191 @@ export default {
       descriptionDisplay: false,
       commentDisplay: false,
       have_setTimeSpent: false
-    }
+    };
   },
   computed: {
-    validateForm () {
-      return !this.errors.any()
-        && this.itemLocal.name != ''
-        && this.itemLocal.date != ''
-        && this.itemLocal.estimated_time != ''
-        && this.itemLocal.skills.length > 0 
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.name != "" &&
+        this.itemLocal.date != "" &&
+        this.itemLocal.estimated_time != ""
+      );
     },
     activePrompt: {
-      get () {
-        this.addPreviousTask(this.itemLocal.previous_tasks)
-        return this.itemId && this.itemId > 0 ? true : false
+      get() {
+        this.addPreviousTask(this.itemLocal.previous_tasks);
+        return this.itemId && this.itemId > 0 ? true : false;
       },
-      set (value) {
-        this.$store.dispatch("taskManagement/editItem", {})
-          .then(()   => {  })
-          .catch(err => { console.error(err) })
+      set(value) {
+        this.$store
+          .dispatch("taskManagement/editItem", {})
+          .then(() => {})
+          .catch(err => {
+            console.error(err);
+          });
       }
     },
     workareasData() {
-      let $workareasData = this.$store.state.workareaManagement.workareas
-      let $filteredItems = this.filterItemsAdmin($workareasData)
-      return $filteredItems
+      let $workareasData = this.$store.state.workareaManagement.workareas;
+      let $filteredItems = this.filterItemsAdmin($workareasData);
+      return $filteredItems;
     },
     skillsData() {
-      let $skillsData = this.$store.state.skillManagement.skills
-      this.updateWorkareasList(this.itemLocal.skills)
-      return this.filterItemsAdmin($skillsData)
-    },
+      let $skillsData = this.$store.state.skillManagement.skills;
+      this.updateWorkareasList(this.itemLocal.skills);
+      return this.filterItemsAdmin($skillsData);
+    }
   },
   methods: {
-    clear () {
-      this.itemLocal= {}
-      this.workareasDataFiltered = [],
-      this.comments = []
+    clear() {
+      this.itemLocal = {};
+      (this.workareasDataFiltered = []), (this.comments = []);
     },
-    moment: function (date) {
-      moment.locale('fr')
-      return moment(date, "YYYY-MM-DD HH:mm:ss").format('DD MMMM YYYY');
+    moment: function(date) {
+      moment.locale("fr");
+      return moment(date, "YYYY-MM-DD HH:mm:ss").format("DD MMMM YYYY");
     },
-    momentTime: function (date) {
-      moment.locale('fr')
-      return moment(date, "YYYY-MM-DD HH:mm:ss").format('HH:mm');
+    momentTime: function(date) {
+      moment.locale("fr");
+      return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
     },
-    submitItem () {
-      this.$validator.validateAll().then(result => {
+    submitItem() {
+      if (this.itemLocal.comment != null && this.itemLocal.comment != "") {
+        this.addComment();
+      }
 
-        this.itemLocal.date = moment(this.itemLocal.date, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')
-        this.itemLocal.workarea_id = this.itemLocal.workarea_id == 'null' ? null : this.itemLocal.workarea_id
+      this.$validator.validateAll().then(result => {
+        this.itemLocal.date = moment(
+          this.itemLocal.date,
+          "DD-MM-YYYY HH:mm"
+        ).format("YYYY-MM-DD HH:mm");
+        this.itemLocal.workarea_id =
+          this.itemLocal.workarea_id == "null"
+            ? null
+            : this.itemLocal.workarea_id;
 
         if (result) {
-          this.$store.dispatch('taskManagement/updateItem', Object.assign({}, this.itemLocal))
-          .then(() => { 
-            this.$vs.loading.close() 
-            this.$vs.notify({
-              title: 'Modification d\'une tâche',
-              text: `"${this.itemLocal.name}" modifiée avec succès`,
-              iconPack: 'feather',
-              icon: 'icon-alert-circle',
-              color: 'success'
+          this.$store
+            .dispatch(
+              "taskManagement/updateItem",
+              Object.assign({}, this.itemLocal)
+            )
+            .then(() => {
+              this.$vs.loading.close();
+              this.$vs.notify({
+                title: "Modification d'une tâche",
+                text: `"${this.itemLocal.name}" modifiée avec succès`,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success"
+              });
             })
-          })
-          .catch(error => {            
-            this.$vs.loading.close()
-            this.$vs.notify({
-              title: 'Error',
-              text: error.message,
-              iconPack: 'feather',
-              icon: 'icon-alert-circle',
-              color: 'danger'
-            })
-          })
+            .catch(error => {
+              this.$vs.loading.close();
+              this.$vs.notify({
+                title: "Error",
+                text: error.message,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "danger"
+              });
+            });
         }
-      })
+      });
     },
-    addComment(){
+    addComment() {
       this.$vs.loading({
-        background: 'success',
-        color: '#fff',
+        background: "success",
+        color: "#fff",
         container: "#button-with-loading",
-        scale: 0.30
-      })
-      this.$store.dispatch('taskManagement/addComment', Object.assign({}, this.itemLocal))
-      .then((response) => {
-        this.itemLocal.comments = response
-        this.$vs.loading.close("#button-with-loading > .con-vs-loading")
-        this.itemLocal.comment = ''
-      })      
+        scale: 0.3
+      });
+      this.$store
+        .dispatch(
+          "taskManagement/addComment",
+          Object.assign({}, this.itemLocal)
+        )
+        .then(response => {
+          this.itemLocal.comments = response;
+          this.$vs.loading.close("#button-with-loading > .con-vs-loading");
+          this.itemLocal.comment = "";
+        });
     },
-    updateWorkareasList(ids) {      
-      this.workareasDataFiltered = this.workareasData.filter(function(workarea) {
-        for (let i = 0; i < ids.length; i ++) {
-          if(workarea.skills.filter(skill => skill.id == ids[i]).length == 0){
+    updateWorkareasList(ids) {
+      this.workareasDataFiltered = this.workareasData.filter(function(
+        workarea
+      ) {
+        for (let i = 0; i < ids.length; i++) {
+          if (workarea.skills.filter(skill => skill.id == ids[i]).length == 0) {
             return false;
           }
         }
         return true;
       });
     },
-    filterItemsAdmin ($items) {
-      let $filteredItems = []
-      const user = this.$store.state.AppActiveUser 
+    filterItemsAdmin($items) {
+      let $filteredItems = [];
+      const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find(r => r.name === 'superAdmin' || r.name === 'littleAdmin')) {
-          $filteredItems = $items.filter((item) => item.company_id === this.companyId)
-        }
-        else{
-          $filteredItems = $items
+        if (
+          user.roles.find(
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          $filteredItems = $items.filter(
+            item => item.company_id === this.companyId
+          );
+        } else {
+          $filteredItems = $items;
         }
       }
-      return $filteredItems
+      return $filteredItems;
     },
-    showDescription () { this.descriptionDisplay = true },
-    addPreviousTask (taskIds) { 
-      this.itemLocal.previousTasksIds= taskIds
-      let previousTasks_local = []
-      
+    addPreviousTask(taskIds) {
+      this.itemLocal.previousTasksIds = taskIds;
+      let previousTasks_local = [];
+
       taskIds.forEach(id => {
-        let task = this.tasks_list.filter(t => t.id == id)
-        previousTasks_local.push(task[0].name)
+        let task = this.tasks_list.filter(t => t.id == id);
+        previousTasks_local.push(task[0].name);
       });
-      this.previousTasks = previousTasks_local
+      this.previousTasks = previousTasks_local;
     },
-    setTimeSpent(){
-      if(!this.have_setTimeSpent){
-        this.itemLocal.time_spent = this.itemLocal.estimated_time
-        this.have_setTimeSpent = true
+    setTimeSpent() {
+      if (!this.have_setTimeSpent) {
+        this.itemLocal.time_spent = this.itemLocal.estimated_time;
+        this.have_setTimeSpent = true;
       }
     }
   }
-}
+};
 </script>
 <style>
-.con-vs-dialog.task-compose .vs-dialog{
+.con-vs-dialog.task-compose .vs-dialog {
   max-width: 700px;
 }
-.edit-task-form{
-  max-height: 450px;
+.edit-task-form {
+  max-height: 600px;
   overflow-y: auto;
   overflow-x: hidden;
 }
-.no-comments{
+.no-comments {
   font-size: 0.9em;
   font-style: italic;
   margin-left: 1em;
 }
-.comment-author{
+.comment-author {
   font-size: 1em;
   font-weight: bold;
   vertical-align: top;
 }
-.comment-created-at{
+.comment-created-at {
   font-size: 0.8em;
   line-height: 2;
   vertical-align: top;
 }
-.comment-content{
+.comment-content {
   border: 1px solid #c3c3c3;
   border-radius: 5px;
   padding: 3px;

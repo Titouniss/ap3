@@ -12,10 +12,13 @@ use App\Models\PreviousTask;
 use App\Models\TasksBundle;
 use Illuminate\Support\Facades\Auth;
 use Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 class ProjectController extends Controller
 {
+    use SoftDeletes;
+
     public $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -186,6 +189,22 @@ class ProjectController extends Controller
     {
         $item = Project::findOrFail($id);
         $item->delete();
+        return '';
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = Project::findOrFail($id);
+        $item->delete();
+
+        $item = Project::withTrashed()->findOrFail($id);
+        $item->forceDelete();
         return '';
     }
 }

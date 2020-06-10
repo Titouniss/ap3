@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Indisponibility extends Model
+class Unavailability extends Model
 {
-    protected $table = 'user_indisponibilities';
-    protected $fillable = [ 'reason', 'start_at', 'end_at'];
+    protected $table = 'user_unavailabilities';
+    protected $fillable = ['reason', 'starts_at', 'ends_at', 'user_id'];
 
     public function user()
     {

@@ -1,0 +1,171 @@
+<template>
+  <vs-prompt
+    title="Edition d'une indisponibilité"
+    accept-text="Modifier"
+    cancel-text="Annuler"
+    button-cancel="border"
+    @cancel="init"
+    @accept="submitItem"
+    @close="init"
+    :is-valid="validateForm"
+    :active.sync="activePrompt"
+  >
+    <div>
+      <form>
+        <div class="vx-row">
+          <div class="vx-col w-full">
+            <flat-pickr
+              name="starts_at"
+              class="w-full mb-4 mt-5"
+              :config="configStartsAtDateTimePicker"
+              v-model="itemLocal.starts_at"
+              placeholder="Date de début"
+              @on-change="onStartsAtChange"
+            />
+            <flat-pickr
+              name="ends_at"
+              class="w-full mb-4 mt-5"
+              :config="configEndsAtDateTimePicker"
+              v-model="itemLocal.ends_at"
+              placeholder="Date de fin"
+              @on-change="onEndsAtChange"
+            />
+            <vs-input
+              name="reason"
+              class="w-full mb-4 mt-5"
+              placeholder="Motif"
+              v-model="itemLocal.reason"
+              v-validate="'required'"
+              :color="!errors.has('reason') ? 'success' : 'danger'"
+            />
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('reason')"
+            >{{ errors.first('reason') }}</span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </vs-prompt>
+</template>
+
+<script>
+import { Validator } from "vee-validate";
+import errorMessage from "./errorValidForm";
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
+
+// register custom messages
+Validator.localize("fr", errorMessage);
+
+export default {
+  components: {
+    flatPickr
+  },
+  props: {
+    itemId: {
+      type: Number,
+      required: true
+    }
+  },
+  data() {
+    const itemLocal = Object.assign(
+      {},
+      this.$store.getters["unavailabilityManagement/getItem"](this.itemId)
+    );
+    return {
+      itemLocal: itemLocal,
+
+      configStartsAtDateTimePicker: {
+        disableMobile: "true",
+        enableTime: true,
+        locale: FrenchLocale,
+        minDate: itemLocal.starts_at,
+        maxDate: null
+      },
+      configEndsAtDateTimePicker: {
+        disableMobile: "true",
+        enableTime: true,
+        locale: FrenchLocale,
+        minDate: itemLocal.starts_at
+      }
+    };
+  },
+  computed: {
+    activePrompt: {
+      get() {
+        return this.itemId && this.itemId > 0 ? true : false;
+      },
+      set(value) {
+        this.$store
+          .dispatch("unavailabilityManagement/editItem", {})
+          .then(() => {})
+          .catch(err => {
+            console.error(err);
+          });
+      }
+    },
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.starts_at &&
+        this.itemLocal.ends_at &&
+        this.itemLocal.reason
+      );
+    }
+  },
+  methods: {
+    init() {
+      this.itemLocal = Object.assign(
+        {},
+        this.$store.getters["unavailabilityManagement/getItem"](this.itemId)
+      );
+
+      this.configStartsAtDateTimePicker = {
+        disableMobile: "true",
+        enableTime: true,
+        locale: FrenchLocale,
+        minDate: this.itemLocal.starts_at,
+        maxDate: null
+      };
+      this.configEndsAtDateTimePicker = {
+        disableMobile: "true",
+        enableTime: true,
+        locale: FrenchLocale,
+        minDate: this.itemLocal.starts_at
+      };
+    },
+    onStartsAtChange(selectedDates, dateStr, instance) {
+      this.$set(this.configEndsAtDateTimePicker, "minDate", dateStr);
+    },
+    onEndsAtChange(selectedDates, dateStr, instance) {
+      this.$set(this.configStartsAtDateTimePicker, "maxDate", dateStr);
+    },
+    submitItem() {
+      this.$store
+        .dispatch("unavailabilityManagement/updateItem", this.itemLocal)
+        .then(() => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Modification d'une indisponibilité",
+            text: `Indisponibilité modifiée avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
+        })
+        .catch(error => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Error",
+            text: error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
+        });
+    }
+  }
+};
+</script>

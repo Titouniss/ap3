@@ -24,6 +24,9 @@ use App\Models\Company;
 use App\Models\WorkHours;
 use Spatie\Permission\Models\Role;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 class UserController extends Controller
 {
     public $successStatus = 200;
@@ -162,6 +165,7 @@ class UserController extends Controller
             'firstname' => 'required',
             'lastname' => 'required',
             'email' => 'required|email',
+            'phone_number' => 'required',
             'password' => 'required',
             'c_password' => 'required|same:password',
             'isTermsConditionAccepted' => 'required',
@@ -175,14 +179,14 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $role = Role::where('name', 'Administrateur');
+        $role = Role::where('name', 'clientAdmin');
         if ($role != null) {
-            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => 'Entreprise ' . $user->lastname, 'expire_at' => now()->addDays(29)]);
         $user->company()->associate($company);
         $user->save();
-        $user->sendEmailVerificationNotification();
+        //$user->sendEmailVerificationNotification();
         $token =  $user->createToken('ProjetX');
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
@@ -197,6 +201,7 @@ class UserController extends Controller
     public function registerWithToken(Request $request, $token)
     {
         $validator = Validator::make($request->all(), [
+            'genre' => 'required',
             'firstname' => 'required',
             'lastname' => 'required',
             'password' => 'required',
@@ -260,8 +265,10 @@ class UserController extends Controller
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
+            'genre' => 'required',
             'lastname' => 'required',
             'firstname' => 'required',
+            'phone_number' => 'required',
             'email' => 'required',
             'company_id' => 'required'
         ]);
@@ -279,7 +286,7 @@ class UserController extends Controller
             $item->assignRole('basicUsers');
         }
 
-        $item->notify(new UserRegistration($item));
+        //$item->notify(new UserRegistration($item));
 
         return response()->json(['success' => $arrayRequest], $this->successStatus);
         //Il faut envoyer un email avec lien d'inscription
@@ -294,7 +301,7 @@ class UserController extends Controller
     public function show($id)
     {
         $item = User::where('id', $id)
-            ->with('roles:id,name', 'company:id,name', 'workHours', 'indisponibilities')
+            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities')
             ->first();
         return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
     }
@@ -310,11 +317,14 @@ class UserController extends Controller
 
         $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
-            'lastname' => 'required'
+            'lastname' => 'required',
+            'genre' => 'required', 
+            'phone_number' => 'required', 
+            'email' => 'required', 
         ]);
         $user = User::withTrashed()->find($id);
         if ($user != null) {
-            if (isset($arrayRequest['roles'])) {
+            if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null ) {
                 $roles = array();
                 foreach ($arrayRequest['roles'] as $role) {
                     array_push($roles, $role['id']);
@@ -323,6 +333,9 @@ class UserController extends Controller
             }
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
+            $user->genre = $arrayRequest['genre'];
+            $user->phone_number = $arrayRequest['phone_number'];
+            $user->email = $arrayRequest['email'];
             $user->save();
         }
         return response()->json(['success' => $user], $this->successStatus);
@@ -420,49 +433,45 @@ class UserController extends Controller
      */
     public function updateWorkHours(Request $request, $id)
     {
-        try {
-            $arrayRequest = $request->all();
+        $arrayRequest = $request->all();
 
-            foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                if (!in_array(strtolower($day), WorkHours::$days)) {
-                    return response()->json(['error' => 'Invalid index'], 401);
-                }
-                $validator = Validator::make($hours, [
-                    'is_active' => 'required',
-                ]);
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 401);
-                }
+        foreach ($arrayRequest['work_hours'] as $day => $hours) {
+            if (!in_array(strtolower($day), WorkHours::$days)) {
+                return response()->json(['error' => 'Invalid index'], 401);
             }
-
-            if (User::withTrashed()->where('id', $id)->exists()) {
-                foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                    $lowerDay = strtolower($day);
-                    $previousHours = WorkHours::where('user_id', $id)->where('day', $lowerDay)->first();
-                    if ($previousHours) {
-                        $previousHours->is_active = $hours['is_active'];
-                        $previousHours->morning_starts_at = $hours['morning_starts_at'];
-                        $previousHours->morning_ends_at = $hours['morning_ends_at'];
-                        $previousHours->afternoon_starts_at = $hours['afternoon_starts_at'];
-                        $previousHours->afternoon_ends_at = $hours['afternoon_ends_at'];
-                        $previousHours->save();
-                    } else {
-                        WorkHours::create([
-                            'day' => $lowerDay,
-                            'is_active' => $hours['is_active'],
-                            'morning_starts_at' => $hours['morning_starts_at'],
-                            'morning_ends_at' => $hours['morning_ends_at'],
-                            'afternoon_starts_at' => $hours['afternoon_starts_at'],
-                            'afternoon_ends_at' => $hours['afternoon_ends_at'],
-                            'user_id' => $id
-                        ]);
-                    }
-                }
+            $validator = Validator::make($hours, [
+                'is_active' => 'required',
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 401);
             }
-            return response()->json(['success' => User::where('id', $id)->with('workHours', 'indisponibilities')->first()], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['errorMessage' => $th->getMessage()], 401);
         }
+
+        if (User::withTrashed()->where('id', $id)->exists()) {
+            foreach ($arrayRequest['work_hours'] as $day => $hours) {
+                $lowerDay = strtolower($day);
+                $previousHours = WorkHours::where('user_id', $id)->where('day', $lowerDay)->first();
+                if ($previousHours) {
+                    $previousHours->is_active = $hours['is_active'];
+                    $previousHours->morning_starts_at = $hours['morning_starts_at'];
+                    $previousHours->morning_ends_at = $hours['morning_ends_at'];
+                    $previousHours->afternoon_starts_at = $hours['afternoon_starts_at'];
+                    $previousHours->afternoon_ends_at = $hours['afternoon_ends_at'];
+                    $previousHours->save();
+                } else {
+                    WorkHours::create([
+                        'day' => $lowerDay,
+                        'is_active' => $hours['is_active'],
+                        'morning_starts_at' => $hours['morning_starts_at'],
+                        'morning_ends_at' => $hours['morning_ends_at'],
+                        'afternoon_starts_at' => $hours['afternoon_starts_at'],
+                        'afternoon_ends_at' => $hours['afternoon_ends_at'],
+                        'user_id' => $id
+                    ]);
+                }
+            }
+        }
+        return response()->json(['success' => User::where('id', $id)->with('workHours', 'unavailabilities')->first()], $this->successStatus);
     }
 
     /**
@@ -473,6 +482,9 @@ class UserController extends Controller
     public function destroy($id)
     {
         $item = User::where('id', $id)->delete();
+        $controllerLog = new Logger('user');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('user', ['response', $item]);
         return response()->json(['success' => $item], $this->successStatus);
     }
 }

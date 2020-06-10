@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class CompanyController extends Controller
 {
+    use SoftDeletes;
+    
     public $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -26,8 +31,8 @@ class CompanyController extends Controller
         } else if ($user->company_id != null) {
             $items = Company::where('id', $user->company_id)->get()->load('skills');
         }
-        
-        return response()->json(['success' => $items], $this-> successStatus);  
+
+        return response()->json(['success' => $items], $this->successStatus);
     }
 
     /**
@@ -50,15 +55,15 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [ 
+        $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'siret' => 'required'
         ]);
-        if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Company::create($arrayRequest);
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -82,14 +87,14 @@ class CompanyController extends Controller
     public function update(Request $request, $id)
     {
         $arrayRequest = $request->all();
-        
-        $validator = Validator::make($arrayRequest, [ 
+
+        $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'siret' => 'required'
-            ]);
-        
-        $item = Company::where('id',$id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
-        return response()->json(['success' => $item], $this-> successStatus); 
+        ]);
+
+        $item = Company::where('id', $id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -100,8 +105,32 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
+        $controllerLog = new Logger('company');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('company', ['destroy']);
+
         $item = Company::findOrFail($id);
         $item->delete();
+        return '';
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = Company::findOrFail($id);
+        $item->delete();
+        
+        $controllerLog = new Logger('company');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('company', ['forceDelete']);
+
+        $item = Company::withTrashed()->findOrFail($id);
+        $item->forceDelete();
         return '';
     }
 }

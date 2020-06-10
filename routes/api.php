@@ -112,7 +112,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\CompanyController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\CompanyController@destroy');
+        Route::delete('destroy/{id}', 'API\CompanyController@destroy');
+        Route::delete('forceDelete/{id}', 'API\CompanyController@forceDelete');
         // });
     });
 
@@ -127,7 +128,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\SkillController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\SkillController@destroy');
+        Route::delete('destroy/{id}', 'API\SkillController@destroy');
+        Route::delete('forceDelete/{id}', 'API\SkillController@forceDelete');
         // });
     });
 
@@ -142,7 +144,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update/{id}', 'API\WorkareaController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\WorkareaController@destroy');
+        Route::delete('destroy/{id}', 'API\WorkareaController@destroy');
+        Route::delete('forceDelete/{id}', 'API\WorkareaController@forceDelete');
         // });
     });
 
@@ -153,12 +156,13 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('index', 'API\ProjectController@index');
         Route::get('show/{id}', 'API\ProjectController@show');
         // Route::group(['middleware' => ['can:publish companies']], function () {
-            Route::post('store', 'API\ProjectController@store');
-            Route::post('store-range/{id}', 'API\ProjectController@addRange');
-            Route::post('update/{id}', 'API\ProjectController@update');
+        Route::post('store', 'API\ProjectController@store');
+        Route::post('store-range/{id}', 'API\ProjectController@addRange');
+        Route::post('update/{id}', 'API\ProjectController@update');
         // });
         // Route::group(['middleware' => ['can:delete roles']], function () {
-        Route::delete('{id}', 'API\ProjectController@destroy');
+        Route::delete('destroy/{id}', 'API\ProjectController@destroy');
+        Route::delete('forceDelete/{id}', 'API\ProjectController@forceDelete');
         // });
     });
 
@@ -178,6 +182,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:delete ranges']], function () {
             Route::delete('destroy/{id}', 'API\RangeController@destroy');
+            Route::delete('forceDelete/{id}', 'API\RangeController@forceDelete');
         });
     });
 
@@ -201,5 +206,35 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************************************************************/
     Route::prefix('repetitive-task-management')->group(function () {
         Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
+    });
+
+    /***********************************************************************************/
+    /*****************************   UNAVAILABILITIES   ********************************/
+    /***********************************************************************************/
+    Route::prefix('unavailability-management')->group(function () {
+        Route::get('index', 'API\UnavailabilityController@index');
+        Route::get('show/{id}', 'API\UnavailabilityController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+        Route::post('store', 'API\UnavailabilityController@store');
+        Route::post('update/{id}', 'API\UnavailabilityController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+        Route::delete('destroy/{id}', 'API\UnavailabilityController@destroy');
+        // });
+    });
+
+    /***********************************************************************************/
+    /***********************************   Hours   *************************************/
+    /***********************************************************************************/
+    Route::prefix('hours-management')->group(function () {
+        Route::get('index', 'API\HoursController@index');
+        Route::get('show/{id}', 'API\HoursController@show');
+        // Route::group(['middleware' => ['can:publish companies']], function () {
+        Route::post('store', 'API\HoursController@store');
+        Route::post('update/{id}', 'API\HoursController@update');
+        // });
+        // Route::group(['middleware' => ['can:delete roles']], function () {
+        Route::delete('destroy/{id}', 'API\HoursController@destroy');
+        // });
     });
 });
