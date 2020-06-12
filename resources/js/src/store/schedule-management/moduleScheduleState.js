@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: moduleCalendarState.js
-  Description: Calendar Module State
+  File Name: moduleScheduleState.js
+  Description: Schedule Module State
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -9,9 +9,9 @@
 
 export default {
 
-  // Calendar Labels
+  // Schedule Labels
   eventLabels: [],
 
-  // Simple Calendar State
+  // Simple Schedule State
   events: []
 }
