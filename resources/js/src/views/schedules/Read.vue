@@ -40,7 +40,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
 // Store Module
-import moduleTaskManagement from "@/store/user-management/moduleTaskManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";

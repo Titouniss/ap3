@@ -1,62 +1,84 @@
-<!-- =========================================================================================
-  File Name: RoleEdit.vue
-  Description: role Edit Page
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/role/pixinvent
-========================================================================================== -->
-
 <template>
-  <div id="page-role-edit">
-    <vs-alert color="danger" title="role Not Found" :active.sync="role_not_found">
-      <span>Le rôle {{ $route.params.id }} est introuvable. </span>
+  <div id="page-hours-edit">
+    <vs-alert color="danger" title="Hours Not Found" :active.sync="hours_not_found">
+      <span>Les heures {{ $route.params.id }} est introuvable.</span>
       <span>
-        <span>voir </span><router-link :to="{name:'roles'}" class="text-inherit underline">Tout les rôles</router-link>
+        <span>voir</span>
+        <router-link :to="{name:'hours'}" class="text-inherit underline">Toutes les heures</router-link>
       </span>
     </vs-alert>
-
-    <vx-card v-if="role_data">
+    <vx-card>
       <div slot="no-body" class="tabs-container px-6 pt-6">
-        <div class="vx-row">
-          <vs-input class="w-full mt-4" label="Titre" v-model="role_data.name" v-validate="'required'" name="name" />
-          <span class="text-danger text-sm"  v-show="errors.has('name')">{{ errors.first('name') }}</span>
-        </div>
-        <div class="vx-row">
-          <vs-textarea class="w-full mt-4" rows="5" label="Ajouter description" v-model="role_data.description" name="description"/>
-          <span class="text-danger text-sm"  v-show="errors.has('description')">{{ errors.first('description') }}</span>
-        </div>
-        <!-- Permissions -->
-        <div class="vx-row mt-4">
-            <div class="vx-col w-full">
-            <div class="flex items-end px-3">
-                <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
-                <span class="font-medium text-lg leading-none">Permissions</span>
-            </div>
-            <vs-divider />
-            </div>
-        </div>
+        <vs-row vs-justify="center" vs-type="flex" vs-w="12">
+          <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+            <vs-select
+              v-validate="'required'"
+              name="project_id"
+              label="Projet"
+              v-model="data_local.project_id"
+              class="w-full"
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in projects"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('project_id')"
+            >{{ errors.first('project_id') }}</span>
+          </vs-col>
+          <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6" v-if="isAdmin">
+            <vs-select
+              v-validate="'required'"
+              name="user_id"
+              label="Utilisateur"
+              v-model="data_local.user_id"
+              class="w-full"
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.firstname + ' ' + item.lastname"
+                v-for="(item,index) in users"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('user_id')"
+            >{{ errors.first('user_id') }}</span>
+          </vs-col>
+        </vs-row>
 
-        <div class="block overflow-x-auto">
-            <table class="w-full">
-            <tr>
-                <!--
-                You can also use `Object.keys(Object.values(data_local.permissions)[0])` this logic if you consider,
-                our data structure. You just have to loop over above variable to get table headers.
-                Below we made it simple. So, everyone can understand.
-                -->
-                <th class="font-semibold text-base text-left px-3 py-2" v-for="heading in ['Module', 'Consulter','Créer', 'Editer',  'Supprimer']" :key="heading">{{ heading }}</th>
-            </tr>
-            <tr v-for="(items,index) in permissions" :key="index">
-                <td class="px-3 py-2">{{ capitalizeFirstLetter(index) }}</td>
-                <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
-                    <vs-checkbox v-model="selected[item.id]" />
-                </td>
-            </tr>
-            </table>
-        </div>
-         
+        <vs-row vs-justify="center" vs-type="flex" vs-w="12">
+          <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+            <small class="date-label pl-1">Date</small>
+            <flat-pickr :config="configDatePicker()" class="w-full" v-model="data_local.date" />
+          </vs-col>
+          <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+            <small class="date-label pl-1">Durée</small>
+            <flat-pickr :config="configTimePicker()" class="w-full" v-model="data_local.duration" />
+          </vs-col>
+        </vs-row>
 
+        <vs-row vs-justify="center" vs-type="flex" vs-w="12">
+          <vs-col vs-w="12" class="mt-6 px-6">
+            <vs-textarea
+              class="w-full mt-4"
+              rows="5"
+              label="Description"
+              v-model="data_local.description"
+              name="description"
+              v-validate="'max:1500'"
+            />
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('description')"
+            >{{ errors.first('description') }}</span>
+          </vs-col>
+        </vs-row>
       </div>
       <!-- Save & Reset Button -->
       <div class="vx-row">
@@ -72,133 +94,170 @@
 </template>
 
 <script>
-import lodash from 'lodash'
 // Store Module
-import moduleManagement from '@/store/role-management/moduleRoleManagement.js'
-import modulePermissionManagement from '@/store/permission-management/modulePermissionManagement.js'
-import { Validator } from 'vee-validate';
-import errorMessage from './errorValidForm';
+import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
+import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+
+import { Validator } from "vee-validate";
+import errorMessage from "./errorValidForm";
+
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // register custom messages
-Validator.localize('fr', errorMessage);
-var model = 'role'
-var modelPlurial = 'roles'
-var modelTitle = 'Rôle'
+Validator.localize("fr", errorMessage);
+var model = "hours";
+var modelPlurial = "hours";
+var modelTitle = "Heures";
 
 export default {
-  data () {
+  data() {
+    const user = this.$store.state.AppActiveUser;
     return {
-      role_data: null,
-      selected: [],
-      role_not_found: false,
-    }
+      data_local: {
+        date: null,
+        duration: null,
+        description: "",
+        project_id: null,
+        user_id: user.id
+      },
+      hours_not_found: false,
+      configTimePicker: () => ({
+        disableMobile: "true",
+        enableTime: true,
+        locale: FrenchLocale,
+        noCalendar: true,
+        defaultHour: 0
+      }),
+      configDatePicker: () => ({
+        disableMobile: "true",
+        enableTime: false,
+        locale: FrenchLocale,
+        altFormat: "j F Y",
+        altInput: true
+      })
+    };
+  },
+  components: {
+    flatPickr
   },
   computed: {
-    permissions () {
-        const permissionsStore = this.$store.state.permissionManagement.permissions
-        let permissions =  []
-        if (permissionsStore && permissionsStore.length > 0) {
-                permissions = permissionsStore.reduce(function(acc, valeurCourante){
-                  let permissionName = valeurCourante.name
-                  let titles = permissionName.split(" ")
-                  
-                  if (!acc) {
-                      acc = {}
-                  }
-                  if (titles.length > 1) {
-                      if (!acc[valeurCourante.name_fr]) {
-                          acc[valeurCourante.name_fr] = {}
-                      }
-                      acc[valeurCourante.name_fr][titles[0]] = valeurCourante
-                  }             
-              return acc;
-              }, {});
-        }
-
-      return permissions
+    isAdmin() {
+      const user = this.$store.state.AppActiveUser;
+      if (
+        user.roles &&
+        user.roles.length > 0 &&
+        user.roles.find(
+          r => r.name === "superAdmin" || r.name === "littleAdmin"
+        )
+      ) {
+        return true;
+      }
+      return false;
     },
-    validateForm () {
-      return !this.errors.any()
+    projects() {
+      return this.$store.state.projectManagement.projects;
+    },
+    users() {
+      return this.$store.state.userManagement.users;
+    },
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.data_local.project_id &&
+        this.data_local.user_id &&
+        this.data_local.date &&
+        this.data_local.duration
+      );
     }
   },
   methods: {
-    fetch_data (id) {
-      this.$store.dispatch('roleManagement/fetchItem', id)
-        .then(res => { 
-            this.role_data = res.data.success
-            if (this.role_data && this.role_data.permissions.length) {
-                this.role_data.permissions.forEach(permission => {
-                    this.selected[permission.id] = true
-                });
-            }
+    fetch_data(id) {
+      this.$store
+        .dispatch("hoursManagement/fetchItem", id)
+        .then(res => {
+          this.data_local = res.data.success;
         })
         .catch(err => {
           if (err.response.status === 404) {
-            this.role_not_found = true
-            return
+            this.hours_not_found = true;
+            return;
           }
-          console.error(err) 
-        })
+          console.error(err);
+        });
     },
-    save_changes () {
+    save_changes() {
       /* eslint-disable */
-      if (!this.validateForm) return
-      this.$vs.loading()
-      this.role_data.permissions = _.keys(_.pickBy(this.selected ))
-       
-      const payload = {...this.role_data}      
-      this.$store.dispatch('roleManagement/updateItem', payload)
-        .then(() => { 
-          this.$vs.loading.close() 
-          this.$vs.notify({
-          title: 'Modification',
-          text: 'Rôle modifier avec succès',
-          iconPack: 'feather',
-          icon: 'icon-alert-circle',
-          color: 'success'
-        })
-        this.$router.push(`/${modelPlurial}`).catch(() => {})
-        })
-        .catch(error => {   
-          const unauthorize = error.message ? error.message.includes('status code 403') : false
-          const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`
-          this.$vs.loading.close()
-          this.$vs.notify({
-            title: 'Echec',
-            text: unauthorize ? unauthorizeMessage : error.message,
-            iconPack: 'feather',
-            icon: 'icon-alert-circle',
-            color: 'danger'
-          })
-        })
-    },
-    back () {
-      this.$router.push(`/${modelPlurial}`).catch(() => {})
-    },
-    capitalizeFirstLetter (word) {
-      if (typeof word !== 'string') return ''
-        return word.charAt(0).toUpperCase() + word.slice(1)
-    }
-  },
-  created () {
-    // Register Module roleManagement Module
-    if (!moduleManagement.isRegistered) {
-      this.$store.registerModule('roleManagement', moduleManagement)
-      moduleManagement.isRegistered = true
-    }
-    if (!modulePermissionManagement.isRegistered) {
-      this.$store.registerModule('permissionManagement', modulePermissionManagement)
-      modulePermissionManagement.isRegistered = true
-    }
-    this.fetch_data(this.$route.params.id)
-    this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) })
-  },
-  beforeDestroy () {
-    moduleManagement.isRegistered = false
-    modulePermissionManagement.isRegistered = false
-    this.$store.unregisterModule('roleManagement')
-    this.$store.unregisterModule('permissionManagement')
-  }
-}
+      if (!this.validateForm) return;
+      this.$vs.loading();
 
+      const payload = { ...this.data_local };
+      this.$store
+        .dispatch("hoursManagement/updateItem", payload)
+        .then(() => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Modification",
+            text: "Heures modifiées avec succès",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
+          this.$router.push(`/${modelPlurial}`).catch(() => {});
+        })
+        .catch(error => {
+          const unauthorize = error.message
+            ? error.message.includes("status code 403")
+            : false;
+          const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`;
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Echec",
+            text: unauthorize ? unauthorizeMessage : error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
+        });
+    },
+    back() {
+      this.$router.push(`/${modelPlurial}`).catch(() => {});
+    }
+  },
+  created() {
+    if (!moduleHoursManagement.isRegistered) {
+      this.$store.registerModule("hoursManagement", moduleHoursManagement);
+      moduleHoursManagement.isRegistered = true;
+    }
+    if (!moduleProjectManagement.isRegistered) {
+      this.$store.registerModule("projectManagement", moduleProjectManagement);
+      moduleProjectManagement.isRegistered = true;
+    }
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
+    this.fetch_data(this.$route.params.id);
+    this.$store.dispatch("hoursManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
+    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
+    this.$store.dispatch("userManagement/fetchItems").catch(err => {
+      this.manageErrors(err);
+    });
+  },
+  beforeDestroy() {
+    window.removeEventListener("resize", this.onResize());
+    moduleHoursManagement.isRegistered = false;
+    moduleProjectManagement.isRegistered = false;
+    moduleUserManagement.isRegistered = false;
+    this.$store.unregisterModule("hoursManagement");
+    this.$store.unregisterModule("projectManagement");
+    this.$store.unregisterModule("userManagement");
+  }
+};
 </script>

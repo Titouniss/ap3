@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Hours;
 use App\Models\Project;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
@@ -18,11 +19,39 @@ class HoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $items = $user->hasRole('superAdmin') ? Hours::all()->load('project', 'user') : Hours::where('user_id', $user->id)->with('project', 'user')->get();
-        return response()->json(['success' => $items], $this->successStatus);
+        $items = Hours::where('user_id', $user->id);
+        if ($user->hasRole('superAdmin')) {
+            $items = Hours::select('*');
+            if ($request->user_id) {
+                $items->where('user_id', $request->user_id);
+            }
+        }
+        if ($request->project_id) {
+            $items->where('project_id', $request->project_id);
+        }
+
+        if ($request->date) {
+            switch ($request->period_type) {
+                case 'week':
+                    $items->whereBetween('date', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
+                    break;
+                case 'month':
+                    $items->whereMonth('date', Carbon::createFromFormat('d-m-Y', $request->date)->month);
+                    break;
+                case 'year':
+                    $items->whereYear('date', Carbon::createFromFormat('d-m-Y', $request->date)->year);
+                    break;
+
+                default:
+                    $items->whereDate('date', Carbon::createFromFormat('d-m-Y', $request->date));
+                    break;
+            }
+        }
+
+        return response()->json(['success' => $items->with('project', 'user')->get(), 'sql' => $items->toSql()], $this->successStatus);
     }
 
     /**
