@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: moduleCalendarActions.js
-  Description: Calendar Module Actions
+  File Name: ScheduleActions.js
+  Description: Schedule Module Actions
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -10,17 +10,17 @@
 import axios from '@/axios.js'
 
 export default {
-  addEvent ({ commit }, event) {
+  addEvent({ commit }, event) {
     return new Promise((resolve, reject) => {
-      axios.post('/api/apps/calendar/events/', {event})
+      axios.post('/api/apps/calendar/events/', { event })
         .then((response) => {
-          commit('ADD_EVENT', Object.assign(event, {id: response.data.id}))
+          commit('ADD_EVENT', Object.assign(event, { id: response.data.id }))
           resolve(response)
         })
         .catch((error) => { reject(error) })
     })
   },
-  fetchEvents ({ commit }) {
+  fetchEvents({ commit }) {
     return new Promise((resolve, reject) => {
       axios.get('/api/apps/calendar/events')
         .then((response) => {
@@ -30,7 +30,7 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  fetchEventLabels ({ commit }) {
+  fetchEventLabels({ commit }) {
     return new Promise((resolve, reject) => {
       axios.get('/api/apps/calendar/labels')
         .then((response) => {
@@ -40,9 +40,9 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  editEvent ({ commit }, event) {
+  editEvent({ commit }, event) {
     return new Promise((resolve, reject) => {
-      axios.post(`/api/apps/calendar/event/${event.id}`, {event})
+      axios.post(`/api/apps/calendar/event/${event.id}`, { event })
         .then((response) => {
 
           // Convert Date String to Date Object
@@ -56,7 +56,7 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  removeEvent ({ commit }, eventId) {
+  removeEvent({ commit }, eventId) {
     return new Promise((resolve, reject) => {
       axios.delete(`/api/apps/calendar/event/${eventId}`)
         .then((response) => {
@@ -66,9 +66,9 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  eventDragged ({ commit }, payload) {
+  eventDragged({ commit }, payload) {
     return new Promise((resolve, reject) => {
-      axios.post(`/api/apps/calendar/event/dragged/${payload.event.id}`, {payload})
+      axios.post(`/api/apps/calendar/event/dragged/${payload.event.id}`, { payload })
         .then((response) => {
 
           // Convert Date String to Date Object

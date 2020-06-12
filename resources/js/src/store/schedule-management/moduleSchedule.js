@@ -1,5 +1,5 @@
 /*=========================================================================================
-  File Name: moduleCalendar.js
+  File Name: moduleSchedule.js
   Description: Calendar Module
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
@@ -8,10 +8,10 @@
 ==========================================================================================*/
 
 
-import state from './moduleCalendarState.js'
-import mutations from './moduleCalendarMutations.js'
-import actions from './moduleCalendarActions.js'
-import getters from './moduleCalendarGetters.js'
+import state from './moduleScheduleState.js'
+import mutations from './moduleScheduleMutations.js'
+import actions from './moduleScheduleActions.js'
+import getters from './moduleScheduleGetters.js'
 
 export default {
   namespaced: true,
