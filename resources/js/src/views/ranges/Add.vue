@@ -177,7 +177,7 @@ export default {
       } else return true;
     },
     validateForm() {
-      return !this.errors.any();
+      return !this.errors.any() && this.repetitiveTasksData > 0;
     },
     itemIdToEdit() {
       return this.$store.state.repetitiveTaskManagement.repetitivesTask.id || 0;
