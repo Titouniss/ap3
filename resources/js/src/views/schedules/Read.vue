@@ -9,7 +9,7 @@
       locale="fr"
       class="demo-app-calendar border-c"
       ref="fullCalendar"
-      defaultView="dayGridMonth"
+      defaultView="timeGridWeek"
       :editable="true"
       :header="{
         left: 'prev today next',
@@ -27,6 +27,7 @@
       :weekends="calendarWeekends"
       :events="calendarEvents"
       @dateClick="handleDateClick"
+      @eventClick="handleEventClick"
     />
   </div>
 </template>
@@ -40,7 +41,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
 // Store Module
-import moduleTaskManagement from "@/store/user-management/moduleTaskManagement.js";
+import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
 
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";
@@ -99,6 +100,9 @@ export default {
           allDay: arg.allDay
         });
       }
+    },
+    handleEventClick(arg) {
+      console.log("Click sur un event");
     }
   },
   mounted() {
@@ -115,9 +119,12 @@ export default {
       });
   },
   created() {
-    if (!moduleTaskManagement.isRegistered) {
-      this.$store.registerModule("taskManagement", moduleTaskManagement);
-      moduleTaskManagement.isRegistered = true;
+    if (!moduleScheduleManagement.isRegistered) {
+      this.$store.registerModule(
+        "ScheduleManagement",
+        moduleScheduleManagement
+      );
+      moduleScheduleManagement.isRegistered = true;
     }
   }
 };
