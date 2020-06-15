@@ -216,8 +216,8 @@ const router = new Router({
                 },
                 {
                     path: '/schedules/schedules-read/:id',
-                    name: 'schedules',
-                    component: () => import('./views/schedules/Read.vue'),
+                    name: 'schedules-read',
+                    component: () => import('@/views/schedules/Read.vue'),
                     meta: {
                         rule: 'admin',
                         requiresAuth: true
