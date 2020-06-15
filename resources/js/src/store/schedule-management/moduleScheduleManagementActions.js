@@ -41,7 +41,8 @@ export default {
     })
   },
   editEvent({ commit }, event) {
-    return;
+    commit('UPDATE_EVENT', event)
+    return
     return new Promise((resolve, reject) => {
       axios.post(`/api/apps/calendar/event/${event.id}`, { event })
         .then((response) => {

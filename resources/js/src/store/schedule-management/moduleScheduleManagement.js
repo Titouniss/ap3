@@ -8,10 +8,10 @@
 ==========================================================================================*/
 
 
-import state from './moduleScheduleState.js'
-import mutations from './moduleScheduleMutations.js'
-import actions from './moduleScheduleActions.js'
-import getters from './moduleScheduleGetters.js'
+import state from './moduleScheduleManagementState.js'
+import mutations from './moduleScheduleManagementMutations.js'
+import actions from './moduleScheduleManagementActions.js'
+import getters from './moduleScheduleManagementGetters.js'
 
 export default {
   namespaced: true,
