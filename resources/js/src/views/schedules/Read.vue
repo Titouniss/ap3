@@ -29,6 +29,7 @@
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
     />
+    <edit-form :reload="this.currentEvent" :itemprop="this.currentEvent" />
   </div>
 </template>
 
@@ -103,7 +104,22 @@ export default {
       }
     },
     handleEventClick(arg) {
-      console.log("Click sur un event");
+      this.$store
+        .dispatch(
+          "ScheduleManagement/editEvent",
+          this.calendarEvents.find(
+            event => event.id.toString() === arg.event.id
+          )
+        )
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+
+      // this.curentEvent = this.calendarEvents.find(
+      //   event => event.id.toString() === arg.event.id
+      // );
+      log[("store", $store)];
     }
   },
   mounted() {
