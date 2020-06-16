@@ -67,7 +67,7 @@ const router = new Router({
                 {
                     path: '/companies',
                     name: 'companies',
-                    component: () => import('./views/companies/index.vue'),
+                    component: () => import('./views/companies/Index.vue'),
                     meta: {
                         pageTitle: 'Gestion des compagnies',
                         rule: 'admin',
@@ -78,7 +78,7 @@ const router = new Router({
                 {
                     path: '/skills',
                     name: 'skills',
-                    component: () => import('./views/skills/index.vue'),
+                    component: () => import('./views/skills/Index.vue'),
                     meta: {
                         rule: 'admin',
                         requiresAuth: true
@@ -119,7 +119,7 @@ const router = new Router({
                 {
                     path: '/workareas',
                     name: 'workareas',
-                    component: () => import('./views/workareas/index.vue'),
+                    component: () => import('./views/workareas/Index.vue'),
                     meta: {
                         rule: 'admin',
                         requiresAuth: true
@@ -129,7 +129,7 @@ const router = new Router({
                 {
                     path: '/projects',
                     name: 'projects',
-                    component: () => import('./views/projects/index.vue'),
+                    component: () => import('./views/projects/Index.vue'),
                     meta: {
                         rule: 'admin',
                         requiresAuth: true
