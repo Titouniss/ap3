@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Hours;
 use App\Models\Project;
+use App\Models\WorkHours;
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
+use Carbon\CarbonPeriod;
+use DatePeriod;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
@@ -51,7 +55,59 @@ class HoursController extends Controller
             }
         }
 
-        return response()->json(['success' => $items->with('project', 'user')->get(), 'sql' => $items->toSql()], $this->successStatus);
+        $items = $items->with('project', 'user')->orderBy('date', 'DESC')->get();
+
+        // Stats
+        $stats = [];
+        if (!$items->isEmpty()) {
+            $stats['total'] = CarbonInterval::hours(0);
+            foreach ($items as $item) {
+                $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));
+            }
+
+            $stats['total'] = $stats['total']->totalHours;
+
+            if ($userId = $user->hasRole('superAdmin') ? $request->user_id : $user->id) {
+                $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count();
+                $workWeekHours = WorkHours::where('user_id', $userId)->where('is_active', 1)->get()->map(function ($day) {
+                    $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+                    $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                    return $morning->add($afternoon)->totalHours;
+                })->sum();
+
+                $defaultWorkHours = 0;
+                if ($request->date) {
+                    switch ($request->period_type) {
+                        case 'week':
+                            $defaultWorkHours = $workWeekHours;
+                            break;
+                        case 'month':
+                            $defaultWorkHours = ((Carbon::createFromFormat('d-m-Y', $request->date)->daysInMonth * $nbWorkDays) / 7) * ($workWeekHours / $nbWorkDays);
+                            break;
+                        case 'year':
+                            $period = CarbonPeriod::create(Carbon::createFromFormat('d-m-Y', $request->date)->startOfYear(), '1 month', Carbon::createFromFormat('d-m-Y', $request->date)->endOfYear());
+                            foreach ($period as $month) {
+                                $defaultWorkHours += (($month->daysInMonth * $nbWorkDays * $workWeekHours) / 7) * ($workWeekHours / $nbWorkDays);
+                            }
+                            break;
+                        default:
+                            $defaultWorkHours = $workWeekHours / $nbWorkDays;
+                            break;
+                    }
+                } else {
+                    $period = CarbonPeriod::create($items->min('date'), '1 week', $items->max('date'));
+                    foreach ($period as $week) {
+                        $defaultWorkHours += $workWeekHours;
+                    }
+                }
+
+                if ($stats['total'] > $defaultWorkHours) {
+                    $stats['overtime'] = $stats['total'] - $defaultWorkHours;
+                }
+            }
+        }
+
+        return response()->json(['success' => $items, 'stats' => $stats], $this->successStatus);
     }
 
     /**

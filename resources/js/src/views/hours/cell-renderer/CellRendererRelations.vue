@@ -10,7 +10,6 @@ export default {
   computed: {
     RelationToText() {
       let text = "";
-      console.log(this.params);
       if (this.params.value) {
         text = this.params.value.name;
       }

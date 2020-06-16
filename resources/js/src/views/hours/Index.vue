@@ -5,78 +5,56 @@
         <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
         <h4 class="ml-3">Filtres</h4>
       </div>
-      <div class="flex flex-wrap items-center">
-        <vs-row vs-justify="center" vs-align="flex-end" vs-type="flex" vs-w="12">
-          <vs-col vs-w="2" vs-xs="12" class="px-6" vs-justify="center">
-            <vs-select
-              v-validate="'required'"
-              name="project_id"
-              label="Projet"
-              v-model="filters.project_id"
-              class="w-full"
-              @input="refreshData"
-            >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.name"
-                v-for="(item,index) in projects"
-              />
-            </vs-select>
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('project_id')"
-            >{{ errors.first('project_id') }}</span>
-          </vs-col>
-          <vs-col
-            vs-w="2"
-            vs-xs="12"
-            class="px-6"
-            vs-type="flex"
-            vs-justify="center"
-            vs-align="flex-end"
+      <div class="flex flex-wrap justify-center items-end">
+        <div style="min-width: 15em">
+          <v-select
+            label="name"
+            v-model="filters.project"
+            :options="projects"
+            @input="refreshData"
+            @search:focus="clearRefreshDataTimeout"
+            class="w-full"
           >
-            <vs-dropdown vs-trigger-click class="cursor-pointer">
-              <div
-                class="p-4 rounded-lg border border-solid d-theme-border-grey-light cursor-pointer flex items-center justify-center text-lg font-medium w-32"
-              >
-                <span class="mr-2 leading-none">{{period_types[filters.period_type].name}}</span>
-                <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-              </div>
+            <template #header>
+              <div style="opacity: .8">Projet</div>
+            </template>
+          </v-select>
+        </div>
+        <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
+          <div
+            class="p-3 rounded-lg border border-solid d-theme-border-grey-light cursor-pointer flex items-center justify-between text-lg font-medium w-32"
+          >
+            <span class="mx-2 leading-none">{{period_types[filters.period_type].name}}</span>
+            <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+          </div>
 
-              <vs-dropdown-menu>
-                <vs-dropdown-item
-                  v-for="period_type in period_type_names"
-                  :key="period_type"
-                  @click="setPeriodType(period_type)"
-                >
-                  <span class="flex items-center">{{period_types[period_type].name}}</span>
-                </vs-dropdown-item>
-              </vs-dropdown-menu>
-            </vs-dropdown>
-          </vs-col>
-          <vs-col vs-w="2" vs-xs="12" class="px-6" v-if="isAdmin" vs-justify="center">
-            <vs-select
-              v-validate="'required'"
-              name="user_id"
-              label="Utilisateur"
-              v-model="filters.user_id"
-              class="w-full"
-              @input="refreshData"
+          <vs-dropdown-menu>
+            <vs-dropdown-item
+              v-for="period_type in period_type_names"
+              :key="period_type"
+              @click="setPeriodType(period_type)"
             >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.firstname + ' ' + item.lastname"
-                v-for="(item,index) in users"
-              />
-            </vs-select>
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('user_id')"
-            >{{ errors.first('user_id') }}</span>
-          </vs-col>
-        </vs-row>
+              <span class="flex items-center">{{period_types[period_type].name}}</span>
+            </vs-dropdown-item>
+          </vs-dropdown-menu>
+        </vs-dropdown>
+        <div style="min-width: 15em">
+          <v-select
+            v-if="isAdmin"
+            label="email"
+            :options="users"
+            v-model="filters.user"
+            @input="refreshData"
+            @search:focus="clearRefreshDataTimeout"
+            class="w-full"
+          >
+            <template #header>
+              <div style="opacity: .8">Utilisateur</div>
+            </template>
+          </v-select>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center">
         <vs-row
           v-if="!isFullFilter()"
           vs-justify="center"
@@ -101,8 +79,8 @@
                 v-if="!isPeriodFilter()"
                 :config="configDatePicker()"
                 placeholder="Date"
-                v-model="filters.date"
-                @on-change="setFilterDate"
+                @on-change="onFilterDateChange"
+                @on-open="clearRefreshDataTimeout"
               />
             </div>
             <vs-button
@@ -123,9 +101,21 @@
         <feather-icon icon="BarChart2Icon" svgClasses="h-6 w-6" />
         <h4 class="ml-3">Résumé</h4>
       </div>
-      <div class="flex flex-wrap items-center">
-        <div></div>
-      </div>
+      <vs-row vs-justify="center" vs-align="center" vs-type="flex" vs-w="12">
+        <vs-col
+          vs-w="6"
+          vs-type="flex"
+          vs-justify="center"
+          vs-align="center"
+        >Heures travaillées sur la période : {{" " + getStats('total')}}</vs-col>
+        <vs-col
+          v-if="stats.overtime"
+          vs-w="6"
+          vs-type="flex"
+          vs-justify="center"
+          vs-align="center"
+        >Heures supplémentaires sur la période : {{" " + getStats('overtime')}}</vs-col>
+      </vs-row>
     </div>
     <div class="vx-card p-6 mt-1">
       <div class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3">
@@ -324,8 +314,8 @@ export default {
 
       // Filters
       filters: {
-        project_id: null,
-        user_id: null,
+        project: null,
+        user: null,
         date: moment(),
         period_type: "month"
       },
@@ -369,7 +359,10 @@ export default {
         altFormat: "j F Y",
         altInput: true
       }),
-      refreshDataTimeout: null
+      refreshDataTimeout: null,
+
+      // Stats
+      stats: { total: 0 }
     };
   },
   computed: {
@@ -424,8 +417,13 @@ export default {
     }
   },
   methods: {
-    setFilterDate(dates) {
-      this.refreshData(dates[0]);
+    clearRefreshDataTimeout() {
+      if (this.refreshDataTimeout) {
+        clearTimeout(this.refreshDataTimeout);
+      }
+    },
+    getStats(name) {
+      return (this.stats[name] ? parseFloat(this.stats[name]) : 0).toFixed(2);
     },
     addToFilterDate() {
       this.filters.date = moment(this.filters.date).add(
@@ -465,35 +463,34 @@ export default {
       this.filters.date = type === "date" || type === "full" ? null : moment();
       this.refreshData();
     },
-    refreshData(date = null) {
+    onFilterDateChange(selectedDates, dateStr, instance) {
+      this.filters.date = selectedDates[0];
+      this.refreshData();
+    },
+    refreshData() {
       const filter = {};
-      if (this.filters.project_id) {
-        filter.project_id = this.filters.project_id;
+      if (this.filters.project) {
+        filter.project_id = this.filters.project.id;
       }
-      if (this.filters.user_id && this.isAdmin()) {
-        filter.user_id = this.filters.user_id;
+      if (this.isAdmin() && this.filters.user) {
+        filter.user_id = this.filters.user.id;
       }
-      if (
-        this.filters.date ||
-        (date && moment(date).format("DD-MM-YYYY") !== "01-01-1970")
-      ) {
-        filter.date = moment(date ? date : this.filters.date).format(
-          "DD-MM-YYYY"
-        );
+      if (this.filters.date) {
+        filter.date = moment(this.filters.date).format("DD-MM-YYYY");
         if (this.isPeriodFilter()) {
           filter.period_type = this.filters.period_type;
         }
       }
-      if (this.refreshDataTimeout) {
-        clearTimeout(this.refreshDataTimeout);
-      }
-      this.refreshDataTimeout = setTimeout(
-        () =>
-          this.$store
-            .dispatch("hoursManagement/fetchItems", filter)
-            .then(data => console.log(data)),
-        1500
-      );
+      this.clearRefreshDataTimeout();
+      this.refreshDataTimeout = setTimeout(() => {
+        this.$vs.loading();
+        this.$store
+          .dispatch("hoursManagement/fetchItems", filter)
+          .then(response => {
+            this.stats = response.data.stats;
+            this.$vs.loading.close();
+          });
+      }, 1500);
     },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
@@ -604,6 +601,7 @@ export default {
         date: moment().format("DD-MM-YYYY"),
         period_type: "month"
       })
+      .then(response => (this.stats = response.data.stats))
       .catch(err => {
         console.error(err);
       });
