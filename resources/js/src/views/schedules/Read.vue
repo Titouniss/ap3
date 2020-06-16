@@ -29,7 +29,11 @@
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
     />
-    <edit-form :reload="this.currentEvent" :itemprop="this.currentEvent" />
+    <edit-form
+      :reload="calendarEvents"
+      :itemId="itemIdToEdit"
+      v-if="itemIdToEdit && authorizedToEdit "
+    />
   </div>
 </template>
 
@@ -45,13 +49,21 @@ import interactionPlugin from "@fullcalendar/interaction";
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
 //import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 
+// Component
+import EditForm from "./EditForm.vue";
+
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
 
+var model = "schedule";
+var modelPlurial = "schedules";
+var modelTitle = "Plannings";
+
 export default {
   components: {
+    EditForm,
     FullCalendar // make the <FullCalendar> tag available
   },
   data: function() {
@@ -63,17 +75,6 @@ export default {
         interactionPlugin // needed for dateClick
       ],
       calendarWeekends: true,
-      calendarEvents: [
-        // initial event data
-        { id: 0, title: "Event One", start: new Date() },
-        {
-          id: 1,
-          title: "Event Two",
-          start: "2020-06-07T14:00:00",
-          end: "2020-06-07T18:45:30",
-          label: "test label"
-        }
-      ],
       customButtons: {
         AddEventBtn: {
           text: "custom!",
@@ -84,7 +85,19 @@ export default {
       }
     };
   },
-  computed: {},
+  computed: {
+    itemIdToEdit() {
+      return this.$store.state.scheduleManagement.event.id || -1;
+    },
+    calendarEvents() {
+      return this.$store.state.scheduleManagement.events;
+    },
+    authorizedToEdit() {
+      return (
+        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
+      );
+    }
+  },
   methods: {
     toggleWeekends() {
       this.calendarWeekends = !this.calendarWeekends; // update a property
@@ -104,45 +117,52 @@ export default {
       }
     },
     handleEventClick(arg) {
+      var targetEvent = this.calendarEvents.find(
+        event => event.id.toString() === arg.event.id
+      );
+
       this.$store
-        .dispatch(
-          "ScheduleManagement/editEvent",
-          this.calendarEvents.find(
-            event => event.id.toString() === arg.event.id
-          )
-        )
+        .dispatch("scheduleManagement/editEvent", targetEvent)
         .then(() => {})
         .catch(err => {
           console.error(err);
         });
-
-      // this.curentEvent = this.calendarEvents.find(
-      //   event => event.id.toString() === arg.event.id
-      // );
-      log[("store", $store)];
     }
   },
-  mounted() {
-    console.log("mounted");
-
-    this.$store
-      .dispatch("taskManagement/fetchItem", $_GET("id"))
-      .then(data => {
-        console.log(["data_1", data]);
-        this.showDeleteSuccess();
-      })
-      .catch(err => {
-        console.error(err);
-      });
-  },
+  mounted() {},
   created() {
     if (!moduleScheduleManagement.isRegistered) {
       this.$store.registerModule(
-        "ScheduleManagement",
+        "scheduleManagement",
         moduleScheduleManagement
       );
       moduleScheduleManagement.isRegistered = true;
     }
+    this.$store
+      .dispatch("scheduleManagement/addEvents", [
+        // initial event data
+        {
+          id: 1,
+          title: "Event One",
+          start: "2020-06-15T11:00:00",
+          end: "2020-06-15T12:45:30",
+          label: "test label 1"
+        },
+        {
+          id: 2,
+          title: "Event Two",
+          start: "2020-06-17T14:00:00",
+          end: "2020-06-17T18:45:30",
+          label: "test label 2"
+        }
+      ])
+      .catch(err => {
+        this.manageErrors(err);
+      });
+  },
+  beforeDestroy() {
+    moduleScheduleManagement.isRegistered = false;
+    this.$store.unregisterModule("scheduleManagement");
   }
 };
 </script>

@@ -14,6 +14,7 @@ import actions from './moduleScheduleManagementActions.js'
 import getters from './moduleScheduleManagementGetters.js'
 
 export default {
+  isRegistered: false,
   namespaced: true,
   state,
   mutations,

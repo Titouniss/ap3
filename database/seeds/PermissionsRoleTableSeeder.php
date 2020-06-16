@@ -30,6 +30,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['tasks', 'tâches', true],
             ['ranges', 'gammes', true],
             ['hours', 'heures', true],
+            ['schedules', 'planning', true]
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
@@ -72,7 +73,9 @@ class PermissionsRoleTableSeeder extends Seeder
                 'lastname' => 'NUMIDEV',
                 'email' => 'admin@numidev.fr',
                 'password' => Hash::make('password'),
-                'email_verified_at' => '2020-01-01 00:00:00.000000',
+                'phone_number' => '0123456789',
+                'genre' => 'H',
+                //'email_verified_at' => '2020-01-01 00:00:00.000000',
                 'isTermsConditionAccepted' => true
             ]);
             $admin->syncRoles('superAdmin');
