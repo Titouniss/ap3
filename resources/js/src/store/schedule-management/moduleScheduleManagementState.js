@@ -13,5 +13,8 @@ export default {
   eventLabels: [],
 
   // Simple Schedule State
-  events: []
+  events: [],
+
+  // Target Event
+  event: {}
 }
