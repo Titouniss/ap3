@@ -116,8 +116,13 @@ export default {
       this.schedulList = value;
       this.activeItem = value;
     },
-    goDetail(id, origin) {
-      this.$router.push("/schedules/schedules-read/:" + id).catch(() => {});
+    goDetail(id, type) {
+      this.$router
+        .push({
+          path: `/schedules/schedules-read`,
+          query: { id: id, type: origin }
+        })
+        .catch(() => {});
     }
   },
   created() {
