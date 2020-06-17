@@ -5,6 +5,11 @@
       <button @click="gotoPast">go to a date in the past</button>
       (also, click a date/time to add an event)
     </div>-->
+    <add-form
+      :activeAddPrompt="this.activeAddPrompt"
+      :handleClose="handleClose"
+      :dateData="this.dateData"
+    />
     <FullCalendar
       locale="fr"
       class="demo-app-calendar border-c"
@@ -51,6 +56,7 @@ import moduleScheduleManagement from "@/store/schedule-management/moduleSchedule
 
 // Component
 import EditForm from "./EditForm.vue";
+import AddForm from "./AddForm.vue";
 
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";
@@ -64,6 +70,7 @@ var modelTitle = "Plannings";
 export default {
   components: {
     EditForm,
+    AddForm,
     FullCalendar // make the <FullCalendar> tag available
   },
   data: function() {
@@ -74,6 +81,8 @@ export default {
         timeGridPlugin,
         interactionPlugin // needed for dateClick
       ],
+      activeAddPrompt: false,
+      dateData: {},
       calendarWeekends: true,
       customButtons: {
         AddEventBtn: {
@@ -107,14 +116,11 @@ export default {
       calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
     },
     handleDateClick(arg) {
-      if (confirm("Would you like to add an event to " + arg.dateStr + " ?")) {
-        this.calendarEvents.push({
-          // add new event data
-          title: "New Event",
-          start: arg.date,
-          allDay: arg.allDay
-        });
-      }
+      console.log(["arg", arg]);
+
+      this.activeAddPrompt = true;
+      this.dateData = arg;
+      console.log(["this.dateData", this.dateData]);
     },
     handleEventClick(arg) {
       var targetEvent = this.calendarEvents.find(
@@ -127,6 +133,9 @@ export default {
         .catch(err => {
           console.error(err);
         });
+    },
+    handleClose() {
+      (this.activeAddPrompt = false), (this.dateData = {});
     }
   },
   mounted() {},
