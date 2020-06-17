@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: moduleCalendarActions.js
-  Description: Calendar Module Actions
+  File Name: ScheduleActions.js
+  Description: Schedule Module Actions
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -10,17 +10,20 @@
 import axios from '@/axios.js'
 
 export default {
-  addEvent ({ commit }, event) {
+  addEvent({ commit }, event) {
     return new Promise((resolve, reject) => {
-      axios.post('/api/apps/calendar/events/', {event})
+      axios.post('/api/apps/calendar/events/', { event })
         .then((response) => {
-          commit('ADD_EVENT', Object.assign(event, {id: response.data.id}))
+          commit('ADD_EVENT', Object.assign(event, { id: response.data.id }))
           resolve(response)
         })
         .catch((error) => { reject(error) })
     })
   },
-  fetchEvents ({ commit }) {
+  addEvents({ commit }, event) {
+    return commit('SET_EVENTS', event)
+  },
+  fetchEvents({ commit }) {
     return new Promise((resolve, reject) => {
       axios.get('/api/apps/calendar/events')
         .then((response) => {
@@ -30,7 +33,7 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  fetchEventLabels ({ commit }) {
+  fetchEventLabels({ commit }) {
     return new Promise((resolve, reject) => {
       axios.get('/api/apps/calendar/labels')
         .then((response) => {
@@ -40,23 +43,30 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  editEvent ({ commit }, event) {
-    return new Promise((resolve, reject) => {
-      axios.post(`/api/apps/calendar/event/${event.id}`, {event})
-        .then((response) => {
+  editEvent({ commit }, event) {
+    commit('EDIT_EVENT', event)
+    return
+    // return new Promise((resolve, reject) => {
+    //   axios.post(`/api/apps/calendar/event/${event.id}`, { event })
+    //     .then((response) => {
 
-          // Convert Date String to Date Object
-          const event = response.data
-          event.startDate = new Date(event.startDate)
-          event.endDate = new Date(event.endDate)
+    //       // Convert Date String to Date Object
+    //       const event = response.data
+    //       event.startDate = new Date(event.startDate)
+    //       event.endDate = new Date(event.endDate)
 
-          commit('UPDATE_EVENT', event)
-          resolve(response)
-        })
-        .catch((error) => { reject(error) })
-    })
+    //       commit('UPDATE_EVENT', event)
+    //       resolve(response)
+    //     })
+    //     .catch((error) => { reject(error) })
+    // })
   },
-  removeEvent ({ commit }, eventId) {
+  updateEvent({ commit }, event) {
+    commit('UPDATE_EVENT', event)
+    return
+  },
+  removeEvent({ commit }, eventId) {
+    return commit('REMOVE_EVENT', eventId), commit('EDIT_EVENT', {});
     return new Promise((resolve, reject) => {
       axios.delete(`/api/apps/calendar/event/${eventId}`)
         .then((response) => {
@@ -66,9 +76,9 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  eventDragged ({ commit }, payload) {
+  eventDragged({ commit }, payload) {
     return new Promise((resolve, reject) => {
-      axios.post(`/api/apps/calendar/event/dragged/${payload.event.id}`, {payload})
+      axios.post(`/api/apps/calendar/event/dragged/${payload.event.id}`, { payload })
         .then((response) => {
 
           // Convert Date String to Date Object

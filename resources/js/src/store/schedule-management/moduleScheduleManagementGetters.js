@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: moduleCalendarGetters.js
-  Description: Calendar Module Getters
+  File Name: moduleScheduleGetters.js
+  Description: Schedule Module Getters
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent

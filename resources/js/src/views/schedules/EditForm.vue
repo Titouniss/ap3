@@ -1,0 +1,166 @@
+<template>
+  <vs-prompt
+    title="Edition"
+    accept-text="Modifier"
+    cancel-text="Annuler"
+    button-cancel="border"
+    @cancel="init"
+    @accept="submitTodo"
+    @close="init"
+    :is-valid="validateForm"
+    :active.sync="activePrompt"
+  >
+    <div>
+      <form>
+        <div class="vx-row">
+          <div class="vx-col w-full">
+            <p>Nom</p>
+            <vs-input
+              v-validate="'required'"
+              v-model="itemLocal.title"
+              data-vv-validate-on="blur"
+              name="title"
+              class="w-full"
+            />
+            <span class="text-danger text-sm">{{ errors.first('title') }}</span>
+
+            <p class="mt-5">Date de début</p>
+            <flat-pickr :config="configDatePicker()" class="w-full" v-model="itemLocal.start" />
+
+            <p class="mt-5">Date de fin</p>
+            <flat-pickr :config="configDatePicker()" class="w-full" v-model="itemLocal.end" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
+      <vs-button
+        @click="confirmDeleteTask(itemLocal.id)"
+        color="danger"
+        type="filled"
+        size="small"
+      >Supprimer la tâche</vs-button>
+    </vs-row>
+  </vs-prompt>
+</template>
+
+<script>
+// Store Module
+import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
+//import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
+
+// FlatPickr
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
+
+export default {
+  components: {
+    flatPickr
+  },
+  props: {
+    itemId: {
+      type: Number,
+      required: true
+    }
+  },
+  data() {
+    return {
+      itemLocal: Object.assign(
+        {},
+        this.$store.getters["scheduleManagement/getEvent"](this.itemId)
+      ),
+      deleteWarning: false,
+      configDatePicker: () => ({
+        disableMobile: "true",
+        enableTime: true,
+        locale: FrenchLocale,
+        dateFormat: "Y-m-d H:i",
+        altFormat: "j F Y, H:i",
+        altInput: true
+      })
+    };
+  },
+  computed: {
+    activePrompt: {
+      get() {
+        console.log(["itemId", this.itemId]);
+        if (this.itemId && this.itemId > -1) {
+          this.itemLocal = Object.assign(
+            {},
+            this.$store.getters["scheduleManagement/getEvent"](this.itemId)
+          );
+        }
+        return this.itemId && this.itemId > -1 && this.deleteWarning === false
+          ? true
+          : false;
+      },
+      set(value) {
+        this.$store
+          .dispatch("scheduleManagement/editEvent", {})
+          .then(() => {})
+          .catch(err => {
+            console.error(err);
+          });
+      }
+    },
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.title !== "" &&
+        this.itemLocal.start !== "" &&
+        this.itemLocal.end !== ""
+      );
+    }
+  },
+  methods: {
+    init() {
+      this.itemLocal = Object.assign(
+        {},
+        this.$store.getters["scheduleManagement/getEvent"](this.itemId)
+      );
+    },
+    submitTodo() {
+      this.$store.dispatch("scheduleManagement/updateEvent", this.itemLocal);
+      this.$store.dispatch("scheduleManagement/editEvent", {});
+      console.log(["state", this.$store.state]);
+    },
+    confirmDeleteTask(idEvent) {
+      this.deleteWarning = true;
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text: `Vous allez supprimer la tâche "${this.itemLocal.title}"`,
+        accept: this.deleteTask,
+        cancel: this.keepTask,
+        acceptText: "Supprimer !",
+        cancelText: "Annuler"
+      });
+    },
+    keepTask() {
+      this.deleteWarning = false;
+    },
+    deleteTask() {
+      this.deleteWarning = false;
+      this.$store
+        .dispatch("scheduleManagement/removeEvent", idEvent)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+      this.init();
+      console.log(["this.store", this.$store.state]);
+    }
+  },
+  created() {
+    if (!moduleScheduleManagement.isRegistered) {
+      this.$store.registerModule(
+        "scheduleManagement",
+        moduleScheduleManagement
+      );
+      moduleScheduleManagement.isRegistered = true;
+    }
+  }
+};
+</script>

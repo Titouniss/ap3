@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: moduleCalendarMutations.js
-  Description: Calendar Module Mutations
+  File Name: moduleScheduleMutations.js
+  Description: Schedule Module Mutations
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -9,20 +9,23 @@
 
 
 export default {
-  ADD_EVENT (state, event) {
+  ADD_EVENT(state, event) {
     state.events.push(event)
   },
-  SET_EVENTS (state, events) {
+  SET_EVENTS(state, events) {
     state.events = events
   },
-  SET_LABELS (state, labels) {
+  SET_LABELS(state, labels) {
     state.eventLabels = labels
   },
-  UPDATE_EVENT (state, event) {
+  EDIT_EVENT(state, event) {
+    state.event = event
+  },
+  UPDATE_EVENT(state, event) {
     const eventIndex = state.events.findIndex((e) => e.id === event.id)
     Object.assign(state.events[eventIndex], event)
   },
-  REMOVE_EVENT (state, eventId) {
+  REMOVE_EVENT(state, eventId) {
     const eventIndex = state.events.findIndex((e) => e.id === eventId)
     state.events.splice(eventIndex, 1)
   }

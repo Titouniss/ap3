@@ -65,6 +65,6 @@ export default [
         url: '/hours',
         name: 'Heures',
         slug: 'hours',
-        icon: 'CalendarIcon'
+        icon: 'ClockIcon'
     }
 ]

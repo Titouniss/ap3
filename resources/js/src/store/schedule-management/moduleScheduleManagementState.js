@@ -1,22 +1,20 @@
 /*=========================================================================================
-  File Name: moduleCalendar.js
-  Description: Calendar Module
+  File Name: moduleScheduleState.js
+  Description: Schedule Module State
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
-
-import state from './moduleCalendarState.js'
-import mutations from './moduleCalendarMutations.js'
-import actions from './moduleCalendarActions.js'
-import getters from './moduleCalendarGetters.js'
-
 export default {
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+
+  // Schedule Labels
+  eventLabels: [],
+
+  // Simple Schedule State
+  events: [],
+
+  // Target Event
+  event: {}
 }

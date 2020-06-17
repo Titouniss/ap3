@@ -18,9 +18,9 @@ export default {
         commit('EDIT_ITEM', item)
         return
     },
-    fetchItems({ commit }) {
+    fetchItems({ commit }, payload = null) {
         return new Promise((resolve, reject) => {
-            axios.get('/api/hours-management/index')
+            axios.get('/api/hours-management/index', payload ? {params: payload} : null)
                 .then((response) => {
                     commit('SET_HOURS', response.data.success)
                     resolve(response)
