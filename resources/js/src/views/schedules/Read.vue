@@ -28,6 +28,7 @@
         day: 'Jour',
         list: 'Liste'
       }"
+      :allDaySlot="false"
       :plugins="calendarPlugins"
       :weekends="calendarWeekends"
       :events="calendarEvents"
@@ -123,6 +124,8 @@ export default {
       console.log(["this.dateData", this.dateData]);
     },
     handleEventClick(arg) {
+      console.log(["this.calendarEvents", this.calendarEvents]);
+
       var targetEvent = this.calendarEvents.find(
         event => event.id.toString() === arg.event.id
       );
