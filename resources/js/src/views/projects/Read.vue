@@ -64,6 +64,7 @@
           <div class="vx-col w-full flex" id="account-manage-buttons">
             <vs-button icon-pack="feather" icon="icon-edit" class="mr-4" @click="editRecord">Edit</vs-button>
             <vs-button type="border" color="danger" icon-pack="feather" icon="icon-trash" @click="confirmDeleteRecord">Delete</vs-button>
+            <vs-button type="border" color="success" icon-pack="feather" icon="icon-play" @click="startProject">Démarrer le project</vs-button>
           </div>
 
         </div>
@@ -97,7 +98,7 @@ import moment from 'moment'
 
 import EditForm from './EditForm.vue'
 import AddRangeForm from './AddRangeForm.vue'
-import IndexTasks from '../tasks/index.vue'
+import IndexTasks from './../tasks/index.vue'
 
 export default {
   components: {
@@ -117,6 +118,11 @@ export default {
     },
   },
   methods: {
+    startProject () {
+      this.$store.dispatch("projectManagement/start", this.project_data.id)
+        .then(()   => {  })
+        .catch(err => { console.error(err)       })
+    },
     editRecord () {
       this.$store.dispatch("projectManagement/editItem", this.project_data)
         .then(()   => {  })
