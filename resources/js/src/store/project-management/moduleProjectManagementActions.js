@@ -72,5 +72,15 @@ export default {
         })
         .catch((error) => { reject(error) })
     })
-  }
+  },
+
+  start({ context }, id) {
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/project-management/start/${id}`)
+        .then((response) => {
+          console.log(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
 }

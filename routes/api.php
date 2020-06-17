@@ -155,6 +155,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('project-management')->group(function () {
         Route::get('index', 'API\ProjectController@index');
         Route::get('show/{id}', 'API\ProjectController@show');
+        Route::get('start/{id}', 'API\ProjectController@start');
+
+
         // Route::group(['middleware' => ['can:publish companies']], function () {
         Route::post('store', 'API\ProjectController@store');
         Route::post('store-range/{id}', 'API\ProjectController@addRange');
