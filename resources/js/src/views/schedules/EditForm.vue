@@ -25,10 +25,32 @@
             <span class="text-danger text-sm">{{ errors.first('title') }}</span>
 
             <p class="mt-5">Date de début</p>
-            <flat-pickr :config="configDatePicker()" class="w-full" v-model="itemLocal.start" />
+            <flat-pickr
+              v-validate="'required'"
+              name="startDate"
+              :config="configDatePicker()"
+              class="w-full"
+              v-model="itemLocal.start"
+              :color="!errors.has('startDate') ? 'success' : 'danger'"
+            />
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('startDate')"
+            >{{ errors.first('startDate') }}</span>
 
             <p class="mt-5">Date de fin</p>
-            <flat-pickr :config="configDatePicker()" class="w-full" v-model="itemLocal.end" />
+            <flat-pickr
+              v-validate="'required'"
+              name="endDate"
+              :config="configDatePicker()"
+              class="w-full"
+              v-model="itemLocal.end"
+              :color="!errors.has('endDate') ? 'success' : 'danger'"
+            />
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('endDate')"
+            >{{ errors.first('endDate') }}</span>
           </div>
         </div>
       </form>
@@ -45,6 +67,13 @@
 </template>
 
 <script>
+// register custom messages
+import { Validator } from "vee-validate";
+import errorMessage from "./errorValidForm";
+Validator.localize("fr", errorMessage);
+var model = "tâche";
+var modelPlurial = "tâches";
+
 // Store Module
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
 //import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
@@ -109,7 +138,8 @@ export default {
         !this.errors.any() &&
         this.itemLocal.title !== "" &&
         this.itemLocal.start !== "" &&
-        this.itemLocal.end !== ""
+        this.itemLocal.end !== "" &&
+        this.itemLocal.start < this.itemLocal.end
       );
     }
   },
