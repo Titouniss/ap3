@@ -45,17 +45,17 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('user-management')->group(function () {
         Route::group(['middleware' => ['can:read users']], function () {
             Route::get('index', 'API\UserController@index');
-            Route::get('show/{id}', 'API\UserController@show');
         });
+        Route::get('show/{user}', 'API\UserController@show')->middleware('can:read,user');
         Route::group(['middleware' => ['can:publish users']], function () {
             Route::post('store', 'API\UserController@store');
         });
-        Route::group(['middleware' => ['can:edit users']], function () {
-            Route::post('update/{id}', 'API\UserController@update');
-            Route::post('updateAccount/{id}', 'API\UserController@updateAccount');
-            Route::post('updateInformation/{id}', 'API\UserController@updateInformation');
-            Route::post('updatePassword', 'API\UserController@updatePassword');
-            Route::post('updateWorkHours/{id}', 'API\UserController@updateWorkHours');
+        Route::group(['middleware' => ['can:edit,user']], function () {
+            Route::post('update/{user}', 'API\UserController@update');
+            Route::post('updateAccount/{user}', 'API\UserController@updateAccount');
+            Route::post('updateInformation/{user}', 'API\UserController@updateInformation');
+            Route::post('updatePassword/{user}', 'API\UserController@updatePassword');
+            Route::post('updateWorkHours/{user}', 'API\UserController@updateWorkHours');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
             Route::delete('destroy/{id}', 'API\UserController@destroy');

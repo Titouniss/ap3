@@ -488,8 +488,17 @@ export default {
           .dispatch("hoursManagement/fetchItems", filter)
           .then(response => {
             this.stats = response.data.stats;
-            this.$vs.loading.close();
-          });
+          })
+          .catch(error => {
+            this.$vs.notify({
+              title: "Erreur",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
+          })
+          .finally(() => this.$vs.loading.close());
       }, 1500);
     },
     setColumnFilter(column, val) {

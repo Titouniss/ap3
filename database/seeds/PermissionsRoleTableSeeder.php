@@ -4,6 +4,7 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\User;
+use Illuminate\Support\Facades\DB;
 
 class PermissionsRoleTableSeeder extends Seeder
 {
@@ -48,18 +49,28 @@ class PermissionsRoleTableSeeder extends Seeder
         ];
 
         foreach ($Rolekeys as $roleKey) {
+            $role = Role::firstOrCreate(['name' => $roleKey[0], 'isPublic' => $roleKey[1]]);
+            foreach ($Permkeys as $PermkeyArray) {
+                $Permkey = $PermkeyArray[0];
+                $role->revokePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
+            }
+        }
+
+        foreach ($Rolekeys as $roleKey) {
             $key = $roleKey[0];
             $role = Role::firstOrCreate(['name' => $key, 'isPublic' => $roleKey[1]]);
             if ($key == 'superAdmin') {
                 $role->givePermissionTo(Permission::all());
-            } else if ($key != 'utilisateur') {
+            } else {
                 foreach ($Permkeys as $PermkeyArray) {
                     $Permkey = $PermkeyArray[0]; //get name only
-                    if ($Permkey == 'permissions' || $Permkey == 'companies') {
+                    if ($Permkey == 'hours' || $Permkey == 'projects' || $Permkey == 'tasks') {
+                        $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
+                    } else if ($Permkey == 'permissions' || $Permkey == 'companies') {
                         if ($key == 'littleAdmin') {
                             $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
                         }
-                    } else {
+                    } else if ($key != 'Utilisateur') {
                         $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
                     }
                 }

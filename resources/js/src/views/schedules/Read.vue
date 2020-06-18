@@ -28,6 +28,8 @@
       :events="calendarEvents"
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
+      @eventDrop="handleEventChange"
+      @eventResize="handleEventChange"
     />
     <edit-form
       :reload="calendarEvents"
@@ -39,6 +41,7 @@
 
 <script>
 import vSelect from "vue-select";
+import moment from "moment";
 
 import FullCalendar from "@fullcalendar/vue";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -123,10 +126,19 @@ export default {
 
       this.$store
         .dispatch("scheduleManagement/editEvent", targetEvent)
-        .then(() => {})
         .catch(err => {
           console.error(err);
         });
+    },
+    handleEventChange(eventDropInfo) {
+      event = eventDropInfo.event;
+
+      // Get task id with eventDropInfo.event.id
+
+      // Get estimated duration
+      estimateTime = moment
+        .duration(moment(event.start).diff(moment(event.end)))
+        .asHours();
     }
   },
   mounted() {},

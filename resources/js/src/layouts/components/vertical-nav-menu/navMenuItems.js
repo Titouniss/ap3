@@ -27,7 +27,7 @@ export default [
     },
     {
         url: '/companies',
-        name: 'Compagnies',
+        name: 'Sociétés',
         slug: 'companies',
         icon: 'BriefcaseIcon'
     },
@@ -46,7 +46,7 @@ export default [
     {
         url: '/projects',
         name: 'Projets',
-        slug: 'project',
+        slug: 'projects',
         icon: 'ActivityIcon'
     },
     {
