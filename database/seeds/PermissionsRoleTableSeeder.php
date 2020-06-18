@@ -56,26 +56,19 @@ class PermissionsRoleTableSeeder extends Seeder
             }
         }
 
-        foreach ($Rolekeys as $roleKey) {
-            $key = $roleKey[0];
-            $role = Role::firstOrCreate(['name' => $key, 'isPublic' => $roleKey[1]]);
-            if ($key == 'superAdmin') {
-                $role->givePermissionTo(Permission::all());
-            } else {
-                foreach ($Permkeys as $PermkeyArray) {
-                    $Permkey = $PermkeyArray[0]; //get name only
-                    if ($Permkey == 'hours' || $Permkey == 'projects' || $Permkey == 'tasks') {
-                        $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
-                    } else if ($Permkey == 'permissions' || $Permkey == 'companies') {
-                        if ($key == 'littleAdmin') {
-                            $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
-                        }
-                    } else if ($key != 'Utilisateur') {
-                        $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
-                    }
-                }
-            }
-        }
+        $role = Role::where(['name' => 'superAdmin'])->first();
+        $role->givePermissionTo(Permission::all());
+
+        $role = Role::where(['name' => 'littleAdmin'])->first();
+        $role->givePermissionTo(Permission::all());
+
+        $role = Role::where(['name' => 'Administrateur'])->first();
+        $role->givePermissionTo(Permission::all()->filter(function ($perm) {
+            return $perm->name_fr != 'permissions' && $perm->name_fr != 'companies';
+        }));
+
+        $role = Role::where(['name' => 'Utilisateur'])->first();
+        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'projets', 'tâches'])->orWhereIn('name', ['read_skills'])->get());
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
         if ($admin == null) {

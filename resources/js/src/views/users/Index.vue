@@ -209,19 +209,13 @@ export default {
       return this.$store.state.userManagement.users;
     },
     authorizedToPublish() {
-      return (
-        this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
     },
     authorizedToDelete() {
-      return (
-        this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
     },
     authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();

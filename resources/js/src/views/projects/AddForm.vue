@@ -51,7 +51,7 @@
               <div class="my-4" v-if="itemLocal.company_id != null">
                 <small class="date-label">Gammes</small>
                 <vs-select
-                  v-if="rangesData.length > 0"
+                  v-if="hasRanges"
                   v-model="itemLocal.ranges"
                   class="w-full"
                   multiple
@@ -67,7 +67,7 @@
                   />
                 </vs-select>
                 <small
-                  v-if="rangesData.length == 0"
+                  v-if="!hasRanges"
                   style="font-style: italic; color: #C8C8C8"
                 >Aucunes gammes trouvées</small>
               </div>
@@ -143,6 +143,9 @@ export default {
     },
     rangesData() {
       return this.filterItemsAdmin(this.$store.state.rangeManagement.ranges);
+    },
+    hasRanges() {
+      return this.rangesData && this.rangesData.length > 0;
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;

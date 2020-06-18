@@ -32,14 +32,10 @@ export default {
       return this.params.data.company_id === null && !this.params.data.isPublic;
     },
     authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
     },
     authorizedToDelete() {
-      return (
-        this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
     }
   },
   methods: {

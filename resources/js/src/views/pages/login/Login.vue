@@ -43,6 +43,7 @@
               placeholder="Mot de passe"
               v-model="password"
               class="w-full mt-6"
+              v-on:keyup.enter="loginJWT"
             />
 
             <div class="flex justify-center my-5 ml-auto mr-auto">

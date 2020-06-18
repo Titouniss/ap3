@@ -352,6 +352,7 @@ const router = new Router({
         // Redirect to 404 page, if no match found
         {
             path: '*',
+            name: 'page-not-found',
             redirect: '/pages/error-404'
         }
     ]

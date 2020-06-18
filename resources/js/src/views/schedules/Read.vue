@@ -96,9 +96,7 @@ export default {
       return this.$store.state.scheduleManagement.events;
     },
     authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
     }
   },
   methods: {
