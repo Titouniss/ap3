@@ -99,7 +99,7 @@
                     <vs-select
                       v-validate="'required'"
                       name="company_id"
-                      label="Compagnie"
+                      label="Société"
                       v-model="itemLocal.company_id"
                       class="w-full mt-5"
                     >

@@ -303,7 +303,6 @@ class UserController extends Controller
         $item = User::where('id', $user->id)
             ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities')
             ->first();
-        //$this->authorize('read', $item);
         return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
     }
 
@@ -322,9 +321,13 @@ class UserController extends Controller
             'genre' => 'required',
             'phone_number' => 'required',
             'email' => 'required',
+            'company_id' => 'required'
         ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
+        }
+
         if ($user != null) {
-            //$this->authorize('edit', $user);
             if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null) {
                 $roles = array();
                 foreach ($arrayRequest['roles'] as $role) {
@@ -337,6 +340,7 @@ class UserController extends Controller
             $user->genre = $arrayRequest['genre'];
             $user->phone_number = $arrayRequest['phone_number'];
             $user->email = $arrayRequest['email'];
+            $user->company_id = $arrayRequest['company_id'];
             $user->save();
         }
         return response()->json(['success' => $user], $this->successStatus);
@@ -447,13 +451,13 @@ class UserController extends Controller
 
         if ($user != null) {
             foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                $hours = WorkHours::firstOrCreate(['user_id' => $user->id, 'day' => strtolower($day)]);
-                $hours->is_active = $hours['is_active'];
-                $hours->morning_starts_at = $hours['morning_starts_at'];
-                $hours->morning_ends_at = $hours['morning_ends_at'];
-                $hours->afternoon_starts_at = $hours['afternoon_starts_at'];
-                $hours->afternoon_ends_at = $hours['afternoon_ends_at'];
-                $hours->save();
+                $workHours = WorkHours::firstOrCreate(['user_id' => $user->id, 'day' => strtolower($day)]);
+                $workHours->is_active = $hours['is_active'];
+                $workHours->morning_starts_at = $hours['morning_starts_at'];
+                $workHours->morning_ends_at = $hours['morning_ends_at'];
+                $workHours->afternoon_starts_at = $hours['afternoon_starts_at'];
+                $workHours->afternoon_ends_at = $hours['afternoon_ends_at'];
+                $workHours->save();
             }
         }
         return response()->json(['success' => User::where('id', $user->id)->with('workHours', 'unavailabilities')->first()], $this->successStatus);

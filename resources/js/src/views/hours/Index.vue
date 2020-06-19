@@ -41,7 +41,7 @@
         <div style="min-width: 15em">
           <v-select
             v-if="authorizedTo('read', 'users')"
-            label="email"
+            label="lastname"
             :options="users"
             v-model="filters.user"
             @input="refreshData"
@@ -50,6 +50,9 @@
           >
             <template #header>
               <div style="opacity: .8">Utilisateur</div>
+            </template>
+            <template #option="user">
+              <span>{{`${user.lastname} ${user.firstname}`}}</span>
             </template>
           </v-select>
         </div>

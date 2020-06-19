@@ -77,7 +77,13 @@
       <div class="vx-row">
         <div class="vx-col w-full">
           <div class="mt-8 flex flex-wrap items-center justify-end">
-            <vs-button class="ml-auto mt-2" @click="save_changes" :disabled="!validateForm">Ajouter</vs-button>
+            <vs-button class="mt-2" @click="save_changes" :disabled="!validateForm">Ajouter</vs-button>
+            <vs-button
+              class="ml-4 mt-2"
+              @click="save_changes(true)"
+              :disabled="!validateForm"
+              type="border"
+            >Ajouter & Recréer</vs-button>
             <vs-button class="ml-4 mt-2" type="border" color="warning" @click="back">Annuler</vs-button>
           </div>
         </div>
@@ -157,7 +163,17 @@ export default {
     }
   },
   methods: {
-    save_changes() {
+    reset() {
+      const user = this.$store.state.AppActiveUser;
+      this.data_local = {
+        date: null,
+        duration: null,
+        description: "",
+        project_id: null,
+        user_id: user.id
+      };
+    },
+    save_changes(reset = false) {
       /* eslint-disable */
       if (!this.validateForm) return;
       this.$vs.loading();
@@ -173,7 +189,11 @@ export default {
             icon: "icon-alert-circle",
             color: "success"
           });
-          this.$router.push(`/${modelPlurial}`).catch(() => {});
+          if (reset) {
+            this.reset();
+          } else {
+            this.$router.push(`/${modelPlurial}`).catch(() => {});
+          }
         })
         .catch(error => {
           this.$vs.notify({

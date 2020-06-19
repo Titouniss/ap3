@@ -79,6 +79,27 @@
             />
             <span class="text-danger text-sm">{{ errors.first('email') }}</span>
 
+            <div>
+              <vs-select
+                v-validate="'required'"
+                name="company_id"
+                label="Société"
+                v-model="itemLocal.company_id"
+                class="w-full mt-5"
+              >
+                <vs-select-item
+                  :key="index"
+                  :value="item.id"
+                  :text="item.name"
+                  v-for="(item,index) in companies"
+                />
+              </vs-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+              >{{ errors.first('company_id') }}</span>
+            </div>
+
             <vs-select label="Rôle" v-model="selected" class="w-full mt-5">
               <vs-select-item
                 v-validate="'required'"
@@ -98,6 +119,7 @@
 <script>
 // Store Module
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 export default {
   props: {
@@ -128,6 +150,9 @@ export default {
             console.error(err);
           });
       }
+    },
+    companies() {
+      return this.$store.state.companyManagement.companies;
     },
     roles() {
       return this.$store.getters["roleManagement/getItems"];
@@ -166,9 +191,18 @@ export default {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
     }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
     this.$store.dispatch("roleManagement/fetchItems").catch(err => {
       console.error(err);
     });
+    if (this.$store.getters.userHasPermissionTo("read companies")) {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
   }
 };
 </script>

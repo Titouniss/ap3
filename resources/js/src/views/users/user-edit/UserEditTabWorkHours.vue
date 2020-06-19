@@ -133,6 +133,7 @@ export default {
             icon: "icon-alert-circle",
             color: "success"
           });
+          console.log(response.data);
         })
         .catch(error => {
           this.$vs.loading.close();

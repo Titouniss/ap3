@@ -55,7 +55,7 @@ class HoursController extends Controller
             }
         }
 
-        $items = $items->with('project', 'user')->orderBy('date', 'DESC')->get();
+        $items = $items->with('project', 'user')->orderBy('date')->get();
 
         // Stats
         $stats = [];
