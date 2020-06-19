@@ -236,6 +236,9 @@ export default {
     }
   },
   methods: {
+    authorizedTo(action, model = "users") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
       let modelObj = null;
@@ -308,11 +311,6 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    },
-    manageErrors(err) {
-      if (err && err.request && err.request.status === 403) {
-        this.$router.push({ name: "page-not-authorized" }).catch(() => {});
-      } else console.error(err);
     }
   },
   mounted() {
@@ -355,15 +353,13 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
-    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "roles")) {
+      this.$store.dispatch("roleManagement/fetchItems");
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
