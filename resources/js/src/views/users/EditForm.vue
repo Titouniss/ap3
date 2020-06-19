@@ -99,6 +99,26 @@
                 v-show="errors.has('company_id')"
               >{{ errors.first('company_id') }}</span>
             </div>
+            <div v-if="itemLocal.company_id">
+              <vs-select
+                label="Compétences"
+                v-model="itemLocal.skills"
+                class="w-full mt-5"
+                multiple
+                autocomplete
+              >
+                <vs-select-item
+                  :key="index"
+                  :value="item.id"
+                  :text="item.name"
+                  v-for="(item,index) in companySkills"
+                />
+              </vs-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+              >{{ errors.first('company_id') }}</span>
+            </div>
 
             <vs-select label="Rôle" v-model="selected" class="w-full mt-5">
               <vs-select-item
@@ -157,6 +177,23 @@ export default {
     roles() {
       return this.$store.getters["roleManagement/getItems"];
     },
+    companySkills() {
+      console.log(this.itemLocal);
+      let test = this.$store.state.companyManagement.companies.find(
+        company => company.id === this.itemLocal.company_id
+      ).skills;
+      console.log(test);
+      return test;
+    },
+    skillsData() {
+      return this.$store.state.skillManagement.skills;
+    },
+    selectCompanySkills(item) {
+      this.companySkills = this.companiesData.find(
+        company => company.id === item
+      ).skills;
+      this.itemLocal.skills = [];
+    },
     validateForm() {
       return (
         !this.errors.any() &&
@@ -180,7 +217,7 @@ export default {
       this.itemLocal.roles = [
         this.$store.getters["roleManagement/getItem"](this.selected)
       ];
-      console.log(["ici", this.itemLocal.roles]);
+      console.log(["ici", this.itemLocal]);
 
       this.$store.dispatch("userManagement/updateItem", this.itemLocal);
       this.usersData;

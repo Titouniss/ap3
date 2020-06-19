@@ -58,6 +58,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany('App\Models\Unavailability');
     }
 
+    public function skills()
+    {
+        return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id');
+    }
+
     /**
      * Override the mail body for reset password notification mail.
      */
