@@ -40,7 +40,7 @@
         </vs-dropdown>
         <div style="min-width: 15em">
           <v-select
-            v-if="isAdmin"
+            v-if="authorizedTo('read', 'users')"
             label="email"
             :options="users"
             v-model="filters.user"
@@ -122,7 +122,7 @@
         <div class="flex flex-row justify-start items-center">
           <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
           <h4 class="ml-3">Heures effectuées</h4>
-          <div class="px-6 py-2" v-if="authorizedToPublish">
+          <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="addRecord">Ajouter des heures</vs-button>
           </div>
         </div>
@@ -181,7 +181,7 @@
           </div>
 
           <vs-dropdown-menu>
-            <vs-dropdown-item v-if="authorizedToDelete">
+            <vs-dropdown-item v-if="authorizedTo('delete')">
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                 <span>Supprimer</span>
@@ -371,21 +371,6 @@ export default {
         this.period_types[this.filters.period_type].format
       );
     },
-    authorizedToPublish() {
-      return (
-        this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`) > -1
-      );
-    },
-    authorizedToDelete() {
-      return (
-        this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`) > -1
-      );
-    },
-    authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
-    },
     itemIdToEdit() {
       return this.$store.state.hoursManagement.hours.id || 0;
     },
@@ -417,6 +402,9 @@ export default {
     }
   },
   methods: {
+    authorizedTo(action, model = "hours") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     clearRefreshDataTimeout() {
       if (this.refreshDataTimeout) {
         clearTimeout(this.refreshDataTimeout);
@@ -488,8 +476,17 @@ export default {
           .dispatch("hoursManagement/fetchItems", filter)
           .then(response => {
             this.stats = response.data.stats;
-            this.$vs.loading.close();
-          });
+          })
+          .catch(error => {
+            this.$vs.notify({
+              title: "Erreur",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
+          })
+          .finally(() => this.$vs.loading.close());
       }, 1500);
     },
     setColumnFilter(column, val) {
@@ -601,16 +598,11 @@ export default {
         date: moment().format("DD-MM-YYYY"),
         period_type: "month"
       })
-      .then(response => (this.stats = response.data.stats))
-      .catch(err => {
-        console.error(err);
-      });
-    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
+      .then(response => (this.stats = response.data.stats));
+    this.$store.dispatch("projectManagement/fetchItems");
+    if (this.authorizedTo("read", "users")) {
+      this.$store.dispatch("userManagement/fetchItems");
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

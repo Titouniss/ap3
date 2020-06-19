@@ -51,7 +51,7 @@
               v-model="itemLocal.client"
               :color="validateForm ? 'success' : 'danger'"
             />
-            <div class="vx-row mt-4">
+            <div v-if="isAdmin" class="vx-row mt-4">
               <div class="vx-col w-full">
                 <div class="flex items-end px-3">
                   <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
@@ -110,6 +110,19 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      const user = this.$store.state.AppActiveUser;
+      if (
+        user.roles &&
+        user.roles.length > 0 &&
+        user.roles.find(
+          r => r.name === "superAdmin" || r.name === "littleAdmin"
+        )
+      ) {
+        return true;
+      }
+      return false;
+    },
     activePrompt: {
       get() {
         return this.itemId && this.itemId > 0 ? true : false;

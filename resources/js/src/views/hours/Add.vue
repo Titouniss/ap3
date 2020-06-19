@@ -23,7 +23,7 @@
               v-show="errors.has('project_id')"
             >{{ errors.first('project_id') }}</span>
           </vs-col>
-          <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6" v-if="isAdmin">
+          <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6" v-if="authorizedToReadUsers">
             <vs-select
               v-validate="'required'"
               name="user_id"
@@ -137,18 +137,8 @@ export default {
     flatPickr
   },
   computed: {
-    isAdmin() {
-      const user = this.$store.state.AppActiveUser;
-      if (
-        user.roles &&
-        user.roles.length > 0 &&
-        user.roles.find(
-          r => r.name === "superAdmin" || r.name === "littleAdmin"
-        )
-      ) {
-        return true;
-      }
-      return false;
+    authorizedToReadUsers() {
+      return this.$store.getters.userHasPermissionTo(`read users`);
     },
     projects() {
       return this.$store.state.projectManagement.projects;
@@ -176,7 +166,6 @@ export default {
       this.$store
         .dispatch("hoursManagement/addItem", payload)
         .then(() => {
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Ajout",
             text: "Heures ajoutées avec succès",
@@ -187,19 +176,15 @@ export default {
           this.$router.push(`/${modelPlurial}`).catch(() => {});
         })
         .catch(error => {
-          const unauthorize = error.message
-            ? error.message.includes("status code 403")
-            : false;
-          const unauthorizeMessage = `Vous n'avez pas les autorisations pour cette action`;
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
-            text: unauthorize ? unauthorizeMessage : error.message,
+            text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
             color: "danger"
           });
-        });
+        })
+        .finally(() => this.$vs.loading.close());
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
@@ -222,18 +207,12 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    this.$store.dispatch("hoursManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
+    this.$store.dispatch("projectManagement/fetchItems");
+    if (this.authorizedToReadUsers) {
+      this.$store.dispatch("userManagement/fetchItems");
+    }
   },
   beforeDestroy() {
-    window.removeEventListener("resize", this.onResize());
     moduleHoursManagement.isRegistered = false;
     moduleProjectManagement.isRegistered = false;
     moduleUserManagement.isRegistered = false;

@@ -26,14 +26,10 @@ export default {
       return false;
     },
     authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
     },
     authorizedToDelete() {
-      return (
-        this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
     }
   },
   methods: {
