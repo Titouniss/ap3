@@ -108,7 +108,7 @@ import moment from "moment";
 
 import EditForm from "./EditForm.vue";
 import AddRangeForm from "./AddRangeForm.vue";
-import IndexTasks from "./../tasks/index.vue";
+import IndexTasks from "./../tasks/Index.vue";
 
 export default {
   components: {
