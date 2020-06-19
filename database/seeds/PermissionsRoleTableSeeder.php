@@ -31,6 +31,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['tasks', 'tâches', true],
             ['ranges', 'gammes', true],
             ['hours', 'heures', true],
+            ['unavailabilities', 'indiponibilités', true],
             ['schedules', 'planning', true]
         ];
         // create permissions
@@ -68,7 +69,7 @@ class PermissionsRoleTableSeeder extends Seeder
         }));
 
         $role = Role::where(['name' => 'Utilisateur'])->first();
-        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'projets', 'tâches'])->orWhereIn('name', ['read_skills'])->get());
+        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'projets', 'tâches', 'indiponibilités'])->orWhereIn('name', ['read skills'])->get());
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
         if ($admin == null) {
