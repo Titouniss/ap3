@@ -95,6 +95,7 @@ import vSelect from "vue-select";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
 import AddForm from "./AddForm.vue";
 import EditForm from "./EditForm.vue";
@@ -352,7 +353,6 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-
     if (!moduleRoleManagement.isRegistered) {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
@@ -360,6 +360,10 @@ export default {
     if (!moduleCompanyManagement.isRegistered) {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
+    }
+     if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule("skillManagement", moduleSkillManagement);
+      moduleSkillManagement.isRegistered = true;
     }
     this.$store.dispatch("userManagement/fetchItems").catch(err => {
       this.manageErrors(err);
@@ -370,6 +374,9 @@ export default {
     this.$store.dispatch("roleManagement/fetchItems").catch(err => {
       this.manageErrors(err);
     });
+    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+      this.manageErrors(err);
+    });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
@@ -377,6 +384,8 @@ export default {
     moduleUserManagement.isRegistered = false;
     moduleRoleManagement.isRegistered = false;
     moduleCompanyManagement.isRegistered = false;
+    moduleSkillManagement.isRegistered = false;
+    this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");

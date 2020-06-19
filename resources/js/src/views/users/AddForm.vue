@@ -88,6 +88,37 @@
                 v-show="errors.has('phone_number')"
               >{{ errors.first('phone_number') }}</span>
 
+              <div v-if="itemLocal.company_id" class="mt-5">
+                <span
+                  v-if="companySkills.length == 0"
+                  class="msgTxt"
+                >Aucune compétences trouvées.</span>
+                <router-link
+                  v-if="companySkills.length == 0"
+                  class="linkTxt"
+                  :to="{ path: '/skills' }"
+                >Ajouter une compétence</router-link>
+                <vs-select
+                  v-if="companySkills.length > 0"
+                  label="Compétences"
+                  v-model="itemLocal.skills"
+                  class="w-full"
+                  multiple
+                  autocomplete
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in companySkills"
+                  />
+                </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('company_id')"
+                >{{ errors.first('company_id') }}</span>
+              </div>
+
               <div class="vx-row mt-4" v-if="!disabled">
                 <div class="vx-col w-full">
                   <div class="flex items-end px-3">
@@ -97,6 +128,7 @@
                   <vs-divider />
                   <div>
                     <vs-select
+                      v-on:change="selectCompanySkills"
                       v-validate="'required'"
                       name="company_id"
                       label="Compagnie"
@@ -169,8 +201,10 @@ export default {
         email: "",
         phone_number: "",
         company_id: null,
-        roles: []
-      }
+        roles: [],
+        skills: []
+      },
+      companySkills: []
     };
   },
   computed: {
@@ -181,6 +215,9 @@ export default {
       return this.$store.getters["roleManagement/getItemsForCompany"](
         this.itemLocal.company_id
       );
+    },
+    skillsData() {
+      return this.$store.state.skillManagement.skills;
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -250,7 +287,32 @@ export default {
             });
         }
       });
-    }
+    },
+    selectCompanySkills(item) {
+      console.log('test')
+      console.log(JSON.stringify(this.companiesData))
+      this.companySkills = this.companiesData.find(
+        company => company.id === item
+      ).skills;
+    },
+    filterItemsAdmin($items) {
+      let $filteredItems = [];
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          $filteredItems = $items.filter(
+            item => item.company_id === this.itemLocal.company_id
+          );
+        } else {
+          $filteredItems = $items;
+        }
+      }
+      return $filteredItems;
+    },
   }
 };
 </script>

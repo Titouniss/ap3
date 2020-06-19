@@ -22,6 +22,7 @@ use Mail;
 use App\User;
 use App\Models\Company;
 use App\Models\WorkHours;
+use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
 
 use Monolog\Logger;
@@ -248,9 +249,9 @@ class UserController extends Controller
         $user = Auth::user();
         $usersList = [];
         if ($user->hasRole('superAdmin')) {
-            $usersList = User::withTrashed()->get()->load('roles');
+            $usersList = User::withTrashed()->get()->load('roles', 'company:id,name', 'skills');
         } else if ($user->company_id != null) {
-            $usersList = User::where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name');
+            $usersList = User::where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');
         }
         return response()->json(['success' => $usersList], $this->successStatus);
     }
@@ -285,6 +286,11 @@ class UserController extends Controller
             // on assigne le rôle d'utilisateur sans droit par défault pour éviter un bug.
             $item->assignRole('basicUsers');
         }
+        if(!empty($arrayRequest['skills'])){
+            foreach($arrayRequest['skills'] as $skill_id){
+                UsersSkill::create(['user_id' => $item->id, 'skill_id' => $skill_id]);
+            }
+        }
 
         //$item->notify(new UserRegistration($item));
 
@@ -301,7 +307,7 @@ class UserController extends Controller
     public function show($id)
     {
         $item = User::where('id', $id)
-            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities')
+            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities', 'skills')
             ->first();
         return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
     }
@@ -331,11 +337,20 @@ class UserController extends Controller
                 }
                 $user->syncRoles($roles);
             }
+            
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
             $user->genre = $arrayRequest['genre'];
             $user->phone_number = $arrayRequest['phone_number'];
             $user->email = $arrayRequest['email'];
+
+            UsersSkill::where('user_id', $user->id)->delete();
+            if(!empty($arrayRequest['skills'])){
+                foreach($arrayRequest['skills'] as $skill_id){
+                    UsersSkill::create(['user_id' => $user->id, 'skill_id' => $skill_id]);
+                }
+            }
+            
             $user->save();
         }
         return response()->json(['success' => $user], $this->successStatus);

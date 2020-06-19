@@ -218,14 +218,17 @@ class ProjectController extends Controller
         $nbHoursAvailable = 0;
         $nbHoursUnvailable = 0;
 
-        // Hours required
         foreach($project->tasks as $task){
+            // Hours required
             $nbHoursRequired += $task->estimated_time;
         }
 
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities')->get();
      
-        $TimeData = $this->calculTimeAvailable($users, $project->date);
+        // Hours Available & Hours Unavailable
+        return $TimeData = $this->calculTimeAvailable($users, $project->date);
+
+
 
         $response = [
             'nbHoursRequired' => $nbHoursRequired,
@@ -237,6 +240,7 @@ class ProjectController extends Controller
 
         return response()->json(['success' => $response], $this-> successStatus);  
     }
+
 
     private function calculTimeAvailable($users, $date_end){
         $hoursAvailable = [];
