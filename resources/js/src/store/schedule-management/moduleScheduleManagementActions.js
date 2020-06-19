@@ -11,6 +11,7 @@ import axios from '@/axios.js'
 
 export default {
   addEvent({ commit }, event) {
+    return commit('ADD_EVENT', event);
     return new Promise((resolve, reject) => {
       axios.post('/api/apps/calendar/events/', { event })
         .then((response) => {

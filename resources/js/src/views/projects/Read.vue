@@ -73,6 +73,13 @@
               icon="icon-trash"
               @click="confirmDeleteRecord"
             >Delete</vs-button>
+            <vs-button
+              type="border"
+              color="success"
+              icon-pack="feather"
+              icon="icon-play"
+              @click="startProject"
+            >Démarrer le project</vs-button>
           </div>
         </div>
       </vx-card>
@@ -101,7 +108,7 @@ import moment from "moment";
 
 import EditForm from "./EditForm.vue";
 import AddRangeForm from "./AddRangeForm.vue";
-import IndexTasks from "../tasks/Index.vue";
+import IndexTasks from "./../tasks/index.vue";
 
 export default {
   components: {
@@ -123,6 +130,14 @@ export default {
   methods: {
     authorizedTo(action, model = "projects") {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
+    startProject() {
+      this.$store
+        .dispatch("projectManagement/start", this.project_data.id)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
     },
     editRecord() {
       this.$store

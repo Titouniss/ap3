@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use App\User;
 use App\Models\Range;
 use App\Models\Task;
 use App\Models\TasksSkill;
@@ -13,6 +14,8 @@ use App\Models\TasksBundle;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
+use Carbon\CarbonPeriod;
 
 
 class ProjectController extends Controller
@@ -207,4 +210,521 @@ class ProjectController extends Controller
         $item->forceDelete();
         return '';
     }
+
+    public function start($id){
+
+        $project = Project::find($id);
+        $nbHoursRequired = 0; 
+        $nbHoursAvailable = 0;
+        $nbHoursUnvailable = 0;
+
+        // Hours required
+        foreach($project->tasks as $task){
+            $nbHoursRequired += $task->estimated_time;
+        }
+
+        $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities')->get();
+     
+        $TimeData = $this->calculTimeAvailable($users, $project->date);
+
+        $response = [
+            'nbHoursRequired' => $nbHoursRequired,
+            'nbHoursAvailable' => $TimeData['total_hours'],
+            'nbHoursUnvailable' => $TimeData['total_hours_unavailable'],
+            'details' => $TimeData,
+            'users' => $users,
+        ];
+
+        return response()->json(['success' => $response], $this-> successStatus);  
+    }
+
+    private function calculTimeAvailable($users, $date_end){
+        $hoursAvailable = [];
+
+        // Get days today date -> end date
+        $start_date = Carbon::now()->addDays('1')->startOfDay();
+        $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $date_end)->subDays('1')->endOfDay();
+
+        $period = CarbonPeriod::create($start_date, $end_date);
+
+        foreach($period as $t){
+            $hoursAvailable[] = [
+                'date' => $t,
+                'day_label' => $t->format('l')
+            ];
+        }
+
+        $totalHours = 0;     
+        $totalHoursUnavailable = 0;     
+
+        // foreach days foreach users get day get hours
+        foreach($hoursAvailable as $key => $data){
+            $test[] = $data['day_label']; 
+            $totalDateHours = 0;
+            switch (true) {
+                case ($data['day_label'] == 'Monday' || $data['day_label'] == 'Lundi'):
+
+                    $dayHours = $this->getHoursAvailableByDay('lundi', $data['date'], $users);
+                    //Raf already task in this date
+
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+
+                case ($data['day_label'] == 'Tuesday' || $data['day_label'] == 'Mardi'):
+
+                    $dayHours = $this->getHoursAvailableByDay('mardi', $data['date'], $users);
+                    //Raf already task in this date
+
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+
+                case ($data['day_label'] == 'Wednesday' || $data['day_label'] == 'Mercredi'):
+
+                    $dayHours = $this->getHoursAvailableByDay('mercredi', $data['date'], $users);
+                    //Raf already task in this date
+
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+
+                case ($data['day_label'] == 'Thursday' || $data['day_label'] == 'Jeudi'):
+
+                    $dayHours = $this->getHoursAvailableByDay('jeudi', $data['date'], $users);
+                    //Raf already task in this date
+    
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+
+                case ($data['day_label'] == 'Friday' || $data['day_label'] == 'Vendredi'):
+
+                    $dayHours = $this->getHoursAvailableByDay('vendredi', $data['date'], $users);
+                    //Raf already task in this date
+
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+
+                case ($data['day_label'] == 'Saturday' || $data['day_label'] == 'Samedi'):
+
+                    $dayHours = $this->getHoursAvailableByDay('samedi', $data['date'], $users);
+                    //Raf already task in this date
+
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+
+                case ($data['day_label'] == 'Sunday' || $data['day_label'] == 'Dimanche'):
+
+                    $dayHours = $this->getHoursAvailableByDay('dimanche', $data['date'], $users);
+                    //Raf already task in this date
+
+                    if($dayHours){
+                        $totalHours += $dayHours['total'];
+                        $totalHoursUnavailable += $dayHours['total_unavailable'];
+                        $data['users'] = $dayHours['users'];
+                        $data['total_hours'] = $dayHours['total'];
+                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+
+                        $hoursAvailable[$key] = $data;
+                    }
+                    break;
+                }
+
+            $totalHours += $totalDateHours;   
+        }
+
+        $hoursAvailable['total_hours'] = $totalHours;
+        $hoursAvailable['total_hours_unavailable'] = $totalHoursUnavailable;
+        
+        return $hoursAvailable;
+    }
+
+    private function getHoursAvailableByDay($day, $date, $users){
+        $hours = [
+            'total' => 0,
+            'total_unavailable' => 0,
+            'users' => []
+        ];
+        $conflictUnavailableDate = false;
+
+        foreach($users as $user){
+            $userHours = [
+                'user_id' => $user->id,
+                'hours' => 0,
+                'hours_unavailable' => 0
+            ];
+            
+            $unAvailablePeriods = count($user->unavailabilities) > 0? $this->transformDatesToPeriod($user->unavailabilities) : null;
+
+            foreach($user->workHours as $dayHours){
+
+                if($dayHours->day == $day && (string)$dayHours->is_active){
+
+                    //Hours available
+                    if($dayHours->morning_ends_at && $dayHours->morning_starts_at){
+                        $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', '2000-01-01' . ' ' .$dayHours->morning_ends_at);
+                        $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', '2000-01-01' . ' ' .$dayHours->morning_starts_at);
+
+                        $userHours['hours'] += Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart));
+                    }
+                    if($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at){
+                        $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', '2000-01-01' . ' ' .$dayHours->afternoon_ends_at);
+                        $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', '2000-01-01' . ' ' .$dayHours->afternoon_starts_at);
+
+                        $userHours['hours'] += Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart));
+                    }
+
+                    //Hours unavailable
+                    if($unAvailablePeriods){
+
+                        $workDate = Carbon::createFromFormat('Y-m-d H:i:s', $date);
+                        $hoursUnavailableByPeriod = [];
+
+                        foreach($unAvailablePeriods as $period){
+                            
+                            //On regarde si la période ne comprend que une seule journée
+                            if(count($period['period']) == 1){
+
+                                $unavailableDate = $period['period']->getStartDate();
+
+                                if($unavailableDate == $workDate){
+
+                                    //On calcul le nombre d'heures d'indisponibilité
+                                    $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailable($dayHours, $period);
+                                }
+                            } 
+                            else{ //plusieurs journées
+                                $startDate = $period['period']->getStartDate();
+                                $endDate = $period['period']->getEndDate();
+
+                                foreach($period['period'] as $periodDay){
+  
+                                    if($periodDay == $workDate){
+                                        if($workDate == $startDate){
+                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, $period['start_date']);
+                                        }else if($workDate == $endDate){
+                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, null, $period['end_date']);
+                                        }else{
+                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        $hours_unavailable_details = $this->mergeHoursUnavailable($hoursUnavailableByPeriod);
+
+                        $userHours['hours_unavailable_details'] = $hours_unavailable_details;
+                        $userHours['hours_unavailable'] = $hours_unavailable_details['afternoon']['hours'] + $hours_unavailable_details['morning']['hours'];
+                    }
+                }
+            }
+
+            if($userHours['hours'] != 0){
+                $hours['total'] += $userHours['hours'];
+                $hours['total_unavailable'] += $userHours['hours_unavailable'];
+                $hours['users'][] = $userHours;
+            }
+        }
+        return empty($hours) ? null : $hours;
+    }
+
+    private function calculNbHoursUnavailable($dayHours, $period, $hours_unavailable = null){
+
+        $hours_unavailable_morning = [
+            'hours' => 0,
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
+        ];
+        $hours_unavailable_afternoon = [
+            'hours' => 0,
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
+        ];
+
+        //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
+        if($dayHours->morning_ends_at && $dayHours->morning_starts_at){
+            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->morning_ends_at);
+            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->morning_starts_at);
+
+            //Matin
+            if($period['start_date'] < $morningEnd){
+                $startMorningUnavailable = null;
+                $endMorningUnavailable = null;
+
+                //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche du matin
+                if($period['start_date'] > $morningStart){
+                    $startMorningUnavailable = $period['start_date'];
+                }
+                else{ //Sinon, on prend l'heure d'embauche
+                    $startMorningUnavailable = $morningStart;
+                }
+
+                //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du midi
+                if($period['end_date'] <= $morningEnd){
+                    $endMorningUnavailable = $period['end_date'];
+                }
+                else{ //Sinon, on prend de débauche du midi.
+                    $endMorningUnavailable = $morningEnd;
+                }
+
+                $hours_unavailable_morning = [
+                    'hours' => Carbon::parse($endMorningUnavailable)->floatDiffInHours(Carbon::parse($startMorningUnavailable)),
+                    'periods' => [
+                        'start_time' => $startMorningUnavailable,
+                        'end_time' => $endMorningUnavailable
+                    ]
+                ];
+            }            
+        }
+
+        if($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at){
+            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->afternoon_ends_at);
+            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->afternoon_starts_at);
+
+            //Après midi
+            if($period['end_date'] > $AfternoonStart){
+                $startAfternoonUnavailable = null;
+                $endAfternoonUnavailable = null;
+
+                //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche d'après-midi
+                if($period['start_date'] > $AfternoonStart){
+                    $startAfternoonUnavailable = $period['start_date'];
+                }
+                else{ //Sinon, on prend l'heure d'embauche d'après-midi
+                    $startAfternoonUnavailable = $AfternoonStart;
+                }
+
+                //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
+                if($period['end_date'] <= $AfternoonEnd){
+                    $endAfternoonUnavailable = $period['end_date'];
+                }
+                else{ //Sinon, on prend de débauche du midi.
+                    $endAfternoonUnavailable = $AfternoonEnd;
+                }
+
+                $hours_unavailable_afternoon = [
+                    'hours' => Carbon::parse($endAfternoonUnavailable)->floatDiffInHours(Carbon::parse($startAfternoonUnavailable)),
+                    'periods' => [
+                        'start_time' => $startAfternoonUnavailable,
+                        'end_time' => $endAfternoonUnavailable
+                    ]
+                ];;
+            }
+        }
+
+        return array('morning' => $hours_unavailable_morning, 'afternoon' => $hours_unavailable_afternoon);
+    }
+
+
+    private function calculNbHoursUnavailablePeriod($dayHours, $day, $fisrt_date = null, $last_date = null){
+
+        $hours_unavailable_morning = [
+            'hours' => 0,
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
+        ];
+        $hours_unavailable_afternoon = [
+            'hours' => 0,
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
+        ];
+
+        $startDateTime = null;
+        $endDateTime = null;
+
+        //Si on est sur la première date de la période alors on attribue l'heure de fin de la journée à 23:59
+        //Si on est sur la dernière date de la période alors on attribue l'heure de début de la journée à 00:00
+        //Si on est entre le début et la fin de la période alors on attribue l'heure de début de la journée à 00:00 et l'heure de fin de la journée à 23:59
+
+        $startDateTime = $fisrt_date ? $fisrt_date : Carbon::parse($day->startOfDay());
+        $endDateTime = $last_date ? $last_date : Carbon::parse($day->endOfDay());
+
+        //return array($startDateTime, $endDateTime);
+
+        //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
+        if($dayHours->morning_ends_at && $dayHours->morning_starts_at){
+            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->morning_ends_at);
+            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->morning_starts_at);
+
+            //Matin
+            if($startDateTime < $morningEnd){
+                $startMorningUnavailable = null;
+                $endMorningUnavailable = null;
+
+                //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche du matin
+                if($startDateTime > $morningStart){
+                    $startMorningUnavailable = $startDateTime;
+                }
+                else{ //Sinon, on prend l'heure d'embauche
+                    $startMorningUnavailable = $morningStart;
+                }
+
+                //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du midi
+                if($endDateTime <= $morningEnd){
+                    $endMorningUnavailable = $endDateTime;
+                }
+                else{ //Sinon, on prend de débauche du midi.
+                    $endMorningUnavailable = $morningEnd;
+                }
+
+                $hours_unavailable_morning = [
+                    'hours' => Carbon::parse($endMorningUnavailable)->floatDiffInHours(Carbon::parse($startMorningUnavailable)),
+                    'periods' => [
+                        'start_time' => $startMorningUnavailable,
+                        'end_time' => $endMorningUnavailable
+                    ]
+                ];
+            }            
+        }
+
+        if($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at){
+            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->afternoon_ends_at);
+            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->afternoon_starts_at);
+
+            //Après midi
+            if($endDateTime > $AfternoonStart){
+                $startAfternoonUnavailable = null;
+                $endAfternoonUnavailable = null;
+
+                //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche d'après-midi
+                if($startDateTime > $AfternoonStart){
+                    $startAfternoonUnavailable = $startDateTime;
+                }
+                else{ //Sinon, on prend l'heure d'embauche d'après-midi
+                    $startAfternoonUnavailable = $AfternoonStart;
+                }
+
+                //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
+                if($endDateTime <= $AfternoonEnd){
+                    $endAfternoonUnavailable = $endDateTime;
+                }
+                else{ //Sinon, on prend de débauche du soir.
+                    $endAfternoonUnavailable = $AfternoonEnd;
+                }
+
+                $hours_unavailable_afternoon = [
+                    'hours' => Carbon::parse($endAfternoonUnavailable)->floatDiffInHours(Carbon::parse($startAfternoonUnavailable)),
+                    'periods' => [
+                        'start_time' => $startAfternoonUnavailable,
+                        'end_time' => $endAfternoonUnavailable
+                    ]
+                ];;
+            }
+        }
+
+        return array('morning' => $hours_unavailable_morning, 'afternoon' => $hours_unavailable_afternoon);
+    }
+
+    private function mergeHoursUnavailable($hoursUnavailableByPeriod){
+
+        //On regarde si la journée contient une ou plusieurs indisponnibilités
+        if(count($hoursUnavailableByPeriod) == 1){
+            $response = $hoursUnavailableByPeriod[0];
+        }
+        else{
+            $hoursUnavailable = [
+                'morning' => [
+                    'hours' => 0,
+                    'periods' => []
+                ],
+                'afternoon' => [
+                    'hours' => 0,
+                    'periods' => []
+                ]
+            ];
+
+            foreach($hoursUnavailableByPeriod as $hours){
+
+                if($hours['morning']['hours'] != 0){
+                    $hoursUnavailable['morning']['hours'] += $hours['morning']['hours'];
+                    $hoursUnavailable['morning']['periods'][] = $hours['morning']['periods'];
+                }
+
+                if($hours['afternoon']['hours'] != 0){
+                    $hoursUnavailable['afternoon']['hours'] += $hours['afternoon']['hours'];
+                    $hoursUnavailable['afternoon']['periods'][] = $hours['afternoon']['periods'];
+                }
+            }
+            $response = $hoursUnavailable;
+        }
+        return $response;
+
+    }
+ 
+    private function transformDatesToPeriod($unavailabilities){
+
+        if(isset($unavailabilities[0])){
+            $periods = [];
+            foreach($unavailabilities as $unavailability){
+                $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
+                $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
+
+                $period = CarbonPeriod::create(Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at)->startOfDay(), Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at)->startOfDay());
+
+                $periods[] = [
+                    'start_date' => $start_date,
+                    'end_date' => $end_date,
+                    'period' => $period,
+                ];
+            }
+            return $periods;
+        }
+        else{
+            return false;
+        }
+    }
+
 }

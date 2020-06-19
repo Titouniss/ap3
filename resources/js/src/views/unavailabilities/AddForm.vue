@@ -1,5 +1,6 @@
 <template>
   <div class="p-3 mb-4 mr-4">
+    <span>RAF : Bloquer l'ajout d'une indisponibilité qui se superpose avec une déjà présente</span>
     <vs-button
       type="border"
       class="items-center p-3 w-full"
