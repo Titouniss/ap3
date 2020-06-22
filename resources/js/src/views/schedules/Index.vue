@@ -120,7 +120,7 @@ export default {
       this.$router
         .push({
           path: `/schedules/schedules-read`,
-          query: { id: id, type: origin }
+          query: { id: id, type: type }
         })
         .catch(() => {});
     }
@@ -150,6 +150,7 @@ export default {
     this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
       this.manageErrors(err);
     });
+    console.log(["store", this.$store]);
   }
 };
 </script>

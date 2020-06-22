@@ -9,6 +9,9 @@
       :activeAddPrompt="this.activeAddPrompt"
       :handleClose="handleClose"
       :dateData="this.dateData"
+      :project_data="project_data"
+      :tasks_list="this.tasksEvent"
+      :customTask="false"
     />
     <FullCalendar
       locale="fr"
@@ -32,6 +35,7 @@
       :plugins="calendarPlugins"
       :weekends="calendarWeekends"
       :events="calendarEvents"
+      @eventDrop="handleEventDrop"
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
     />
@@ -45,6 +49,7 @@
 
 <script>
 import vSelect from "vue-select";
+import moment from "moment";
 
 import FullCalendar from "@fullcalendar/vue";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -53,11 +58,12 @@ import interactionPlugin from "@fullcalendar/interaction";
 
 // Store Module
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
-//import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
+import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
 // Component
 import EditForm from "./EditForm.vue";
-import AddForm from "./AddForm.vue";
+import AddForm from "../tasks/AddForm.vue";
 
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";
@@ -100,15 +106,63 @@ export default {
       return this.$store.state.scheduleManagement.event.id || -1;
     },
     calendarEvents() {
-      return this.$store.state.scheduleManagement.events;
+      // Get all task and parse to show
+      var eventsParse = [];
+      if (this.tasksEvent !== []) {
+        this.tasksEvent.forEach(t => {
+          eventsParse.push({
+            id: t.id,
+            title: t.name,
+            start: t.date,
+            estimated_time: t.estimated_time,
+            order: t.order,
+            description: t.description,
+            time_spent: t.time_spent,
+            workarea_id: t.workarea_id,
+            status: t.status,
+            end: moment(t.date)
+              .add(t.estimated_time, "hour")
+              .format("YYYY-MM-DD HH:mm:ss")
+          });
+        });
+      }
+
+      this.$store
+        .dispatch("scheduleManagement/addEvents", eventsParse)
+        .catch(err => {
+          this.manageErrors(err);
+        });
+
+      return eventsParse;
     },
     authorizedToEdit() {
       return (
         this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
       );
+    },
+    tasksEvent() {
+      return this.$store.state.taskManagement
+        ? this.$store.state.taskManagement.tasks
+        : [];
+    },
+    project_data() {
+      var project_data = this.$store.state.projectManagement.projects.find(
+        p => (p.id = this.$route.query.id)
+      );
+      return project_data;
     }
   },
   methods: {
+    refresh() {
+      if (this.$route.query.type === "projects") {
+        console.log("Planning d'un projet");
+        this.$store
+          .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
+          .catch(err => {
+            this.manageErrors(err);
+          });
+      }
+    },
     toggleWeekends() {
       this.calendarWeekends = !this.calendarWeekends; // update a property
     },
@@ -117,15 +171,11 @@ export default {
       calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
     },
     handleDateClick(arg) {
-      console.log(["arg", arg]);
-
       this.activeAddPrompt = true;
       this.dateData = arg;
-      console.log(["this.dateData", this.dateData]);
+      console.log(["dateData", this.dateData]);
     },
     handleEventClick(arg) {
-      console.log(["this.calendarEvents", this.calendarEvents]);
-
       var targetEvent = this.calendarEvents.find(
         event => event.id.toString() === arg.event.id
       );
@@ -137,12 +187,46 @@ export default {
           console.error(err);
         });
     },
+    handleEventDrop(arg) {
+      var itemTemp = this.calendarEvents.find(
+        e => e.id.toString() === arg.event.id
+      );
+      //Parse new item to update task
+
+      var itemToSave = {
+        id: itemTemp.id,
+        name: itemTemp.title,
+        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+        estimated_time: itemTemp.estimated_time,
+        order: itemTemp.order,
+        description: itemTemp.description,
+        time_spent: itemTemp.time_spent,
+        workarea_id: itemTemp.workarea_id,
+        status: itemTemp.status,
+        from: "schedule"
+      };
+
+      this.$store
+        .dispatch("taskManagement/updateItem", itemToSave)
+        .then(data => {
+          console.log(["data", data]);
+          if (data && data.status === 200) {
+            this.refresh();
+          } else {
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    },
     handleClose() {
+      this.refresh();
       (this.activeAddPrompt = false), (this.dateData = {});
     }
   },
   mounted() {},
   created() {
+    // Add store management
     if (!moduleScheduleManagement.isRegistered) {
       this.$store.registerModule(
         "scheduleManagement",
@@ -150,31 +234,34 @@ export default {
       );
       moduleScheduleManagement.isRegistered = true;
     }
-    this.$store
-      .dispatch("scheduleManagement/addEvents", [
-        // initial event data
-        {
-          id: 1,
-          title: "Event One",
-          start: "2020-06-15T11:00:00",
-          end: "2020-06-15T12:45:30",
-          label: "test label 1"
-        },
-        {
-          id: 2,
-          title: "Event Two",
-          start: "2020-06-17T14:00:00",
-          end: "2020-06-17T18:45:30",
-          label: "test label 2"
-        }
-      ])
-      .catch(err => {
-        this.manageErrors(err);
-      });
+    if (!moduleTaskManagement.isRegistered) {
+      this.$store.registerModule("taskManagement", moduleTaskManagement);
+      moduleTaskManagement.isRegistered = true;
+    }
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule("skillManagement", moduleSkillManagement);
+      moduleSkillManagement.isRegistered = true;
+    }
+
+    if (this.$route.query.type === "projects") {
+      this.$store
+        .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
+        .catch(err => {
+          this.manageErrors(err);
+        });
+    }
+
+    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+      this.manageErrors(err);
+    });
   },
   beforeDestroy() {
     moduleScheduleManagement.isRegistered = false;
+    moduleTaskManagement.isRegistered = false;
+    moduleSkillManagement.isRegistered = false;
     this.$store.unregisterModule("scheduleManagement");
+    this.$store.unregisterModule("taskManagement");
+    this.$store.unregisterModule("skillManagement");
   }
 };
 </script>

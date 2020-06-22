@@ -76,7 +76,11 @@ var modelPlurial = "tâches";
 
 // Store Module
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
+
 //import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
+
+import moment from "moment";
 
 // FlatPickr
 import flatPickr from "vue-flatpickr-component";
@@ -151,6 +155,37 @@ export default {
       );
     },
     submitTodo() {
+      console.log(["id", this.itemLocal.id]);
+      var itemToSave = {};
+      //Parse new item to update task
+      var itemToSave = {
+        id: this.itemLocal.id,
+        name: this.itemLocal.title,
+        date: this.itemLocal.start,
+        estimated_time: moment
+          .duration(
+            moment(this.itemLocal.end, "YYYY/MM/DD HH:mm").diff(
+              moment(this.itemLocal.start, "YYYY/MM/DD HH:mm")
+            )
+          )
+          .asHours(),
+        order: this.itemLocal.order,
+        description: this.itemLocal.description,
+        time_spent: this.itemLocal.time_spent,
+        workarea_id: this.itemLocal.workarea_id,
+        status: this.itemLocal.status,
+        from: "schedule"
+      };
+      console.log(["itemToSave", itemToSave]);
+      this.$store
+        .dispatch("taskManagement/updateItem", itemToSave)
+        .then(data => {
+          console.log(["data", data]);
+        })
+        .catch(err => {
+          //console.error(err);
+        });
+
       this.$store.dispatch("scheduleManagement/updateEvent", this.itemLocal);
       this.$store.dispatch("scheduleManagement/editEvent", {});
       console.log(["state", this.$store.state]);
@@ -174,11 +209,20 @@ export default {
     deleteTask() {
       this.deleteWarning = false;
       this.$store
-        .dispatch("scheduleManagement/removeEvent", idEvent)
+        .dispatch("scheduleManagement/removeEvent", this.idEvent)
         .then(() => {})
         .catch(err => {
           console.error(err);
         });
+      console.log(["idEvent", this.idEvent]);
+
+      this.$store
+        .dispatch("taskManagement/removeItem", this.itemLocal.id)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+
       this.init();
       console.log(["this.store", this.$store.state]);
     }

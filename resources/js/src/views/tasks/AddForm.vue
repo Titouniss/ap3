@@ -1,144 +1,165 @@
 <template>
+  <div>
+    <vs-button
+      v-if="customTask == false"
+      @click="activePrompt = true"
+      class="w-full p-3 mb-4 mr-4"
+    >Ajouter une tâche</vs-button>
+    <div v-if="customTask == true" @click="activePrompt = true" class="card-task-add p-2 m-3">
+      <feather-icon icon="PlusIcon" svgClasses="h-10 w-10" style="color: #fff" />
+      <div style="font-size: 1.1em; color: #fff">Ajouter une tâche</div>
+    </div>
+    <vs-prompt
+      title="Ajouter une tâche"
+      accept-text="Ajouter"
+      cancel-text="Annuler"
+      button-cancel="border"
+      @cancel="clearFields"
+      @accept="addItem"
+      @close="clearFields"
+      :is-valid="validateForm"
+      :active.sync="showPrompt"
+      class="task-compose"
+    >
+      <div>
+        <form class="add-task-form">
+          <div class="vx-row">
+            <!-- Left -->
+            <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
+              <vs-input
+                v-validate="'required'"
+                name="name"
+                class="w-full mb-4 mt-1"
+                placeholder="Nom"
+                v-model="itemLocal.name"
+                :color="!errors.has('name') ? 'success' : 'danger'"
+              />
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('name')"
+              >{{ errors.first('name') }}</span>
 
-    <div>
-      <vs-button v-if="customTask == false" @click="activePrompt = true" class="w-full">
-          Ajouter une tâche
-      </vs-button>
-      <div v-if="customTask == true" @click="activePrompt = true" class="card-task-add p-2 m-3">
-        <feather-icon icon="PlusIcon" svgClasses="h-10 w-10" style="color: #fff" />
-        <div style="font-size: 1.1em; color: #fff">Ajouter une tâche</div>
-      </div>
-      <vs-prompt
-        title="Ajouter une tâche"
-        accept-text= "Ajouter"
-        cancel-text= "Annuler"
-        button-cancel = "border"
-        @cancel="clearFields"
-        @accept="addItem"
-        @close="clearFields"
-        :is-valid="validateForm"
-        :active.sync="activePrompt"
-        class="task-compose">
-        <div>
-          <form class="add-task-form">
-            <div class="vx-row">
-              <!-- Left -->
-              <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
-                <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-1" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
-                <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
-                
-                <div class="my-3">
-                  <div v-if="descriptionDisplay">
-                    <small class="date-label">Description</small>
-                    <vs-textarea rows="2" label="Ajouter une description" name="description" class="w-full mb-1 mt-1" v-model="itemLocal.description" />  
-                  </div>
+              <div class="my-3">
+                <div v-if="descriptionDisplay">
+                  <small class="date-label">Description</small>
+                  <vs-textarea
+                    rows="2"
+                    label="Ajouter une description"
+                    name="description"
+                    class="w-full mb-1 mt-1"
+                    v-model="itemLocal.description"
+                  />
                 </div>
-                <div class="my-3" v-if="previousTasks.length > 0">
-                    <span> Tache dépendante de : </span> 
-                    <li :key="index" v-for="(item, index) in previousTasks">
-                      {{ item }}
-                    </li>
-                </div>
-                <div class="my-3" style="font-size: 0.9em;">
-                  <small class="date-label mb-1" style="display: block;">Date</small>
-                  <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
-                </div>
+              </div>
+              <div class="my-3" v-if="previousTasks.length > 0">
+                <span>Tache dépendante de :</span>
+                <li :key="index" v-for="(item, index) in previousTasks">{{ item }}</li>
+              </div>
+              <div class="my-3" style="font-size: 0.9em;">
+                <small class="date-label mb-1" style="display: block;">Date</small>
+                <flat-pickr
+                  :config="configdateTimePicker"
+                  v-model="itemLocal.date"
+                  placeholder="Date"
+                  class="w-full"
+                />
+              </div>
 
-                <div class="my-3">
-                  <small class="date-label">Compétences</small>
-                  <vs-select
-                    v-on:change="updateWorkareasList"
-                    v-model="itemLocal.skills"
-                    class="w-full"
-                    multiple
-                    autocomplete
-                    name="skills"
-                  >
-                    <vs-select-item
-                      :key="index"
-                      :value="item.id"
-                      :text="item.name"
-                      v-for="(item,index) in skillsData"
-                    />
-                  </vs-select>
-                  <span
-                    class="text-danger text-sm"
-                    v-show="errors.has('skills')"
-                  >{{ errors.first('skills') }}</span>
-                </div>
-
-                <div
-                  class="my-3"
-                  v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0"
+              <div class="my-3">
+                <small class="date-label">Compétences</small>
+                <vs-select
+                  v-on:change="updateWorkareasList"
+                  v-model="itemLocal.skills"
+                  class="w-full"
+                  multiple
+                  autocomplete
+                  name="skills"
                 >
-                  <small class="date-label">Ilot</small>
-                  <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
-                    <vs-select-item
-                      :key="index"
-                      :value="item.id"
-                      :text="item.name"
-                      v-for="(item,index) in workareasDataFiltered"
-                    />
-                  </vs-select>
-                </div>
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in skillsData"
+                  />
+                </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('skills')"
+                >{{ errors.first('skills') }}</span>
               </div>
-              <!-- Right -->
-              <div class="vx-col flex-5">
-                <div class="mb-3" style="flex-direction: column; display: flex;">
-                  <add-previous-task
-                    :addPreviousTask="addPreviousTask"
-                    :tasks_list="tasks_list"
-                    :previousTasksIds="itemLocal.previousTasksIds"
+
+              <div
+                class="my-3"
+                v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0"
+              >
+                <small class="date-label">Ilot</small>
+                <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in workareasDataFiltered"
                   />
-                  <span
-                    v-if="!commentDisplay"
-                    v-on:click="showComment"
-                    class="linkTxt"
-                  >+ Ajouter un commentaire</span>
-                </div>
-                <div class="mb-4">
-                  <div v-if="orderDisplay">
-                    <small class="date-label">Ordre</small>
-                    <vs-input-number
-                      min="1"
-                      name="order"
-                      class="inputNumber"
-                      v-model="itemLocal.order"
-                    />
-                  </div>
-                </div>
-                <ul class="mt-3">
-                  <li class="mr-3">
-                    <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
-                  </li>
-                  <li class="mr-3">
-                    <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
-                  </li>
-                  <li v-on:click="setTimeSpent">
-                    <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
-                  </li>
-                </ul>
-                <div class="my-4 mt-3 mb-2">
-                  <small class="date-label">Temps estimé (en h)</small>
+                </vs-select>
+              </div>
+            </div>
+            <!-- Right -->
+            <div class="vx-col flex-5">
+              <div class="mb-3" style="flex-direction: column; display: flex;">
+                <add-previous-task
+                  :addPreviousTask="addPreviousTask"
+                  :tasks_list="tasks_list"
+                  :previousTasksIds="itemLocal.previousTasksIds"
+                />
+                <span
+                  v-if="!commentDisplay"
+                  v-on:click="showComment"
+                  class="linkTxt"
+                >+ Ajouter un commentaire</span>
+              </div>
+              <div class="mb-4">
+                <div v-if="orderDisplay">
+                  <small class="date-label">Ordre</small>
                   <vs-input-number
                     min="1"
-                    max="200"
-                    name="estimatedTime"
+                    name="order"
                     class="inputNumber"
-                    v-model="itemLocal.estimated_time"
-                  />
-                </div>
-                <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
-                  <small class="date-label">Temps passé (en h)</small>
-                  <vs-input-number
-                    min="1"
-                    max="200"
-                    name="timeSpent"
-                    class="inputNumber"
-                    v-model="itemLocal.time_spent"
+                    v-model="itemLocal.order"
                   />
                 </div>
               </div>
+              <ul class="mt-3">
+                <li class="mr-3">
+                  <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
+                </li>
+                <li class="mr-3">
+                  <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
+                </li>
+                <li v-on:click="setTimeSpent">
+                  <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
+                </li>
+              </ul>
+              <div class="my-4 mt-3 mb-2">
+                <small class="date-label">Temps estimé (en h)</small>
+                <vs-input-number
+                  min="1"
+                  max="200"
+                  name="estimatedTime"
+                  class="inputNumber"
+                  v-model="itemLocal.estimated_time"
+                />
+              </div>
+              <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
+                <small class="date-label">Temps passé (en h)</small>
+                <vs-input-number
+                  min="1"
+                  max="200"
+                  name="timeSpent"
+                  class="inputNumber"
+                  v-model="itemLocal.time_spent"
+                />
+              </div>
+            </div>
           </div>
 
           <div class="my-3">
@@ -181,8 +202,17 @@ export default {
     project_data: {
       required: true
     },
-    tasks_list : { required: true},
-    customTask : { type: Boolean}
+    tasks_list: { required: true },
+    customTask: { type: Boolean },
+    dateData: {
+      type: Object
+    },
+    activeAddPrompt: {
+      type: Boolean
+    },
+    handleClose: {
+      type: Function
+    }
   },
   data() {
     return {
@@ -238,6 +268,21 @@ export default {
     skillsData() {
       let $skillsData = this.$store.state.skillManagement.skills;
       return this.filterItemsAdmin($skillsData);
+    },
+    showPrompt: {
+      get() {
+        if (this.activeAddPrompt) {
+          console.log("pass to change");
+          console.log(["this.itemLocal.date", this.itemLocal.date]);
+          console.log(["this.dateData.dateStr", this.dateData.date]);
+
+          this.itemLocal.date = this.dateData.date;
+        }
+        return this.activeAddPrompt ? true : this.activePrompt ? true : false;
+      },
+      set(value) {
+        return value;
+      }
     }
   },
   methods: {
@@ -258,6 +303,9 @@ export default {
         comment: "",
         previousTasksIds: []
       });
+      if (this.activeAddPrompt) {
+        this.handleClose();
+      }
       this.orderDisplay = false;
       this.descriptionDisplay = false;
       this.commentDisplay = false;
@@ -354,7 +402,8 @@ export default {
         this.have_setTimeSpent = true;
       }
     }
-  }
+  },
+  created() {}
 };
 </script>
 <style>

@@ -122,12 +122,12 @@ class TaskController extends Controller
             'name' => 'required',
             'date' => 'required',
             'status' => 'required',
-            'estimated_time' => 'required' 
+            'estimated_time' => 'required'
             ]);
-        
-        $update = Task::where('id',$id)
+            
+            $update = Task::where('id',$id)
             ->update([
-                'name' => $arrayRequest['name'], 
+                'name' => $arrayRequest['name'],
                 'date' => $arrayRequest['date'],
                 'estimated_time' => $arrayRequest['estimated_time'],
                 'order' => $arrayRequest['order'],
@@ -135,16 +135,20 @@ class TaskController extends Controller
                 'time_spent' => $arrayRequest['time_spent'],
                 'workarea_id' => $arrayRequest['workarea_id'],
                 'status' => $arrayRequest['status']
-            ]);
-            
-        $this->updateSkills($id, $arrayRequest['skills']);
-        $this->updatePreviousTasks($id, $arrayRequest['previousTasksIds']);
+                ]);
+
+            if(isset($arrayRequest['skills']) && isset($arrayRequest['previousTasksIds'])) {
+                $this->updateSkills($id, $arrayRequest['skills']);
+                $this->updatePreviousTasks($id, $arrayRequest['previousTasksIds']);
+            }
+        
         
         if($update){
             $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
-            return response()->json(['success' => $item], $this-> successStatus); 
+            return response()->json(['item' => $item], $this-> successStatus); 
         }
         else{
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
             return response()->json(['error' => 'error'], $this-> errorStatus); 
         }
         

@@ -11,24 +11,24 @@ var slug = 'tasks'
 var slug_singular = 'task'
 
 export default {
-  ADD_ITEM (state, item) {
+  ADD_ITEM(state, item) {
     state[slug].unshift(item)
   },
 
-  EDIT_ITEM (state, item) {
+  EDIT_ITEM(state, item) {
     state[slug_singular] = item
   },
 
-  UPDATE_ITEM (state, item) {
-    const index = state[slug].findIndex((r) => r.id === item.id)    
+  UPDATE_ITEM(state, item) {
+    const index = state[slug].findIndex((r) => r.id === item.id)
     state[slug].splice(index, 1, item)
   },
 
-  SET_ITEMS (state, items) {
+  SET_ITEMS(state, items) {
     state[slug] = items
   },
 
-  REMOVE_ITEM (state, itemId) {
+  REMOVE_ITEM(state, itemId) {
     const index = state[slug].findIndex((u) => u.id === itemId)
     state[slug].splice(index, 1)
   }
