@@ -1,5 +1,6 @@
 <template>
   <div class="vx-card w-full p-6">
+    <h2 class="mb-4 color-primary">{{scheduleTitle}}</h2>
     <!-- <div>
       <button @click="toggleWeekends">toggle weekends</button>
       <button @click="gotoPast">go to a date in the past</button>
@@ -38,6 +39,7 @@
       @eventDrop="handleEventDrop"
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
+      @eventResize="handleEventResize"
     />
     <edit-form
       :reload="calendarEvents"
@@ -89,6 +91,7 @@ export default {
         interactionPlugin // needed for dateClick
       ],
       activeAddPrompt: false,
+      scheduleTitle: "",
       dateData: {},
       calendarWeekends: true,
       customButtons: {
@@ -219,12 +222,56 @@ export default {
           console.error(err);
         });
     },
+    handleEventResize(arg) {
+      var itemTemp = this.calendarEvents.find(
+        e => e.id.toString() === arg.event.id
+      );
+
+      //Parse new item to update task
+
+      var start = moment(arg.event.start);
+      var end = moment(arg.event.end);
+
+      var itemToSave = {
+        id: itemTemp.id,
+        name: itemTemp.title,
+        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+        estimated_time: end.diff(start, "hours"),
+        order: itemTemp.order,
+        description: itemTemp.description,
+        time_spent: itemTemp.time_spent,
+        workarea_id: itemTemp.workarea_id,
+        status: itemTemp.status,
+        from: "schedule"
+      };
+
+      this.$store
+        .dispatch("taskManagement/updateItem", itemToSave)
+        .then(data => {
+          console.log(["data", data]);
+          if (data && data.status === 200) {
+            this.refresh();
+          } else {
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    },
     handleClose() {
       this.refresh();
       (this.activeAddPrompt = false), (this.dateData = {});
     }
   },
-  mounted() {},
+  mounted() {
+    if (this.$route.query.type === "projects") {
+      this.scheduleTitle = "Planning du projet : " + this.project_data.name;
+    } else if (this.$route.query.type === "users") {
+      this.scheduleTitle = "Planning de l'utilisateur : ";
+    } else if (this.$route.query.type === "workarea") {
+      this.scheduleTitle = "Planning de l'îlot : ";
+    }
+  },
   created() {
     // Add store management
     if (!moduleScheduleManagement.isRegistered) {
