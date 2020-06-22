@@ -216,26 +216,31 @@ class ProjectController extends Controller
         $project = Project::find($id);
         $nbHoursRequired = 0; 
         $nbHoursAvailable = 0;
+        $nbHoursUnvailable = 0;
 
-        // Hours required
         foreach($project->tasks as $task){
+            // Hours required
             $nbHoursRequired += $task->estimated_time;
         }
 
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities')->get();
-        
      
-        return $this->calculTimeAvailable($users, $project->date);
+        // Hours Available & Hours Unavailable
+        return $TimeData = $this->calculTimeAvailable($users, $project->date);
+
 
 
         $response = [
             'nbHoursRequired' => $nbHoursRequired,
-            'nbHoursAvailable' => $nbHoursAvailable,
+            'nbHoursAvailable' => $TimeData['total_hours'],
+            'nbHoursUnvailable' => $TimeData['total_hours_unavailable'],
+            'details' => $TimeData,
             'users' => $users,
         ];
 
         return response()->json(['success' => $response], $this-> successStatus);  
     }
+
 
     private function calculTimeAvailable($users, $date_end){
         $hoursAvailable = [];
@@ -422,18 +427,19 @@ class ProjectController extends Controller
                     if($unAvailablePeriods){
 
                         $workDate = Carbon::createFromFormat('Y-m-d H:i:s', $date);
-                       
+                        $hoursUnavailableByPeriod = [];
+
                         foreach($unAvailablePeriods as $period){
+                            
                             //On regarde si la période ne comprend que une seule journée
                             if(count($period['period']) == 1){
-                               
+
                                 $unavailableDate = $period['period']->getStartDate();
 
                                 if($unavailableDate == $workDate){
 
                                     //On calcul le nombre d'heures d'indisponibilité
-                                    $userHours['hours_unavailable_details'] = $this->calculNbHoursUnavailable($dayHours, $period);
-                                    $userHours['hours_unavailable'] = $userHours['hours_unavailable_details']['afternoon']['hours'] + $userHours['hours_unavailable_details']['morning']['hours'];
+                                    $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailable($dayHours, $period);
                                 }
                             } 
                             else{ //plusieurs journées
@@ -444,19 +450,20 @@ class ProjectController extends Controller
   
                                     if($periodDay == $workDate){
                                         if($workDate == $startDate){
-                                            $userHours['hours_unavailable_details'] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, $period['start_date']);
-                                            $userHours['hours_unavailable'] = $userHours['hours_unavailable_details']['afternoon']['hours'] + $userHours['hours_unavailable_details']['morning']['hours'];
+                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, $period['start_date']);
                                         }else if($workDate == $endDate){
-                                            $userHours['hours_unavailable_details'] =  $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, null, $period['end_date']);
-                                            $userHours['hours_unavailable'] = $userHours['hours_unavailable_details']['afternoon']['hours'] + $userHours['hours_unavailable_details']['morning']['hours'];
+                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, null, $period['end_date']);
                                         }else{
-                                            $userHours['hours_unavailable_details'] =  $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay);
-                                            $userHours['hours_unavailable'] = $userHours['hours_unavailable_details']['afternoon']['hours'] + $userHours['hours_unavailable_details']['morning']['hours'];
+                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay);
                                         }
                                     }
                                 }
                             }
                         }
+                        $hours_unavailable_details = $this->mergeHoursUnavailable($hoursUnavailableByPeriod);
+
+                        $userHours['hours_unavailable_details'] = $hours_unavailable_details;
+                        $userHours['hours_unavailable'] = $hours_unavailable_details['afternoon']['hours'] + $hours_unavailable_details['morning']['hours'];
                     }
                 }
             }
@@ -470,17 +477,21 @@ class ProjectController extends Controller
         return empty($hours) ? null : $hours;
     }
 
-    private function calculNbHoursUnavailable($dayHours, $period){
+    private function calculNbHoursUnavailable($dayHours, $period, $hours_unavailable = null){
 
         $hours_unavailable_morning = [
             'hours' => 0,
-            'start_time' => null,
-            'end_time' => null
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
         ];
         $hours_unavailable_afternoon = [
             'hours' => 0,
-            'start_time' => null,
-            'end_time' => null
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
         ];
 
         //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
@@ -511,8 +522,10 @@ class ProjectController extends Controller
 
                 $hours_unavailable_morning = [
                     'hours' => Carbon::parse($endMorningUnavailable)->floatDiffInHours(Carbon::parse($startMorningUnavailable)),
-                    'start_time' => $startMorningUnavailable,
-                    'end_time' => $endMorningUnavailable
+                    'periods' => [
+                        'start_time' => $startMorningUnavailable,
+                        'end_time' => $endMorningUnavailable
+                    ]
                 ];
             }            
         }
@@ -535,7 +548,7 @@ class ProjectController extends Controller
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
-                if($period['end_date'] <= $morningEnd){
+                if($period['end_date'] <= $AfternoonEnd){
                     $endAfternoonUnavailable = $period['end_date'];
                 }
                 else{ //Sinon, on prend de débauche du midi.
@@ -544,8 +557,10 @@ class ProjectController extends Controller
 
                 $hours_unavailable_afternoon = [
                     'hours' => Carbon::parse($endAfternoonUnavailable)->floatDiffInHours(Carbon::parse($startAfternoonUnavailable)),
-                    'start_time' => $startAfternoonUnavailable,
-                    'end_time' => $endAfternoonUnavailable
+                    'periods' => [
+                        'start_time' => $startAfternoonUnavailable,
+                        'end_time' => $endAfternoonUnavailable
+                    ]
                 ];;
             }
         }
@@ -558,13 +573,17 @@ class ProjectController extends Controller
 
         $hours_unavailable_morning = [
             'hours' => 0,
-            'start_time' => null,
-            'end_time' => null
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
         ];
         $hours_unavailable_afternoon = [
             'hours' => 0,
-            'start_time' => null,
-            'end_time' => null
+            'periods' => [
+                'start_time' => null,
+                'end_time' => null
+            ]
         ];
 
         $startDateTime = null;
@@ -607,8 +626,10 @@ class ProjectController extends Controller
 
                 $hours_unavailable_morning = [
                     'hours' => Carbon::parse($endMorningUnavailable)->floatDiffInHours(Carbon::parse($startMorningUnavailable)),
-                    'start_time' => $startMorningUnavailable,
-                    'end_time' => $endMorningUnavailable
+                    'periods' => [
+                        'start_time' => $startMorningUnavailable,
+                        'end_time' => $endMorningUnavailable
+                    ]
                 ];
             }            
         }
@@ -640,13 +661,51 @@ class ProjectController extends Controller
 
                 $hours_unavailable_afternoon = [
                     'hours' => Carbon::parse($endAfternoonUnavailable)->floatDiffInHours(Carbon::parse($startAfternoonUnavailable)),
-                    'start_time' => $startAfternoonUnavailable,
-                    'end_time' => $endAfternoonUnavailable
+                    'periods' => [
+                        'start_time' => $startAfternoonUnavailable,
+                        'end_time' => $endAfternoonUnavailable
+                    ]
                 ];;
             }
         }
 
         return array('morning' => $hours_unavailable_morning, 'afternoon' => $hours_unavailable_afternoon);
+    }
+
+    private function mergeHoursUnavailable($hoursUnavailableByPeriod){
+
+        //On regarde si la journée contient une ou plusieurs indisponnibilités
+        if(count($hoursUnavailableByPeriod) == 1){
+            $response = $hoursUnavailableByPeriod[0];
+        }
+        else{
+            $hoursUnavailable = [
+                'morning' => [
+                    'hours' => 0,
+                    'periods' => []
+                ],
+                'afternoon' => [
+                    'hours' => 0,
+                    'periods' => []
+                ]
+            ];
+
+            foreach($hoursUnavailableByPeriod as $hours){
+
+                if($hours['morning']['hours'] != 0){
+                    $hoursUnavailable['morning']['hours'] += $hours['morning']['hours'];
+                    $hoursUnavailable['morning']['periods'][] = $hours['morning']['periods'];
+                }
+
+                if($hours['afternoon']['hours'] != 0){
+                    $hoursUnavailable['afternoon']['hours'] += $hours['afternoon']['hours'];
+                    $hoursUnavailable['afternoon']['periods'][] = $hours['afternoon']['periods'];
+                }
+            }
+            $response = $hoursUnavailable;
+        }
+        return $response;
+
     }
  
     private function transformDatesToPeriod($unavailabilities){

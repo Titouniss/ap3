@@ -214,6 +214,9 @@ export default {
     }
   },
   methods: {
+    authorizedTo(action, model = "skills") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
     },
@@ -331,12 +334,14 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
     this.$store.dispatch("skillManagement/fetchItems").catch(err => {
       console.error(err);
     });
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

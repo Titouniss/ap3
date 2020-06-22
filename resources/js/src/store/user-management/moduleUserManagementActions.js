@@ -66,7 +66,7 @@ export default {
     },
     updatePassword({ commit }, payload) {
         return new Promise((resolve, reject) => {
-            axios.post(`/api/user-management/updatePassword/`, payload).then((response) => {
+            axios.post(`/api/user-management/updatePassword/${payload.id_user}`, payload).then((response) => {
                 resolve(response)
             })
                 .catch((error) => { reject(error) })

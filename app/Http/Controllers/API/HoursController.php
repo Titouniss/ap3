@@ -55,7 +55,7 @@ class HoursController extends Controller
             }
         }
 
-        $items = $items->with('project', 'user')->orderBy('date', 'DESC')->get();
+        $items = $items->with('project', 'user')->orderBy('date')->get();
 
         // Stats
         $stats = [];
@@ -68,7 +68,7 @@ class HoursController extends Controller
             $stats['total'] = $stats['total']->totalHours;
 
             if ($userId = $user->hasRole('superAdmin') ? $request->user_id : $user->id) {
-                $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count();
+                $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count() || 1;
                 $workWeekHours = WorkHours::where('user_id', $userId)->where('is_active', 1)->get()->map(function ($day) {
                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
                     $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));

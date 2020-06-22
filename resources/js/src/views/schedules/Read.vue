@@ -39,7 +39,7 @@
       @eventDrop="handleEventDrop"
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
-      @eventResize="handleEventResize"
+      @eventResize="handleEventChange"
     />
     <edit-form
       :reload="calendarEvents"
@@ -227,7 +227,6 @@ export default {
 
       this.$store
         .dispatch("scheduleManagement/editEvent", targetEvent)
-        .then(() => {})
         .catch(err => {
           console.error(err);
         });

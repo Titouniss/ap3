@@ -64,10 +64,10 @@
             <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
 
             <vs-input
-              v-validate="'min:10|max:10|required|phone_number'"
+              v-validate="'min:10|max:10|required'"
               data-vv-validate-on="blur"
               name="phone_number"
-              type="phone_number"
+              type="number"
               label-placeholder="Numéro de téléphone"
               placeholder="Numéro de téléphone"
               v-model="phone_number"
@@ -91,7 +91,7 @@
               ref="password"
               type="password"
               data-vv-validate-on="blur"
-              v-validate="'required|min:8|max:10'"
+              v-validate="'required|min:8|max:50'"
               name="password"
               label-placeholder="Mot de passe"
               placeholder="Mot de passe"
@@ -102,7 +102,7 @@
 
             <vs-input
               type="password"
-              v-validate="'min:8|max:10|confirmed:password'"
+              v-validate="'required|min:8|max:50|confirmed:password'"
               data-vv-validate-on="blur"
               data-vv-as="password"
               name="confirm_password"
@@ -146,7 +146,7 @@ export default {
       email: "",
       password: "",
       confirm_password: "",
-      isTermsConditionAccepted: true,
+      isTermsConditionAccepted: false,
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
@@ -237,5 +237,16 @@ export default {
   .con-tab {
     padding-bottom: 23px;
   }
+}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 </style>

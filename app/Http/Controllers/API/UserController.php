@@ -22,6 +22,7 @@ use Mail;
 use App\User;
 use App\Models\Company;
 use App\Models\WorkHours;
+use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
 
 use Monolog\Logger;
@@ -179,14 +180,14 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $role = Role::where('name', 'clientAdmin');
+        $role = Role::where('name', 'Utilisateur');
         if ($role != null) {
-            $user->assignRole('clientAdmin'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+            $user->assignRole('Utilisateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
-        $company = Company::create(['name' => 'Entreprise ' . $user->lastname, 'expire_at' => now()->addDays(29)]);
+        $company = Company::where(['siret' => 'test_users'])->first();
         $user->company()->associate($company);
         $user->save();
-        //$user->sendEmailVerificationNotification();
+        $user->sendEmailVerificationNotification();
         $token =  $user->createToken('ProjetX');
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
@@ -248,9 +249,9 @@ class UserController extends Controller
         $user = Auth::user();
         $usersList = [];
         if ($user->hasRole('superAdmin')) {
-            $usersList = User::withTrashed()->get()->load('roles');
+            $usersList = User::withTrashed()->get()->load('roles', 'company:id,name', 'skills');
         } else if ($user->company_id != null) {
-            $usersList = User::where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name');
+            $usersList = User::where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');
         }
         return response()->json(['success' => $usersList], $this->successStatus);
     }
@@ -285,6 +286,11 @@ class UserController extends Controller
             // on assigne le rôle d'utilisateur sans droit par défault pour éviter un bug.
             $item->assignRole('basicUsers');
         }
+        if (!empty($arrayRequest['skills'])) {
+            foreach ($arrayRequest['skills'] as $skill_id) {
+                UsersSkill::create(['user_id' => $item->id, 'skill_id' => $skill_id]);
+            }
+        }
 
         //$item->notify(new UserRegistration($item));
 
@@ -298,10 +304,10 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(User $user)
     {
-        $item = User::where('id', $id)
-            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities')
+        $item = User::where('id', $user->id)
+            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities', 'skills')
             ->first();
         return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
     }
@@ -311,31 +317,45 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
         $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
             'lastname' => 'required',
-            'genre' => 'required', 
-            'phone_number' => 'required', 
-            'email' => 'required', 
+            'genre' => 'required',
+            'phone_number' => 'required',
+            'email' => 'required',
+            'company_id' => 'required'
         ]);
-        $user = User::withTrashed()->find($id);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
+        }
+
         if ($user != null) {
-            if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null ) {
+            if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null) {
                 $roles = array();
                 foreach ($arrayRequest['roles'] as $role) {
                     array_push($roles, $role['id']);
                 }
                 $user->syncRoles($roles);
             }
+
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
             $user->genre = $arrayRequest['genre'];
             $user->phone_number = $arrayRequest['phone_number'];
             $user->email = $arrayRequest['email'];
+            $user->company_id = $arrayRequest['company_id'];
+
+            UsersSkill::where('user_id', $user->id)->delete();
+            if (!empty($arrayRequest['skills'])) {
+                foreach ($arrayRequest['skills'] as $skill_id) {
+                    UsersSkill::create(['user_id' => $user->id, 'skill_id' => $skill_id]);
+                }
+            }
+
             $user->save();
         }
         return response()->json(['success' => $user], $this->successStatus);
@@ -346,7 +366,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function updateAccount(Request $request, $id)
+    public function updateAccount(Request $request, User $user)
     {
         $arrayRequest = $request->all();
 
@@ -356,9 +376,7 @@ class UserController extends Controller
             'email' => 'email'
         ]);
 
-        $user = User::withTrashed()->find($id);
         if ($user != null) {
-
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
             $user->email = $arrayRequest['email'];
@@ -372,7 +390,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function updateInformation(Request $request, $id)
+    public function updateInformation(Request $request, User $user)
     {
         $arrayRequest = $request->all();
 
@@ -385,7 +403,6 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        $user = User::withTrashed()->find($id);
         if ($user != null) {
             $user->birth_date = $arrayRequest['birth_date'];
             $user->phone_number = $arrayRequest['phone_number'];
@@ -400,12 +417,12 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(Request $request, User $user)
     {
         $rule = ['password' => [new StrongPassword]];
 
         $arrayRequest = $request->all();
-        $user = User::where('id', $arrayRequest['id_user'])->first();
+
         // Verify user exist
         if ($user != null) {
             // Verify old same password
@@ -431,7 +448,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function updateWorkHours(Request $request, $id)
+    public function updateWorkHours(Request $request, User $user)
     {
         $arrayRequest = $request->all();
 
@@ -447,31 +464,18 @@ class UserController extends Controller
             }
         }
 
-        if (User::withTrashed()->where('id', $id)->exists()) {
+        if ($user != null) {
             foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                $lowerDay = strtolower($day);
-                $previousHours = WorkHours::where('user_id', $id)->where('day', $lowerDay)->first();
-                if ($previousHours) {
-                    $previousHours->is_active = $hours['is_active'];
-                    $previousHours->morning_starts_at = $hours['morning_starts_at'];
-                    $previousHours->morning_ends_at = $hours['morning_ends_at'];
-                    $previousHours->afternoon_starts_at = $hours['afternoon_starts_at'];
-                    $previousHours->afternoon_ends_at = $hours['afternoon_ends_at'];
-                    $previousHours->save();
-                } else {
-                    WorkHours::create([
-                        'day' => $lowerDay,
-                        'is_active' => $hours['is_active'],
-                        'morning_starts_at' => $hours['morning_starts_at'],
-                        'morning_ends_at' => $hours['morning_ends_at'],
-                        'afternoon_starts_at' => $hours['afternoon_starts_at'],
-                        'afternoon_ends_at' => $hours['afternoon_ends_at'],
-                        'user_id' => $id
-                    ]);
-                }
+                $workHours = WorkHours::firstOrCreate(['user_id' => $user->id, 'day' => strtolower($day)]);
+                $workHours->is_active = $hours['is_active'];
+                $workHours->morning_starts_at = $hours['morning_starts_at'];
+                $workHours->morning_ends_at = $hours['morning_ends_at'];
+                $workHours->afternoon_starts_at = $hours['afternoon_starts_at'];
+                $workHours->afternoon_ends_at = $hours['afternoon_ends_at'];
+                $workHours->save();
             }
         }
-        return response()->json(['success' => User::where('id', $id)->with('workHours', 'unavailabilities')->first()], $this->successStatus);
+        return response()->json(['success' => User::where('id', $user->id)->with('workHours', 'unavailabilities')->first()], $this->successStatus);
     }
 
     /**

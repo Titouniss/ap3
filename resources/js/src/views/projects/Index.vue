@@ -340,15 +340,19 @@ export default {
       this.$store.registerModule("rangeManagement", moduleRangeManagement);
       moduleRangeManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
     this.$store.dispatch("projectManagement/fetchItems").catch(err => {
       console.error(err);
     });
+    if (this.$store.getters.userHasPermissionTo(`read companies`)) {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
+    if (this.$store.getters.userHasPermissionTo(`read ranges`)) {
+      this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

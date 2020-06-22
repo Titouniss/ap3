@@ -4,6 +4,7 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\User;
+use Illuminate\Support\Facades\DB;
 
 class PermissionsRoleTableSeeder extends Seeder
 {
@@ -30,6 +31,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['tasks', 'tâches', true],
             ['ranges', 'gammes', true],
             ['hours', 'heures', true],
+            ['unavailabilities', 'indiponibilités', true],
             ['schedules', 'planning', true]
         ];
         // create permissions
@@ -48,23 +50,26 @@ class PermissionsRoleTableSeeder extends Seeder
         ];
 
         foreach ($Rolekeys as $roleKey) {
-            $key = $roleKey[0];
-            $role = Role::firstOrCreate(['name' => $key, 'isPublic' => $roleKey[1]]);
-            if ($key == 'superAdmin') {
-                $role->givePermissionTo(Permission::all());
-            } else if ($key != 'utilisateur') {
-                foreach ($Permkeys as $PermkeyArray) {
-                    $Permkey = $PermkeyArray[0]; //get name only
-                    if ($Permkey == 'permissions' || $Permkey == 'companies') {
-                        if ($key == 'littleAdmin') {
-                            $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
-                        }
-                    } else {
-                        $role->givePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
-                    }
-                }
+            $role = Role::firstOrCreate(['name' => $roleKey[0], 'isPublic' => $roleKey[1]]);
+            foreach ($Permkeys as $PermkeyArray) {
+                $Permkey = $PermkeyArray[0];
+                $role->revokePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
             }
         }
+
+        $role = Role::where(['name' => 'superAdmin'])->first();
+        $role->givePermissionTo(Permission::all());
+
+        $role = Role::where(['name' => 'littleAdmin'])->first();
+        $role->givePermissionTo(Permission::all());
+
+        $role = Role::where(['name' => 'Administrateur'])->first();
+        $role->givePermissionTo(Permission::all()->filter(function ($perm) {
+            return $perm->name_fr != 'permissions' && $perm->name_fr != 'companies';
+        }));
+
+        $role = Role::where(['name' => 'Utilisateur'])->first();
+        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'projets', 'tâches', 'indiponibilités'])->orWhereIn('name', ['read skills'])->get());
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
         if ($admin == null) {

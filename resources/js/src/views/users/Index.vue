@@ -95,6 +95,7 @@ import vSelect from "vue-select";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
 import AddForm from "./AddForm.vue";
 import EditForm from "./EditForm.vue";
@@ -209,19 +210,13 @@ export default {
       return this.$store.state.userManagement.users;
     },
     authorizedToPublish() {
-      return (
-        this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
     },
     authorizedToDelete() {
-      return (
-        this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
     },
     authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -242,6 +237,9 @@ export default {
     }
   },
   methods: {
+    authorizedTo(action, model = "users") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
       let modelObj = null;
@@ -314,11 +312,6 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    },
-    manageErrors(err) {
-      if (err && err.request && err.request.status === 403) {
-        this.$router.push({ name: "page-not-authorized" }).catch(() => {});
-      } else console.error(err);
     }
   },
   mounted() {
@@ -352,7 +345,6 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-
     if (!moduleRoleManagement.isRegistered) {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
@@ -360,16 +352,27 @@ export default {
     if (!moduleCompanyManagement.isRegistered) {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
+    } 
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule("skillManagement", moduleSkillManagement);
+      moduleSkillManagement.isRegistered = true;
     }
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
-    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
+
+    this.$store.dispatch("skillManagement/fetchItems");
+    if (this.authorizedTo("read", "skills")) {
+      this.$store.dispatch("skillManagement/fetchItems");
+    }
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "users")) {
+      this.$store.dispatch("userManagement/fetchItems");
+    }
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "roles")) {
+      this.$store.dispatch("roleManagement/fetchItems");
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
@@ -377,6 +380,8 @@ export default {
     moduleUserManagement.isRegistered = false;
     moduleRoleManagement.isRegistered = false;
     moduleCompanyManagement.isRegistered = false;
+    moduleSkillManagement.isRegistered = false;
+    this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");

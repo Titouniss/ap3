@@ -32,7 +32,7 @@
                 <td class="font-semibold">Date de livraison prévu :</td>
                 <td>{{ project_data.date }}</td>
               </tr>
-              <tr>
+              <tr v-if="authorizedTo('read', 'ranges')">
                 <td
                   class="font-semibold"
                   style="padding-bottom: 0; vertical-align: inherit;"
@@ -73,7 +73,13 @@
               icon="icon-trash"
               @click="confirmDeleteRecord"
             >Delete</vs-button>
-            <vs-button type="border" color="success" icon-pack="feather" icon="icon-play" @click="startProject">Démarrer le project</vs-button>
+            <vs-button
+              type="border"
+              color="success"
+              icon-pack="feather"
+              icon="icon-play"
+              @click="startProject"
+            >Démarrer le project</vs-button>
           </div>
         </div>
       </vx-card>
@@ -100,9 +106,9 @@ import moduleRangeManagement from "@/store/range-management/moduleRangeManagemen
 
 import moment from "moment";
 
-import EditForm from './EditForm.vue'
-import AddRangeForm from './AddRangeForm.vue'
-import IndexTasks from './../tasks/index.vue'
+import EditForm from "./EditForm.vue";
+import AddRangeForm from "./AddRangeForm.vue";
+import IndexTasks from "./../tasks/Index.vue";
 
 export default {
   components: {
@@ -122,10 +128,16 @@ export default {
     }
   },
   methods: {
-    startProject () {
-      this.$store.dispatch("projectManagement/start", this.project_data.id)
-        .then(()   => {  })
-        .catch(err => { console.error(err)       })
+    authorizedTo(action, model = "projects") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
+    startProject() {
+      this.$store
+        .dispatch("projectManagement/start", this.project_data.id)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
     },
     editRecord() {
       this.$store
@@ -192,21 +204,6 @@ export default {
     moment.locale("fr");
 
     const projectId = this.$route.params.id;
-    this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
     this.$store
       .dispatch("projectManagement/fetchItem", projectId)
       .then(res => {
@@ -222,6 +219,26 @@ export default {
         }
         console.error(err);
       });
+    if (this.authorizedTo("read", "ranges")) {
+      this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
+    if (this.authorizedTo("read", "workareas")) {
+      this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
+    if (this.authorizedTo("read", "skills")) {
+      this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
   },
   beforeDestroy() {
     moduleProjectManagement.isRegistered = false;

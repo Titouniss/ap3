@@ -79,6 +79,47 @@
             />
             <span class="text-danger text-sm">{{ errors.first('email') }}</span>
 
+            <div>
+              <vs-select
+                v-validate="'required'"
+                name="company_id"
+                label="Société"
+                v-model="itemLocal.company_id"
+                class="w-full mt-5"
+              >
+                <vs-select-item
+                  :key="index"
+                  :value="item.id"
+                  :text="item.name"
+                  v-for="(item,index) in companies"
+                />
+              </vs-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+              >{{ errors.first('company_id') }}</span>
+            </div>
+            <div v-if="itemLocal.company_id">
+              <vs-select
+                label="Compétences"
+                v-model="itemLocal.skills"
+                class="w-full mt-5"
+                multiple
+                autocomplete
+              >
+                <vs-select-item
+                  :key="index"
+                  :value="item.id"
+                  :text="item.name"
+                  v-for="(item,index) in companySkills"
+                />
+              </vs-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+              >{{ errors.first('company_id') }}</span>
+            </div>
+
             <vs-select label="Rôle" v-model="selected" class="w-full mt-5">
               <vs-select-item
                 v-validate="'required'"
@@ -98,6 +139,7 @@
 <script>
 // Store Module
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 export default {
   props: {
@@ -129,8 +171,28 @@ export default {
           });
       }
     },
+    companies() {
+      return this.$store.state.companyManagement.companies;
+    },
     roles() {
       return this.$store.getters["roleManagement/getItems"];
+    },
+    companySkills() {
+      console.log(this.itemLocal);
+      let test = this.$store.state.companyManagement.companies.find(
+        company => company.id === this.itemLocal.company_id
+      ).skills;
+      console.log(test);
+      return test;
+    },
+    skillsData() {
+      return this.$store.state.skillManagement.skills;
+    },
+    selectCompanySkills(item) {
+      this.companySkills = this.companiesData.find(
+        company => company.id === item
+      ).skills;
+      this.itemLocal.skills = [];
     },
     validateForm() {
       return (
@@ -155,7 +217,7 @@ export default {
       this.itemLocal.roles = [
         this.$store.getters["roleManagement/getItem"](this.selected)
       ];
-      console.log(["ici", this.itemLocal.roles]);
+      console.log(["ici", this.itemLocal]);
 
       this.$store.dispatch("userManagement/updateItem", this.itemLocal);
       this.usersData;
@@ -166,9 +228,18 @@ export default {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
     }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
     this.$store.dispatch("roleManagement/fetchItems").catch(err => {
       console.error(err);
     });
+    if (this.$store.getters.userHasPermissionTo("read companies")) {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
   }
 };
 </script>
