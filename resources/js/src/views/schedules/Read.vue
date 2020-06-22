@@ -111,23 +111,52 @@ export default {
     calendarEvents() {
       // Get all task and parse to show
       var eventsParse = [];
-      if (this.tasksEvent !== []) {
-        this.tasksEvent.forEach(t => {
-          eventsParse.push({
-            id: t.id,
-            title: t.name,
-            start: t.date,
-            estimated_time: t.estimated_time,
-            order: t.order,
-            description: t.description,
-            time_spent: t.time_spent,
-            workarea_id: t.workarea_id,
-            status: t.status,
-            end: moment(t.date)
-              .add(t.estimated_time, "hour")
-              .format("YYYY-MM-DD HH:mm:ss")
+      if (this.$route.query.type === "projects") {
+        if (this.tasksEvent !== []) {
+          this.tasksEvent.forEach(t => {
+            eventsParse.push({
+              id: t.id,
+              title: t.name,
+              start: t.date,
+              estimated_time: t.estimated_time,
+              order: t.order,
+              description: t.description,
+              time_spent: t.time_spent,
+              workarea_id: t.workarea_id,
+              status: t.status,
+              end: moment(t.date)
+                .add(t.estimated_time, "hour")
+                .format("YYYY-MM-DD HH:mm:ss")
+            });
           });
-        });
+        }
+      } else if (this.$route.query.type === "users") {
+      } else if (this.$route.query.type === "workarea") {
+        if (this.tasksEvent !== []) {
+          console.log(["this.tasksEvent", this.tasksEvent]);
+          console.log(["this.$route.query.id", this.$route.query.id]);
+          this.tasksEvent.forEach(t => {
+            if (
+              t.workarea_id.toString() === this.$route.query.id ||
+              t.workarea_id === this.$route.query.id
+            ) {
+              eventsParse.push({
+                id: t.id,
+                title: t.name,
+                start: t.date,
+                estimated_time: t.estimated_time,
+                order: t.order,
+                description: t.description,
+                time_spent: t.time_spent,
+                workarea_id: t.workarea_id,
+                status: t.status,
+                end: moment(t.date)
+                  .add(t.estimated_time, "hour")
+                  .format("YYYY-MM-DD HH:mm:ss")
+              });
+            }
+          });
+        }
       }
 
       this.$store
@@ -135,6 +164,7 @@ export default {
         .catch(err => {
           this.manageErrors(err);
         });
+      console.log(["eventsParse", eventsParse]);
 
       return eventsParse;
     },
@@ -153,18 +183,30 @@ export default {
         p => (p.id = this.$route.query.id)
       );
       return project_data;
+    },
+    user_data() {
+      var user_data = this.$store.state.userManagement.users.find(
+        u => (u.id = this.$route.query.id)
+      );
+      return user_data;
+    },
+    workarea_data() {
+      var workarea_data = this.$store.state.workareaManagement.workareas.find(
+        w => (w.id = this.$route.query.id)
+      );
+      return workarea_data;
     }
   },
   methods: {
     refresh() {
-      if (this.$route.query.type === "projects") {
-        console.log("Planning d'un projet");
-        this.$store
-          .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
-          .catch(err => {
-            this.manageErrors(err);
-          });
-      }
+      // if (this.$route.query.type === "projects") {
+      //   console.log("Planning d'un projet");
+      //   this.$store
+      //     .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
+      //     .catch(err => {
+      //       this.manageErrors(err);
+      //     });
+      // }
     },
     toggleWeekends() {
       this.calendarWeekends = !this.calendarWeekends; // update a property
@@ -214,7 +256,7 @@ export default {
         .then(data => {
           console.log(["data", data]);
           if (data && data.status === 200) {
-            this.refresh();
+            //this.refresh();
           } else {
           }
         })
@@ -250,7 +292,7 @@ export default {
         .then(data => {
           console.log(["data", data]);
           if (data && data.status === 200) {
-            this.refresh();
+            //this.refresh();
           } else {
           }
         })
@@ -264,12 +306,18 @@ export default {
     }
   },
   mounted() {
+    console.log(["state", this.$store.state]);
+
     if (this.$route.query.type === "projects") {
       this.scheduleTitle = "Planning du projet : " + this.project_data.name;
     } else if (this.$route.query.type === "users") {
-      this.scheduleTitle = "Planning de l'utilisateur : ";
+      this.scheduleTitle =
+        "Planning de l'utilisateur : " +
+        this.user_data.firstname +
+        " " +
+        this.user_data.lastname;
     } else if (this.$route.query.type === "workarea") {
-      this.scheduleTitle = "Planning de l'îlot : ";
+      this.scheduleTitle = "Planning de l'îlot : " + this.workarea_data.name;
     }
   },
   created() {
@@ -296,8 +344,12 @@ export default {
         .catch(err => {
           this.manageErrors(err);
         });
+    } else if (this.$route.query.type === "users") {
+    } else if (this.$route.query.type === "workarea") {
+      this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        this.manageErrors(err);
+      });
     }
-
     this.$store.dispatch("skillManagement/fetchItems").catch(err => {
       this.manageErrors(err);
     });

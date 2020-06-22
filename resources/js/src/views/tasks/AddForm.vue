@@ -305,6 +305,8 @@ export default {
       });
       if (this.activeAddPrompt) {
         this.handleClose();
+      } else {
+        this.activePrompt = false;
       }
       this.orderDisplay = false;
       this.descriptionDisplay = false;
