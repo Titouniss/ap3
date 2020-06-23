@@ -39,7 +39,7 @@
       @eventDrop="handleEventDrop"
       @dateClick="handleDateClick"
       @eventClick="handleEventClick"
-      @eventResize="handleEventChange"
+      @eventResize="handleEventResize"
     />
     <edit-form
       :reload="calendarEvents"
@@ -126,15 +126,38 @@ export default {
               status: t.status,
               end: moment(t.date)
                 .add(t.estimated_time, "hour")
-                .format("YYYY-MM-DD HH:mm:ss")
+                .format("YYYY-MM-DD HH:mm:ss"),
+              user_id: t.user_id
             });
           });
         }
       } else if (this.$route.query.type === "users") {
+        if (this.tasksEvent !== []) {
+          this.tasksEvent.forEach(t => {
+            if (
+              t.user_id.toString() === this.$route.query.id ||
+              t.user_id === this.$route.query.id
+            ) {
+              eventsParse.push({
+                id: t.id,
+                title: t.name,
+                start: t.date,
+                estimated_time: t.estimated_time,
+                order: t.order,
+                description: t.description,
+                time_spent: t.time_spent,
+                workarea_id: t.workarea_id,
+                status: t.status,
+                end: moment(t.date)
+                  .add(t.estimated_time, "hour")
+                  .format("YYYY-MM-DD HH:mm:ss"),
+                user_id: t.user_id
+              });
+            }
+          });
+        }
       } else if (this.$route.query.type === "workarea") {
         if (this.tasksEvent !== []) {
-          console.log(["this.tasksEvent", this.tasksEvent]);
-          console.log(["this.$route.query.id", this.$route.query.id]);
           this.tasksEvent.forEach(t => {
             if (
               t.workarea_id.toString() === this.$route.query.id ||
@@ -152,7 +175,8 @@ export default {
                 status: t.status,
                 end: moment(t.date)
                   .add(t.estimated_time, "hour")
-                  .format("YYYY-MM-DD HH:mm:ss")
+                  .format("YYYY-MM-DD HH:mm:ss"),
+                user_id: t.user_id
               });
             }
           });
@@ -164,7 +188,6 @@ export default {
         .catch(err => {
           this.manageErrors(err);
         });
-      console.log(["eventsParse", eventsParse]);
 
       return eventsParse;
     },
@@ -218,7 +241,6 @@ export default {
     handleDateClick(arg) {
       this.activeAddPrompt = true;
       this.dateData = arg;
-      console.log(["dateData", this.dateData]);
     },
     handleEventClick(arg) {
       var targetEvent = this.calendarEvents.find(
@@ -253,7 +275,6 @@ export default {
       this.$store
         .dispatch("taskManagement/updateItem", itemToSave)
         .then(data => {
-          console.log(["data", data]);
           if (data && data.status === 200) {
             //this.refresh();
           } else {
@@ -289,7 +310,6 @@ export default {
       this.$store
         .dispatch("taskManagement/updateItem", itemToSave)
         .then(data => {
-          console.log(["data", data]);
           if (data && data.status === 200) {
             //this.refresh();
           } else {
@@ -305,8 +325,6 @@ export default {
     }
   },
   mounted() {
-    console.log(["state", this.$store.state]);
-
     if (this.$route.query.type === "projects") {
       this.scheduleTitle = "Planning du projet : " + this.project_data.name;
     } else if (this.$route.query.type === "users") {
@@ -344,6 +362,9 @@ export default {
           this.manageErrors(err);
         });
     } else if (this.$route.query.type === "users") {
+      this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        this.manageErrors(err);
+      });
     } else if (this.$route.query.type === "workarea") {
       this.$store.dispatch("taskManagement/fetchItems").catch(err => {
         this.manageErrors(err);
