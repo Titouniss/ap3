@@ -101,9 +101,10 @@ class HoursController extends Controller
                     }
                 }
 
-                if ($stats['total'] > $defaultWorkHours) {
+                //On veut connaitre également le nombre d'heures effectuées en moins.
+                //if ($stats['total'] > $defaultWorkHours) {
                     $stats['overtime'] = $stats['total'] - $defaultWorkHours;
-                }
+                //}
             }
         }
 
