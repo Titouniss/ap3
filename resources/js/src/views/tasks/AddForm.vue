@@ -107,8 +107,8 @@
                 </vs-select>
                 <span
                   class="text-danger text-sm"
-                  v-show="errors.has('userId')"
-                >{{ errors.first('userId') }}</span>
+                  v-show="errors.has('projectId')"
+                >{{ errors.first('projectId') }}</span>
               </div>
 
               <div class="my-3">
@@ -308,14 +308,12 @@ export default {
   },
   computed: {
     validateForm() {
-      return (
+      return this.$nextTick(() => {
         !this.errors.any() &&
-        this.itemLocal.name != "" &&
-        this.itemLocal.date != "" &&
-        this.itemLocal.estimated_time != "" &&
-        this.itemLocal.user_id != null &&
-        this.itemLocal.project_id != null
-      );
+          this.itemLocal.name != "" &&
+          this.itemLocal.date != "" &&
+          this.itemLocal.estimated_time != "";
+      });
     },
     workareasData() {
       let $workareasData = this.$store.state.workareaManagement.workareas;

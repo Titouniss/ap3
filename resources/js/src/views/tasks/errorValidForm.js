@@ -11,6 +11,12 @@ const errorMessage = {
     skills: {
       required: 'Une tache doit être rattachée au minimum à une compétence'
     },
+    userId: {
+      required: 'Vous devez attribuer cette tâche à un utilisateur'
+    },
+    projectId: {
+      required: "Vous devez définir un projet pour cette tâche"
+    }
   }
 }
 
