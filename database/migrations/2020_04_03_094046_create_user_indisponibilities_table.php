@@ -15,8 +15,8 @@ class CreateUserIndisponibilitiesTable extends Migration
     {
         Schema::create('user_indisponibilities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->timestamp('start_at');
-            $table->timestamp('end_at');
+            $table->timestamp('start_at')->nullable();
+            $table->timestamp('end_at')->nullable();
             $table->string('reason');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); 
