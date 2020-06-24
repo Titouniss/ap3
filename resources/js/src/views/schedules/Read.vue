@@ -13,6 +13,8 @@
       :project_data="project_data"
       :tasks_list="this.tasksEvent"
       :customTask="false"
+      :type="this.$route.query.type"
+      :idType="parseInt(this.$route.query.id, 10)"
     />
     <FullCalendar
       locale="fr"
@@ -158,10 +160,13 @@ export default {
         }
       } else if (this.$route.query.type === "workarea") {
         if (this.tasksEvent !== []) {
+          console.log(["this.tasksEvent", this.tasksEvent]);
+
           this.tasksEvent.forEach(t => {
             if (
-              t.workarea_id.toString() === this.$route.query.id ||
-              t.workarea_id === this.$route.query.id
+              t.workarea_id !== null &&
+              (t.workarea_id.toString() === this.$route.query.id ||
+                t.workarea_id === this.$route.query.id)
             ) {
               eventsParse.push({
                 id: t.id,
@@ -197,15 +202,25 @@ export default {
       );
     },
     tasksEvent() {
+      console.log(["tasksEvent", this.$store.state.taskManagement.tasks]);
+
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
         : [];
     },
     project_data() {
-      var project_data = this.$store.state.projectManagement.projects.find(
-        p => (p.id = this.$route.query.id)
-      );
-      return project_data;
+      if (this.$route.query.type === "projects") {
+        var project_data = this.$store.state.projectManagement.projects.find(
+          p => (p.id = parseInt(this.$route.query.id, 10))
+        );
+        console.log(["ICI", project_data]);
+
+        if (project_data) {
+          return project_data;
+        }
+      } else {
+        return null;
+      }
     },
     user_data() {
       var user_data = this.$store.state.userManagement.users.find(
@@ -326,18 +341,26 @@ export default {
   },
   mounted() {
     if (this.$route.query.type === "projects") {
-      this.scheduleTitle = "Planning du projet : " + this.project_data.name;
+      let project = this.$store.state.projectManagement.projects.find(
+        p => p.id === parseInt(this.$route.query.id, 10)
+      );
+      this.scheduleTitle = "Planning du projet : " + project.name;
     } else if (this.$route.query.type === "users") {
+      let user = this.$store.state.userManagement.users.find(
+        u => u.id === parseInt(this.$route.query.id, 10)
+      );
       this.scheduleTitle =
-        "Planning de l'utilisateur : " +
-        this.user_data.firstname +
-        " " +
-        this.user_data.lastname;
+        "Planning de l'utilisateur : " + user.firstname + " " + user.lastname;
     } else if (this.$route.query.type === "workarea") {
-      this.scheduleTitle = "Planning de l'îlot : " + this.workarea_data.name;
+      let workarea = this.$store.state.workareaManagement.workareas.find(
+        w => w.id === parseInt(this.$route.query.id, 10)
+      );
+      this.scheduleTitle = "Planning de l'îlot : " + workarea.name;
     }
   },
   created() {
+    console.log(["state", this.$store.state]);
+
     // Add store management
     if (!moduleScheduleManagement.isRegistered) {
       this.$store.registerModule(
@@ -355,12 +378,29 @@ export default {
       moduleSkillManagement.isRegistered = true;
     }
 
+    //this.$store.state.taskManagement.tasks = [];
+
     if (this.$route.query.type === "projects") {
-      this.$store
-        .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
-        .catch(err => {
-          this.manageErrors(err);
+      console.log("je passe");
+
+      var id_bundle = null;
+
+      this.$store.state.projectManagement.projects.forEach(p => {
+        p.tasks_bundles.forEach(t => {
+          if (t.project_id === parseInt(this.$route.query.id, 10)) {
+            id_bundle = t.id;
+          }
         });
+      });
+      console.log(["id_bundle", id_bundle]);
+
+      if (id_bundle != null) {
+        this.$store
+          .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+          .catch(err => {
+            this.manageErrors(err);
+          });
+      }
     } else if (this.$route.query.type === "users") {
       this.$store.dispatch("taskManagement/fetchItems").catch(err => {
         this.manageErrors(err);
@@ -373,6 +413,37 @@ export default {
     this.$store.dispatch("skillManagement/fetchItems").catch(err => {
       this.manageErrors(err);
     });
+  },
+  updated() {
+    // if (this.$route.query.type === "projects") {
+    //   console.log("je passe");
+    //   var id_bundle = null;
+    //   this.$store.state.projectManagement.projects.forEach(p => {
+    //     p.tasks_bundles.forEach(t => {
+    //       if (t.project_id === this.$route.query.id) {
+    //         id_bundle = t.id;
+    //       }
+    //     });
+    //   });
+    //   if (id_bundle != null) {
+    //     this.$store
+    //       .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+    //       .catch(err => {
+    //         this.manageErrors(err);
+    //       });
+    //   }
+    // } else if (this.$route.query.type === "users") {
+    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+    //     this.manageErrors(err);
+    //   });
+    // } else if (this.$route.query.type === "workarea") {
+    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+    //     this.manageErrors(err);
+    //   });
+    // }
+    // this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+    //   this.manageErrors(err);
+    // });
   },
   beforeDestroy() {
     moduleScheduleManagement.isRegistered = false;
