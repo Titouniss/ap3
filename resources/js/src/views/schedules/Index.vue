@@ -46,7 +46,7 @@
               >Visualiser</vs-button>
             </vs-list-item>
           </vs-list>
-          <h4 v-if="!workareasData" color="red">Aucun utilisateur</h4>
+          <h4 v-if="!workareasData" color="red">Aucun îlot</h4>
         </div>
         <!-- users list-->
         <div v-if="schedulList === 'users'">
@@ -74,7 +74,7 @@
               >Visualiser</vs-button>
             </vs-list-item>
           </vs-list>
-          <h4 v-if="!projectsData" color="red">Aucun utilisateur</h4>
+          <h4 v-if="!projectsData" color="red">Aucun projet</h4>
         </div>
       </div>
     </div>
