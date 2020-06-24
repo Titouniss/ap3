@@ -17,8 +17,8 @@ class CreateTasksTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->timestamp('date')->nullable();  // Date de la tâche
-            $table->timestamp('estimated_time');  // Estimation temps de la tâche
-            $table->timestamp('time_spent');  // temps réellement passé
+            $table->timestamp('estimated_time')->nullable();  // Estimation temps de la tâche
+            $table->timestamp('time_spent')->nullable();  // temps réellement passé
             $table->unsignedBigInteger('tasks_bundle_id');
             $table->foreign('tasks_bundle_id')->references('id')->on('tasks_bundles')->onDelete('cascade');       
             $table->unsignedBigInteger('workarea_id')->nullable(); // Zone de travail

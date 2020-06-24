@@ -18,7 +18,7 @@ class ChangeUserPlanningsToUserWorkHoursTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->boolean('is_active');
+            $table->boolean('is_active')->default(0);
             $table->enum('day', ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']);
             $table->time('morning_starts_at')->nullable();
             $table->time('morning_ends_at')->nullable();
