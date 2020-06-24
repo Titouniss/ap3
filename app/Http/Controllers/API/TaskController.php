@@ -58,6 +58,11 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $arrayRequest = $request->all();
+
+        $controllerLog = new Logger('task');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('task arrayRequest', [$arrayRequest]);
+
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
             'date' => 'required',
@@ -135,7 +140,8 @@ class TaskController extends Controller
             'name' => 'required',
             'date' => 'required',
             'status' => 'required',
-            'estimated_time' => 'required'
+            'estimated_time' => 'required',
+            'user_id' => 'required'
             ]);
             
             $update = Task::where('id',$id)
@@ -147,7 +153,8 @@ class TaskController extends Controller
                 'description' => $arrayRequest['description'],
                 'time_spent' => $arrayRequest['time_spent'],
                 'workarea_id' => $arrayRequest['workarea_id'],
-                'status' => $arrayRequest['status']
+                'status' => $arrayRequest['status'],
+                'user_id' => $arrayRequest['user_id']
                 ]);
 
             if(isset($arrayRequest['skills']) && isset($arrayRequest['previousTasksIds'])) {

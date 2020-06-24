@@ -46,6 +46,8 @@
     <edit-form
       :reload="calendarEvents"
       :itemId="itemIdToEdit"
+      :type="this.$route.query.type"
+      :idType="parseInt(this.$route.query.id, 10)"
       v-if="itemIdToEdit && authorizedToEdit "
     />
   </div>
@@ -95,6 +97,7 @@ export default {
       activeAddPrompt: false,
       scheduleTitle: "",
       dateData: {},
+      taskBundle: null,
       calendarWeekends: true,
       customButtons: {
         AddEventBtn: {
@@ -129,7 +132,8 @@ export default {
               end: moment(t.date)
                 .add(t.estimated_time, "hour")
                 .format("YYYY-MM-DD HH:mm:ss"),
-              user_id: t.user_id
+              user_id: t.user_id,
+              project_id: parseInt(this.$route.query.id, 10)
             });
           });
         }
@@ -140,6 +144,16 @@ export default {
               t.user_id.toString() === this.$route.query.id ||
               t.user_id === this.$route.query.id
             ) {
+              // Get project id
+              let project_id = null;
+              this.$store.state.projectManagement.projects.forEach(p => {
+                p.tasks_bundles.forEach(tb => {
+                  if (t.tasks_bundle_id === tb.id) {
+                    project_id = tb.project_id;
+                  }
+                });
+              });
+
               eventsParse.push({
                 id: t.id,
                 title: t.name,
@@ -153,7 +167,8 @@ export default {
                 end: moment(t.date)
                   .add(t.estimated_time, "hour")
                   .format("YYYY-MM-DD HH:mm:ss"),
-                user_id: t.user_id
+                user_id: t.user_id,
+                project_id: project_id
               });
             }
           });
@@ -168,6 +183,16 @@ export default {
               (t.workarea_id.toString() === this.$route.query.id ||
                 t.workarea_id === this.$route.query.id)
             ) {
+              // Get project id
+              let project_id = null;
+              this.$store.state.projectManagement.projects.forEach(p => {
+                p.tasks_bundles.forEach(tb => {
+                  if (t.tasks_bundle_id === tb.id) {
+                    project_id = tb.project_id;
+                  }
+                });
+              });
+
               eventsParse.push({
                 id: t.id,
                 title: t.name,
@@ -181,7 +206,8 @@ export default {
                 end: moment(t.date)
                   .add(t.estimated_time, "hour")
                   .format("YYYY-MM-DD HH:mm:ss"),
-                user_id: t.user_id
+                user_id: t.user_id,
+                project_id: project_id
               });
             }
           });
@@ -283,6 +309,8 @@ export default {
         description: itemTemp.description,
         time_spent: itemTemp.time_spent,
         workarea_id: itemTemp.workarea_id,
+        user_id: itemTemp.user_id,
+        project_id: itemTemp.project_id,
         status: itemTemp.status,
         from: "schedule"
       };
@@ -318,6 +346,8 @@ export default {
         description: itemTemp.description,
         time_spent: itemTemp.time_spent,
         workarea_id: itemTemp.workarea_id,
+        user_id: itemTemp.user_id,
+        project_id: itemTemp.project_id,
         status: itemTemp.status,
         from: "schedule"
       };
