@@ -73,6 +73,27 @@
               class="text-danger text-sm"
               v-show="errors.has('userId')"
             >{{ errors.first('userId') }}</span>
+
+            <p class="mt-4" v-if="workareasSkillsData && workareasSkillsData.length > 0">Îlot</p>
+            <vs-select
+              v-if="workareasSkillsData && workareasSkillsData.length > 0"
+              v-validate="'required'"
+              name="projectId"
+              v-model="itemLocal.workarea_id"
+              class="w-full"
+              autocomplete
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in workareasSkillsData"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('projectId')"
+            >{{ errors.first('projectId') }}</span>
           </div>
         </div>
       </form>
@@ -133,6 +154,7 @@ export default {
         {},
         this.$store.getters["scheduleManagement/getEvent"](this.itemId)
       ),
+      workareasSkillsData: {},
       deleteWarning: false,
       configDatePicker: () => ({
         disableMobile: "true",
@@ -148,12 +170,15 @@ export default {
     activePrompt: {
       get() {
         console.log(["itemId", this.itemId]);
+
         if (this.itemId && this.itemId > -1) {
           this.itemLocal = Object.assign(
             {},
             this.$store.getters["scheduleManagement/getEvent"](this.itemId)
           );
         }
+        this.getWorkareasData();
+        console.log(["itemLocal active prompt", this.itemLocal]);
         return this.itemId && this.itemId > -1 && this.deleteWarning === false
           ? true
           : false;
@@ -177,7 +202,6 @@ export default {
       );
     },
     usersData() {
-      console.log(["itemLocal ICI", this.itemLocal]);
       return this.$store.state.userManagement.users;
     }
   },
@@ -188,9 +212,51 @@ export default {
         this.$store.getters["scheduleManagement/getEvent"](this.itemId)
       );
     },
+    async getWorkareasData() {
+      // get all workareas
+      let allWorkareas = this.$store.state.workareaManagement.workareas;
+
+      let taskSkills = [];
+      // check if task selected to edit
+      var workareas = [];
+      if (this.itemId) {
+        // get current task skills
+        await this.$store
+          .dispatch("skillManagement/fetchItemByTaskId", this.itemId)
+          .then(result => {
+            taskSkills = result.data.success;
+            if (taskSkills !== []) {
+              allWorkareas.forEach(aW => {
+                let missTask = false;
+                // keep workareas have skills task
+                taskSkills.forEach(ts => {
+                  if (aW.skills.find(s => s.id === ts.skill_id) !== undefined) {
+                  } else {
+                    missTask = true;
+                  }
+                });
+                if (!missTask) {
+                  workareas.push(aW);
+                }
+              });
+              console.log(["workareas 1", workareas]);
+            } else {
+              console.log(["workareas 2", workareas]);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+          });
+        this.workareasSkillsData = workareas;
+      } else {
+        console.log("pas de itemLocal");
+        this.workareasSkillsData = workareas;
+      }
+    },
     submitTodo() {
-      console.log(["id", this.itemLocal.id]);
+      console.log(["itemLocal.id", this.itemLocal.id]);
       console.log(["submitTodo itemLocal", this.itemLocal]);
+
       var itemToSave = {};
       //Parse new item to update task
       var itemToSave = {
@@ -264,6 +330,7 @@ export default {
       console.log(["this.store", this.$store.state]);
     }
   },
+  mounted() {},
   created() {
     if (!moduleScheduleManagement.isRegistered) {
       this.$store.registerModule(

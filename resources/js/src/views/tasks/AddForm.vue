@@ -260,12 +260,10 @@ export default {
       type: Function
     },
     type: {
-      type: String,
-      required: true
+      type: String
     },
     idType: {
-      type: Number,
-      required: true
+      type: Number
     }
   },
   data() {
@@ -308,12 +306,10 @@ export default {
   },
   computed: {
     validateForm() {
-      return this.$nextTick(() => {
-        !this.errors.any() &&
-          this.itemLocal.name != "" &&
-          this.itemLocal.date != "" &&
-          this.itemLocal.estimated_time != "";
-      });
+      !this.errors.any() &&
+        this.itemLocal.name != "" &&
+        this.itemLocal.date != "" &&
+        this.itemLocal.estimated_time != "";
     },
     workareasData() {
       let $workareasData = this.$store.state.workareaManagement.workareas;
@@ -420,7 +416,6 @@ export default {
           console.log(["result", result]);
 
           this.$store
-
             .dispatch(
               "taskManagement/addItem",
               Object.assign({}, this.itemLocal)
