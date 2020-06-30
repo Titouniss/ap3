@@ -11,6 +11,9 @@ const errorMessage = {
     skills: {
       required: 'Une tache doit être rattachée au minimum à une compétence'
     },
+    workarea: {
+      required: "Vous devez selectionner un îlot lorsqu'une ou plusieurs compétences sont selectionnées"
+    },
     userId: {
       required: 'Vous devez attribuer cette tâche à un utilisateur'
     },

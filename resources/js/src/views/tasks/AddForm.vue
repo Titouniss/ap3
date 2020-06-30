@@ -139,7 +139,12 @@
                 v-if="this.type !== 'workarea' && ( itemLocal.skills.length > 0 && workareasDataFiltered.length > 0)"
               >
                 <small class="date-label">Ilot</small>
-                <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
+                <vs-select
+                  name="workarea"
+                  v-model="itemLocal.workarea_id"
+                  v-validate="this.itemLocal.skills.length > 0 ? 'required' : ''"
+                  class="w-full mb-2"
+                >
                   <vs-select-item
                     :key="index"
                     :value="item.id"
@@ -147,6 +152,10 @@
                     v-for="(item,index) in workareasDataFiltered"
                   />
                 </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('workarea')"
+                >{{ errors.first('workarea') }}</span>
               </div>
             </div>
             <!-- Right -->
@@ -394,6 +403,8 @@ export default {
       (this.previousTasks = []), Object.assign(this.workareasDataFiltered, []);
     },
     addItem() {
+      console.log(["this.errors", this.errors]);
+
       this.$validator.validateAll().then(result => {
         this.itemLocal.date = moment(
           this.itemLocal.date,
@@ -516,7 +527,7 @@ export default {
   max-width: 700px;
 }
 .add-task-form {
-  max-height: 450px;
+  max-height: 550px;
   overflow-y: auto;
   overflow-x: hidden;
 }
