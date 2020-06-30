@@ -172,6 +172,10 @@ export default {
         project_id: null,
         user_id: user.id
       };
+      this.errors.clear();
+      this.$nextTick(() => {
+        this.$validator.reset();
+      });
     },
     save_changes(reset) {
       /* eslint-disable */
