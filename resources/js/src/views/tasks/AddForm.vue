@@ -305,6 +305,7 @@ export default {
 
       workareasDataFiltered: [],
       comments: [],
+      isSubmiting: false,
 
       orderDisplay: false,
       descriptionDisplay: false,
@@ -403,57 +404,66 @@ export default {
       (this.previousTasks = []), Object.assign(this.workareasDataFiltered, []);
     },
     addItem() {
-      console.log(["this.errors", this.errors]);
+      if (!this.isSubmiting) {
+        this.isSubmiting = true;
 
-      this.$validator.validateAll().then(result => {
-        this.itemLocal.date = moment(
-          this.itemLocal.date,
-          "DD-MM-YYYY HH:mm"
-        ).format("YYYY-MM-DD HH:mm");
-        this.itemLocal.workarea_id =
-          this.itemLocal.workarea_id == "null"
-            ? null
-            : this.itemLocal.workarea_id;
-        this.itemLocal.project_id =
-          this.type === "projects" ? this.idType : this.itemLocal.project_id;
-        this.itemLocal.user_id =
-          this.type === "ursers" ? this.idType : this.itemLocal.user_id;
-        this.itemLocal.workarea_id =
-          this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
+        this.$validator.validateAll().then(result => {
+          this.itemLocal.date = moment(
+            this.itemLocal.date,
+            "DD-MM-YYYY HH:mm"
+          ).format("YYYY-MM-DD HH:mm");
 
-        console.log(["this.itemLocal", this.itemLocal]);
+          this.itemLocal.workarea_id =
+            this.itemLocal.workarea_id == "null"
+              ? null
+              : this.itemLocal.workarea_id;
+          this.itemLocal.project_id =
+            this.type === "projects" ? this.idType : this.itemLocal.project_id;
+          this.itemLocal.user_id =
+            this.type === "users" ? this.idType : this.itemLocal.user_id;
+          this.itemLocal.workarea_id =
+            this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
 
-        if (result) {
-          console.log(["result", result]);
+          console.log(["this.type", this.type]);
+          console.log(["this.idType", this.idType]);
+          console.log(["this.itemLocal", this.itemLocal]);
 
-          this.$store
-            .dispatch(
-              "taskManagement/addItem",
-              Object.assign({}, this.itemLocal)
-            )
-            .then(() => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Ajout d'une tâche",
-                text: `"${this.itemLocal.name}" ajouté avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
+          if (result) {
+            console.log(["result", result]);
+
+            this.$store
+              .dispatch(
+                "taskManagement/addItem",
+                Object.assign({}, this.itemLocal)
+              )
+              .then(() => {
+                this.isSubmiting = false;
+
+                this.$vs.loading.close();
+                this.$vs.notify({
+                  title: "Ajout d'une tâche",
+                  text: `"${this.itemLocal.name}" ajouté avec succès`,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "success"
+                });
+                this.clearFields();
+              })
+              .catch(error => {
+                this.isSubmiting = false;
+
+                this.$vs.loading.close();
+                this.$vs.notify({
+                  title: "Error",
+                  text: error.message,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "danger"
+                });
               });
-              this.clearFields();
-            })
-            .catch(error => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Error",
-                text: error.message,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "danger"
-              });
-            });
-        }
-      });
+          }
+        });
+      }
     },
     updateWorkareasList(ids) {
       this.workareasDataFiltered = this.workareasData.filter(function(
