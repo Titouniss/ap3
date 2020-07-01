@@ -76,7 +76,7 @@
               icon="icon-chevron-left"
               @click="removeFromFilterDate"
             ></vs-button>
-            <div class="m-3 flex" style="width: 250px">
+            <div class="m-3 flex" style="width: 300px">
               <vs-row vs-type="flex" vs-justify="center">
                 <vs-col vs-type="flex" vs-justify="center">
                   <h5 v-if="isPeriodFilter()">{{filterDate}}</h5>
@@ -89,6 +89,7 @@
                     v-if="!isPeriodFilter()"
                     :config="configDatePicker()"
                     placeholder="Date"
+                    v-model="filters.date"
                     @on-change="onFilterDateChange"
                     @on-open="clearRefreshDataTimeout"
                   />
