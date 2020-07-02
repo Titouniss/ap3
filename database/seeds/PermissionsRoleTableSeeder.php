@@ -32,7 +32,8 @@ class PermissionsRoleTableSeeder extends Seeder
             ['ranges', 'gammes', true],
             ['hours', 'heures', true],
             ['unavailabilities', 'indiponibilités', true],
-            ['schedules', 'planning', true]
+            ['schedules', 'planning', true],
+            ['dealingHours', 'gestion des heures', true]
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
