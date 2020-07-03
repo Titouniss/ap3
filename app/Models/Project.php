@@ -31,7 +31,7 @@ class Project extends Model
         $tasksBundles = $this->tasksBundles;
         $tasks = [];
         foreach ($tasksBundles as $t) {
-            $tasks = Task::where('tasks_bundle_id', $t->id)->get();
+            $tasks = Task::where('tasks_bundle_id', $t->id)->with('skills', 'previousTasks')->get();
         }
         return $tasks;
     }
