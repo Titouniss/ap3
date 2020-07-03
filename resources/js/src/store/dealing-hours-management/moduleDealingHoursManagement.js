@@ -8,10 +8,10 @@
 ==========================================================================================*/
 
 
-import state from './moduleRepetitiveDealingHoursManagementState.js'
-import mutations from './moduleRepetitiveDealingHoursManagementMutations.js'
-import actions from './moduleRepetitiveDealingHoursManagementActions.js'
-import getters from './moduleRepetitiveDealingHoursManagementGetters.js'
+import state from './moduleDealingHoursManagementState.js'
+import mutations from './moduleDealingHoursManagementMutations.js'
+import actions from './moduleDealingHoursManagementActions.js'
+import getters from './moduleDealingHoursManagementGetters.js'
 
 export default {
   isRegistered: false,
