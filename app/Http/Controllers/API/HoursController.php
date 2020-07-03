@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Hours;
+use App\Models\DealingHours;
 use App\Models\Project;
 use App\Models\WorkHours;
 use Carbon\Carbon;
@@ -14,6 +15,8 @@ use DatePeriod;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class HoursController extends Controller
 {
@@ -144,6 +147,31 @@ class HoursController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Hours::create($arrayRequest);
+        
+        // Parse duration from time to double
+        $parts = explode(':', $arrayRequest['duration']);
+        $parseDuration = $parts[0] + $parts[1]/60*100 / 100;
+
+        // je verifie qu'il est une tuple dans dealing_hours en lien avec cette date
+        $findDealingHour = DealingHours::where('date', $arrayRequest['date'])->first();
+
+        if(empty($findDealingHour) === false) {
+            // J'ajoute la durée de cette heure de travail dans la table dealing_hour pour la colomn overtime
+            if($parseDuration > 0) {
+                DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
+            }
+        } 
+        // Sinon je créer une nouvelle tuple avec cette horraire la
+        else {
+            // Création du tuple dans table dealing_hours avec le user_id et la date
+            $deallingHourItem = DealingHours::create(
+                ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date']]                
+            );
+            // Ajout de la durée de travail à cette même tuple pour la colomn overtime
+            if($parseDuration > 0) {
+                DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
+            }
+        }
 
         return response()->json(['success' => $item], $this->successStatus);
     }
