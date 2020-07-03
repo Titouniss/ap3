@@ -76,15 +76,25 @@
               icon="icon-chevron-left"
               @click="removeFromFilterDate"
             ></vs-button>
-            <div class="m-3 flex justify-center" style="width: 150px">
-              <h5 v-if="isPeriodFilter()">{{filterDate}}</h5>
-              <flat-pickr
-                v-if="!isPeriodFilter()"
-                :config="configDatePicker()"
-                placeholder="Date"
-                @on-change="onFilterDateChange"
-                @on-open="clearRefreshDataTimeout"
-              />
+            <div class="m-3 flex" style="width: 300px">
+              <vs-row vs-type="flex" vs-justify="center">
+                <vs-col vs-type="flex" vs-justify="center">
+                  <h5 v-if="isPeriodFilter()">{{filterDate}}</h5>
+                </vs-col>
+                <vs-col vs-type="flex" vs-justify="center">
+                  <h5 class="mt-1" v-if="this.filters.period_type === 'week'">{{currentWeek}}</h5>
+                </vs-col>
+                <vs-col vs-type="flex" vs-justify="center">
+                  <flat-pickr
+                    v-if="!isPeriodFilter()"
+                    :config="configDatePicker()"
+                    placeholder="Date"
+                    v-model="filters.date"
+                    @on-change="onFilterDateChange"
+                    @on-open="clearRefreshDataTimeout"
+                  />
+                </vs-col>
+              </vs-row>
             </div>
             <vs-button
               v-if="isPeriodFilter()"
@@ -320,7 +330,7 @@ export default {
         project: null,
         user: null,
         date: moment(),
-        period_type: "month"
+        period_type: "week"
       },
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
@@ -355,6 +365,7 @@ export default {
           format: null
         }
       },
+      currentWeek: "",
       configDatePicker: () => ({
         disableMobile: "true",
         enableTime: false,
@@ -370,6 +381,19 @@ export default {
   },
   computed: {
     filterDate() {
+      moment.locale("fr");
+      if (this.filters.period_type === "week") {
+        let startWeek = moment(this.filters.date)
+          .startOf("isoWeek")
+          .format("dddd D MMM");
+
+        let endWeek = moment(this.filters.date)
+          .endOf("isoWeek")
+          .format("dddd D MMM");
+
+        this.currentWeek = startWeek + " - " + endWeek;
+      }
+
       return moment(this.filters.date).format(
         this.period_types[this.filters.period_type].format
       );

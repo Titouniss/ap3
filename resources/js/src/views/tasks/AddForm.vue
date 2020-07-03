@@ -40,7 +40,7 @@
               >{{ errors.first('name') }}</span>
 
               <div class="my-3">
-                <div v-if="descriptionDisplay">
+                <div>
                   <small class="date-label">Description</small>
                   <vs-textarea
                     rows="2"
@@ -63,6 +63,52 @@
                   placeholder="Date"
                   class="w-full"
                 />
+              </div>
+
+              <div class="my-3">
+                <vs-select
+                  v-if="this.type !== 'users' && usersData.length > 0"
+                  v-validate="'required'"
+                  name="userId"
+                  label="Attribuer"
+                  v-model="itemLocal.user_id"
+                  class="w-full"
+                  autocomplete
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.firstname + ' ' + item.lastname"
+                    v-for="(item,index) in usersData"
+                  />
+                </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('userId')"
+                >{{ errors.first('userId') }}</span>
+              </div>
+
+              <div class="my-3">
+                <vs-select
+                  v-if="this.type !== 'projects' && projectsData.length > 0"
+                  v-validate="'required'"
+                  name="projectId"
+                  label="Projet"
+                  v-model="itemLocal.project_id"
+                  class="w-full"
+                  autocomplete
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in projectsData"
+                  />
+                </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('projectId')"
+                >{{ errors.first('projectId') }}</span>
               </div>
 
               <div class="my-3">
@@ -90,10 +136,15 @@
 
               <div
                 class="my-3"
-                v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0"
+                v-if="this.type !== 'workarea' && ( itemLocal.skills.length > 0 && workareasDataFiltered.length > 0)"
               >
                 <small class="date-label">Ilot</small>
-                <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
+                <vs-select
+                  name="workarea"
+                  v-model="itemLocal.workarea_id"
+                  v-validate="this.itemLocal.skills.length > 0 ? 'required' : ''"
+                  class="w-full mb-2"
+                >
                   <vs-select-item
                     :key="index"
                     :value="item.id"
@@ -101,6 +152,10 @@
                     v-for="(item,index) in workareasDataFiltered"
                   />
                 </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('workarea')"
+                >{{ errors.first('workarea') }}</span>
               </div>
             </div>
             <!-- Right -->
@@ -212,6 +267,12 @@ export default {
     },
     handleClose: {
       type: Function
+    },
+    type: {
+      type: String
+    },
+    idType: {
+      type: Number
     }
   },
   data() {
@@ -232,17 +293,19 @@ export default {
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
-        workarea_id: "null",
+        workarea_id: this.type === "workarea" ? this.idType : null,
         created_by: "",
         status: "todo",
-        project_id: this.project_data.id,
+        project_id: this.type === "projects" ? this.idType : null,
         comment: "",
         skills: [],
-        previousTasksIds: []
+        previousTasksIds: [],
+        user_id: this.type === "users" ? this.idType : null
       },
 
       workareasDataFiltered: [],
       comments: [],
+      isSubmiting: false,
 
       orderDisplay: false,
       descriptionDisplay: false,
@@ -253,12 +316,10 @@ export default {
   },
   computed: {
     validateForm() {
-      return (
-        !this.errors.any() &&
+      !this.errors.any() &&
         this.itemLocal.name != "" &&
         this.itemLocal.date != "" &&
-        this.itemLocal.estimated_time != ""
-      );
+        this.itemLocal.estimated_time != "";
     },
     workareasData() {
       let $workareasData = this.$store.state.workareaManagement.workareas;
@@ -266,8 +327,35 @@ export default {
       return $filteredItems;
     },
     skillsData() {
-      let $skillsData = this.$store.state.skillManagement.skills;
-      return this.filterItemsAdmin($skillsData);
+      if (this.type === "workarea") {
+        console.log([
+          "this.$store.state.skillManagement.skills",
+          this.$store.state.skillManagement.skills
+        ]);
+
+        let workarea = this.$store.state.workareaManagement.workareas.find(
+          w => w.id === this.idType || w.id === this.idType.toString()
+        );
+        console.log(["workarea", workarea]);
+        if (workarea.skills !== []) {
+          let $skillsData = [];
+          workarea.skills.forEach(s => {
+            $skillsData.push(s);
+          });
+          console.log(["$skillsData", $skillsData]);
+
+          return this.filterItemsAdmin($skillsData);
+        }
+      } else {
+        let $skillsData = this.$store.state.skillManagement.skills;
+        return this.filterItemsAdmin($skillsData);
+      }
+    },
+    usersData() {
+      return this.$store.state.userManagement.users;
+    },
+    projectsData() {
+      return this.$store.state.projectManagement.projects;
     },
     showPrompt: {
       get() {
@@ -299,9 +387,10 @@ export default {
         created_by: "",
         status: "todo",
         skills: [],
-        project_id: this.project_data.id,
+        project_id: null,
         comment: "",
-        previousTasksIds: []
+        previousTasksIds: [],
+        user_id: null
       });
       if (this.activeAddPrompt) {
         this.handleClose();
@@ -315,45 +404,66 @@ export default {
       (this.previousTasks = []), Object.assign(this.workareasDataFiltered, []);
     },
     addItem() {
-      this.$validator.validateAll().then(result => {
-        this.itemLocal.date = moment(
-          this.itemLocal.date,
-          "DD-MM-YYYY HH:mm"
-        ).format("YYYY-MM-DD HH:mm");
-        this.itemLocal.workarea_id =
-          this.itemLocal.workarea_id == "null"
-            ? null
-            : this.itemLocal.workarea_id;
+      if (!this.isSubmiting) {
+        this.isSubmiting = true;
 
-        if (result) {
-          this.$store
-            .dispatch(
-              "taskManagement/addItem",
-              Object.assign({}, this.itemLocal)
-            )
-            .then(() => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Ajout d'une tâche",
-                text: `"${this.itemLocal.name}" ajouté avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
+        this.$validator.validateAll().then(result => {
+          this.itemLocal.date = moment(
+            this.itemLocal.date,
+            "DD-MM-YYYY HH:mm"
+          ).format("YYYY-MM-DD HH:mm");
+
+          this.itemLocal.workarea_id =
+            this.itemLocal.workarea_id == "null"
+              ? null
+              : this.itemLocal.workarea_id;
+          this.itemLocal.project_id =
+            this.type === "projects" ? this.idType : this.itemLocal.project_id;
+          this.itemLocal.user_id =
+            this.type === "users" ? this.idType : this.itemLocal.user_id;
+          this.itemLocal.workarea_id =
+            this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
+
+          console.log(["this.type", this.type]);
+          console.log(["this.idType", this.idType]);
+          console.log(["this.itemLocal", this.itemLocal]);
+
+          if (result) {
+            console.log(["result", result]);
+
+            this.$store
+              .dispatch(
+                "taskManagement/addItem",
+                Object.assign({}, this.itemLocal)
+              )
+              .then(() => {
+                this.isSubmiting = false;
+
+                this.$vs.loading.close();
+                this.$vs.notify({
+                  title: "Ajout d'une tâche",
+                  text: `"${this.itemLocal.name}" ajouté avec succès`,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "success"
+                });
+                this.clearFields();
+              })
+              .catch(error => {
+                this.isSubmiting = false;
+
+                this.$vs.loading.close();
+                this.$vs.notify({
+                  title: "Error",
+                  text: error.message,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "danger"
+                });
               });
-              this.clearFields();
-            })
-            .catch(error => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Error",
-                text: error.message,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "danger"
-              });
-            });
-        }
-      });
+          }
+        });
+      }
     },
     updateWorkareasList(ids) {
       this.workareasDataFiltered = this.workareasData.filter(function(
@@ -368,6 +478,11 @@ export default {
       });
     },
     filterItemsAdmin($items) {
+      let projectData = this.$store.state.projectManagement.projects.find(
+        p => p.id === this.itemLocal.project_id
+      );
+      console.log(["projectData", projectData]);
+
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
@@ -376,9 +491,15 @@ export default {
             r => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
-          $filteredItems = $items.filter(
-            item => item.company_id === this.project_data.company_id
-          );
+          if (this.project_data !== undefined && this.project_data !== null) {
+            $filteredItems = $items.filter(
+              item => item.company_id === this.project_data.company_id
+            );
+          } else if (projectData !== undefined && projectData !== null) {
+            $filteredItems = $items.filter(
+              item => item.company_id === projectData.company_id
+            );
+          }
         } else {
           $filteredItems = $items;
         }
@@ -405,7 +526,10 @@ export default {
       }
     }
   },
-  created() {}
+  created() {
+    console.log(["this.project_data", this.project_data]);
+    console.log(["this.$store.state", this.$store.state]);
+  }
 };
 </script>
 <style>
@@ -413,7 +537,7 @@ export default {
   max-width: 700px;
 }
 .add-task-form {
-  max-height: 450px;
+  max-height: 550px;
   overflow-y: auto;
   overflow-x: hidden;
 }

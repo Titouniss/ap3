@@ -77,7 +77,7 @@
       <div class="vx-row">
         <div class="vx-col w-full">
           <div class="mt-8 flex flex-wrap items-center justify-end">
-            <vs-button class="mt-2" @click="save_changes" :disabled="!validateForm">Ajouter</vs-button>
+            <vs-button class="mt-2" @click="save_changes(false)" :disabled="!validateForm">Ajouter</vs-button>
             <vs-button
               class="ml-4 mt-2"
               @click="save_changes(true)"
@@ -172,8 +172,12 @@ export default {
         project_id: null,
         user_id: user.id
       };
+      this.errors.clear();
+      this.$nextTick(() => {
+        this.$validator.reset();
+      });
     },
-    save_changes(reset = false) {
+    save_changes(reset) {
       /* eslint-disable */
       if (!this.validateForm) return;
       this.$vs.loading();
@@ -192,7 +196,7 @@ export default {
           if (reset) {
             this.reset();
           } else {
-            this.$router.push(`/${modelPlurial}`).catch(() => {});
+            this.back();
           }
         })
         .catch(error => {

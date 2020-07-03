@@ -13,6 +13,8 @@ use App\Models\TasksSkill;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class TaskController extends Controller
 {
@@ -56,17 +58,33 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $arrayRequest = $request->all();
+
+        $controllerLog = new Logger('task');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('task arrayRequest', [$arrayRequest]);
+
         $validator = Validator::make($arrayRequest, [ 
             'name' => 'required',
             'date' => 'required',
             'status' => 'required',
-            'estimated_time' => 'required'            
+            'estimated_time' => 'required',
+            'user_id' => 'required'          
         ]);
         if ($validator->fails()) { 
+
+            $controllerLog = new Logger('task');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('task', ['ici 1']);
+
             return response()->json(['error'=>$validator->errors()], 401);            
         }
         $taskBundle = $this->checkIfTaskBundleExist($arrayRequest['project_id']);
         if (!$taskBundle) {
+
+            $controllerLog = new Logger('task');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('task', ['ici 2']);
+
             return response()->json(['error'=> 'error'], 401);            
         }
         $user = Auth::user();
@@ -122,7 +140,8 @@ class TaskController extends Controller
             'name' => 'required',
             'date' => 'required',
             'status' => 'required',
-            'estimated_time' => 'required'
+            'estimated_time' => 'required',
+            'user_id' => 'required'
             ]);
             
             $update = Task::where('id',$id)
@@ -134,7 +153,8 @@ class TaskController extends Controller
                 'description' => $arrayRequest['description'],
                 'time_spent' => $arrayRequest['time_spent'],
                 'workarea_id' => $arrayRequest['workarea_id'],
-                'status' => $arrayRequest['status']
+                'status' => $arrayRequest['status'],
+                'user_id' => $arrayRequest['user_id']
                 ]);
 
             if(isset($arrayRequest['skills']) && isset($arrayRequest['previousTasksIds'])) {

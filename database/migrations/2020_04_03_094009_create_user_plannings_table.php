@@ -17,8 +17,8 @@ class CreateUserPlanningsTable extends Migration
             $table->bigIncrements('id');
             $table->integer('day');
             $table->enum('days', ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']);
-            $table->timestamp('start_at');
-            $table->timestamp('end_at');
+            $table->timestamp('start_at')->nullable();
+            $table->timestamp('end_at')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); 
             $table->timestamps();

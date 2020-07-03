@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Skill;
+use App\Models\TasksSkill;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -140,5 +141,22 @@ class SkillController extends Controller
         $item = Skill::withTrashed()->findOrFail($id);
         $item->forceDelete();
         return '';
+    }
+
+    /**
+     * getting skills by task.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function getByTaskId(int $task_id) 
+    {
+        $items = TasksSkill::select('skill_id')->where('task_id', $task_id)->get();
+
+        if ($items) {
+            return response()->json(['success' => $items], $this-> successStatus); 
+        } else {
+            return response()->json(['errore' => 'error'], $this-> errorStatus);
+        }
     }
 }

@@ -128,6 +128,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:read skills']], function () {
             Route::get('index', 'API\SkillController@index');
             Route::get('show/{id}', 'API\SkillController@show');
+            Route::get('getByTaskId/{id}', 'API\SkillController@getByTaskId');
         });
         Route::group(['middleware' => ['can:publish skills']], function () {
             Route::post('store', 'API\SkillController@store');

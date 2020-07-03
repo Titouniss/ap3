@@ -44,6 +44,15 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  fetchItemByTaskId({ commit }, task_id) {
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/skill-management/getByTaskId/${task_id}`)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   removeItem({ commit }, id) {
     return new Promise((resolve, reject) => {
       axios.delete(`/api/skill-management/destroy/${id}`)

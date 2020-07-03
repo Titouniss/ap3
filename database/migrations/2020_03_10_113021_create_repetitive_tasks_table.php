@@ -18,7 +18,7 @@ class CreateRepetitiveTasksTable extends Migration
             $table->string('name');
             $table->integer('order');
             $table->timestamp('date')->nullable();  // Date de la tâche
-            $table->timestamp('estimated_time');  // Estimation temps de la tâche
+            $table->timestamp('estimated_time')->nullable();  // Estimation temps de la tâche
             $table->unsignedBigInteger('range_id');
             $table->foreign('range_id')->references('id')->on('ranges')->onDelete('cascade');
             $table->softDeletes();
