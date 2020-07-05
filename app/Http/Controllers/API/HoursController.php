@@ -168,6 +168,9 @@ class HoursController extends Controller
                 ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date']]                
             );
             // Ajout de la durée de travail à cette même tuple pour la colomn overtime
+            $controllerLog = new Logger('dealing');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('parseDuration', [$parseDuration]);
             if($parseDuration > 0) {
                 DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
             }

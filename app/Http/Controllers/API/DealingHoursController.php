@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use App\Models\DealingHours;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -33,6 +34,66 @@ class DealingHoursController extends Controller
         }
 
         return response()->json(['success' => $items], $this->successStatus);
+    }
+
+    /**
+     * Display a listing of resource with specific year.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getOvertimesByYear( $year, $user_id ) {
+        $controllerLog = new Logger('dealing');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('items', ['je passe dedans', $year, $user_id]);
+
+        $user = Auth::user();
+        $items = DealingHours::where(['user_id', $user->id], ['date', $year]);
+        if ($user->hasRole('superAdmin')) {
+            $items = DealingHours::whereYear('date', $year)->get();
+            if ($user_id !== null) {
+                $items = DealingHours::where('user_id', $user_id)
+                                    ->whereYear('date', $year)
+                                    ->get();
+            }
+        }
+
+        $controllerLog = new Logger('dealing');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('items', [$items]);
+
+        // calcul for year overtime
+        $missHours = 0;
+        $overtimes = 0;
+        $usedHours = 0;
+        $result = [];
+        if($items !== []) {
+            foreach ($items as $key => $day) {
+                if ($day->overtimes > 0) {
+                    $overtimes += $day->overtimes;
+                } else {
+                    $missHours += $day->overtimes;
+                }
+                if ($day->used_hours > 0) {
+                    $usedHours += $day->used_hours;
+                }
+            }
+            if($overtimes > abs($missHours)){
+                $overtimes = $overtimes - abs($missHours);
+                $missHours = 0;
+            }
+        }
+            $overtimes = $overtimes - $usedHours + $missHours;
+            $result= Array (
+                "missHours" => $missHours,
+                "overtimes" => $overtimes,
+                "usedHours" => $usedHours);
+            
+        $controllerLog = new Logger('dealing');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('result, overtimes, usedHours, missHours', [$result, $overtimes, $usedHours, $missHours]);
+
+        return response()->json(['success' => $result], $this->successStatus);  
+
     }
 
     /**

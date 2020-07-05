@@ -129,6 +129,36 @@
           vs-align="center"
         >Heures supplémentaires sur la période : {{" " + getStats('overtime')}}</vs-col>
       </vs-row>
+      <vs-row
+        v-if="dealingHours"
+        vs-justify="center"
+        vs-align="center"
+        vs-type="flex"
+        vs-w="12"
+        class="mt-5 mb-5"
+      >
+        <vs-col
+          v-if="filters.user !== null && filters.period_type === 'year'"
+          vs-w="4"
+          vs-type="flex"
+          vs-justify="center"
+          vs-align="center"
+        >Heures supplémentaires : {{dealingHours.overtimes ? Math.abs(dealingHours.overtimes) : dealingHours.overtimes}}</vs-col>
+        <vs-col
+          v-if="filters.user !== null && filters.period_type === 'year'"
+          vs-w="4"
+          vs-type="flex"
+          vs-justify="center"
+          vs-align="center"
+        >Heures manquantes : {{dealingHours.missHours ? Math.abs(dealingHours.missHours) : dealingHours.missHours}}</vs-col>
+        <vs-col
+          v-if="filters.user !== null && filters.period_type === 'year'"
+          vs-w="4"
+          vs-type="flex"
+          vs-justify="center"
+          vs-align="center"
+        >Heures récupérées / payées : {{dealingHours.usedHours ? dealingHours.usedHours : dealingHours.usedHours}}</vs-col>
+      </vs-row>
     </div>
     <div class="vx-card p-6 mt-1">
       <div class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3">
@@ -237,6 +267,7 @@ import vSelect from "vue-select";
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement.js";
 
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
@@ -330,7 +361,7 @@ export default {
         project: null,
         user: null,
         date: moment(),
-        period_type: "week"
+        period_type: "year"
       },
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
@@ -426,6 +457,9 @@ export default {
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
       }
+    },
+    dealingHours() {
+      return this.$store.state.dealingHoursManagement.dealingHour;
     }
   },
   methods: {
@@ -499,6 +533,11 @@ export default {
       this.clearRefreshDataTimeout();
       this.refreshDataTimeout = setTimeout(() => {
         this.$vs.loading();
+        // refresh DealingHours
+        if (this.filters.user && this.filters.period_type === "year") {
+          this.getdealingHours();
+        }
+        // refresh Hours
         this.$store
           .dispatch("hoursManagement/fetchItems", filter)
           .then(response => {
@@ -585,6 +624,24 @@ export default {
           return value;
         })
       );
+    },
+    getdealingHours() {
+      console.log(["this.filterDate", this.filterDate]);
+      let item = {
+        year: this.filterDate,
+        user_id: this.filters.user ? this.filters.user.id : null
+      };
+      this.$store
+        .dispatch("dealingHoursManagement/getOvertimesByYear", item)
+        .then(data => {
+          if (data && data.status === 200) {
+            console.log(["data", data.data.success]);
+          } else {
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
     }
   },
   mounted() {
@@ -620,6 +677,13 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
+    if (!moduleDealingHoursManagement.isRegistered) {
+      this.$store.registerModule(
+        "dealingHoursManagement",
+        moduleDealingHoursManagement
+      );
+      moduleDealingHoursManagement.isRegistered = true;
+    }
     this.$store
       .dispatch("hoursManagement/fetchItems", {
         date: moment().format("DD-MM-YYYY"),
@@ -633,12 +697,14 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
-    moduleHoursManagement.isRegistered = false;
+    moduleDealingHoursManagement.isRegistered = false;
     moduleProjectManagement.isRegistered = false;
     moduleUserManagement.isRegistered = false;
+    moduleHoursManagement.isRegistered = false;
     this.$store.unregisterModule("hoursManagement");
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("userManagement");
+    this.$store.unregisterModule("dealingHoursManagement");
   }
 };
 </script>

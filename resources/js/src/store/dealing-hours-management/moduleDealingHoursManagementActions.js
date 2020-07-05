@@ -45,6 +45,17 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  getOvertimesByYear({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/dealing-hours-management/overtimesYear/${item.year}/${item.user_id}`, item)
+        .then((response) => {
+          console.log(["response", response]);
+          commit('EDIT_ITEM', response.data.success)
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   updateItem({ commit }, payload) {
     return new Promise((resolve, reject) => {
       axios.post(`/api/dealing-hours-management/update/${payload.id}`, payload)
