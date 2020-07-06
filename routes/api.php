@@ -269,4 +269,25 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::delete('destroy/{id}', 'API\HoursController@destroy');
         });
     });
+
+    /***********************************************************************************/
+    /***********************************   Used Hours   *************************************/
+    /***********************************************************************************/
+    Route::prefix('dealing-hours-management')->group(function () {
+        Route::group(['middleware' => ['can:read dealingHours']], function () {
+            Route::get('index', 'API\DealingHoursController@index');
+            Route::get('show/{id}', 'API\DealingHoursController@show');
+            Route::get('overtimesYear/{year}/{id}', 'API\DealingHoursController@getOvertimesByYear');
+        });
+        Route::group(['middleware' => ['can:publish usedHours']], function () {
+            Route::post('store', 'API\DealingHoursController@store');
+        });
+        Route::group(['middleware' => ['can:edit usedHours']], function () {
+            Route::post('update/{id}', 'API\DealingHoursController@update');
+        });
+        Route::group(['middleware' => ['can:delete usedHours']], function () {
+            Route::delete('destroy/{id}', 'API\DealingHoursController@destroy');
+            Route::delete('forceDelete/{id}', 'API\DealingHoursController@forceDelete');
+        });
+    });
 });
