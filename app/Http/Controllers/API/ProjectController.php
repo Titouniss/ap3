@@ -253,56 +253,49 @@ class ProjectController extends Controller
             if(($date['total_hours'] - $date['total_hours_unavailable']) > 0){
 
                 //On parcours chaque tache 
-                foreach($tasksTemp as $task){
-                     
-                    $previousOk = true;
-                    //On regarde si la tache est dépendante d'autre(s) tache(s)
-                    if($task->previousTask && count($task->previousTask) > 0){
-                        $previousOk = false;
+                foreach($tasksTemp as $keytask => $task){
 
-                        //Si oui, on regarde si les taches sont déjà programmées
-                        foreach($task->previousTask as $previous_task){
-                            $previousOk = true; //RAF
-                        }
-
-                        //Si déjà programmé RAF
-                    }
-
-                    if($previousOk){
+                    if($task->date == null){
                         // On récupère les compétences de la tache
                         $taskSkills = $task->skills;
+                        $taskPlan = false;
 
-                        //On filtre les utilisateurs qui possèdent ces compétences
-                        foreach($users as $user){
-                            
-                            if(count($user->skills) > 0){
-                                $haveSkills = true;
-                                foreach($taskSkills as $skill){
-                                    if(array_search($skill->id, array_column((array)$user->skills, 'id')) == -1 && $haveSkills){
-                                        //Pas toutes les compétences de la tache
-                                        $haveSkills = false;
-                                    }
+                        //On parcours la liste des périodes disponible et on regarde si la durée de la tache est inférieur ou égale a la periode disponilbe
+                        foreach($date['periods_available'] as $key => $period){
+
+                            $previousOk = true;
+                            //On regarde si la tache est dépendante d'autre(s) tache(s)
+                            if($task->previousTask && count($task->previousTask) > 0){
+
+                                //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède  
+                                foreach($task->previousTask as $previous_task){
+                                    $previous_task->date != null && Carbon::parse($previous_task->date)->addHours($previous_task->estimated_time) >= $period['start_time'] ? null : $previousOk = false; 
                                 }
+                            }
 
-                                if($haveSkills){
-                                    foreach ($date['users'] as $key => $userData) {
-                                        if($userData['user_id'] == $user->id){
-                                            // On programme la tache en fonction du planning de l'utilisateur
-                                            foreach ($userData['periods_available'] as $key => $period) {
-                                                //si la durée de la tache est inférieur ou égale a la periode disponilbe
-                                                if($task->estimated_time <= $period['hours']){
-                                                    Task::where('id', $task->id)->update(['date' => $period['start'], 'user_id' => $user->id]);
+                            //On regarde si la période contient assez d'heure pour la tâche
+                            if($task->estimated_time <= $period['hours'] && $previousOk && !$taskPlan){
 
-                                                    //On enlève la période des heures dispo de l'utilisateur
-                                                    $userData['periods_available'][$key]['hours'] = $period['hours'] - $task->estimated_time;
-                                                    if($userData['periods_available'][$key]['hours'] > 0){
-                                                        $userData['periods_available'][$key]['start'] = $period['end'];
-                                                    }
-                                                }
-                                            }
+                                // On regarde si l'utilisateur de la période possède les compétences nécéssaires
+                                if(count($period['user']->skills) > 0){
+                                    $haveSkills = true;
+                                    foreach($taskSkills as $skill){
+                                        if(array_search($skill->id, array_column((array)$period['user']->skills, 'id')) == -1 && $haveSkills){
+                                            //Pas toutes les compétences de la tache
+                                            $haveSkills = false;
                                         }
                                     }
-                                   
+
+                                    if($haveSkills){
+                                        $tasksTemp[$keytask] = tap(Task::findOrFail($task->id))->update(['date' => $period['start_time'], 'user_id' => $period['user']->id])->fresh();
+                                        $taskPlan = true;
+
+                                        //On enlève la période des heures dispo de l'utilisateur
+                                        $date['periods_available'][$key]['hours'] = $period['hours'] - $task->estimated_time;
+                                        if($date['periods_available'][$key]['hours'] > 0){
+                                            $date['periods_available'][$key]['start_time'] = Carbon::parse($period['start_time'])->addHours($task->estimated_time);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -348,6 +341,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -364,6 +358,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -380,6 +375,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -396,6 +392,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -412,6 +409,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -428,6 +426,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -444,6 +443,7 @@ class ProjectController extends Controller
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
+                        $data['periods_available'] = $dayHours['periods_available'];
                         $data['total_hours'] = $dayHours['total'];
                         $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
 
@@ -467,7 +467,8 @@ class ProjectController extends Controller
         $hours = [
             'total' => 0,
             'total_unavailable' => 0,
-            'users' => []
+            'users' => [],
+            'periods_available' => []
         ];
         $conflictUnavailableDate = false;
 
@@ -589,22 +590,42 @@ class ProjectController extends Controller
                             $periods_unavailable['morning'] = array_merge($periods_unavailable['morning'], $other_tasks_project_periods['morning']);
                         }
 
-                        $periods = $this->reversePeriodsUnavailableToPeriods($periods_unavailable, array('mornigStart' => $morningStart, 'morningEnd' => $morningEnd, 'afternoonStart' => $AfternoonStart, 'afternoonEnd' => $AfternoonEnd));
+                        $periods = $this->reversePeriodsUnavailableToPeriods(
+                            $periods_unavailable, 
+                            array('mornigStart' => $morningStart, 'morningEnd' => $morningEnd, 'afternoonStart' => $AfternoonStart, 'afternoonEnd' => $AfternoonEnd),
+                            $user
+                        );
 
                     }    
                     else{
-                        $periods[] = array('start' => $morningStart, 'end' => $morningEnd, 'hours' => Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart)));
-                        $periods[] = array('start' => $AfternoonStart, 'end' => $AfternoonEnd, 'hours' => Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart)));
+                        $periods[] = array(
+                            'start_time' => $morningStart,
+                            'end_time' => $morningEnd, 
+                            'hours' => Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart)), 
+                            'user' => $user 
+                        );
+
+                        $periods[] = array(
+                            'start_time' => $AfternoonStart, 
+                            'end_time' => $AfternoonEnd, 
+                            'hours' => Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart)), 
+                            'user' => $user
+                        );
                     }   
                     
                     $userHours['periods_available'] = $periods;
                 }
             }
 
+
+
             if($userHours['hours'] != 0){
                 $hours['total'] += $userHours['hours'];
                 $hours['total_unavailable'] += $userHours['hours_unavailable'];
                 $hours['users'][] = $userHours;
+
+                $hours['periods_available'] = array_merge($hours['periods_available'], $userHours['periods_available']);
+                usort($hours['periods_available'], array($this, 'date_sort'));
             }
         }
         return empty($hours) ? null : $hours;
@@ -865,7 +886,7 @@ class ProjectController extends Controller
     }
 
     //Permet de transformer le planning des periodes indisponibles en périodes disponibles
-    private function reversePeriodsUnavailableToPeriods($periods_unavailable, $hours_work){
+    private function reversePeriodsUnavailableToPeriods($periods_unavailable, $hours_work, $user){
 
         $periods = [];
         
@@ -879,7 +900,8 @@ class ProjectController extends Controller
                 $period_available = [
                     'start_time' => $hours_work['morningStart'],
                     'end_time' => $hours_work['morningEnd'],
-                    'hours' => Carbon::parse($hours_work['morningEnd'])->floatDiffInHours(Carbon::parse($hours_work['morningStart']))
+                    'hours' => Carbon::parse($hours_work['morningEnd'])->floatDiffInHours(Carbon::parse($hours_work['morningStart'])),
+                    'user' => $user
                 ];
                 $periods[] = $period_available;
             }
@@ -897,13 +919,15 @@ class ProjectController extends Controller
                     $period_available1 = [
                         'start_time' => $hours_work['morningStart'],
                         'end_time' => $periods_unavailable['morning'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['morning'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['morningStart']))
+                        'hours' => Carbon::parse($periods_unavailable['morning'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['morningStart'])),
+                        'user' => $user
                     ];
 
                     $period_available2 = [
                         'start_time' => $periods_unavailable['morning'][0]['end_time'],
                         'end_time' => $hours_work['morningEnd'],
-                        'hours' => Carbon::parse($hours_work['morningEnd'])->floatDiffInHours(Carbon::parse($periods_unavailable['morning'][0]['end_time']))
+                        'hours' => Carbon::parse($hours_work['morningEnd'])->floatDiffInHours(Carbon::parse($periods_unavailable['morning'][0]['end_time'])),
+                        'user' => $user
                     ];
 
                     $periods[] = $period_available1;
@@ -916,7 +940,8 @@ class ProjectController extends Controller
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time))
+                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
+                        'user' => $user
                     ];
 
                     $periods[] = $period_available;
@@ -929,7 +954,8 @@ class ProjectController extends Controller
                     $period_available = [
                         'start_time' => $hours_work['morningStart'],
                         'end_time' => $periods_unavailable['morning'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['morning'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['morningStart']))
+                        'hours' => Carbon::parse($periods_unavailable['morning'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['morningStart'])),
+                        'user' => $user
                     ];
                     $periods[] = $period_available;
                 }
@@ -940,7 +966,8 @@ class ProjectController extends Controller
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time))
+                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
+                        'user' => $user
                     ];
 
                     $periods[] = $period_available;
@@ -957,7 +984,8 @@ class ProjectController extends Controller
                 $period_available = [
                     'start_time' => $hours_work['afternoonStart'],
                     'end_time' => $hours_work['afternoonEnd'],
-                    'hours' => Carbon::parse($hours_work['afternoonEnd'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart']))
+                    'hours' => Carbon::parse($hours_work['afternoonEnd'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart'])),
+                    'user' => $user
                 ];
                 $periods[] = $period_available;
             }
@@ -975,13 +1003,15 @@ class ProjectController extends Controller
                     $period_available1 = [
                         'start_time' => $hours_work['afternoonStart'],
                         'end_time' => $periods_unavailable['afternoon'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['afternoon'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart']))
+                        'hours' => Carbon::parse($periods_unavailable['afternoon'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart'])),
+                        'user' => $user
                     ];
 
                     $period_available2 = [
                         'start_time' => $periods_unavailable['afternoon'][0]['end_time'],
                         'end_time' => $hours_work['afternoonEnd'],
-                        'hours' => Carbon::parse($hours_work['afternoonEnd'])->floatDiffInHours(Carbon::parse($periods_unavailable['afternoon'][0]['end_time']))
+                        'hours' => Carbon::parse($hours_work['afternoonEnd'])->floatDiffInHours(Carbon::parse($periods_unavailable['afternoon'][0]['end_time'])),
+                        'user' => $user
                     ];
 
                     $periods[] = $period_available1;
@@ -994,7 +1024,8 @@ class ProjectController extends Controller
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time))
+                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
+                        'user' => $user
                     ];
 
                     $periods[] = $period_available;
@@ -1007,7 +1038,8 @@ class ProjectController extends Controller
                     $period_available = [
                         'start_time' => $hours_work['afternoonStart'],
                         'end_time' => $periods_unavailable['afternoon'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['afternoon'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart']))
+                        'hours' => Carbon::parse($periods_unavailable['afternoon'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart'])),
+                        'user' => $user
                     ];
                     $periods[] = $period_available;
                 }
@@ -1018,7 +1050,8 @@ class ProjectController extends Controller
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time))
+                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
+                        'user' => $user
                     ];
 
                     $periods[] = $period_available;
