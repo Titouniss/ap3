@@ -269,24 +269,45 @@ class ProjectController extends Controller
 
                                 //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède  
                                 foreach($task->previousTask as $previous_task){
-                                    $previous_task->date != null && Carbon::parse($previous_task->date)->addHours($previous_task->estimated_time) >= $period['start_time'] ? null : $previousOk = false; 
+                                    $previous_task->date != null && $previous_task->dateEnd >= $period['start_time'] ? null : $previousOk = false; 
                                 }
                             }
 
+                            //On regarde si l'ilôt est disponible pendant la période
+                            $workareaOk = true;
+                            $tasksWorkarea = Task::where('workarea_id', $task->workarea_id)->whereNotNull('date')->where('status', '!=', 'done')->get();
+                            if(count($tasksWorkarea) > 0){
+                                foreach($tasksWorkarea as $taskWorkarea){
+                                    $workareaTaskperiod = CarbonPeriod::create($taskWorkarea->date, $taskWorkarea->dateEnd);
+
+                                    if($workareaTaskperiod->contains($period['start_time'])
+                                      || $workareaTaskperiod->contains($period['end_time'])
+                                      || ($period['start_time'] <= $taskWorkarea->date && $taskWorkarea->dateEnd <= $period['end_time'])){
+
+                                        $workareaOk = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+
                             //On regarde si la période contient assez d'heure pour la tâche
-                            if($task->estimated_time <= $period['hours'] && $previousOk && !$taskPlan){
+                            if($task->estimated_time <= $period['hours'] && $previousOk && $workareaOk && !$taskPlan){
 
                                 // On regarde si l'utilisateur de la période possède les compétences nécéssaires
                                 if(count($period['user']->skills) > 0){
-                                    $haveSkills = true;
+                                    $haveSkillsNb = 0;
                                     foreach($taskSkills as $skill){
-                                        if(array_search($skill->id, array_column((array)$period['user']->skills, 'id')) == -1 && $haveSkills){
-                                            //Pas toutes les compétences de la tache
-                                            $haveSkills = false;
+
+                                        foreach($period['user']->skills as $userskill){
+                                            if($skill->id == $userskill->id){
+                                                $haveSkillsNb++;
+                                                break;
+                                            }
                                         }
                                     }
 
-                                    if($haveSkills){
+                                    if($haveSkillsNb == count($taskSkills)){
                                         $tasksTemp[$keytask] = tap(Task::findOrFail($task->id))->update(['date' => $period['start_time'], 'user_id' => $period['user']->id])->fresh();
                                         $taskPlan = true;
 
