@@ -162,6 +162,7 @@
       <add-form
         v-if="filters.user !== null && filters.period_type === 'year'"
         :user="filters.user"
+        :dealingHours="dealingHours"
       />
     </div>
     <div class="vx-card p-6 mt-1">

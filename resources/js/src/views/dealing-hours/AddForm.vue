@@ -1,7 +1,14 @@
 <template>
   <div class="p-3 mr-4">
     <div class="text-center">
-      <vs-button @click="activePrompt = true" class="w-1/3">Récupération d'heures</vs-button>
+      <small
+        class="date-label pl-1 mr-4"
+      >Heures supplémentaires à utiliser : {{this.disabled ? "0" : this.dealingHours.overtimes - this.dealingHours.usedHours}}</small>
+      <vs-button
+        :disabled="disabled"
+        @click="activePrompt = true"
+        class="w-1/3"
+      >Récupération d'heures</vs-button>
     </div>
     <vs-prompt
       title="Récupéré des heures"
@@ -79,6 +86,9 @@ export default {
   props: {
     user: {
       type: Object
+    },
+    dealingHours: {
+      type: Object
     }
   },
   data() {
@@ -126,6 +136,15 @@ export default {
         this.itemLocal.used_type != "" &&
         this.itemLocal.user_id != null
       );
+    },
+    disabled: {
+      get() {
+        return this.dealingHours.missHours === 0 &&
+          this.dealingHours.overtimes > this.dealingHours.usedHours
+          ? false
+          : true;
+      },
+      set(val) {}
     }
   },
   methods: {
@@ -139,9 +158,9 @@ export default {
     },
     addUsedHours() {
       let itemLocalTemp = Object.assign({}, this.itemLocal);
-      console.log(["itemLocal", itemLocalTemp]);
+      itemLocalTemp.user_id = this.user.id;
+      itemLocalTemp.access = this.disabled;
 
-      this.itemLocal.user_id = this.user.id;
       this.$validator.validateAll().then(result => {
         if (result) {
           this.$store
