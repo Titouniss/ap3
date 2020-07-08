@@ -100,6 +100,7 @@ export default {
       itemLocal: {
         date: null,
         overtimes: -7,
+        overtimes_to_use: 0,
         used_hours: null,
         used_type: "",
         user_id: user.id
@@ -152,6 +153,7 @@ export default {
       Object.assign(this.itemLocal, {
         date: null,
         overtimes: -7,
+        overtimes_to_use: 0,
         used_hours: null,
         used_type: ""
       });
@@ -159,7 +161,9 @@ export default {
     addUsedHours() {
       let itemLocalTemp = Object.assign({}, this.itemLocal);
       itemLocalTemp.user_id = this.user.id;
-      itemLocalTemp.access = this.disabled;
+      itemLocalTemp.overtimes_to_use = this.disabled
+        ? "0"
+        : this.dealingHours.overtimes - this.dealingHours.usedHours;
 
       this.$validator.validateAll().then(result => {
         if (result) {
