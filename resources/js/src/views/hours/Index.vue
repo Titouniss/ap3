@@ -703,6 +703,8 @@ export default {
     this.$store.dispatch("projectManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
       this.$store.dispatch("userManagement/fetchItems");
+    } else {
+      this.filters.user = this.$store.state.AppActiveUser;
     }
   },
   beforeDestroy() {
