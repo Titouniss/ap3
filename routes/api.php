@@ -271,7 +271,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /***********************************************************************************/
-    /***********************************   Used Hours   *************************************/
+    /***********************************   Dealing Hours   *************************************/
     /***********************************************************************************/
     Route::prefix('dealing-hours-management')->group(function () {
         Route::group(['middleware' => ['can:read dealingHours']], function () {
@@ -281,6 +281,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:publish usedHours']], function () {
             Route::post('store', 'API\DealingHoursController@store');
+            Route::post('storeOrUpdateUsed', 'API\DealingHoursController@storeOrUpdateUsed');
         });
         Route::group(['middleware' => ['can:edit usedHours']], function () {
             Route::post('update/{id}', 'API\DealingHoursController@update');
