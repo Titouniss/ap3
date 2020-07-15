@@ -90,6 +90,11 @@
 
       <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
     </div>
+    <edit-form
+      :reload="customersData"
+      :itemId="itemIdToEdit"
+      v-if="itemIdToEdit && authorizedToEdit "
+    />
   </div>
 </template>
 
@@ -99,6 +104,7 @@ import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
 
 //CRUD
+import EditForm from "./EditForm.vue";
 
 // Store Module
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
@@ -114,7 +120,7 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-
+    EditForm,
     // Cell Renderer
     CellRendererActions
   },
@@ -139,25 +145,25 @@ export default {
           resizable: true
         },
         {
-          headerName: "Name",
+          headerName: "Nom société",
           field: "name",
           filter: true,
           width: 200
         },
         {
-          headerName: "Lastname",
+          headerName: "Nom Client",
           field: "lastname",
           filter: true,
           width: 150
         },
         {
-          headerName: "Siret",
+          headerName: "Numéro siret",
           field: "siret",
           filter: true,
           width: 150
         },
         {
-          headerName: "Professional",
+          headerName: "Professionnel",
           field: "professional",
           filter: true,
           width: 150

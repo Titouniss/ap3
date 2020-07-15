@@ -29,7 +29,7 @@ class CustomersController extends Controller
             $customers = Customers::all();
             // Add link to specific company ?
         }
-        return response()->json(['success' => $customers], $this-> successStatus); 
+        return response()->json(['success' => $customers], $this->successStatus); 
     } 
     
     /** 
@@ -39,8 +39,8 @@ class CustomersController extends Controller
      */ 
     public function show($id) 
     { 
-        $item = Role::where('id',$id)->first()->load('permissions');
-        return response()->json(['success' => $item], $this-> successStatus); 
+        $item = Customers::where('id',$id)->first();
+        return response()->json(['success' => $item], $this->successStatus); 
     } 
 
     /** 
@@ -83,19 +83,20 @@ class CustomersController extends Controller
         $arrayRequest = $request->all();
         
         $validator = Validator::make($arrayRequest, [ 
-            'name' => 'required'
+            'name' => 'required',
+            'lastname'=> 'required',
+            'siret'=> 'required',
+            'professional'=> 'required'
             ]);
-            $role = Role::where('id',$id)->first();
-            if ($role != null) {
-                $role->name = $arrayRequest['name'];
-                $role->description = $arrayRequest['description'];
-                $role->isPublic = $arrayRequest['isPublic'];
-                if (isset($arrayRequest['permissions'])) {
-                    $role->syncPermissions($arrayRequest['permissions'] );
-                }
-                $role->save();
+            $customer = Customers::where('id',$id)->first();
+            if ($customer != null) {
+                $customer->name = $arrayRequest['name'];
+                $customer->lastname = $arrayRequest['lastname'];
+                $customer->siret = $arrayRequest['siret'];
+                $customer->professional = $arrayRequest['professional'];
+                $customer->save();
             }
-        return response()->json(['success' => true, 'item' => $role], $this-> successStatus); 
+        return response()->json(['success' => true, 'item' => $customer], $this->successStatus); 
     } 
 
     /** 
