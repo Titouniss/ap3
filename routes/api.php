@@ -291,4 +291,24 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::delete('forceDelete/{id}', 'API\DealingHoursController@forceDelete');
         });
     });
+
+     /***********************************************************************************/
+    /***********************************   Customers   *************************************/
+    /***********************************************************************************/
+    Route::prefix('customer-management')->group(function () {
+        Route::group(['middleware' => ['can:read customers']], function () {
+            Route::get('index', 'API\CustomersController@index');
+            Route::get('show/{id}', 'API\CustomersController@show');
+        });
+        Route::group(['middleware' => ['can:publish customers']], function () {
+            Route::post('store', 'API\CustomersController@store');
+        });
+        Route::group(['middleware' => ['can:edit customers']], function () {
+            Route::post('update/{id}', 'API\CustomersController@update');
+        });
+        Route::group(['middleware' => ['can:delete customers']], function () {
+            Route::delete('destroy/{id}', 'API\CustomersController@destroy');
+            Route::delete('forceDelete/{id}', 'API\CustomersController@forceDelete');
+        });
+    });
 });

@@ -32,6 +32,12 @@ export default [
         icon: 'BriefcaseIcon'
     },
     {
+        url: '/customers',
+        name: 'Clients',
+        slug: 'customers',
+        icon: 'UsersIcon'
+    },
+    {
         url: '/skills',
         name: 'Compétences',
         slug: 'skills',
