@@ -25,7 +25,7 @@
         <div class="vx-row">
           <div class="vx-col w-full">
             <vs-input
-              v-validate="'max:255|required'"
+              v-validate="'max:50|required'"
               name="lastname"
               class="w-full mb-4 mt-5"
               label="Nom du client"
@@ -39,11 +39,11 @@
             >{{ errors.first('lastname') }}</span>
             <div>
               <small class="ml-1" for>Professionnel</small>
-              <vs-switch class="ml-2" v-model="itemLocal.professional" />
+              <vs-switch v-model="itemLocal.professional" />
             </div>
             <vs-input
               v-if="itemLocal.professional"
-              v-validate="itemLocal.professional ? 'required|max:255' : ''"
+              v-validate="itemLocal.professional ? 'required|max:50' : ''"
               name="name"
               class="w-full mb-4 mt-5"
               label="Nom de la société"
@@ -117,7 +117,6 @@ export default {
       return this.$store.state.roleManagement.permissions;
     },
     validateForm() {
-      console.log(["profesionnal", this.itemLocal.professional]);
       if (this.itemLocal.professional || this.itemLocal.professional === 1) {
         return (
           !this.errors.any() &&
@@ -148,7 +147,6 @@ export default {
         this.itemLocal.name = null;
         this.itemLocal.siret = null;
       }
-      console.log(["item", this.itemLocal]);
 
       this.$store
         .dispatch("customerManagement/updateItem", this.itemLocal)

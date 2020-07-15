@@ -10,6 +10,9 @@ use App\Models\Customers;
 use Illuminate\Support\Facades\Auth; 
 use Validator;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 class CustomersController extends Controller 
 {
     public $successStatus = 200;
@@ -52,23 +55,21 @@ class CustomersController extends Controller
     { 
         $user = Auth::user();
         $arrayRequest = $request->all();
+        $controllerLog = new Logger('customer');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('customer', [$arrayRequest]);
         $validator = Validator::make($arrayRequest, [ 
-            'name' => 'required'
-            ]);
-            if ($validator->fails()) { 
-                return response()->json(['error'=>$validator->errors()], 401);            
-            }
-        $permissions = $arrayRequest['permissions'];
-        unset($arrayRequest['permissions']);
+            'name' => 'nullable',
+            'lastname'=> 'nullable',
+            'siret'=> 'nullable',
+            'professional'=> 'required'
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['error'=>$validator->errors()], 401);            
+        }
         if ($user != null) {
-            $arrayRequest['company_id'] = $user->company_id;
-            $item = Role::create($arrayRequest);
-            if ($item != null) {
-                if (isset($permissions)) {
-                    $item->syncPermissions($permissions);
-                }
-            }
-            return response()->json(['success' => $item], $this-> successStatus); 
+            $item = Customers::create($arrayRequest);
+            return response()->json(['success' => $item], $this->successStatus); 
         }
         return response()->json(['success' => 'notAuthentified'], 500);
     } 
@@ -106,7 +107,23 @@ class CustomersController extends Controller
      */ 
     public function destroy($id) 
     { 
-        $item = Role::where('id',$id)->delete();
-        return response()->json(['success' => $item], $this-> successStatus); 
-    } 
+        $item = Customers::where('id',$id)->delete();
+        return response()->json(['success' => $item], $this->successStatus); 
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = Customers::findOrFail($id);
+        $item->delete();
+
+        $item = Customers::withTrashed()->findOrFail($id);
+        $item->forceDelete();
+        return '';
+    }
 }

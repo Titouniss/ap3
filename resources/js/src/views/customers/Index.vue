@@ -10,6 +10,8 @@
 <template>
   <div id="page-users-list">
     <div class="vx-card w-full p-6">
+      <add-form v-if="authorizedToPublish" />
+
       <div class="flex flex-wrap items-center">
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
@@ -59,10 +61,17 @@
           </div>
 
           <vs-dropdown-menu>
-            <vs-dropdown-item @click="this.confirmDeleteRecord" v-if="authorizedToDelete">
+            <vs-dropdown-item @click="confirmDeleteRecord('delete')" v-if="authorizedToDelete">
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                 <span>Supprimer</span>
+              </span>
+            </vs-dropdown-item>
+
+            <vs-dropdown-item @click="confirmDeleteRecord('archive')" v-if="authorizedToDelete">
+              <span class="flex items-center">
+                <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
+                <span>Archiver</span>
               </span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
@@ -105,12 +114,14 @@ import vSelect from "vue-select";
 
 //CRUD
 import EditForm from "./EditForm.vue";
+import AddForm from "./AddForm.vue";
 
 // Store Module
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 
 // Cell Renderer
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 
 var model = "customer";
 var modelPlurial = "customers";
@@ -120,9 +131,12 @@ export default {
   components: {
     AgGridVue,
     vSelect,
+    // Crud
     EditForm,
+    AddForm,
     // Cell Renderer
-    CellRendererActions
+    CellRendererActions,
+    CellRendererBoolean
   },
   data() {
     return {
@@ -142,42 +156,44 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true
+          width: 70
         },
         {
-          headerName: "Nom société",
+          headerName: "Société",
           field: "name",
           filter: true,
-          width: 200
+          width: 175
         },
         {
-          headerName: "Nom Client",
+          headerName: "Nom",
           field: "lastname",
           filter: true,
           width: 150
         },
         {
-          headerName: "Numéro siret",
+          headerName: "Siret",
           field: "siret",
           filter: true,
           width: 150
         },
         {
-          headerName: "Professionnel",
+          headerName: "Type",
           field: "professional",
           filter: true,
-          width: 150
+          width: 150,
+          cellRendererFramework: "CellRendererBoolean"
         },
         {
           headerName: "Actions",
           field: "transactions",
-          width: 150,
+          width: 125,
           cellRendererFramework: "CellRendererActions"
         }
       ],
       // Cell Renderer Components
       components: {
-        CellRendererActions
+        CellRendererActions,
+        CellRendererBoolean
       }
     };
   },
@@ -246,41 +262,74 @@ export default {
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
     },
-    confirmDeleteRecord() {
+    confirmDeleteRecord(type) {
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
-        title: "Confirmer suppression",
+        title:
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
         text:
-          this.gridApi.getSelectedRows().length > 1
-            ? `Vous vous vraiment supprimer ces clients ?`
-            : `Vous vous vraiment supprimer ce client ?`,
-        accept: this.deleteRecord,
-        acceptText: "Supprimer !",
+          type === "delete" && this.gridApi.getSelectedRows().length > 1
+            ? `Voulez vous vraiment supprimer ces clients ?`
+            : type === "delete" && this.gridApi.getSelectedRows().length === 1
+            ? `Voulez vous vraiment supprimer ce client ?`
+            : this.gridApi.getSelectedRows().length > 1
+            ? `Voulez vous vraiment archiver ces clients ?`
+            : `Voulez vous vraiment archiver ce client ?`,
+        accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
+        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
         cancelText: "Annuler"
       });
     },
     deleteRecord() {
+      const selectedRowLength = this.gridApi.getSelectedRows().length;
+
       this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
-          .dispatch("customerManagement/removeRecord", selectRow.id)
+          .dispatch("customerManagement/forceRemoveItem", selectRow.id)
           .then(data => {
-            console.log(["data_1", data]);
-            this.showDeleteSuccess();
+            if (selectedRowLength === 1) {
+              this.showDeleteSuccess("delete", selectedRowLength);
+            }
           })
           .catch(err => {
             console.error(err);
           });
       });
+      if (selectedRowLength > 1) {
+        this.showDeleteSuccess("delete", selectedRowLength);
+      }
     },
-    showDeleteSuccess() {
+    archiveRecord() {
+      const selectedRowLength = this.gridApi.getSelectedRows().length;
+      this.gridApi.getSelectedRows().map(selectRow => {
+        this.$store
+          .dispatch("customerManagement/removeItem", selectRow.id)
+          .then(data => {
+            if (selectedRowLength === 1) {
+              this.showDeleteSuccess("archive", selectedRowLength);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      });
+      if (selectedRowLength > 1) {
+        this.showDeleteSuccess("archive", selectedRowLength);
+      }
+    },
+    showDeleteSuccess(type, selectedRowLength) {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
         text:
-          this.gridApi.getSelectedRows().length > 1
-            ? `Clients supprimés?`
-            : `Client supprimé`
+          type === "delete" && selectedRowLength > 1
+            ? `Clients supprimés`
+            : type === "delete" && selectedRowLength === 1
+            ? `Client supprimé`
+            : selectedRowLength > 1
+            ? `Clients archivés`
+            : `Client archivé`
       });
     },
     onResize(event) {
@@ -331,7 +380,6 @@ export default {
     if (this.authorizedTo("read", "customers")) {
       this.$store.dispatch("customerManagement/fetchItems");
     }
-    console.log(["ici", this.$store.state.customerManagement]);
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

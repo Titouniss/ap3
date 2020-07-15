@@ -65,7 +65,7 @@ export default {
   },
   forceRemoveItem({ commit }, id) {
     return new Promise((resolve, reject) => {
-      axios.delete(`/api/company-management/forceDelete/${id}`)
+      axios.delete(`/api/customer-management/forceDelete/${id}`)
         .then((response) => {
           commit('REMOVE_ITEM', id)
           resolve(response)
