@@ -223,6 +223,18 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                /////---Customers---/////
+                {
+
+                    path: '/customers',
+                    name: 'customers',
+                    component: () => import('@/views/customers/Index.vue'),
+                    meta: {
+                        pageTitle: 'Gestion des clients',
+                        rule: 'admin',
+                        requiresAuth: true
+                    }
+                }
             ]
         },
         // =============================================================================

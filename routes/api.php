@@ -271,7 +271,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /***********************************************************************************/
-    /***********************************   Used Hours   *************************************/
+    /***********************************   Dealing Hours   *************************************/
     /***********************************************************************************/
     Route::prefix('dealing-hours-management')->group(function () {
         Route::group(['middleware' => ['can:read dealingHours']], function () {
@@ -281,6 +281,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:publish usedHours']], function () {
             Route::post('store', 'API\DealingHoursController@store');
+            Route::post('storeOrUpdateUsed', 'API\DealingHoursController@storeOrUpdateUsed');
         });
         Route::group(['middleware' => ['can:edit usedHours']], function () {
             Route::post('update/{id}', 'API\DealingHoursController@update');
@@ -288,6 +289,26 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:delete usedHours']], function () {
             Route::delete('destroy/{id}', 'API\DealingHoursController@destroy');
             Route::delete('forceDelete/{id}', 'API\DealingHoursController@forceDelete');
+        });
+    });
+
+     /***********************************************************************************/
+    /***********************************   Customers   *************************************/
+    /***********************************************************************************/
+    Route::prefix('customer-management')->group(function () {
+        Route::group(['middleware' => ['can:read customers']], function () {
+            Route::get('index', 'API\CustomersController@index');
+            Route::get('show/{id}', 'API\CustomersController@show');
+        });
+        Route::group(['middleware' => ['can:publish customers']], function () {
+            Route::post('store', 'API\CustomersController@store');
+        });
+        Route::group(['middleware' => ['can:edit customers']], function () {
+            Route::post('update/{id}', 'API\CustomersController@update');
+        });
+        Route::group(['middleware' => ['can:delete customers']], function () {
+            Route::delete('destroy/{id}', 'API\CustomersController@destroy');
+            Route::delete('forceDelete/{id}', 'API\CustomersController@forceDelete');
         });
     });
 });

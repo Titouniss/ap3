@@ -159,6 +159,11 @@
           vs-align="center"
         >Heures récupérées / payées : {{dealingHours.usedHours ? dealingHours.usedHours : dealingHours.usedHours}}</vs-col>
       </vs-row>
+      <add-form
+        v-if="filters.user !== null && filters.period_type === 'year'"
+        :user="filters.user"
+        :dealingHours="dealingHours"
+      />
     </div>
     <div class="vx-card p-6 mt-1">
       <div class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3">
@@ -269,6 +274,7 @@ import moduleProjectManagement from "@/store/project-management/moduleProjectMan
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement.js";
 
+// FlatPickr import
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
@@ -276,6 +282,9 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 // Cell Renderer
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
+
+//Component
+import AddForm from "../dealing-hours/AddForm.vue";
 
 import moment from "moment";
 
@@ -288,6 +297,7 @@ export default {
     AgGridVue,
     vSelect,
     flatPickr,
+    AddForm,
     // Cell Renderer
     CellRendererActions,
     CellRendererRelations
@@ -693,6 +703,8 @@ export default {
     this.$store.dispatch("projectManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
       this.$store.dispatch("userManagement/fetchItems");
+    } else {
+      this.filters.user = this.$store.state.AppActiveUser;
     }
   },
   beforeDestroy() {

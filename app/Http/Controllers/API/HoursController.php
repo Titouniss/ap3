@@ -146,34 +146,33 @@ class HoursController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $item = Hours::create($arrayRequest);
+
         
         // Parse duration from time to double
         $parts = explode(':', $arrayRequest['duration']);
         $parseDuration = $parts[0] + $parts[1]/60*100 / 100;
 
-        // je verifie qu'il est une tuple dans dealing_hours en lien avec cette date
+        if($parseDuration === 0) {
+            return response()->json(['error' => "Veuillez inserer une durée"]); 
+        }
+
+        // je verifie qu'il y est une tuple dans dealing_hours en lien avec cette date
         $findDealingHour = DealingHours::where('date', $arrayRequest['date'])->first();
 
         if(empty($findDealingHour) === false) {
             // J'ajoute la durée de cette heure de travail dans la table dealing_hour pour la colomn overtime
-            if($parseDuration > 0) {
-                DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
-            }
+            $item = Hours::create($arrayRequest);
+            DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
         } 
         // Sinon je créer une nouvelle tuple avec cette horraire la
         else {
             // Création du tuple dans table dealing_hours avec le user_id et la date
+            $item = Hours::create($arrayRequest);
             $deallingHourItem = DealingHours::create(
                 ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date']]                
             );
             // Ajout de la durée de travail à cette même tuple pour la colomn overtime
-            $controllerLog = new Logger('dealing');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('parseDuration', [$parseDuration]);
-            if($parseDuration > 0) {
-                DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
-            }
+            DealingHours::where('date', $arrayRequest['date'])->increment('overtimes', $parseDuration);
         }
 
         return response()->json(['success' => $item], $this->successStatus);

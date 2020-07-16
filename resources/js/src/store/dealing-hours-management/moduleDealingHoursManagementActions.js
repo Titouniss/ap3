@@ -22,6 +22,21 @@ export default {
         })
     })
   },
+  addOrUpdtateUsed({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post("/api/dealing-hours-management/storeOrUpdateUsed", item)
+        .then((response) => {
+          if (response.data.success && response.data.success[1] === "create") {
+            commit('ADD_ITEM', Object.assign(item, { id: response.data.success[0].id }))
+          }
+          resolve(response)
+        })
+        .catch((error) => {
+          console.log(error);
+          reject(error)
+        })
+    })
+  },
   editItem({ commit }, item) {
     commit('EDIT_ITEM', item)
     return

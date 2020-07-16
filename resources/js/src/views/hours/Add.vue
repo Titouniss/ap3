@@ -185,18 +185,30 @@ export default {
       const payload = { ...this.data_local };
       this.$store
         .dispatch("hoursManagement/addItem", payload)
-        .then(() => {
-          this.$vs.notify({
-            title: "Ajout",
-            text: "Heures ajoutées avec succès",
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "success"
-          });
-          if (reset) {
-            this.reset();
+        .then(data => {
+          if (data.data.error) {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              time: 10000,
+              title: "Erreur",
+              text: data.data.error,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
           } else {
-            this.back();
+            this.$vs.notify({
+              title: "Ajout",
+              text: "Heures ajoutées avec succès",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success"
+            });
+            if (reset) {
+              this.reset();
+            } else {
+              this.back();
+            }
           }
         })
         .catch(error => {
