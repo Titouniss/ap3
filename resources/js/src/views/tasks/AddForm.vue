@@ -328,21 +328,15 @@ export default {
     },
     skillsData() {
       if (this.type === "workarea") {
-        console.log([
-          "this.$store.state.skillManagement.skills",
-          this.$store.state.skillManagement.skills
-        ]);
 
         let workarea = this.$store.state.workareaManagement.workareas.find(
           w => w.id === this.idType || w.id === this.idType.toString()
         );
-        console.log(["workarea", workarea]);
         if (workarea.skills !== []) {
           let $skillsData = [];
           workarea.skills.forEach(s => {
             $skillsData.push(s);
           });
-          console.log(["$skillsData", $skillsData]);
 
           return this.filterItemsAdmin($skillsData);
         }
@@ -360,10 +354,6 @@ export default {
     showPrompt: {
       get() {
         if (this.activeAddPrompt) {
-          console.log("pass to change");
-          console.log(["this.itemLocal.date", this.itemLocal.date]);
-          console.log(["this.dateData.dateStr", this.dateData.date]);
-
           this.itemLocal.date = this.dateData.date;
         }
         return this.activeAddPrompt ? true : this.activePrompt ? true : false;
@@ -423,10 +413,6 @@ export default {
             this.type === "users" ? this.idType : this.itemLocal.user_id;
           this.itemLocal.workarea_id =
             this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
-
-          console.log(["this.type", this.type]);
-          console.log(["this.idType", this.idType]);
-          console.log(["this.itemLocal", this.itemLocal]);
 
           if (result) {
             console.log(["result", result]);
@@ -527,8 +513,6 @@ export default {
     }
   },
   created() {
-    console.log(["this.project_data", this.project_data]);
-    console.log(["this.$store.state", this.$store.state]);
   }
 };
 </script>
