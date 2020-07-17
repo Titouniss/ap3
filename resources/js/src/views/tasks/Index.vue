@@ -135,6 +135,8 @@ import EditForm from "./EditForm.vue";
 
 // Store Module
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
@@ -335,6 +337,10 @@ export default {
       this.$store.registerModule("taskManagement", moduleTaskManagement);
       moduleTaskManagement.isRegistered = true;
     }
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
     this.$store
       .dispatch(
         "taskManagement/fetchItemsByBundle",
@@ -343,12 +349,21 @@ export default {
       .catch(err => {
         console.error(err);
       });
+
+    this.$store.dispatch("userManagement/fetchItems").catch(err => {
+      this.manageErrors(err);
+    });
+
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
 
     moduleTaskManagement.isRegistered = false;
     this.$store.unregisterModule("taskManagement");
+
+    moduleUserManagement.isRegistered = false;
+    this.$store.unregisterModule("userManagement");
+
   }
 };
 </script>
