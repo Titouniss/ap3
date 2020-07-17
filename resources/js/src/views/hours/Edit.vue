@@ -186,16 +186,28 @@ export default {
       const payload = { ...this.data_local };
       this.$store
         .dispatch("hoursManagement/updateItem", payload)
-        .then(() => {
-          this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Modification",
-            text: "Heures modifiées avec succès",
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "success"
-          });
-          this.$router.push(`/${modelPlurial}`).catch(() => {});
+        .then(data => {
+          if (data.data.error) {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Echec",
+              text: data.data.error,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+              time: 8000
+            });
+          } else {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Modification",
+              text: "Heures modifiées avec succès",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success"
+            });
+            this.$router.push(`/${modelPlurial}`).catch(() => {});
+          }
         })
         .catch(error => {
           this.$vs.loading.close();
