@@ -20,7 +20,7 @@
           <vs-select
             name="company"
             v-validate="'required'"
-            label="Compagnie"
+            label="Société"
             v-model="range_data.company_id"
             class="w-full"
           >

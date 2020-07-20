@@ -19,7 +19,7 @@ const errorMessage = {
       numeric: "Le numéro doit être composé uniquement de chiffre."
     },
     company_id: {
-      required: "L\'utilisteur doit être rattaché à une compagnie"
+      required: "L\'utilisteur doit être rattaché à une société"
     },
     role: {
       required: "L\'utilisteur doit être rattaché à un rôle"

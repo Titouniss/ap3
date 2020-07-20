@@ -1,8 +1,8 @@
 <template>
   <div class="p-3 mb-4 mr-4">
-    <vs-button @click="activePrompt = true" class="w-full">Ajouter une compagnie</vs-button>
+    <vs-button @click="activePrompt = true" class="w-full">Ajouter une société</vs-button>
     <vs-prompt
-      title="Ajouter une compagnie"
+      title="Ajouter une société"
       accept-text="Ajouter"
       cancel-text="Annuler"
       button-cancel="border"
@@ -20,7 +20,7 @@
                 v-validate="'max:255|required'"
                 name="name"
                 class="w-full mb-4 mt-5"
-                placeholder="Nom de la compagnie"
+                placeholder="Nom de la société"
                 v-model="itemLocal.name"
                 :color="!errors.has('name') ? 'success' : 'danger'"
               />
@@ -86,7 +86,7 @@ export default {
             .then(() => {
               this.$vs.loading.close();
               this.$vs.notify({
-                title: "Ajout d'une compagnie",
+                title: "Ajout d'une société",
                 text: `"${itemLocal.name}" ajoutée avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",

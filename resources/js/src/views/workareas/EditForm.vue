@@ -56,7 +56,7 @@
                   <vs-select
                     v-on:change="selectCompanySkills"
                     v-validate="'required'"
-                    label="Compagnie"
+                    label="Société"
                     v-model="itemLocal.company_id"
                     class="w-full mt-5"
                   >

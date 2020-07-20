@@ -38,7 +38,7 @@
                   <div>
                     <vs-select
                       v-validate="'required'"
-                      label="Compagnie"
+                      label="Société"
                       v-model="itemLocal.company_id"
                       class="w-full mt-5"
                     >
@@ -52,7 +52,7 @@
                   </div>
                 </div>
               </div>
-              <!-- <vs-input v-validate="'required'" name="company_id" class="w-full mb-4 mt-5" placeholder="Compagnie" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" /> -->
+              <!-- <vs-input v-validate="'required'" name="company_id" class="w-full mb-4 mt-5" placeholder="Société" v-model="itemLocal.company_id" :color="validateForm ? 'success' : 'danger'" /> -->
             </div>
           </div>
         </form>
