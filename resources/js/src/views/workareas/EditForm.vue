@@ -1,7 +1,7 @@
 <template>
   <vs-prompt
     title="Editer un îlot"
-    accept-text="Mofier"
+    accept-text="Modifier"
     cancel-text="Annuler"
     button-cancel="border"
     @cancel="init"
