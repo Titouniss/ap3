@@ -60,17 +60,10 @@
           </div>
 
           <vs-dropdown-menu>
-            <vs-dropdown-item @click="confirmDeleteRecord('delete')">
+            <vs-dropdown-item @click="confirmDeleteRecord()">
               <span class="flex items-center">
                 <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
                 <span>Supprimer</span>
-              </span>
-            </vs-dropdown-item>
-
-            <vs-dropdown-item @click="confirmDeleteRecord('archive')">
-              <span class="flex items-center">
-                <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Archiver</span>
               </span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
@@ -220,22 +213,17 @@ export default {
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
     },
-    confirmDeleteRecord(type) {
+    confirmDeleteRecord() {
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
-        title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+        title: "Confirmer suppression",
         text:
-          type === "delete" && this.gridApi.getSelectedRows().length > 1
-            ? `Voulez vous vraiment supprimer ces compétences ?`
-            : type === "delete" && this.gridApi.getSelectedRows().length === 1
+          this.gridApi.getSelectedRows().length >= 1
             ? `Voulez vous vraiment supprimer cette compétence ?`
-            : this.gridApi.getSelectedRows().length > 1
-            ? `Voulez vous vraiment archiver ces compétences ?`
-            : `Voulez vous vraiment archiver cette compétence ?`,
-        accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+            : `Voulez vous vraiment archiver ces compétences ?`,
+        accept: this.deleteRecord,
+        acceptText: "Supprimer !",
         cancelText: "Annuler"
       });
     },
@@ -245,48 +233,24 @@ export default {
         this.$store
           .dispatch("skillManagement/forceRemoveItem", selectRow.id)
           .then(data => {
+            console.log(["data", data]);
             if (selectedRowLength === 1) {
-              this.showDeleteSuccess("delete", selectedRowLength);
+              this.showDeleteSuccess(selectedRowLength);
             }
           })
           .catch(err => {
             console.error(err);
           });
       });
-      if (selectedRowLength > 1) {
-        this.showDeleteSuccess("delete", selectedRowLength);
-      }
     },
-    archiveRecord() {
-      const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
-        this.$store
-          .dispatch("skillManagement/removeItem", selectRow.id)
-          .then(data => {
-            if (selectedRowLength === 1) {
-              this.showDeleteSuccess("archive", selectedRowLength);
-            }
-          })
-          .catch(err => {
-            console.error(err);
-          });
-      });
-      if (selectedRowLength > 1) {
-        this.showDeleteSuccess("archive", selectedRowLength);
-      }
-    },
-    showDeleteSuccess(type, selectedRowLength) {
+    showDeleteSuccess(selectedRowLength) {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
         text:
-          type === "delete" && selectedRowLength > 1
+          selectedRowLength > 1
             ? `Compétences supprimées`
-            : type === "delete" && selectedRowLength === 1
-            ? `Compétence supprimée`
-            : selectedRowLength > 1
-            ? `Compétences archivées`
-            : `Compétence archivée`
+            : `Compétence supprimée`
       });
     },
     onResize(event) {
