@@ -18,7 +18,6 @@ class DealingHoursController extends Controller
     use SoftDeletes;
     
     public $successStatus = 200;
-    public $workDuration = 7;
     /**
      * Display a listing of the resource.
      *
@@ -152,15 +151,19 @@ class DealingHoursController extends Controller
         $parts = explode(':', $arrayRequest['used_hours']);
         $arrayRequest['used_hours'] = $parts[0] + $parts[1]/60*100 / 100;
 
-        // $controllerLog = new Logger('dealing');
-        // $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        // $controllerLog->info('parseUsed_hours', [$arrayRequest['used_hours'], $this->workDuration]);
+        // Expected hours for this day
+        $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['date']);
+        if ($workDuration === 0) {
+            setlocale(LC_TIME, "fr_FR", "French");
+            $target_day = strftime("%A", strtotime($arrayRequest['date']));
+            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " + $target_day], 401);
+        }
         
         // Check have nb overtimes
         if ($arrayRequest['used_hours'] <= $arrayRequest['overtimes_to_use']) {
             // Check used_hours
-            if ($arrayRequest['used_hours'] > $this->workDuration) {
-                return response()->json(['error' => "Vous ne pouvez pas récupérer plus de $this->workDuration heures par jour."]);
+            if ($arrayRequest['used_hours'] > $workDuration) {
+                return response()->json(['error' => "Vous ne pouvez pas récupérer plus de $workDuration heures par jour."]);
             }
 
             // Check if dealing_hour have value for this date
@@ -174,11 +177,11 @@ class DealingHoursController extends Controller
                         // Check if same type
                         if ($item->used_type === $arrayRequest['used_type']) {
                             // Check if after update used_hour < workDuration
-                            if (($item->used_hours + $arrayRequest['used_hours'] ) <= $this->workDuration) {
+                            if (($item->used_hours + $arrayRequest['used_hours'] ) <= $workDuration) {
                                 $item = DealingHours::where('id', $item->id)->update(['used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
                                 return response()->json(['success' => [$item, "update"]], $this->successStatus);
                             } else {
-                                return response()->json(['error' => "Vous avez déjà récupéré(e) $item->used_hours heures le $item->date, vous ne pouvez récupérer que 7 heures par jour."]);
+                                return response()->json(['error' => "Vous avez déjà récupéré(e) $item->used_hours heures le $item->date, vous ne pouvez récupérer que 7 heures pour ce jour."]);
                             }
                         } else {
                             return response()->json(['error' => "Vous avez déjà des heures $item->used_type pour le $item->date, veuillez utiliser vos heures supplémentaires de la même manière pour ce jour."]);
