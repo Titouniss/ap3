@@ -75,6 +75,7 @@
               @click="confirmDeleteRecord"
             >Supprimer</vs-button>
             <vs-button
+              v-if="project_data.status == 'todo'"
               type="border"
               color="success"
               icon-pack="feather"
@@ -135,7 +136,20 @@ export default {
     startProject() {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
-        .then(() => {})
+        .then(() => {
+          this.$vs.notify({
+            title: "Ajout",
+            text: "Gamme ajoutée avec succès",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
+          this.$router.push({
+              path: `/schedules/schedules-read`,
+              query: { id: this.project_data.id, type: 'projects' }
+            })
+            .catch(() => {});
+        })
         .catch(err => {
           console.error(err);
         });
