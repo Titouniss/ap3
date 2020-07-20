@@ -213,6 +213,8 @@ class ProjectController extends Controller
 
     public function start($id){
 
+        return response()->json(['success' => 'test'], $this-> successStatus);
+
         $project = Project::find($id);
         $nbHoursRequired = 0; 
         $nbHoursAvailable = 0;
@@ -228,26 +230,25 @@ class ProjectController extends Controller
         // Hours Available & Hours Unavailable
         $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
 
-        $tasks = $this->setDateToTasks($project->tasks, $TimeData, $users);
+        if( $TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired ){
 
-        $response = [
-            'nbHoursRequired' => $nbHoursRequired,
-            'nbHoursAvailable' => $TimeData['total_hours'],
-            'nbHoursUnvailable' => $TimeData['total_hours_unavailable'],
-            'details' => $TimeData,
-            'users' => $users,
-            'tasks' => $tasks,
-        ];
+            $tasksPlanified = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
+        }
+        else{
+            return response()->json(['error' => 'hours less'], $this-> successStatus);
+        }
 
         return response()->json(['success' => $response], $this-> successStatus);  
     }
 
-    private function setDateToTasks($tasks, $TimeData, $users){
+    private function setDateToTasks($tasks, $TimeData, $users, $project){
 
         $tasksTemp = $this->orderTasksByPrevious($tasks);
         $NoPlanTasks = [];
 
         //Foreach jours jusqu'a la date de livraison
+
+        
         foreach($TimeData['details'] as $date){
 
             // On regarde si on a des heures disponibles pour plannifier une tache
@@ -295,7 +296,7 @@ class ProjectController extends Controller
                                             break;
                                         }
                                     }
-                                }
+                                } 
 
 
                                 //On regarde si la tache est conforme pour être programmée
@@ -335,6 +336,32 @@ class ProjectController extends Controller
                 }
             }
         }
+
+        //On regarde si toute les tâches ont été plannifé
+        $allPlanified = true;
+        $taskIds = [];
+
+        foreach($tasksTemp as $taskTemp){
+            array_push($taskIds, $taskTemp->id);
+
+            if(!$taskTemp->date || !$taskTemp->user_id){
+                $allPlanified = false;
+            }
+        }
+
+
+        //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
+        if($allPlanified){
+            Project::findOrFail($project->id)->update(['status' => 'doing']);
+
+            $alerts = ['success' => 'All good'];
+        }
+        else{ // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
+
+            Task::whereIn('id', $taskIds)->update(['date' => null, 'user_id' => null]);
+        }
+
+        return $alerts;
     }
 
     private function calculTimeAvailable($users, $date_end){

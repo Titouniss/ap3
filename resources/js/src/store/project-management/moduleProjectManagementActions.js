@@ -74,11 +74,11 @@ export default {
     })
   },
 
-  start({ context }, id) {
+  start({ commit }, id) {
     return new Promise((resolve, reject) => {
       axios.get(`/api/project-management/start/${id}`)
         .then((response) => {
-          console.log(response)
+          resolve(response)
         })
         .catch((error) => { reject(error) })
     })
