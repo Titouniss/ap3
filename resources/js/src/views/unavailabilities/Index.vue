@@ -36,7 +36,7 @@
         class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
         v-model="searchQuery"
         @input="updateSearchQuery"
-        placeholder="Search..."
+        placeholder="Rechercher..."
       />
       <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
@@ -53,7 +53,7 @@
           <vs-dropdown-item>
             <span class="flex items-center">
               <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-              <span>Delete</span>
+              <span>Supprimer</span>
             </span>
           </vs-dropdown-item>
         </vs-dropdown-menu>
@@ -72,7 +72,7 @@
       rowSelection="multiple"
       colResizeDefault="shift"
       :animateRows="true"
-      :floatingFilter="true"
+      :floatingFilter="false"
       :pagination="true"
       :paginationPageSize="paginationPageSize"
       :suppressPaginationPanel="true"
