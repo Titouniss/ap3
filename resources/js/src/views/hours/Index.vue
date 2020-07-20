@@ -469,7 +469,11 @@ export default {
       }
     },
     dealingHours() {
-      return this.$store.state.dealingHoursManagement.dealingHour;
+      if (this.$store.state.dealingHoursManagement) {
+        return this.$store.state.dealingHoursManagement.dealingHour;
+      } else {
+        return {};
+      }
     }
   },
   methods: {
