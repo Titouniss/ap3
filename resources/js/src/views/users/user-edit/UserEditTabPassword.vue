@@ -12,7 +12,7 @@
     <vs-input
       type="password"
       class="w-full mb-base"
-      label-placeholder="Old Password"
+      label-placeholder="Ancien mot de passe"
       v-model="old_password"
       v-validate="'required'"
       name="old_password"
@@ -25,7 +25,7 @@
     <vs-input
       type="password"
       class="w-full mb-base"
-      label-placeholder="New Password"
+      label-placeholder="Nouveau mot de passe"
       v-model="new_password"
       v-validate="'required'"
       name="password"
@@ -35,7 +35,7 @@
     <vs-input
       type="password"
       class="w-full mb-base"
-      label-placeholder="Confirm Password"
+      label-placeholder="Comfirmation mot de passe"
       v-model="confirm_new_password"
       v-validate="'required'"
       name="password_confirm"

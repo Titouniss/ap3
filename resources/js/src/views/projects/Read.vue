@@ -69,10 +69,11 @@
             <vs-button
               type="border"
               color="danger"
+              class="mr-4"
               icon-pack="feather"
               icon="icon-trash"
               @click="confirmDeleteRecord"
-            >Delete</vs-button>
+            >Supprimer</vs-button>
             <vs-button
               type="border"
               color="success"
