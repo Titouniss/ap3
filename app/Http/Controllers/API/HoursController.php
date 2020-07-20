@@ -224,7 +224,7 @@ class HoursController extends Controller
      * @param  string  $date
      * @return \Illuminate\Http\Response
      */
-    public function getTargetWorkHours($user_id, $date)
+    public static function getTargetWorkHours($user_id, $date)
     {
         // Expected hours for this day
         setlocale(LC_TIME, "fr_FR", "French");
