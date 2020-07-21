@@ -134,7 +134,12 @@
                 >{{ errors.first('skills') }}</span>
               </div>
 
-              <div
+              <span
+                  v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                  class="text-danger text-sm"
+                >Attention, aucun îlot ne possède cette combinaison de compétences</span>
+
+              <!-- <div
                 class="my-3"
                 v-if="this.type !== 'workarea' && ( itemLocal.skills.length > 0 && workareasDataFiltered.length > 0)"
               >
@@ -156,7 +161,8 @@
                   class="text-danger text-sm"
                   v-show="errors.has('workarea')"
                 >{{ errors.first('workarea') }}</span>
-              </div>
+              </div> -->
+
             </div>
             <!-- Right -->
             <div class="vx-col flex-5">
@@ -293,7 +299,7 @@ export default {
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
-        workarea_id: this.type === "workarea" ? this.idType : null,
+        //workarea_id: this.type === "workarea" ? this.idType : null,
         created_by: "",
         status: "todo",
         project_id: this.type === "projects" ? this.idType : null,
@@ -373,7 +379,7 @@ export default {
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
-        workarea_id: "null",
+        //workarea_id: "null",
         created_by: "",
         status: "todo",
         skills: [],
@@ -403,16 +409,16 @@ export default {
             "DD-MM-YYYY HH:mm"
           ).format("YYYY-MM-DD HH:mm");
 
-          this.itemLocal.workarea_id =
-            this.itemLocal.workarea_id == "null"
-              ? null
-              : this.itemLocal.workarea_id;
+          // this.itemLocal.workarea_id =
+          //   this.itemLocal.workarea_id == "null"
+          //     ? null
+          //     : this.itemLocal.workarea_id;
           this.itemLocal.project_id =
             this.type === "projects" ? this.idType : this.itemLocal.project_id;
           this.itemLocal.user_id =
             this.type === "users" ? this.idType : this.itemLocal.user_id;
-          this.itemLocal.workarea_id =
-            this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
+          // this.itemLocal.workarea_id =
+          //   this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
 
           if (result) {
             console.log(["result", result]);
