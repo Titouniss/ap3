@@ -50,13 +50,11 @@ export default {
       password: pwd
     })
   },
-  registerUser(genre, firstname, lastname, email, phone_number, pwd, c_password, isTermsConditionAccepted) {
+  registerUser(firstname, lastname, email, pwd, c_password, isTermsConditionAccepted) {
     return axios.post('/api/auth/register', {
-      genre: genre,
       firstname: firstname,
       lastname: lastname,
       email,
-      phone_number: phone_number,
       password: pwd,
       c_password: c_password,
       isTermsConditionAccepted: isTermsConditionAccepted

@@ -80,8 +80,6 @@ class PermissionsRoleTableSeeder extends Seeder
                 'lastname' => 'NUMIDEV',
                 'email' => 'admin@numidev.fr',
                 'password' => Hash::make('password'),
-                'phone_number' => '0123456789',
-                'genre' => 'H',
                 //'email_verified_at' => '2020-01-01 00:00:00.000000',
                 'isTermsConditionAccepted' => true
             ]);

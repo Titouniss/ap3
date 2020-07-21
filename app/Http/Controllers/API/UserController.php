@@ -166,7 +166,6 @@ class UserController extends Controller
             'firstname' => 'required',
             'lastname' => 'required',
             'email' => 'required|email',
-            'phone_number' => 'required',
             'password' => 'required',
             'c_password' => 'required|same:password',
             'isTermsConditionAccepted' => 'required',
@@ -202,7 +201,6 @@ class UserController extends Controller
     public function registerWithToken(Request $request, $token)
     {
         $validator = Validator::make($request->all(), [
-            'genre' => 'required',
             'firstname' => 'required',
             'lastname' => 'required',
             'password' => 'required',
@@ -266,10 +264,8 @@ class UserController extends Controller
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
-            'genre' => 'required',
             'lastname' => 'required',
             'firstname' => 'required',
-            'phone_number' => 'required',
             'email' => 'required',
             'company_id' => 'required'
         ]);
@@ -324,8 +320,6 @@ class UserController extends Controller
         $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
             'lastname' => 'required',
-            'genre' => 'required',
-            'phone_number' => 'required',
             'email' => 'required',
             'company_id' => 'required'
         ]);
@@ -344,8 +338,6 @@ class UserController extends Controller
 
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
-            $user->genre = $arrayRequest['genre'];
-            $user->phone_number = $arrayRequest['phone_number'];
             $user->email = $arrayRequest['email'];
             $user->company_id = $arrayRequest['company_id'];
 
@@ -380,33 +372,6 @@ class UserController extends Controller
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
             $user->email = $arrayRequest['email'];
-            $user->save();
-        }
-        return response()->json(['success' => $user], $this->successStatus);
-    }
-
-    /**
-     * update information item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function updateInformation(Request $request, User $user)
-    {
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'birth_date' => 'required',
-            'phone_number' => 'required',
-            'genre' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-
-        if ($user != null) {
-            $user->birth_date = $arrayRequest['birth_date'];
-            $user->phone_number = $arrayRequest['phone_number'];
-            $user->genre = $arrayRequest['genre'];
             $user->save();
         }
         return response()->json(['success' => $user], $this->successStatus);

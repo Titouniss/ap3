@@ -21,26 +21,6 @@
             <h4 class="mb-8 text-center">Création de compte</h4>
           </div>
           <div class="flex-column clearfix">
-            <div class="mt-4">
-              <label class="text-sm">Sexe</label>
-              <div class="mt-2">
-                <vs-radio
-                  v-model="genre"
-                  vs-value="H"
-                  color="primary"
-                  vs-name="radio_genre"
-                  class="mr-4"
-                >Homme</vs-radio>
-                <vs-radio
-                  v-model="genre"
-                  vs-value="F"
-                  color="primary"
-                  vs-name="radio_genre"
-                  class="mr-4"
-                >Femme</vs-radio>
-              </div>
-            </div>
-
             <vs-input
               v-validate="'required|alpha_dash|min:3'"
               data-vv-validate-on="blur"
@@ -62,18 +42,6 @@
               class="w-full"
             />
             <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
-
-            <vs-input
-              v-validate="'min:10|max:10|required'"
-              data-vv-validate-on="blur"
-              name="phone_number"
-              type="number"
-              label-placeholder="Numéro de téléphone"
-              placeholder="Numéro de téléphone"
-              v-model="phone_number"
-              class="w-full mt-6"
-            />
-            <span class="text-danger text-sm">{{ errors.first('phone_number') }}</span>
 
             <vs-input
               v-validate="'required|email'"
@@ -139,10 +107,8 @@ import themeConfig from "@/../themeConfig.js";
 export default {
   data() {
     return {
-      genre: "",
       firstname: "",
       lastname: "",
-      phone_number: "",
       email: "",
       password: "",
       confirm_password: "",
@@ -158,10 +124,8 @@ export default {
     validateForm() {
       return (
         !this.errors.any() &&
-        (this.genre === "H" || this.genre === "F") &&
         this.firstname !== "" &&
         this.lastname !== "" &&
-        this.phone_number !== "" &&
         this.email !== "" &&
         this.password !== "" &&
         this.confirm_password !== "" &&
@@ -194,11 +158,9 @@ export default {
 
       const payload = {
         userDetails: {
-          genre: this.genre,
           firstname: this.firstname,
           lastname: this.lastname,
           email: this.email,
-          phone_number: this.phone_number,
           password: this.password,
           confirmPassword: this.confirm_password,
           isTermsConditionAccepted: this.isTermsConditionAccepted
