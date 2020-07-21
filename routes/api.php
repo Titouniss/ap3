@@ -58,6 +58,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:delete users']], function () {
             Route::delete('destroy/{id}', 'API\UserController@destroy');
+            Route::delete('forceDelete/{id}', 'API\UserController@forceDelete');
         });
     });
 

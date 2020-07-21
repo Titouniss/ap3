@@ -56,8 +56,9 @@ export default {
       });
     },
     deleteRecord() {
+      console.log(["id", this.params.data.id]);
       this.$store
-        .dispatch("userManagement/removeRecord", this.params.data.id)
+        .dispatch("userManagement/forceRemoveItem", this.params.data.id)
         .then(() => {
           this.showDeleteSuccess();
         })

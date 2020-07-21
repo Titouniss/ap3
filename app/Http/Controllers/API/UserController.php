@@ -24,12 +24,14 @@ use App\Models\Company;
 use App\Models\WorkHours;
 use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
 class UserController extends Controller
 {
+    use SoftDeletes;
     public $successStatus = 200;
     /**
      * login api
@@ -450,10 +452,23 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $item = User::where('id', $id)->delete();
-        $controllerLog = new Logger('user');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('user', ['response', $item]);
-        return response()->json(['success' => $item], $this->successStatus);
+        $item = User::findOrFail($id);
+        $item->delete();
+
+        return '';
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete($id)
+    {
+        $item = User::withTrashed()->findOrFail(intval($id));
+
+        $item->forceDelete();
+        return '';
     }
 }
