@@ -109,6 +109,61 @@ var model = "user";
 var modelPlurial = "users";
 var modelTitle = "Utilisateurs";
 
+var columnDef = [
+  {
+    width: 60,
+    filter: false,
+    checkboxSelection: true,
+    headerCheckboxSelectionFilteredOnly: true,
+    headerCheckboxSelection: true,
+    resizable: true
+  },
+  {
+    headerName: "Nom",
+    field: "lastname",
+    filter: true,
+    width: 200,
+    resizable: true
+  },
+  {
+    headerName: "Prénom",
+    field: "firstname",
+    filter: true,
+    width: 150,
+    resizable: true
+  },
+  {
+    headerName: "Email",
+    field: "email",
+    filter: true,
+    width: 300,
+    resizable: true
+  },
+  {
+    headerName: "Rôle",
+    field: "roles",
+    filter: true,
+    width: 150,
+    cellRendererFramework: "CellRendererRelations",
+    resizable: true
+  },
+  {
+    headerName: "Société",
+    field: "company",
+    filter: true,
+    width: 150,
+    cellRendererFramework: "CellRendererRelations",
+    resizable: true
+  },
+  {
+    headerName: "Actions",
+    field: "transactions",
+    width: 150,
+    cellRendererFramework: "CellRendererActions",
+    resizable: true
+  }
+];
+
 export default {
   components: {
     AgGridVue,
@@ -132,51 +187,7 @@ export default {
         resizable: true,
         suppressMenu: true
       },
-      columnDefs: [
-        {
-          filter: false,
-          checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true,
-          resizable: true
-        },
-        {
-          headerName: "Nom",
-          field: "lastname",
-          filter: true,
-          width: 200,
-          resizable: true
-        },
-        {
-          headerName: "Prénom",
-          field: "firstname",
-          filter: true,
-          width: 150,
-          resizable: true
-        },
-        {
-          headerName: "Email",
-          field: "email",
-          filter: true,
-          width: 300,
-          resizable: true
-        },
-        {
-          headerName: "Rôle",
-          field: "roles",
-          filter: true,
-          width: 150,
-          cellRendererFramework: "CellRendererRelations",
-          resizable: true
-        },
-        {
-          headerName: "Actions",
-          field: "transactions",
-          width: 150,
-          cellRendererFramework: "CellRendererActions",
-          resizable: true
-        }
-      ],
+      columnDefs: this.getColumnDef(),
 
       // Cell Renderer Components
       components: {
@@ -239,6 +250,18 @@ export default {
   methods: {
     authorizedTo(action, model = "users") {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
+    getColumnDef() {
+      if (
+        this.$store.state.AppActiveUser.roles.findIndex(
+          r => r.name === "superAdmin"
+        ) > -1
+      ) {
+        return columnDef;
+      } else {
+        let withoutCompany = columnDef.slice(0, 5).concat(columnDef.slice(-1));
+        return withoutCompany;
+      }
     },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
@@ -314,6 +337,7 @@ export default {
     }
   },
   mounted() {
+    const user = this.$store.state.AppActiveUser;
     this.gridApi = this.gridOptions.api;
 
     window.addEventListener("resize", this.onResize);
