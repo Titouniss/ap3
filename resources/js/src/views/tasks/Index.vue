@@ -17,7 +17,7 @@
     
     <div class="vx-card p-6 mb-4" style="display: flex; flex-direction: row; flex-wrap: wrap;" v-if="formatActive == 'grid'">
         
-        <add-form :customTask="true" :project_data="this.project_data" :tasks_list="tasksData"/>
+        <add-form :customTask="true" :project_data="this.project_data" :tasks_list="tasksData" :hideProjectInput="true" :hideUserInput="true"/>
 
         <div v-for="item in tasksData" v-bind:key="item.name" class="card-task p-2  m-3">
           <!-- <div>

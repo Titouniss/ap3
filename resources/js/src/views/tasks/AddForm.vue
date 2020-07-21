@@ -67,7 +67,7 @@
 
               <div class="my-3">
                 <vs-select
-                  v-if="this.type !== 'users' && usersData.length > 0"
+                  v-if="this.type !== 'users' && usersData.length > 0 && hideUserInput == false"
                   v-validate="'required'"
                   name="userId"
                   label="Attribuer"
@@ -90,7 +90,7 @@
 
               <div class="my-3">
                 <vs-select
-                  v-if="this.type !== 'projects' && projectsData.length > 0"
+                  v-if="this.type !== 'projects' && projectsData.length > 0 && hideUserInput == false"
                   v-validate="'required'"
                   name="projectId"
                   label="Projet"
@@ -265,21 +265,12 @@ export default {
     },
     tasks_list: { required: true },
     customTask: { type: Boolean },
-    dateData: {
-      type: Object
-    },
-    activeAddPrompt: {
-      type: Boolean
-    },
-    handleClose: {
-      type: Function
-    },
-    type: {
-      type: String
-    },
-    idType: {
-      type: Number
-    }
+    dateData: { type: Object },
+    activeAddPrompt: { type: Boolean },
+    handleClose: { type: Function },
+    type: { type: String },
+    hideProjectInput: { type: Boolean },
+    hideUserInput: { type: Boolean }
   },
   data() {
     return {
