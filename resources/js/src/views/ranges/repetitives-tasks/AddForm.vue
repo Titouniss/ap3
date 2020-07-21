@@ -60,6 +60,7 @@
             </div>
             <!-- Right -->
             <div class="vx-col flex-1">
+
               <vs-select
                 label="Compétences"
                 v-on:change="updateWorkareasList"
@@ -82,7 +83,12 @@
                 v-show="errors.has('skills')"
               >{{ errors.first('skills') }}</span>
 
-              <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+              <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"> -->
+                <span
+                  v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                  class="text-danger text-sm"
+                >Attention, aucun îlot ne possède cette combinaison de compétences</span>
+              <!--
                 <vs-select
                   name="workarea"
                   label="Ilot"
@@ -96,7 +102,7 @@
                     v-for="(item,index) in workareasDataFiltered"
                   />
                 </vs-select>
-              </div>
+              </div> -->
               <div class="my-4">
                 <small class="date-label">Temps estimé (en h)</small>
                 <vs-input-number
@@ -137,7 +143,7 @@ export default {
         order: 1,
         estimated_time: 1,
         description: "",
-        workarea_id: null,
+       // workarea_id: null,
         skills: []
       },
 
@@ -171,16 +177,16 @@ export default {
         order: 1,
         estimated_time: 1,
         description: "",
-        workarea_id: null,
+        //workarea_id: null,
         skills: []
       });
       Object.assign(this.workareasDataFiltered, []);
     },
     addItem() {
       this.$validator.validateAll().then(result => {
-        this.itemLocal.workarea = this.workareasDataFiltered.find(
-          workarea => workarea.id === this.itemLocal.workarea_id
-        );
+        // this.itemLocal.workarea = this.workareasDataFiltered.find(
+        //   workarea => workarea.id === this.itemLocal.workarea_id
+        // );
 
         if (result) {
           this.$store

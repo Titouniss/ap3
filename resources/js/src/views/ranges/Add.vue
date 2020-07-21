@@ -17,20 +17,19 @@
             <span class="font-medium text-lg leading-none">Admin</span>
           </div>
           <vs-divider />
-          <vs-select
-            name="company"
+          
+          <v-select
+            label="name"
             v-validate="'required'"
-            label="Société"
-            v-model="range_data.company_id"
+            v-model="range_data.company"
+            :options="companiesData"
             class="w-full"
           >
-            <vs-select-item
-              :key="index"
-              :value="item.id"
-              :text="item.name"
-              v-for="(item,index) in companiesData"
-            />
-          </vs-select>
+            <template #header>
+              <div class="vs-select--label">Société</div>
+            </template>
+          </v-select>
+
           <vs-divider />
         </div>
 
@@ -66,7 +65,7 @@
             <div class="flex items-end px-3">
               <feather-icon svgClasses="w-6 h-6" icon="PackageIcon" class="mr-2" />
               <span class="font-medium text-lg leading-none">Liste des étapes de la gamme</span>
-              <add-form v-if="range_data.company_id != null" :company_id="range_data.company_id"></add-form>
+              <add-form v-if="range_data.company != null" :company_id="range_data.company.id"></add-form>
             </div>
             <vs-divider />
             <vs-table :data="repetitiveTasksData">
@@ -109,13 +108,14 @@
         </div>
       </div>
     </vx-card>
-    <edit-form :itemId="itemIdToEdit" :companyId="range_data.company_id" v-if="itemIdToEdit" />
+    <edit-form :itemId="itemIdToEdit" :companyId="range_data.company.id" v-if="itemIdToEdit" />
   </div>
 </template>
 
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import vSelect from "vue-select";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -141,6 +141,7 @@ var modelTitle = "Gammes";
 export default {
   components: {
     AddForm,
+    vSelect,
     EditForm,
     CellRendererActions
   },
@@ -188,7 +189,7 @@ export default {
         ) {
           return false;
         } else {
-          this.range_data.company_id = user.company_id;
+          this.range_data.company.id = user.company_id;
           return true;
         }
       } else return true;
@@ -209,6 +210,8 @@ export default {
 
       let payload = { ...this.range_data };
       payload.repetitive_tasks = this.repetitiveTasksData;
+      payload.company_id = payload.company.id
+
       this.$store
         .dispatch("rangeManagement/addItem", payload)
         .then(() => {

@@ -36,11 +36,16 @@
                     </vs-select>
                     <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
                     
-                    <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                  <span
+                    v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                    class="text-danger text-sm"
+                  >Attention, aucun îlot ne possède cette combinaison de compétences</span>
+                    
+                    <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
                       <vs-select name="workarea" label="Ilot" v-model="itemLocal.workarea_id" class="w-full mt-3">
                           <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
                       </vs-select>
-                    </div>
+                    </div> -->
                     <div class="my-4">
                       <small class="date-label">Temps estimé (en h)</small>
                       <vs-input-number min="1" name="estimatedTime" class="inputNumber" v-model="itemLocal.estimated_time" />
@@ -115,7 +120,7 @@ export default {
     },
     submitItem () {
       this.$validator.validateAll().then(result => {
-        this.itemLocal.workarea = this.workareasDataFiltered.find((workarea) => workarea.id === this.itemLocal.workarea_id)
+        //this.itemLocal.workarea = this.workareasDataFiltered.find((workarea) => workarea.id === this.itemLocal.workarea_id)
 
         if (result) {
           this.$store.dispatch('repetitiveTaskManagement/updateItem', Object.assign({}, this.itemLocal))

@@ -40,7 +40,7 @@
                 <template slot="thead">
                   <vs-th>Ordre</vs-th>
                   <vs-th>Intitulé</vs-th>
-                  <vs-th>Ilot</vs-th>
+                  <vs-th>Compétences</vs-th>
                   <vs-th>Temps</vs-th>
                   <vs-th></vs-th>
                 </template>
@@ -56,9 +56,9 @@
                       {{ data[indextr].name }}
                     </vs-td>
 
-                    <vs-td :data="data[indextr].workarea">
-                      {{ data[indextr].workarea ? data[indextr].workarea.name : 'Aucun' }}
-                    </vs-td>
+                    <vs-td
+                      :data="data[indextr].skills"
+                    >{{ data[indextr].skillsNames != "" ? data[indextr].skillsNames : 'Aucunes' }}</vs-td>
 
                     <vs-td :data="data[indextr].estimated_time">
                        {{ data[indextr].estimated_time }}
@@ -121,7 +121,24 @@ export default {
   },
   computed: {
     repetitiveTasksData() {
-      return this.$store.state.repetitiveTaskManagement.repetitivesTasks
+      let repetitivesTasks = this.$store.state.repetitiveTaskManagement.repetitivesTasks;
+
+      repetitivesTasks.forEach(task => {
+        
+        if(task.skills.length > 0){
+          let skillsNames = ''
+          task.skills.forEach(skill_id => {
+            
+            const skills = this.$store.state.skillManagement.skills;
+            let skill = skills.find( s => s.id == parseInt(skill_id)).name
+            skillsNames = skill ? (skillsNames == "" ? skill : skillsNames + ' | ' + skill) : skillsNames
+
+          });
+          task.skillsNames = skillsNames
+        }
+      });
+
+      return repetitivesTasks;
     },
     validateForm () {
       return !this.errors.any()

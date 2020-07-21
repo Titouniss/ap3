@@ -121,6 +121,7 @@ import moduleRangeManagement from "@/store/range-management/moduleRangeManagemen
 // Cell Renderer
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererLink from './cell-renderer/CellRendererLink.vue'
 
 var modelTitle = "Projet";
 
@@ -133,6 +134,7 @@ export default {
 
     // Cell Renderer
     CellRendererActions,
+    CellRendererLink,
     CellRendererRelations
   },
   data() {
@@ -156,7 +158,8 @@ export default {
         {
           headerName: "Nom",
           field: "name",
-          filter: true
+          filter: true,
+          cellRendererFramework: 'CellRendererLink'
         },
         {
           headerName: "Date de création",
@@ -187,6 +190,7 @@ export default {
 
       // Cell Renderer Components
       components: {
+        CellRendererLink,
         CellRendererActions,
         CellRendererRelations
       }

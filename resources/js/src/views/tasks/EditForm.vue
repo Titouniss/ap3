@@ -45,12 +45,17 @@
                       <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
                     </div>
                     
-                    <div class="my-3" v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                    <span
+                      v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                      class="text-danger text-sm"
+                    >Attention, aucun îlot ne possède cette combinaison de compétences</span>
+
+                    <!-- <div class="my-3" v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
                       <small class="date-label">Ilot</small>
                         <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
                             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
                         </vs-select>
-                    </div>
+                    </div> -->
                   </div>
                   <!-- Right -->
                   <div class="vx-col flex-5">
@@ -245,10 +250,10 @@ export default {
           this.itemLocal.date,
           "DD-MM-YYYY HH:mm"
         ).format("YYYY-MM-DD HH:mm");
-        this.itemLocal.workarea_id =
-          this.itemLocal.workarea_id == "null"
-            ? null
-            : this.itemLocal.workarea_id;
+        // this.itemLocal.workarea_id =
+        //   this.itemLocal.workarea_id == "null"
+        //     ? null
+        //     : this.itemLocal.workarea_id;
 
         if (result) {
           this.$store
@@ -342,6 +347,9 @@ export default {
         this.itemLocal.time_spent = this.itemLocal.estimated_time;
         this.have_setTimeSpent = true;
       }
+    },
+    showDescription() {
+      this.descriptionDisplay = true;
     }
   }
 };
