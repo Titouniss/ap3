@@ -25,11 +25,6 @@
               <user-edit-tab-account class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
-          <vs-tab label="Information" icon-pack="feather" icon="icon-info">
-            <div class="tab-text">
-              <user-edit-tab-information class="mt-4" :data="user_data" />
-            </div>
-          </vs-tab>
           <vs-tab label="Horaires" icon-pack="feather" icon="icon-clock">
             <div class="tab-text">
               <user-edit-tab-work-hours class="mt-4" :data="user_data" />
@@ -53,7 +48,6 @@
 
 <script>
 import UserEditTabAccount from "./UserEditTabAccount.vue";
-import UserEditTabInformation from "./UserEditTabInformation.vue";
 import UserEditTabWorkHours from "./UserEditTabWorkHours.vue";
 import UserEditTabNotifications from "./UserEditTabNotifications.vue";
 import UserEditTabPassword from "./UserEditTabPassword.vue";
@@ -64,7 +58,6 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 export default {
   components: {
     UserEditTabAccount,
-    UserEditTabInformation,
     UserEditTabWorkHours,
     UserEditTabNotifications,
     UserEditTabPassword

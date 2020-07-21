@@ -86,7 +86,7 @@
 
         <vs-input
           class="w-full mt-4"
-          label="Company"
+          label="Société"
           v-model="data_local.company"
           v-validate="'alpha_spaces'"
           name="company"

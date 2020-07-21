@@ -10,7 +10,7 @@
 
 <template>
   <vs-prompt
-    title="Edition d'une compagnie"
+    title="Edition d'une société"
     accept-text="Modifier"
     cancel-text="Annuler"
     button-cancel="border"
@@ -28,7 +28,7 @@
               v-validate="'max:255|required'"
               name="name"
               class="w-full mb-4 mt-5"
-              placeholder="Nom de la compagnie"
+              placeholder="Nom de la société"
               v-model="itemLocal.name"
               :color="!errors.has('name') ? 'success' : 'danger'"
             />
@@ -107,7 +107,7 @@ export default {
         .then(() => {
           this.$vs.loading.close();
           this.$vs.notify({
-            title: "Modification d'une compagnie",
+            title: "Modification d'une société",
             text: `"${this.itemLocal.name}" modifiée avec succès`,
             iconPack: "feather",
             icon: "icon-alert-circle",

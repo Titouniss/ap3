@@ -91,5 +91,15 @@ export default {
                 })
                 .catch((error) => { reject(error) })
         })
-    }
+    },
+    forceRemoveItem({ commit }, id) {
+        return new Promise((resolve, reject) => {
+            axios.delete(`/api/user-management/forceDelete/${id}`)
+                .then((response) => {
+                    commit('REMOVE_RECORD', id)
+                    resolve(response)
+                })
+                .catch((error) => { reject(error) })
+        })
+    },
 }

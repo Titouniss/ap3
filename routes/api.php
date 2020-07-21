@@ -53,12 +53,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::get('show/{user}', 'API\UserController@show');
             Route::post('update/{user}', 'API\UserController@update');
             Route::post('updateAccount/{user}', 'API\UserController@updateAccount');
-            Route::post('updateInformation/{user}', 'API\UserController@updateInformation');
             Route::post('updatePassword/{user}', 'API\UserController@updatePassword');
             Route::post('updateWorkHours/{user}', 'API\UserController@updateWorkHours');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
             Route::delete('destroy/{id}', 'API\UserController@destroy');
+            Route::delete('forceDelete/{id}', 'API\UserController@forceDelete');
         });
     });
 

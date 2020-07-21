@@ -69,7 +69,7 @@ const router = new Router({
                     name: 'companies',
                     component: () => import('./views/companies/Index.vue'),
                     meta: {
-                        pageTitle: 'Gestion des compagnies',
+                        pageTitle: 'Gestion des sociétés',
                         rule: 'admin',
                         requiresAuth: true
                     }

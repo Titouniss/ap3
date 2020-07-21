@@ -284,9 +284,8 @@ export default {
     deleteRecord() {
       this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
-          .dispatch("userManagement/removeRecord", selectRow.id)
+          .dispatch("userManagement/forceRemoveItem", selectRow.id)
           .then(data => {
-            console.log(["data_1", data]);
             this.showDeleteSuccess();
           })
           .catch(err => {
@@ -352,7 +351,7 @@ export default {
     if (!moduleCompanyManagement.isRegistered) {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
-    } 
+    }
     if (!moduleSkillManagement.isRegistered) {
       this.$store.registerModule("skillManagement", moduleSkillManagement);
       moduleSkillManagement.isRegistered = true;

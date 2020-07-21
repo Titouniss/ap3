@@ -81,11 +81,11 @@ export default {
     },
     registerUserJWT({ commit }, payload) {
 
-        const { genre, firstname, lastname, email, phone_number, password, confirmPassword, isTermsConditionAccepted } = payload.userDetails
+        const { firstname, lastname, email, password, confirmPassword, isTermsConditionAccepted } = payload.userDetails
 
         return new Promise((resolve, reject) => {
 
-            jwt.registerUser(genre, firstname, lastname, email, phone_number, password, confirmPassword, isTermsConditionAccepted)
+            jwt.registerUser(firstname, lastname, email, password, confirmPassword, isTermsConditionAccepted)
                 .then(response => {
                     const data = response.data
                     console.log(data)

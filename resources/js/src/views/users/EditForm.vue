@@ -36,38 +36,6 @@
             />
             <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
 
-            <div class="mt-4">
-              <label class="text-sm">Sexe</label>
-              <div class="mt-2">
-                <vs-radio
-                  v-model="itemLocal.genre"
-                  vs-value="H"
-                  color="primary"
-                  vs-name="radio_genre"
-                  class="mr-4"
-                >Homme</vs-radio>
-                <vs-radio
-                  v-model="itemLocal.genre"
-                  vs-value="F"
-                  color="primary"
-                  vs-name="radio_genre"
-                  class="mr-4"
-                >Femme</vs-radio>
-              </div>
-            </div>
-
-            <vs-input
-              v-validate="'min:10|max:10|required'"
-              data-vv-validate-on="blur"
-              name="phone_number"
-              type="phone_number"
-              label-placeholder="Numéro de téléphone"
-              placeholder="Numéro de téléphone"
-              v-model="itemLocal.phone_number"
-              class="w-full mt-8"
-            />
-            <span class="text-danger text-sm">{{ errors.first('phone_number') }}</span>
-
             <vs-input
               v-validate="'required|email'"
               data-vv-validate-on="blur"
@@ -199,8 +167,6 @@ export default {
         !this.errors.any() &&
         this.itemLocal.firstname !== "" &&
         this.itemLocal.lastname !== "" &&
-        (this.itemLocal.genre === "H" || this.itemLocal.genre === "F") &&
-        this.itemLocal.phone_number !== "" &&
         this.itemLocal.email !== "" &&
         this.itemLocal.roles !== null
       );
