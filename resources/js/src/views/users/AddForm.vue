@@ -1,150 +1,154 @@
+<!-- =========================================================================================
+  File Name: UserAdd.vue
+  Description: user Add Page
+  ----------------------------------------------------------------------------------------
+  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+  Author: Pixinvent
+  Author URL: http://www.themeforest.net/role/pixinvent
+========================================================================================== -->
+
 <template>
-  <div class="p-3 mb-4 mr-4">
-    <vs-button @click="activePrompt = true" class="w-full">Ajouter un utilisateur</vs-button>
-    <vs-prompt
-      title="Ajouter un utilisateur"
-      accept-text="Ajouter"
-      cancel-text="Annuler"
-      button-cancel="border"
-      @cancel="clearFields"
-      @accept="addItem"
-      @close="clearFields"
-      :is-valid="validateForm"
-      :active.sync="activePrompt"
-    >
-      <div>
-        <form>
-          <div class="vx-row">
-            <div class="vx-col w-full">
-              <vs-input
-                v-validate="'required|max:255'"
-                name="lastname"
-                class="w-full mb-4 mt-5"
-                placeholder="Nom"
-                v-model="itemLocal.lastname"
-                :color="!errors.has('lastname') ? 'success' : 'danger'"
-              />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('lastname')"
-              >{{ errors.first('lastname') }}</span>
-              <vs-input
-                v-validate="'required|max:255'"
-                name="firstname"
-                class="w-full mb-4 mt-5"
-                placeholder="Prénom"
-                v-model="itemLocal.firstname"
-                :color="!errors.has('firstname') ? 'success' : 'danger'"
-              />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('firstname')"
-              >{{ errors.first('firstname') }}</span>
-              <vs-input
-                v-validate="'required|email'"
-                name="email"
-                class="w-full mb-4 mt-5"
-                placeholder="E-mail"
-                v-model="itemLocal.email"
-                :color="!errors.has('email') ? 'success' : 'danger'"
-              />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('email')"
-              >{{ errors.first('email') }}</span>
+  <div id="page-role-add">
+    <vx-card>
+      <vs-row vs-justify="center" vs-type="flex" vs-w="12">
+        <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+          <vs-input
+            v-validate="'required|max:255'"
+            name="lastname"
+            class="w-full mb-4"
+            label="Nom"
+            v-model="itemLocal.lastname"
+            :color="!errors.has('lastname') ? 'success' : 'danger'"
+          />
+          <span
+            class="text-danger text-sm"
+            v-show="errors.has('lastname')"
+          >{{ errors.first('lastname') }}</span>
 
-              <div v-if="itemLocal.company_id" class="mt-5">
-                <span v-if="companySkills.length == 0" class="msgTxt">Aucune compétences trouvées.</span>
-                <router-link
-                  v-if="companySkills.length == 0"
-                  class="linkTxt"
-                  :to="{ path: '/skills' }"
-                >Ajouter une compétence</router-link>
-                <vs-select
-                  v-if="companySkills.length > 0"
-                  label="Compétences"
-                  v-model="itemLocal.skills"
-                  class="w-full"
-                  multiple
-                  autocomplete
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in companySkills"
-                  />
-                </vs-select>
-                <span
-                  class="text-danger text-sm"
-                  v-show="errors.has('company_id')"
-                >{{ errors.first('company_id') }}</span>
-              </div>
+          <vs-input
+            v-validate="'required|max:255'"
+            name="firstname"
+            class="w-full mb-4 mt-5"
+            label="Prénom"
+            v-model="itemLocal.firstname"
+            :color="!errors.has('firstname') ? 'success' : 'danger'"
+          />
+          <span
+            class="text-danger text-sm"
+            v-show="errors.has('firstname')"
+          >{{ errors.first('firstname') }}</span>
 
-              <div class="vx-row mt-4" v-if="!disabled">
-                <div class="vx-col w-full">
-                  <div class="flex items-end px-3">
-                    <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
-                    <span class="font-medium text-lg leading-none">Admin</span>
-                  </div>
-                  <vs-divider />
-                  <div>
-                    <vs-select
-                      v-on:change="selectCompanySkills"
-                      v-validate="'required'"
-                      name="company_id"
-                      label="Société"
-                      v-model="itemLocal.company_id"
-                      class="w-full mt-5"
-                    >
-                      <vs-select-item
-                        :key="index"
-                        :value="item.id"
-                        :text="item.name"
-                        v-for="(item,index) in companiesData"
-                      />
-                    </vs-select>
-                    <span
-                      class="text-danger text-sm"
-                      v-show="errors.has('company_id')"
-                    >{{ errors.first('company_id') }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <vs-select
-                  v-validate="'required'"
-                  name="role"
-                  label="Rôle"
-                  :multiple="true"
-                  v-model="itemLocal.roles"
-                  class="w-full mt-5"
-                  autocomplete
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in rolesData"
-                  />
-                </vs-select>
-                <span
-                  class="text-danger text-sm"
-                  v-show="errors.has('role')"
-                >{{ errors.first('role') }}</span>
-              </div>
-            </div>
+          <vs-input
+            v-validate="'required|email'"
+            name="email"
+            class="w-full mb-4 mt-5"
+            label="E-mail"
+            v-model="itemLocal.email"
+            :color="!errors.has('email') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('email')">{{ errors.first('email') }}</span>
+        </vs-col>
+        <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+          <div>
+            <vs-select
+              v-validate="'required'"
+              name="role"
+              label="Rôle"
+              :multiple="true"
+              v-model="itemLocal.roles"
+              class="w-full"
+              autocomplete
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in rolesData"
+              />
+            </vs-select>
+            <span class="text-danger text-sm" v-show="errors.has('role')">{{ errors.first('role') }}</span>
           </div>
-        </form>
+
+          <div v-if="!disabled">
+            <vs-select
+              v-on:change="selectCompanySkills"
+              v-validate="'required'"
+              name="company_id"
+              label="Société"
+              v-model="itemLocal.company_id"
+              class="w-full mt-5"
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in companiesData"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('company_id')"
+            >{{ errors.first('company_id') }}</span>
+          </div>
+
+          <div v-if="itemLocal.company_id">
+            <div v-if="companySkills.length === 0" class="mt-12 mb-2">
+              <span
+                label="Compétences"
+                v-if="companySkills.length === 0"
+                class="msgTxt mt-10"
+              >Aucune compétences trouvées.</span>
+              <router-link
+                v-if="companySkills.length === 0"
+                class="linkTxt"
+                :to="{ path: '/skills' }"
+              >Ajouter une compétence</router-link>
+            </div>
+            <vs-select
+              v-if="companySkills.length > 0"
+              label="Compétences"
+              v-model="itemLocal.skills"
+              class="w-full mt-5"
+              multiple
+              autocomplete
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in companySkills"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('company_id')"
+            >{{ errors.first('company_id') }}</span>
+          </div>
+        </vs-col>
+      </vs-row>
+
+      <!-- Save & Reset Button -->
+      <div class="vx-row">
+        <div class="vx-col w-full">
+          <div class="mt-8 flex flex-wrap items-center justify-end">
+            <vs-button class="ml-auto mt-2" @click="addItem" :disabled="!validateForm">Ajouter</vs-button>
+            <vs-button class="ml-4 mt-2" type="border" color="warning" @click="back">Annuler</vs-button>
+          </div>
+        </div>
       </div>
-    </vs-prompt>
+    </vx-card>
   </div>
 </template>
 
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+
+// Store Module
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -179,6 +183,15 @@ export default {
     skillsData() {
       return this.$store.state.skillManagement.skills;
     },
+    authorizedToPublish() {
+      return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
+    },
+    authorizedToDelete() {
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
+    },
+    authorizedToEdit() {
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
+    },
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
@@ -206,6 +219,9 @@ export default {
     }
   },
   methods: {
+    authorizedTo(action, model = "users") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     clearFields() {
       Object.assign(this.itemLocal, {
         itemLocal: {
@@ -225,6 +241,7 @@ export default {
             )
             .then(() => {
               this.$vs.loading.close();
+              this.back();
               this.$vs.notify({
                 title: "Ajout d'un utilisateur",
                 text: `Utilisateur ajouté avec succès`,
@@ -247,8 +264,6 @@ export default {
       });
     },
     selectCompanySkills(item) {
-      console.log("test");
-      console.log(JSON.stringify(this.companiesData));
       this.companySkills = this.companiesData.find(
         company => company.id === item
       ).skills;
@@ -270,7 +285,55 @@ export default {
         }
       }
       return $filteredItems;
+    },
+    back() {
+      this.$router.push(`/${modelPlurial}`).catch(() => {});
     }
+  },
+  created() {
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
+    if (!moduleRoleManagement.isRegistered) {
+      this.$store.registerModule("roleManagement", moduleRoleManagement);
+      moduleRoleManagement.isRegistered = true;
+    }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule("skillManagement", moduleSkillManagement);
+      moduleSkillManagement.isRegistered = true;
+    }
+
+    this.$store.dispatch("skillManagement/fetchItems");
+    if (this.authorizedTo("read", "skills")) {
+      this.$store.dispatch("skillManagement/fetchItems");
+    }
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "users")) {
+      this.$store.dispatch("userManagement/fetchItems");
+    }
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "roles")) {
+      this.$store.dispatch("roleManagement/fetchItems");
+    }
+  },
+  beforeDestroy() {
+    moduleUserManagement.isRegistered = false;
+    moduleRoleManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
+    moduleSkillManagement.isRegistered = false;
+
+    this.$store.unregisterModule("skillManagement");
+    this.$store.unregisterModule("userManagement");
+    this.$store.unregisterModule("roleManagement");
+    this.$store.unregisterModule("companyManagement");
   }
 };
 </script>

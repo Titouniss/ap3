@@ -55,6 +55,16 @@ const router = new Router({
                     }
                 },
                 {
+                    path: '/users/user-add',
+                    name: 'users-user-add',
+                    component: () => import('./views/users/AddForm.vue'),
+                    meta: {
+                        pageTitle: 'Ajout d\'un utilisateur',
+                        rule: 'admin',
+                        requiresAuth: true
+                    }
+                },
+                {
                     path: '/users/user-edit/:userId',
                     name: 'app-user-edit',
                     component: () => import('@/views/users/user-edit/UserEdit.vue'),

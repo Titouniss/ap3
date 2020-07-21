@@ -11,13 +11,13 @@ export default {
     RelationToText() {
       let text = "";
       if (this.params.colDef.field === "company") {
-        if (this.params.value !== null) {
+        if (this.params.value !== null && this.params.value !== undefined) {
           text = this.params.value.name;
         } else {
           text = "Pas de société";
         }
       } else if (this.params.colDef.field === "roles") {
-        if (this.params.value) {
+        if (this.params.value !== null && this.params.value !== undefined) {
           this.params.value.forEach(element => {
             if (text !== "") {
               text = " |" + element.name;

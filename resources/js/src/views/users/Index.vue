@@ -1,7 +1,6 @@
 <template>
   <div id="page-users-list">
     <div class="vx-card w-full p-6">
-      <add-form v-if="authorizedToPublish" />
       <div class="flex flex-wrap items-center">
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
@@ -61,12 +60,16 @@
         </vs-dropdown>
       </div>
 
+      <div class="px-6 pb-2 pt-6" v-if="authorizedToPublish">
+        <vs-button @click="addRecord" class="w-full">Ajouter un utilisateur</vs-button>
+      </div>
       <!-- AgGrid Table -->
       <ag-grid-vue
         ref="agGridTable"
         :components="components"
         :gridOptions="gridOptions"
         class="ag-theme-material w-100 my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
         :rowData="usersData"
@@ -90,6 +93,7 @@
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
+import router from "@/router";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
@@ -97,7 +101,6 @@ import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.j
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
-import AddForm from "./AddForm.vue";
 import EditForm from "./EditForm.vue";
 
 // Cell Renderer
@@ -168,7 +171,6 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-    AddForm,
     EditForm,
     // Cell Renderer
     CellRendererLink,
@@ -181,7 +183,9 @@ export default {
 
       // AgGrid
       gridApi: null,
-      gridOptions: {},
+      gridOptions: {
+        localeText: { noRowsToShow: "Aucun utilisateur" }
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,
@@ -334,6 +338,9 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
+    },
+    addRecord() {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
     }
   },
   mounted() {
@@ -347,6 +354,8 @@ export default {
 
       // resize columns in the grid to fit the available space
       this.gridApi.sizeColumnsToFit();
+
+      this.gridApi.showLoadingOverlay();
     }
 
     /* =================================================================
