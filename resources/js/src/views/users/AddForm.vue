@@ -54,7 +54,7 @@
               v-validate="'required'"
               name="role"
               label="Rôle"
-              :multiple="true"
+              :multiple="false"
               v-model="itemLocal.roles"
               class="w-full"
               autocomplete
@@ -208,13 +208,21 @@ export default {
       } else return true;
     },
     validateForm() {
+      console.log("itemLocal", [this.itemLocal]);
+
+      console.log(["errors", this.errors.any()]);
+      console.log(["name", this.itemLocal.lastname]);
+      console.log(["firstname", this.itemLocal.firstname]);
+      console.log(["email", this.itemLocal.email]);
+      console.log(["company_id", this.itemLocal.company_id]);
+      console.log(["role", this.itemLocal.roles.length]);
       return (
         !this.errors.any() &&
-        this.itemLocal.name != "" &&
+        this.itemLocal.lastname != "" &&
         this.itemLocal.firstname != "" &&
         this.itemLocal.email != "" &&
         this.itemLocal.company_id != null &&
-        this.itemLocal.roles.length > 0
+        this.itemLocal.roles > 0
       );
     }
   },
