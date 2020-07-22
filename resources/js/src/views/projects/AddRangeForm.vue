@@ -18,12 +18,20 @@
           style="z-index: 52007;"
           title="Information"
           color="dark"
-          text="Le préfixe va vous servir afin de différencier vos différentes gammes">
+          text="Le préfixe va vous servir pour différencier vos différentes gammes">
             <vs-input icon-pack="feather" icon="icon-info" v-validate="'required|numeric'" name="prefix" class="w-full mb-4 mt-1" 
               placeholder="Préfixe" v-model="itemLocal.prefix" maxlength="5" @input="onPrefixChange"/>
-            <vs-select v-model="itemLocal.rangeId" class="w-full" v-validate="'required'" name='range'>
-              <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in rangesData" />
-            </vs-select>
+            <v-select
+              label="name"
+              v-model="itemLocal.range"
+              :options="rangesData"
+              class="w-full"
+            >
+              <template #header>
+                <div class="vs-select--label">Gamme</div>
+              </template>
+            </v-select>
+
           </vx-tooltip>
         </form>
       </div>
@@ -35,11 +43,16 @@
 import moment from 'moment'
 import { Validator } from 'vee-validate';
 import errorMessage from './errorValidForm';
+import vSelect from "vue-select";
+
 
 // register custom messages
 Validator.localize('fr', errorMessage);
 
 export default {
+  components: {
+    vSelect,
+  },
   props: {
     company_id: {
       required: true
@@ -54,13 +67,13 @@ export default {
 
       itemLocal: {
         prefix: '',
-        rangeId: ''
+        range: ''
       }
     }
   },
   computed: {
     validateForm () {
-      return this.itemLocal.prefix != '' && this.itemLocal.rangeId != null && this.itemLocal.rangeId != ''
+      return this.itemLocal.prefix != '' && this.itemLocal.range != null && this.itemLocal.range != ''
     },
     rangesData() {
       return this.filterItemsAdmin(this.$store.state.rangeManagement.ranges)
@@ -70,11 +83,12 @@ export default {
     clearFields () {
       Object.assign(this.itemLocal, {
         prefix: '',
+        range: '',
         rangeId: ''
       })
     },
     addRange () {
-      let range = this.rangesData.filter(e => e.id == this.itemLocal.rangeId)
+      this.itemLocal.rangeId = this.itemLocal.range.id
       this.itemLocal.project_id = this.project_id
 
       this.$store.dispatch('taskManagement/addItemRange', Object.assign({}, this.itemLocal))
@@ -82,7 +96,7 @@ export default {
           this.$vs.loading.close() 
           this.$vs.notify({
           title: 'Ajout d\'une gamme au projet',
-          text: `"${range[0].name}" ajouté avec succès`,
+          text: `"${this.itemLocal.name}" ajouté avec succès`,
           iconPack: 'feather',
           icon: 'icon-alert-circle',
           color: 'success'

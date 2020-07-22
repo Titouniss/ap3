@@ -24,15 +24,15 @@
             <feather-icon icon="HexagonIcon" svgClasses="h-5 w-5" />
           </div> -->
           <div class="info-task" @mouseover="showEditDeleteByIndex = item.id" @mouseout="showEditDeleteByIndex = null">
-            <div class="titleTask">
+            <div class="titleTask" @click="editRecord(item)">
               <feather-icon icon="CircleIcon" svgClasses="h-5 w-5" v-if="item.status == 'done'" class="statusGreenTask mr-1" />
               <feather-icon icon="CircleIcon" svgClasses="h-5 w-5" v-if="item.status == 'doing'" class="statusOrangeTask mr-1" />
               <feather-icon icon="CircleIcon" svgClasses="h-5 w-5" v-if="item.status == 'todo'" class="statusRedTask mr-1" />
               <span class="nameTask">{{item.name}}</span>
             </div>
 
-            <div class="dateTask">{{momentTransform(item.date)}}</div>
-            <div v-show="showEditDeleteByIndex !== item.id" style="display: flex; flex-direction: row; align-self: flex-end;">
+            <div class="dateTask" @click="editRecord(item)">{{momentTransform(item.date)}}</div>
+            <div v-show="showEditDeleteByIndex !== item.id" style="display: flex; flex-direction: row; align-self: flex-end;"  @click="editRecord(item)">
               <div v-if="item.workarea" class="workareaTask mr-4">{{item.workarea.name}}</div>
               <feather-icon v-if="item.description" icon="AlignLeftIcon" svgClasses="h-4 w-4" class="mr-2" />
               <feather-icon v-if="item.comments.length > 0" icon="MessageSquareIcon" svgClasses="h-4 w-4" />
@@ -283,18 +283,20 @@ export default {
         .catch(err => { console.error(err)       })
     },
     confirmDeleteRecord (item) {
+      this.itemToDelete = item
+
       this.$vs.dialog({
         type: 'confirm',
         color: 'danger',
         title: 'Confirmer suppression',
         text: `Vous allez supprimer "${item.name}"`,
-        accept: this.deleteRecord(item),
+        accept: this.deleteRecord,
         acceptText: 'Supprimer',
         cancelText: 'Annuler',
       })
     },
-    deleteRecord (item) {
-      this.$store.dispatch("taskManagement/removeItem", item)
+    deleteRecord() {
+      this.$store.dispatch("taskManagement/removeItem", this.itemToDelete.id)
         .then(()   => { this.showDeleteSuccess() })
         .catch(err => { console.error(err)       })
     },
@@ -386,6 +388,9 @@ export default {
     font-size: 0.8em;
     border-radius: 5px;
   }
+  .card-task:hover{
+    cursor: pointer;
+  }
   .card-task-add{
     background: #2196f3;
     border: 1px solid #2196f3;
@@ -398,6 +403,9 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .card-task-add:hover{
+    cursor: pointer;
   }
   .titleTask{
     color: #080808;
