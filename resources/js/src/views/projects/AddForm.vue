@@ -16,6 +16,28 @@
         <form>
           <div class="vx-row">
             <div class="vx-col w-full">
+              <div class="vx-row mt-4" v-if="!disabled">
+                <div class="vx-col w-full">
+                  <div class="flex items-end px-3">
+                    <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
+                    <span class="font-medium text-lg leading-none">Admin</span>
+                  </div>
+                  <vs-divider />
+                  <v-select
+                    label="name"
+                    @input="updateCustomersList"
+                    v-validate="'required'"
+                    v-model="itemLocal.company"
+                    :options="companiesData"
+                    class="w-full"
+                  >
+                    <template #header>
+                      <div class="vs-select--label">Société</div>
+                    </template>
+                  </v-select>
+                   <vs-divider />
+                </div>
+              </div>
               <vs-input
                 v-validate="'required|max:255'"
                 name="name"
@@ -39,60 +61,17 @@
                   :color="validateForm ? 'success' : 'danger'"
                 ></datepicker>
               </div>
-              <div class="my-4">
-                <small class="date-label">Client</small>
-                <vs-input
-                  name="client"
-                  class="w-full mb-4"
-                  placeholder="Client (RAF)"
-                  v-model="itemLocal.client"
-                />
-              </div>
-              <div class="my-4" v-if="itemLocal.company_id != null">
-                <small class="date-label">Gammes</small>
-                <vs-select
-                  v-if="hasRanges"
-                  v-model="itemLocal.ranges"
+              <div class="my-4" v-if="itemLocal.company != null">
+                <v-select
+                  label="name"
+                  v-model="itemLocal.customer"
+                  :options="customersDataFiltered"
                   class="w-full"
-                  multiple
-                  autocomplete
-                  v-validate="'required'"
-                  name="ranges"
                 >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in rangesData"
-                  />
-                </vs-select>
-                <small
-                  v-if="!hasRanges"
-                  style="font-style: italic; color: #C8C8C8"
-                >Aucunes gammes trouvées</small>
-              </div>
-              <div class="vx-row mt-4" v-if="!disabled">
-                <div class="vx-col w-full">
-                  <div class="flex items-end px-3">
-                    <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
-                    <span class="font-medium text-lg leading-none">Admin</span>
-                  </div>
-                  <vs-divider />
-                  <vs-select
-                    name="company"
-                    v-validate="'required'"
-                    label="Société"
-                    v-model="itemLocal.company_id"
-                    class="w-full mt-5"
-                  >
-                    <vs-select-item
-                      :key="index"
-                      :value="item.id"
-                      :text="item.name"
-                      v-for="(item,index) in companiesData"
-                    />
-                  </vs-select>
-                </div>
+                  <template #header>
+                    <div class="vs-select--label">Client</div>
+                  </template>
+                </v-select>
               </div>
             </div>
           </div>
@@ -108,12 +87,15 @@ import { fr } from "vuejs-datepicker/src/locale";
 import moment from "moment";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import vSelect from "vue-select";
+
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
   components: {
+    vSelect,
     Datepicker
   },
   data() {
@@ -124,10 +106,12 @@ export default {
       itemLocal: {
         name: "",
         date: new Date(),
-        clients: "",
-        ranges: "",
-        company_id: null
-      }
+        customer: null,
+        company_id: null,
+        company: null
+      },
+
+      customersDataFiltered: null
     };
   },
   computed: {
@@ -135,17 +119,16 @@ export default {
       return (
         !this.errors.any() &&
         this.itemLocal.name != "" &&
-        this.itemLocal.company_id != null
+        this.itemLocal.company != null
       );
     },
     companiesData() {
       return this.$store.state.companyManagement.companies;
     },
-    rangesData() {
-      return this.filterItemsAdmin(this.$store.state.rangeManagement.ranges);
-    },
-    hasRanges() {
-      return this.rangesData && this.rangesData.length > 0;
+    customersData() {
+      let customers = this.filterItemsAdmin(this.$store.state.customerManagement.customers);
+      this.customersDataFiltered = customers
+      return customers
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -168,15 +151,21 @@ export default {
       this.itemLocal = {
         name: "",
         date: new Date(),
-        clients: "",
-        ranges: "",
-        company_id: null
+        customer: null,
+        company_id: null,
+        company: null
       };
+
+      this.customersDataFiltered = null
     },
     addProject() {
       this.$validator.validateAll().then(result => {
         this.itemLocal.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
+        this.itemLocal.company ? this.itemLocal.company_id = this.itemLocal.company.id : null
+        this.itemLocal.customer ? this.itemLocal.customer_id = this.itemLocal.customer.id : null
+        
         if (result) {
+
           this.$store
             .dispatch(
               "projectManagement/addItem",
@@ -207,6 +196,7 @@ export default {
       });
     },
     filterItemsAdmin(items) {
+      
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
@@ -216,14 +206,18 @@ export default {
           )
         ) {
           filteredItems = items.filter(
-            item => item.company.id === this.itemLocal.company_id
+            item => item.company_id === this.itemLocal.company.id
           );
         } else {
           filteredItems = items;
         }
       }
       return filteredItems;
-    }
+    },
+    updateCustomersList() {
+      this.itemLocal.customer = null 
+      this.customersDataFiltered = this.filterItemsAdmin(this.$store.state.customerManagement.customers)
+    },
   }
 };
 </script>

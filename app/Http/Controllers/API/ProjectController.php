@@ -33,9 +33,9 @@ class ProjectController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Project::all()->load('company');
+            $items = Project::all()->load('company')->load('customer');
         } else if ($user->company_id != null) {
-            $items = Project::where('company_id',$user->company_id)->get()->load('company');
+            $items = Project::where('company_id',$user->company_id)->get()->load('company')->load('customer');
         }
         return response()->json(['success' => $items], $this-> successStatus);  
     }
@@ -169,11 +169,12 @@ class ProjectController extends Controller
             ->update([
                 'name' => $arrayRequest['name'], 
                 'date' => $arrayRequest['date'],
-                'company_id' => $arrayRequest['company_id']
+                'company_id' => $arrayRequest['company_id'],
+                'customer_id' => $arrayRequest['customer_id']
             ]);
         
         if($update){
-            $item = Project::find($id)->load('company');
+            $item = Project::find($id)->load('company')->load('customer');
             return response()->json(['success' => $item], $this-> successStatus); 
         }
         else{
@@ -248,7 +249,7 @@ class ProjectController extends Controller
 
         //Foreach jours jusqu'a la date de livraison
 
-        
+
         foreach($TimeData['details'] as $date){
 
             // On regarde si on a des heures disponibles pour plannifier une tache

@@ -9,5 +9,10 @@ class Customers extends Model
 {
     use SoftDeletes;
     
-    protected $fillable = [ 'name', 'lastname', 'siret', 'professional'];
+    protected $fillable = [ 'name', 'lastname', 'siret', 'professional', 'company_id'];
+
+    public function company()
+    {
+        return $this->belongsTo('App\Models\Company', 'company_id', 'id');
+    }
 }

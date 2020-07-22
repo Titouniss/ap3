@@ -117,6 +117,7 @@ import EditForm from "./EditForm.vue";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
+import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 
 // Cell Renderer
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
@@ -344,7 +345,14 @@ export default {
       this.$store.registerModule("rangeManagement", moduleRangeManagement);
       moduleRangeManagement.isRegistered = true;
     }
+    if (!moduleCustomerManagement.isRegistered) {
+      this.$store.registerModule("customerManagement", moduleCustomerManagement);
+      moduleCustomerManagement.isRegistered = true;
+    }
     this.$store.dispatch("projectManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
+    this.$store.dispatch("customerManagement/fetchItems").catch(err => {
       console.error(err);
     });
     if (this.$store.getters.userHasPermissionTo(`read companies`)) {
@@ -364,9 +372,11 @@ export default {
     moduleProjectManagement.isRegistered = false;
     moduleCompanyManagement.isRegistered = false;
     moduleRangeManagement.isRegistered = false;
+    moduleCustomerManagement.isRegistered = false;
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("rangeManagement");
+    this.$store.unregisterModule("customerManagement");
   }
 };
 </script>
