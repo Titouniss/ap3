@@ -35,7 +35,7 @@
     <vs-input
       type="password"
       class="w-full mb-base"
-      label-placeholder="Comfirmation mot de passe"
+      label-placeholder="Confirmation mot de passe"
       v-model="confirm_new_password"
       v-validate="'required'"
       name="password_confirm"
