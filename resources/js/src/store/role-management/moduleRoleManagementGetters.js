@@ -15,7 +15,7 @@ export default {
   getPermissions: state => id => {
     const role = state.roles.find((item) => item.id === id)
     let permissions = []
-    
+
     if (role && role.permissions.length) {
       role.permissions.forEach(permission => {
         permissions.push(permission.id)

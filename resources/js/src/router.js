@@ -66,6 +66,16 @@ const router = new Router({
                 },
                 {
                     path: '/users/user-edit/:userId',
+                    name: 'users-user-edit',
+                    component: () => import('./views/users/EditForm.vue'),
+                    meta: {
+                        pageTitle: 'Édition d\'un utilisateur',
+                        rule: 'admin',
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: '/users/user-profil-edit/:userId',
                     name: 'app-user-edit',
                     component: () => import('@/views/users/user-edit/UserEdit.vue'),
                     meta: {

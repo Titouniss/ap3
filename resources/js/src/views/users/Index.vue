@@ -85,7 +85,7 @@
 
       <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
     </div>
-    <edit-form :reload="usersData" :itemId="itemIdToEdit" v-if="itemIdToEdit && authorizedToEdit " />
+    <!-- <edit-form :reload="usersData" :itemId="itemIdToEdit" v-if="itemIdToEdit && authorizedToEdit " /> -->
   </div>
 </template>
 
@@ -100,8 +100,6 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
-
-import EditForm from "./EditForm.vue";
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
@@ -171,7 +169,6 @@ export default {
   components: {
     AgGridVue,
     vSelect,
-    EditForm,
     // Cell Renderer
     CellRendererLink,
     CellRendererRelations,

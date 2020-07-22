@@ -37,12 +37,9 @@ export default {
   },
   methods: {
     editRecord() {
-      this.$store
-        .dispatch("userManagement/editItem", this.params.data)
-        .then(() => {})
-        .catch(err => {
-          console.error(err);
-        });
+      this.$router
+        .push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`)
+        .catch(() => {});
     },
     confirmDeleteRecord() {
       this.$vs.dialog({
@@ -56,7 +53,6 @@ export default {
       });
     },
     deleteRecord() {
-      console.log(["id", this.params.data.id]);
       this.$store
         .dispatch("userManagement/forceRemoveItem", this.params.data.id)
         .then(() => {

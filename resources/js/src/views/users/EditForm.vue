@@ -1,160 +1,218 @@
+<!-- =========================================================================================
+  File Name: UserEdit.vue
+  Description: user Edit Page
+  ----------------------------------------------------------------------------------------
+  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+  Author: Pixinvent
+  Author URL: http://www.themeforest.net/role/pixinvent
+========================================================================================== -->
+
 <template>
-  <vs-prompt
-    title="Edition"
-    accept-text="Modifier"
-    cancel-text="Annuler"
-    button-cancel="border"
-    @cancel="init"
-    @accept="submitTodo"
-    @close="init"
-    :is-valid="validateForm"
-    :active.sync="activePrompt"
-  >
-    <div>
-      <form>
-        <div class="vx-row">
-          <div class="vx-col w-full">
-            <vs-input
-              v-validate="'required|alpha_dash|min:3'"
-              data-vv-validate-on="blur"
-              label-placeholder="Nom"
-              name="lastname"
-              placeholder="Nom"
-              v-model="itemLocal.lastname"
-              class="w-full mt-8"
-            />
-            <span class="text-danger text-sm">{{ errors.first('lastname') }}</span>
+  <div>
+    <vx-card>
+      <vs-row vs-justify="center" vs-type="flex" vs-w="12">
+        <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+          <!-- Lastname -->
+          <vs-input
+            v-validate="'required|max:255'"
+            name="lastname"
+            class="w-full mb-4"
+            label="Nom"
+            v-model="itemLocal.lastname"
+            :color="!errors.has('lastname') ? 'success' : 'danger'"
+          />
+          <span
+            class="text-danger text-sm"
+            v-show="errors.has('lastname')"
+          >{{ errors.first('lastname') }}</span>
 
-            <vs-input
-              v-validate="'required|alpha_dash|min:3'"
-              data-vv-validate-on="blur"
-              label-placeholder="Prénom"
-              name="firstname"
-              placeholder="Prénom"
-              v-model="itemLocal.firstname"
-              class="w-full mt-8"
-            />
-            <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
+          <!-- Firstname -->
+          <vs-input
+            v-validate="'required|max:255'"
+            name="firstname"
+            class="w-full mb-4 mt-5"
+            label="Prénom"
+            v-model="itemLocal.firstname"
+            :color="!errors.has('firstname') ? 'success' : 'danger'"
+          />
+          <span
+            class="text-danger text-sm"
+            v-show="errors.has('firstname')"
+          >{{ errors.first('firstname') }}</span>
 
-            <vs-input
-              v-validate="'required|email'"
-              data-vv-validate-on="blur"
-              label-placeholder="Email"
-              name="email"
-              placeholder="Email"
-              v-model="itemLocal.email"
-              class="w-full mt-8"
-            />
-            <span class="text-danger text-sm">{{ errors.first('email') }}</span>
-
-            <div>
-              <vs-select
-                v-validate="'required'"
-                name="company_id"
-                label="Société"
-                v-model="itemLocal.company_id"
-                class="w-full mt-5"
-              >
-                <vs-select-item
-                  :key="index"
-                  :value="item.id"
-                  :text="item.name"
-                  v-for="(item,index) in companies"
-                />
-              </vs-select>
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('company_id')"
-              >{{ errors.first('company_id') }}</span>
-            </div>
-            <div v-if="itemLocal.company_id">
-              <vs-select
-                label="Compétences"
-                v-model="itemLocal.skills"
-                class="w-full mt-5"
-                multiple
-                autocomplete
-              >
-                <vs-select-item
-                  :key="index"
-                  :value="item.id"
-                  :text="item.name"
-                  v-for="(item,index) in companySkills"
-                />
-              </vs-select>
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('company_id')"
-              >{{ errors.first('company_id') }}</span>
-            </div>
-
-            <vs-select label="Rôle" v-model="selected" class="w-full mt-5">
+          <!-- Email -->
+          <vs-input
+            v-validate="'required|email'"
+            name="email"
+            class="w-full mb-4 mt-5"
+            label="E-mail"
+            v-model="itemLocal.email"
+            :color="!errors.has('email') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('email')">{{ errors.first('email') }}</span>
+        </vs-col>
+        <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+          <!-- Role -->
+          <div>
+            <vs-select
+              v-validate="'required'"
+              name="role"
+              label="Rôle"
+              :multiple="false"
+              v-model="itemLocal.roles[0].id"
+              class="w-full"
+              autocomplete
+            >
               <vs-select-item
-                v-validate="'required'"
                 :key="index"
                 :value="item.id"
                 :text="item.name"
-                v-for="(item,index) in roles"
+                v-for="(item,index) in rolesData"
               />
             </vs-select>
+            <span class="text-danger text-sm" v-show="errors.has('role')">{{ errors.first('role') }}</span>
+          </div>
+
+          <!-- Company -->
+          <div v-if="!disabled">
+            <vs-select
+              v-on:change="selectCompanySkills"
+              v-validate="'required'"
+              name="company_id"
+              label="Société"
+              v-model="itemLocal.company_id"
+              class="w-full mt-5"
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in companiesData"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('company_id')"
+            >{{ errors.first('company_id') }}</span>
+          </div>
+
+          <!-- Skills -->
+          <div v-if="itemLocal.company_id">
+            <div v-if="companySkills.length === 0" class="mt-12 mb-2">
+              <span
+                label="Compétences"
+                v-if="companySkills.length === 0"
+                class="msgTxt mt-10"
+              >Aucune compétences trouvées.</span>
+              <router-link
+                v-if="companySkills.length === 0"
+                class="linkTxt"
+                :to="{ path: '/skills' }"
+              >Ajouter une compétence</router-link>
+            </div>
+            <vs-select
+              v-if="companySkills.length > 0"
+              label="Compétences"
+              v-model="itemLocal.skills"
+              class="w-full mt-5"
+              multiple
+              autocomplete
+            >
+              <vs-select-item
+                :key="index"
+                :value="item.id"
+                :text="item.name"
+                v-for="(item,index) in companySkills"
+              />
+            </vs-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('company_id')"
+            >{{ errors.first('company_id') }}</span>
+          </div>
+        </vs-col>
+      </vs-row>
+
+      <!-- Save & Reset Button -->
+      <div class="vx-row">
+        <div class="vx-col w-full">
+          <div class="mt-8 flex flex-wrap items-center justify-end">
+            <vs-button class="ml-auto mt-2" @click="submitTodo" :disabled="!validateForm">Modifier</vs-button>
+            <vs-button class="ml-4 mt-2" type="border" color="warning" @click="back">Annuler</vs-button>
           </div>
         </div>
-      </form>
-    </div>
-  </vs-prompt>
+      </div>
+    </vx-card>
+  </div>
 </template>
 
 <script>
 // Store Module
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
+
+var model = "user";
+var modelPlurial = "users";
 
 export default {
-  props: {
-    itemId: {
-      type: Number,
-      required: true
-    }
-  },
   data() {
     return {
-      itemLocal: Object.assign(
-        {},
-        this.$store.getters["userManagement/getItem"](this.itemId)
-      ),
-      selected: this.$store.getters["userManagement/getRole"](this.itemId)
+      itemLocal: {
+        firstname: "",
+        lastname: "",
+        email: "",
+        company_id: null,
+        roles: [],
+        skills: []
+      },
+      companySkills: [],
+      selected: []
     };
   },
   computed: {
-    activePrompt: {
-      get() {
-        return this.itemId && this.itemId > 0 ? true : false;
-      },
-      set(value) {
-        this.$store
-          .dispatch("userManagement/editItem", {})
-          .then(() => {})
-          .catch(err => {
-            console.error(err);
-          });
-      }
-    },
-    companies() {
+    companiesData() {
       return this.$store.state.companyManagement.companies;
     },
-    roles() {
-      return this.$store.getters["roleManagement/getItems"];
-    },
-    companySkills() {
-      console.log(this.itemLocal);
-      let test = this.$store.state.companyManagement.companies.find(
-        company => company.id === this.itemLocal.company_id
-      ).skills;
-      console.log(test);
-      return test;
+    rolesData() {
+      return this.$store.getters["roleManagement/getItemsForCompany"](
+        this.itemLocal.company_id
+      );
     },
     skillsData() {
       return this.$store.state.skillManagement.skills;
+    },
+
+    disabled() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          return false;
+        } else {
+          this.itemLocal.company_id = user.company_id;
+          return true;
+        }
+      } else return true;
+    },
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.name != "" &&
+        this.itemLocal.firstname != "" &&
+        this.itemLocal.email != "" &&
+        this.itemLocal.company_id != null &&
+        this.itemLocal.roles.length > 0
+      );
+    }
+  },
+  methods: {
+    authorizedTo(action, model = "users") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     selectCompanySkills(item) {
       this.companySkills = this.companiesData.find(
@@ -162,34 +220,72 @@ export default {
       ).skills;
       this.itemLocal.skills = [];
     },
-    validateForm() {
-      return (
-        !this.errors.any() &&
-        this.itemLocal.firstname !== "" &&
-        this.itemLocal.lastname !== "" &&
-        this.itemLocal.email !== "" &&
-        this.itemLocal.roles !== null
-      );
-    }
-  },
-  methods: {
-    init() {
-      this.itemLocal = Object.assign(
-        {},
-        this.$store.getters["userManagement/getItem"](this.itemId)
-      );
+    fetch_data(id) {
+      this.$vs.loading();
+
+      this.$store
+        .dispatch("userManagement/fetchItem", id)
+        .then(res => {
+          let item = res.data.success;
+
+          let skill_ids = [];
+          if (item.skills.length > 0) {
+            item.skills.forEach(element => {
+              skill_ids.push(element.id);
+            });
+          }
+          item.skills = skill_ids;
+          this.itemLocal = item;
+          if (item.company_id) {
+            this.selectCompanySkills(item.company_id);
+          }
+          this.$vs.loading.close();
+        })
+        .catch(err => {
+          this.$vs.loading.close();
+          console.error(err);
+        });
     },
     submitTodo() {
+      this.$vs.loading();
       this.itemLocal.roles = [
-        this.$store.getters["roleManagement/getItem"](this.selected)
+        this.$store.getters["roleManagement/getItem"](
+          this.itemLocal.roles[0].id
+        )
       ];
-      console.log(["ici", this.itemLocal]);
-
-      this.$store.dispatch("userManagement/updateItem", this.itemLocal);
-      this.usersData;
+      this.$store
+        .dispatch("userManagement/updateItem", this.itemLocal)
+        .then(() => {
+          this.$vs.loading.close();
+          this.back();
+          this.$vs.notify({
+            title: "Modification",
+            text: "Utilisateur modifier avec succès",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
+        })
+        .catch(error => {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Echec",
+            text: error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
+        });
+    },
+    back() {
+      this.$router.push(`/${modelPlurial}`).catch(() => {});
     }
   },
   created() {
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
     if (!moduleRoleManagement.isRegistered) {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
@@ -198,14 +294,36 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
-      console.error(err);
-    });
-    if (this.$store.getters.userHasPermissionTo("read companies")) {
-      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-        console.error(err);
-      });
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule("skillManagement", moduleSkillManagement);
+      moduleSkillManagement.isRegistered = true;
     }
+
+    if (this.authorizedTo("read", "skills")) {
+      this.$store.dispatch("skillManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "users")) {
+      this.$store.dispatch("userManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "roles")) {
+      this.$store.dispatch("roleManagement/fetchItems");
+    }
+
+    this.fetch_data(parseInt(this.$route.params.userId, 10));
+  },
+  beforeDestroy() {
+    moduleUserManagement.isRegistered = false;
+    moduleRoleManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
+    moduleSkillManagement.isRegistered = false;
+
+    this.$store.unregisterModule("skillManagement");
+    this.$store.unregisterModule("userManagement");
+    this.$store.unregisterModule("roleManagement");
+    this.$store.unregisterModule("companyManagement");
   }
 };
 </script>
