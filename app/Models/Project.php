@@ -12,13 +12,18 @@ class Project extends Model
     use SoftDeletes;
 
 
-    protected $fillable = [ 'name', 'date', 'status','company_id'];
+    protected $fillable = [ 'name', 'date', 'status','company_id', 'customer_id'];
 
     protected $appends = ['tasks'];
 
     public function company()
     {
         return $this->belongsTo('App\Models\Company', 'company_id', 'id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo('App\Models\Customers', 'customer_id', 'id');
     }
 
     public function tasksBundles()

@@ -105,6 +105,7 @@ import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkarea
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
+import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 
 import moment from "moment";
 
@@ -216,6 +217,11 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
+    if (!moduleCustomerManagement.isRegistered) {
+      this.$store.registerModule("customerManagement", moduleCustomerManagement);
+      moduleCustomerManagement.isRegistered = true;
+    }
+
     moment.locale("fr");
 
     const projectId = this.$route.params.id;
@@ -254,6 +260,18 @@ export default {
         console.error(err);
       });
     }
+    if (this.authorizedTo("read", "projects")) {
+      this.$store.dispatch("projectManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    }
+
+    //if (this.authorizedTo("read", "customers")) {
+      this.$store.dispatch("customerManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+    //}
+
   },
   beforeDestroy() {
     moduleProjectManagement.isRegistered = false;
@@ -261,11 +279,13 @@ export default {
     moduleCompanyManagement.isRegistered = false;
     moduleSkillManagement.isRegistered = false;
     moduleRangeManagement.isRegistered = false;
+    moduleCustomerManagement.isRegistered = false;
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("workareaManagement");
     this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("rangeManagement");
+    this.$store.unregisterModule("customerManagement");
   }
 };
 </script>

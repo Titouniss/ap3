@@ -464,7 +464,6 @@ export default {
       let projectData = this.$store.state.projectManagement.projects.find(
         p => p.id === this.itemLocal.project_id
       );
-      console.log(["projectData", projectData]);
 
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;

@@ -24,10 +24,33 @@
       <form>
         <div class="vx-row">
           <div class="vx-col w-full">
+            <div v-if="isAdmin" class="vx-row mt-4">
+              <div class="vx-col w-full">
+                <div class="flex items-end px-3">
+                  <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
+                  <span class="font-medium text-lg leading-none">Admin</span>
+                </div>
+                <vs-divider />
+                  <v-select
+                    label="name"
+                    @input="updateCustomersList"
+                    v-validate="'required'"
+                    v-model="itemLocal.company"
+                    :options="companiesData"
+                    class="w-full"
+                  >
+                    <template #header>
+                      <div class="vs-select--label">Société</div>
+                    </template>
+                  </v-select>
+                <vs-divider />
+              </div>
+            </div>
+            <small class="date-label">Nom du projet</small>
             <vs-input
               v-validate="'required|max:255'"
               name="name"
-              class="w-full mb-4 mt-5"
+              class="w-full mb-4"
               placeholder="Nom"
               v-model="itemLocal.name"
               :color="!errors.has('name') ? 'success' : 'danger'"
@@ -44,34 +67,18 @@
                 :color="validateForm ? 'success' : 'danger'"
               ></datepicker>
             </div>
-            <vs-input
-              name="client"
-              class="w-full mb-4 mt-5"
-              placeholder="Client (RAF)"
-              v-model="itemLocal.client"
-              :color="validateForm ? 'success' : 'danger'"
-            />
-            <div v-if="isAdmin" class="vx-row mt-4">
-              <div class="vx-col w-full">
-                <div class="flex items-end px-3">
-                  <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
-                  <span class="font-medium text-lg leading-none">Admin</span>
-                </div>
-                <vs-divider />
-                <vs-select
-                  v-validate="'required'"
-                  label="Société"
-                  v-model="itemLocal.company_id"
-                  class="w-full mt-5"
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in companiesData"
-                  />
-                </vs-select>
-              </div>
+            <div class="my-4" v-if="itemLocal.company != null">
+              <v-select
+                label="name"
+                v-validate="'required'"
+                v-model="itemLocal.customer"
+                :options="customersData"
+                class="w-full"
+              >
+                <template #header>
+                  <div class="vs-select--label">Client</div>
+                </template>
+              </v-select>
             </div>
           </div>
         </div>
@@ -86,12 +93,15 @@ import { fr } from "vuejs-datepicker/src/locale";
 import moment from "moment";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import vSelect from "vue-select";
+
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
   components: {
+    vSelect,
     Datepicker
   },
   props: {
@@ -106,7 +116,7 @@ export default {
         {},
         this.$store.getters["projectManagement/getItem"](this.itemId)
       ),
-      langFr: fr
+      langFr: fr,
     };
   },
   computed: {
@@ -142,11 +152,16 @@ export default {
     permissions() {
       return this.$store.state.roleManagement.permissions;
     },
+    customersData() {
+      let customers = this.filterItemsAdmin(this.$store.state.customerManagement.customers);
+      this.customersDataFiltered = customers
+      return customers
+    },
     validateForm() {
       return (
         !this.errors.any() &&
         this.itemLocal.name != "" &&
-        this.itemLocal.company_id != null
+        this.itemLocal.company != null
       );
     }
   },
@@ -158,30 +173,58 @@ export default {
       );
     },
     submitItem() {
-      this.itemLocal.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
-      this.$store
-        .dispatch("projectManagement/updateItem", this.itemLocal)
-        .then(() => {
-          this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Modification d'un projet",
-            text: `"${this.itemLocal.name}" modifiée avec succès`,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "success"
+      this.$validator.validateAll().then(result => {
+
+        this.itemLocal.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
+        this.itemLocal.company_id = this.itemLocal.company.id
+        this.itemLocal.customer_id = this.itemLocal.customer.id
+
+        this.$store
+          .dispatch("projectManagement/updateItem", this.itemLocal)
+          .then(() => {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Modification d'un projet",
+              text: `"${this.itemLocal.name}" modifiée avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success"
+            });
+          })
+          .catch(error => {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Error",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
           });
-        })
-        .catch(error => {
-          this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Error",
-            text: error.message,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "danger"
-          });
-        });
-    }
-  }
+      })
+    },
+    filterItemsAdmin(items) {
+      let filteredItems = [];
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          filteredItems = items.filter(
+            item => item.company_id === this.itemLocal.company.id
+          );
+        } else {
+          filteredItems = items;
+        }
+      }
+      return filteredItems;
+    },
+    updateCustomersList() {
+      this.itemLocal.customer = null 
+      this.customersDataFiltered = this.filterItemsAdmin(this.$store.state.customerManagement.customers)
+    },
+  },
 };
 </script>
