@@ -60,7 +60,7 @@ export default {
   },
   computed: {
     validateForm () {
-      return this.itemLocal.prefix != '' && this.itemLocal.rangeId != null
+      return this.itemLocal.prefix != '' && this.itemLocal.rangeId != null && this.itemLocal.rangeId != ''
     },
     rangesData() {
       return this.filterItemsAdmin(this.$store.state.rangeManagement.ranges)
