@@ -85,9 +85,19 @@
         <span class="text-danger text-sm" v-show="errors.has('role')">{{ errors.first('role') }}</span>
 
         <vs-input
+          v-if="data_local.company !== null"
           class="w-full mt-4"
           label="Société"
-          v-model="data_local.company"
+          v-model="data_local.company.name"
+          v-validate="'alpha_spaces'"
+          name="company"
+          disabled="true"
+        />
+        <vs-input
+          v-else
+          class="w-full mt-4"
+          label="Société"
+          placeholder="Pas de société"
           v-validate="'alpha_spaces'"
           name="company"
           disabled="true"

@@ -1,7 +1,6 @@
 <template>
   <div id="page-users-list">
     <div class="vx-card w-full p-6">
-      <add-form v-if="authorizedToPublish" />
       <div class="flex flex-wrap items-center">
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
@@ -61,12 +60,16 @@
         </vs-dropdown>
       </div>
 
+      <div class="px-6 pb-2 pt-6" v-if="authorizedToPublish">
+        <vs-button @click="addRecord" class="w-full">Ajouter un utilisateur</vs-button>
+      </div>
       <!-- AgGrid Table -->
       <ag-grid-vue
         ref="agGridTable"
         :components="components"
         :gridOptions="gridOptions"
         class="ag-theme-material w-100 my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
         :rowData="usersData"
@@ -90,6 +93,7 @@
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
+import router from "@/router";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
@@ -97,7 +101,6 @@ import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.j
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
-import AddForm from "./AddForm.vue";
 import EditForm from "./EditForm.vue";
 
 // Cell Renderer
@@ -109,11 +112,65 @@ var model = "user";
 var modelPlurial = "users";
 var modelTitle = "Utilisateurs";
 
+var columnDef = [
+  {
+    width: 60,
+    filter: false,
+    checkboxSelection: true,
+    headerCheckboxSelectionFilteredOnly: true,
+    headerCheckboxSelection: true,
+    resizable: true
+  },
+  {
+    headerName: "Nom",
+    field: "lastname",
+    filter: true,
+    width: 200,
+    resizable: true
+  },
+  {
+    headerName: "Prénom",
+    field: "firstname",
+    filter: true,
+    width: 150,
+    resizable: true
+  },
+  {
+    headerName: "Email",
+    field: "email",
+    filter: true,
+    width: 300,
+    resizable: true
+  },
+  {
+    headerName: "Rôle",
+    field: "roles",
+    filter: true,
+    width: 150,
+    cellRendererFramework: "CellRendererRelations",
+    resizable: true
+  },
+  {
+    headerName: "Société",
+    field: "company",
+    filter: true,
+    width: 150,
+    cellRendererFramework: "CellRendererRelations",
+    resizable: true
+  },
+  {
+    headerName: "Actions",
+    field: "transactions",
+    width: 150,
+    cellRendererFramework: "CellRendererActions",
+    resizable: true
+  }
+];
+
 export default {
   components: {
     AgGridVue,
     vSelect,
-    AddForm,
     EditForm,
     // Cell Renderer
     CellRendererLink,
@@ -126,57 +183,15 @@ export default {
 
       // AgGrid
       gridApi: null,
-      gridOptions: {},
+      gridOptions: {
+        localeText: { noRowsToShow: "Aucun utilisateur" }
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,
         suppressMenu: true
       },
-      columnDefs: [
-        {
-          filter: false,
-          checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true,
-          resizable: true
-        },
-        {
-          headerName: "Nom",
-          field: "lastname",
-          filter: true,
-          width: 200,
-          resizable: true
-        },
-        {
-          headerName: "Prénom",
-          field: "firstname",
-          filter: true,
-          width: 150,
-          resizable: true
-        },
-        {
-          headerName: "Email",
-          field: "email",
-          filter: true,
-          width: 300,
-          resizable: true
-        },
-        {
-          headerName: "Rôle",
-          field: "roles",
-          filter: true,
-          width: 150,
-          cellRendererFramework: "CellRendererRelations",
-          resizable: true
-        },
-        {
-          headerName: "Actions",
-          field: "transactions",
-          width: 150,
-          cellRendererFramework: "CellRendererActions",
-          resizable: true
-        }
-      ],
+      columnDefs: this.getColumnDef(),
 
       // Cell Renderer Components
       components: {
@@ -239,6 +254,18 @@ export default {
   methods: {
     authorizedTo(action, model = "users") {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
+    getColumnDef() {
+      if (
+        this.$store.state.AppActiveUser.roles.findIndex(
+          r => r.name === "superAdmin"
+        ) > -1
+      ) {
+        return columnDef;
+      } else {
+        let withoutCompany = columnDef.slice(0, 5).concat(columnDef.slice(-1));
+        return withoutCompany;
+      }
     },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
@@ -311,9 +338,13 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
+    },
+    addRecord() {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
     }
   },
   mounted() {
+    const user = this.$store.state.AppActiveUser;
     this.gridApi = this.gridOptions.api;
 
     window.addEventListener("resize", this.onResize);
@@ -323,6 +354,8 @@ export default {
 
       // resize columns in the grid to fit the available space
       this.gridApi.sizeColumnsToFit();
+
+      this.gridApi.showLoadingOverlay();
     }
 
     /* =================================================================
