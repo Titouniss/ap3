@@ -53,7 +53,7 @@ export default {
               this.params.data.name +
               ` ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+        acceptText: type === "delete" ? "Supprimer" : "Archiver",
         cancelText: "Annuler"
       });
     },
