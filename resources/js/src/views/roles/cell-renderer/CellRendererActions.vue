@@ -43,9 +43,9 @@ export default {
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
-        text: `Vous allez supprimer "${this.params.data.name}"`,
+        text: `Voulez vous vraiment supprimer le rôle ${this.params.data.name} ?`,
         accept: this.deleteRecord,
-        acceptText: "Supprimer !",
+        acceptText: "Supprimer",
         cancelText: "Annuler"
       });
     },
