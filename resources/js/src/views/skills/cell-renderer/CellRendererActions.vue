@@ -36,7 +36,7 @@ export default {
           this.params.data.name +
           ` ?`,
         accept: this.deleteRecord,
-        acceptText: "Supprimer !",
+        acceptText: "Supprimer",
         cancelText: "Annuler"
       });
     },

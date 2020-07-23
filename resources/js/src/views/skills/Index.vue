@@ -12,59 +12,62 @@
     <div class="vx-card p-6">
       <add-form />
       <div class="flex flex-wrap items-center">
-        <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
-          <vs-dropdown vs-trigger-click class="cursor-pointer">
-            <div
-              class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
-            >
-              <span
-                class="mr-2"
-              >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ skillsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : skillsData.length }} of {{ skillsData.length }}</span>
-              <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-            </div>
-            <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
-            <vs-dropdown-menu>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
-                <span>10</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
-                <span>20</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
-                <span>25</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
-                <span>30</span>
-              </vs-dropdown-item>
-            </vs-dropdown-menu>
-          </vs-dropdown>
+          <vs-row vs-type="flex">
+            <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
+
+            <!-- ACTION - DROPDOWN -->
+            <vs-dropdown vs-trigger-click class="cursor-pointer">
+              <div
+                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+              >
+                <span class="mr-2 leading-none">Actions</span>
+                <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+              </div>
+
+              <vs-dropdown-menu>
+                <vs-dropdown-item @click="confirmDeleteRecord()">
+                  <span class="flex items-center">
+                    <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <span>Supprimer</span>
+                  </span>
+                </vs-dropdown-item>
+              </vs-dropdown-menu>
+            </vs-dropdown>
+
+            <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
+            <vs-input
+              class="ml-5"
+              v-model="searchQuery"
+              @input="updateSearchQuery"
+              placeholder="Rechercher..."
+            />
+          </vs-row>
         </div>
 
-        <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-        <vs-input
-          class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
-          v-model="searchQuery"
-          @input="updateSearchQuery"
-          placeholder="Rechercher..."
-        />
-        <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
-
-        <!-- ACTION - DROPDOWN -->
+        <!-- ITEMS PER PAGE -->
         <vs-dropdown vs-trigger-click class="cursor-pointer">
           <div
-            class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+            class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span class="mr-2 leading-none">Actions</span>
+            <span
+              class="mr-2"
+            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ skillsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : skillsData.length }} of {{ skillsData.length }}</span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
-
+          <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
           <vs-dropdown-menu>
-            <vs-dropdown-item @click="confirmDeleteRecord()">
-              <span class="flex items-center">
-                <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Supprimer</span>
-              </span>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
+              <span>10</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
+              <span>20</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
+              <span>25</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
+              <span>30</span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
         </vs-dropdown>
@@ -76,6 +79,7 @@
         :components="components"
         :gridOptions="gridOptions"
         class="ag-theme-material w-100 my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
         :rowData="skillsData"
@@ -134,7 +138,9 @@ export default {
 
       // AgGrid
       gridApi: null,
-      gridOptions: {},
+      gridOptions: {
+        localeText: { noRowsToShow: "Aucune compétence" }
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,
@@ -143,6 +149,7 @@ export default {
       columnDefs: [
         {
           filter: false,
+          width: 30,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
@@ -152,21 +159,21 @@ export default {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 200,
+          width: 100,
           resizable: true
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          width: 150,
+          width: 100,
           resizable: true,
           cellRendererFramework: "CellRendererRelations"
         },
         {
           headerName: "Actions",
           field: "transactions",
-          width: 150,
+          width: 30,
           resizable: true,
           cellRendererFramework: "CellRendererActions"
         }
@@ -214,16 +221,19 @@ export default {
       this.gridApi.setQuickFilter(val);
     },
     confirmDeleteRecord() {
+      let selectedRow = this.gridApi.getSelectedRows();
+      let singleSkill = selectedRow[0];
+
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
         text:
-          this.gridApi.getSelectedRows().length >= 1
+          this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer cette compétence ?`
-            : `Voulez vous vraiment archiver ces compétences ?`,
+            : `Voulez vous vraiment archiver la compétences ${singleSkill.name} ?`,
         accept: this.deleteRecord,
-        acceptText: "Supprimer !",
+        acceptText: "Supprimer",
         cancelText: "Annuler"
       });
     },
@@ -273,6 +283,8 @@ export default {
 
       // resize columns in the grid to fit the available space
       this.gridApi.sizeColumnsToFit();
+
+      this.gridApi.showLoadingOverlay();
     }
 
     /* =================================================================
