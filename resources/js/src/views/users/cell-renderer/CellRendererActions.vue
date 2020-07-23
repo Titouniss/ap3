@@ -46,9 +46,9 @@ export default {
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
-        text: `Vous allez supprimer "${this.params.data.firstname} ${this.params.data.lastname}"`,
+        text: `Voulez vous vraiment supprimer l'utilisateur ${this.params.data.firstname} ${this.params.data.lastname}`,
         accept: this.deleteRecord,
-        acceptText: "Supprimer !",
+        acceptText: "Supprimer",
         cancelText: "Annuler"
       });
     },
