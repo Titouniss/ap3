@@ -41,14 +41,14 @@ export default {
           type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
         text:
           type === "delete"
-            ? `Voulez vous vraiment supprimer l'îlot \"` +
+            ? `Voulez vous vraiment supprimer l'îlot ` +
               this.params.data.name +
-              `\" ?`
-            : `Voulez vous vraiment archiver l'îlot \"` +
+              ` ?`
+            : `Voulez vous vraiment archiver l'îlot ` +
               this.params.data.name +
-              `\" ?`,
+              ` ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+        acceptText: type === "delete" ? "Supprimer" : "Archiver !",
         cancelText: "Annuler"
       });
     },
