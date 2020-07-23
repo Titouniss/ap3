@@ -40,13 +40,13 @@ export default {
         text:
           type === "delete"
             ? `Voulez vous vraiment supprimer le Client ` +
-              this.params.data.name +
+              this.params.data.lastname +
               ` ?`
-            : `Voulez vous vraiment archiver l Client ` +
-              this.params.data.name +
+            : `Voulez vous vraiment archiver le Client ` +
+              this.params.data.lastname +
               ` ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+        acceptText: type === "delete" ? "Supprimer" : "Archiver",
         cancelText: "Annuler"
       });
     },
