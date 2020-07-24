@@ -59,7 +59,7 @@
           >
             <span
               class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ customersData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : customersData.length }} of {{ customersData.length }}</span>
+            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ customersData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : customersData.length }} sur {{ customersData.length }}</span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
