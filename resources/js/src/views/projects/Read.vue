@@ -17,6 +17,12 @@
       </span>
     </vs-alert>
 
+    
+    <router-link :to="'/projects'" class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3">
+      <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
+      <span class="ml-2"> Retour à la liste des projets </span>
+    </router-link>
+
     <div id="project-data" v-if="project_data">
       <vx-card title="Informations" class="mb-base">
         <!-- Avatar -->
@@ -294,6 +300,10 @@ export default {
 </script>
 
 <style lang="scss">
+.btnBack {
+  line-height: 2;
+}
+
 #avatar-col {
   width: 10rem;
 }

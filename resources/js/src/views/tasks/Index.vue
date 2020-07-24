@@ -451,6 +451,9 @@ export default {
     font-size: 0.8em;
     border-radius: 5px;
   }
+  .card-task:hover {
+    cursor: pointer;
+  }
   .card-task-add {
     background: #2196f3;
     border: 1px solid #2196f3;
@@ -463,6 +466,9 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .card-task-add:hover {
+    cursor: pointer;
   }
   .titleTask {
     color: #080808;
