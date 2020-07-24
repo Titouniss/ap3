@@ -76,7 +76,7 @@ const router = new Router({
                 },
                 {
                     path: '/users/user-profil-edit/:userId',
-                    name: 'app-user-edit',
+                    name: 'app-user-edit-profil',
                     component: () => import('@/views/users/user-edit/UserEdit.vue'),
                     meta: {
                         pageTitle: 'Mon compte',
