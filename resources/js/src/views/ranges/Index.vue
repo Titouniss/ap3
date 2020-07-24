@@ -1,80 +1,84 @@
 <template>
   <div id="page-role-list">
     <div class="vx-card p-6">
+      <div class="px-6 mb-6 pt-3" v-if="authorizedToPublish">
+        <vs-button @click="addRecord" class="w-full">Ajouter une gamme</vs-button>
+      </div>
       <div class="flex flex-wrap items-center">
-        <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
-          <vs-dropdown vs-trigger-click class="cursor-pointer">
-            <div
-              class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
-            >
-              <span
-                class="mr-2"
-              >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ rangesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : rangesData.length }} of {{ rangesData.length }}</span>
-              <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-            </div>
-            <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
-            <vs-dropdown-menu>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
-                <span>10</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
-                <span>20</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
-                <span>25</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
-                <span>30</span>
-              </vs-dropdown-item>
-            </vs-dropdown-menu>
-          </vs-dropdown>
+          <vs-row type="flex">
+            <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
+
+            <!-- ACTION - DROPDOWN -->
+            <vs-dropdown vs-trigger-click class="cursor-pointer">
+              <div
+                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+              >
+                <span class="mr-2 leading-none">Actions</span>
+                <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+              </div>
+
+              <vs-dropdown-menu>
+                <vs-dropdown-item @click="confirmDeleteRecord('delete')" v-if="authorizedToDelete">
+                  <span class="flex items-center">
+                    <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <span>Supprimer</span>
+                  </span>
+                </vs-dropdown-item>
+                <vs-dropdown-item @click="confirmDeleteRecord('archive')" v-if="authorizedToDelete">
+                  <span class="flex items-center">
+                    <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <span>Archiver</span>
+                  </span>
+                </vs-dropdown-item>
+              </vs-dropdown-menu>
+            </vs-dropdown>
+
+            <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
+            <vs-input
+              class="ml-5"
+              v-model="searchQuery"
+              @input="updateSearchQuery"
+              placeholder="Rechercher..."
+            />
+          </vs-row>
         </div>
 
-        <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-        <vs-input
-          class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
-          v-model="searchQuery"
-          @input="updateSearchQuery"
-          placeholder="Rechercher..."
-        />
-        <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
-
-        <!-- ACTION - DROPDOWN -->
+        <!-- ITEMS PER PAGE -->
         <vs-dropdown vs-trigger-click class="cursor-pointer">
           <div
-            class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+            class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span class="mr-2 leading-none">Actions</span>
+            <span
+              class="mr-2"
+            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ rangesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : rangesData.length }} of {{ rangesData.length }}</span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
-
+          <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
           <vs-dropdown-menu>
-            <vs-dropdown-item @click="confirmDeleteRecord('archive')" v-if="authorizedToDelete">
-              <span class="flex items-center">
-                <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Archiver</span>
-              </span>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
+              <span>10</span>
             </vs-dropdown-item>
-            <vs-dropdown-item @click="confirmDeleteRecord('delete')" v-if="authorizedToDelete">
-              <span class="flex items-center">
-                <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Supprimer</span>
-              </span>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
+              <span>20</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
+              <span>25</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
+              <span>30</span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
         </vs-dropdown>
       </div>
 
-      <div class="px-6 pb-2 pt-6" v-if="authorizedToPublish">
-        <vs-button @click="addRecord" class="w-full">Ajouter une gamme</vs-button>
-      </div>
       <!-- AgGrid Table -->
       <ag-grid-vue
         ref="agGridTable"
         :components="components"
         :gridOptions="gridOptions"
         class="ag-theme-material w-100 my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
         :rowData="rangesData"
@@ -121,7 +125,9 @@ export default {
       searchQuery: "",
       // AgGrid
       gridApi: null,
-      gridOptions: {},
+      gridOptions: {
+        localeText: { noRowsToShow: "Aucune gamme" }
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,
@@ -130,6 +136,7 @@ export default {
       columnDefs: [
         {
           filter: false,
+          width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
@@ -137,15 +144,18 @@ export default {
         },
         {
           headerName: "Titre",
-          field: "name"
+          field: "name",
+          width: 100
         },
         {
           headerName: "Description",
-          field: "description"
+          field: "description",
+          width: 200
         },
         {
           headerName: "Actions",
           field: "transactions",
+          width: 40,
           cellRendererFramework: "CellRendererActions"
         }
       ],
@@ -222,6 +232,9 @@ export default {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
     },
     confirmDeleteRecord(type) {
+      let selectedRow = this.gridApi.getSelectedRows();
+      let singleRange = selectedRow[0];
+
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
@@ -231,12 +244,12 @@ export default {
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces gammes ?`
             : type === "delete" && this.gridApi.getSelectedRows().length === 1
-            ? `Voulez vous vraiment supprimer cette gamme ?`
+            ? `Voulez vous vraiment supprimer la gamme ${singleRange.name} ?`
             : this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment archiver ces gammes ?`
-            : `Voulez vous vraiment archiver cette gamme ?`,
+            : `Voulez vous vraiment archiver la gamme ${singleRange.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
+        acceptText: type === "delete" ? "Supprimer" : "Archiver",
         cancelText: "Annuler"
       });
     },
