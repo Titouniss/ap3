@@ -233,7 +233,7 @@ export default {
             ? `Voulez vous vraiment archiver ces sociétés ?`
             : `Voulez vous vraiment archiver la société ${singleCompany.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer" : "Archiver !",
+        acceptText: type === "delete" ? "Supprimer" : "Archiver",
         cancelText: "Annuler"
       });
     },

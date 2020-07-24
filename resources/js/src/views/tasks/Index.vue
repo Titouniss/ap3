@@ -9,47 +9,105 @@
 
 <template>
   <div id="page-tasks-list">
-  
     <div class="chooseTaskDisplay">
-      <feather-icon icon="GridIcon" svgClasses="h-5 w-5" v-bind:class="[formatActive == 'grid' ? 'btnChooseDisplayFormatActive p-3' : 'btnFormatTaskList p-3']" @click="formatActive = 'grid'"/>
-      <feather-icon icon="ListIcon" svgClasses="h-5 w-5" v-bind:class="[formatActive == 'list' ? 'btnChooseDisplayFormatActive p-3' : 'btnFormatTaskList p-3']"  @click="formatActive = 'list'" />
+      <feather-icon
+        icon="GridIcon"
+        svgClasses="h-5 w-5"
+        v-bind:class="[formatActive == 'grid' ? 'btnChooseDisplayFormatActive p-3' : 'btnFormatTaskList p-3']"
+        @click="formatActive = 'grid'"
+      />
+      <feather-icon
+        icon="ListIcon"
+        svgClasses="h-5 w-5"
+        v-bind:class="[formatActive == 'list' ? 'btnChooseDisplayFormatActive p-3' : 'btnFormatTaskList p-3']"
+        @click="formatActive = 'list'"
+      />
     </div>
-    
-    <div class="vx-card p-6 mb-4" style="display: flex; flex-direction: row; flex-wrap: wrap;" v-if="formatActive == 'grid'">
-        
-        <add-form :customTask="true" :project_data="this.project_data" :tasks_list="tasksData" :hideProjectInput="true" :hideUserInput="true"/>
 
-        <div v-for="item in tasksData" v-bind:key="item.name" class="card-task p-2  m-3">
-          <!-- <div>
+    <div
+      class="vx-card p-6 mb-4"
+      style="display: flex; flex-direction: row; flex-wrap: wrap;"
+      v-if="formatActive == 'grid'"
+    >
+      <add-form
+        :customTask="true"
+        :project_data="this.project_data"
+        :tasks_list="tasksData"
+        :hideProjectInput="true"
+        :hideUserInput="true"
+      />
+
+      <div v-for="item in tasksData" v-bind:key="item.name" class="card-task p-2 m-3">
+        <!-- <div>
             <feather-icon icon="HexagonIcon" svgClasses="h-5 w-5" />
-          </div> -->
-          <div class="info-task" @mouseover="showEditDeleteByIndex = item.id" @mouseout="showEditDeleteByIndex = null">
-            <div class="titleTask">
-              <feather-icon icon="CircleIcon" svgClasses="h-5 w-5" v-if="item.status == 'done'" class="statusGreenTask mr-1" />
-              <feather-icon icon="CircleIcon" svgClasses="h-5 w-5" v-if="item.status == 'doing'" class="statusOrangeTask mr-1" />
-              <feather-icon icon="CircleIcon" svgClasses="h-5 w-5" v-if="item.status == 'todo'" class="statusRedTask mr-1" />
-              <span class="nameTask">{{item.name}}</span>
-            </div>
+        </div>-->
+        <div
+          class="info-task"
+          @mouseover="showEditDeleteByIndex = item.id"
+          @mouseout="showEditDeleteByIndex = null"
+        >
+          <div class="titleTask">
+            <feather-icon
+              icon="CircleIcon"
+              svgClasses="h-5 w-5"
+              v-if="item.status == 'done'"
+              class="statusGreenTask mr-1"
+            />
+            <feather-icon
+              icon="CircleIcon"
+              svgClasses="h-5 w-5"
+              v-if="item.status == 'doing'"
+              class="statusOrangeTask mr-1"
+            />
+            <feather-icon
+              icon="CircleIcon"
+              svgClasses="h-5 w-5"
+              v-if="item.status == 'todo'"
+              class="statusRedTask mr-1"
+            />
+            <span class="nameTask">{{item.name}}</span>
+          </div>
 
-            <div class="dateTask">{{momentTransform(item.date)}}</div>
-            <div v-show="showEditDeleteByIndex !== item.id" style="display: flex; flex-direction: row; align-self: flex-end;">
-              <div v-if="item.workarea" class="workareaTask mr-4">{{item.workarea.name}}</div>
-              <feather-icon v-if="item.description" icon="AlignLeftIcon" svgClasses="h-4 w-4" class="mr-2" />
-              <feather-icon v-if="item.comments.length > 0" icon="MessageSquareIcon" svgClasses="h-4 w-4" />
-            </div>
+          <div class="dateTask">{{momentTransform(item.date)}}</div>
+          <div
+            v-show="showEditDeleteByIndex !== item.id"
+            style="display: flex; flex-direction: row; align-self: flex-end;"
+          >
+            <div v-if="item.workarea" class="workareaTask mr-4">{{item.workarea.name}}</div>
+            <feather-icon
+              v-if="item.description"
+              icon="AlignLeftIcon"
+              svgClasses="h-4 w-4"
+              class="mr-2"
+            />
+            <feather-icon
+              v-if="item.comments.length > 0"
+              icon="MessageSquareIcon"
+              svgClasses="h-4 w-4"
+            />
+          </div>
 
-            <div v-show="showEditDeleteByIndex === item.id" style="display: flex; flex-direction: row; align-self: flex-end;">
-              <feather-icon icon="Edit3Icon" svgClasses="h-5 w-5 mr-2 hover:text-primary cursor-pointer" @click="editRecord(item)" />
-              <feather-icon icon="Trash2Icon" svgClasses="h-5 w-5 hover:text-danger cursor-pointer" @click="confirmDeleteRecord(item)" />
-            </div>
+          <div
+            v-show="showEditDeleteByIndex === item.id"
+            style="display: flex; flex-direction: row; align-self: flex-end;"
+          >
+            <feather-icon
+              icon="Edit3Icon"
+              svgClasses="h-5 w-5 mr-2 hover:text-primary cursor-pointer"
+              @click="editRecord(item)"
+            />
+            <feather-icon
+              icon="Trash2Icon"
+              svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+              @click="confirmDeleteRecord(item)"
+            />
           </div>
         </div>
-
+      </div>
     </div>
 
     <div class="vx-card p-6" v-if="formatActive == 'list'">
-
-      <add-form :project_data="this.project_data" :tasks_list="tasksData"/>
+      <add-form :project_data="this.project_data" :tasks_list="tasksData" />
       <div class="flex flex-wrap items-center">
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
@@ -122,12 +180,12 @@
 </template>
 
 <script>
-var modelTitle = 'Tâche'
+var modelTitle = "Tâche";
 
-import { AgGridVue } from 'ag-grid-vue'
-import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
-import vSelect from 'vue-select'
-import moment from 'moment'
+import { AgGridVue } from "ag-grid-vue";
+import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
+import vSelect from "vue-select";
+import moment from "moment";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -136,7 +194,6 @@ import EditForm from "./EditForm.vue";
 // Store Module
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
-
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
@@ -164,9 +221,9 @@ export default {
   },
   data() {
     return {
-      searchQuery: '',
+      searchQuery: "",
       showEditDeleteByIndex: null,
-      formatActive: 'grid',
+      formatActive: "grid",
 
       // AgGrid
       gridApi: null,
@@ -262,11 +319,13 @@ export default {
     }
   },
   methods: {
-    updateSearchQuery (val) {
-      this.gridApi.setQuickFilter(val)
+    updateSearchQuery(val) {
+      this.gridApi.setQuickFilter(val);
     },
-    momentTransform(date){
-      return moment(date).format('DD MMMM YYYY') == 'Invalid date' ? '' : moment(date).format('DD MMMM YYYY')
+    momentTransform(date) {
+      return moment(date).format("DD MMMM YYYY") == "Invalid date"
+        ? ""
+        : moment(date).format("DD MMMM YYYY");
     },
     onResize(event) {
       if (this.gridApi) {
@@ -277,34 +336,42 @@ export default {
         this.gridApi.sizeColumnsToFit();
       }
     },
-    editRecord (item) {
-      this.$store.dispatch("taskManagement/editItem", item)
-        .then(()   => {  })
-        .catch(err => { console.error(err)       })
+    editRecord(item) {
+      this.$store
+        .dispatch("taskManagement/editItem", item)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
     },
-    confirmDeleteRecord (item) {
+    confirmDeleteRecord(item) {
       this.$vs.dialog({
-        type: 'confirm',
-        color: 'danger',
-        title: 'Confirmer suppression',
-        text: `Vous allez supprimer "${item.name}"`,
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text: `Voulez vous vraiment supprimer la tâche "${item.name}"`,
         accept: this.deleteRecord(item),
-        acceptText: 'Supprimer',
-        cancelText: 'Annuler',
-      })
+        acceptText: "Supprimer",
+        cancelText: "Annuler"
+      });
     },
-    deleteRecord (item) {
-      this.$store.dispatch("taskManagement/removeItem", item)
-        .then(()   => { this.showDeleteSuccess() })
-        .catch(err => { console.error(err)       })
+    deleteRecord(item) {
+      this.$store
+        .dispatch("taskManagement/removeItem", item)
+        .then(() => {
+          this.showDeleteSuccess();
+        })
+        .catch(err => {
+          console.error(err);
+        });
     },
-    showDeleteSuccess () {
+    showDeleteSuccess() {
       this.$vs.notify({
-        color: 'success',
-        title: 'Tâche',
+        color: "success",
+        title: "Tâche",
         text: `${modelTitle} supprimé`
-      })
-    },
+      });
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -353,7 +420,6 @@ export default {
     this.$store.dispatch("userManagement/fetchItems").catch(err => {
       this.manageErrors(err);
     });
-
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
@@ -363,7 +429,6 @@ export default {
 
     moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("userManagement");
-
   }
 };
 </script>
@@ -378,15 +443,15 @@ export default {
       transform: translateY(-58%);
     }
   }
-  .card-task{
-    background:#fafafa;
+  .card-task {
+    background: #fafafa;
     width: 200px;
     height: 80px;
     border: 1px solid #e2e2e2;
     font-size: 0.8em;
     border-radius: 5px;
   }
-  .card-task-add{
+  .card-task-add {
     background: #2196f3;
     border: 1px solid #2196f3;
     border-radius: 5px;
@@ -399,45 +464,45 @@ export default {
     align-items: center;
     justify-content: center;
   }
-  .titleTask{
+  .titleTask {
     color: #080808;
     font-size: 1.1em;
     font-weight: 600;
     white-space: nowrap;
     display: flex;
   }
-  .info-task{
+  .info-task {
     display: flex;
     height: 100%;
     flex-direction: column;
     justify-content: space-between;
   }
-  .workareaTask{
+  .workareaTask {
     border: 1px solid grey;
     border-radius: 3px;
     padding: 0 2px;
   }
-  .iconTaskCat{
+  .iconTaskCat {
     position: absolute;
     top: -2px;
     right: 0;
   }
-  .statusRedTask{
-    color:whitesmoke;
+  .statusRedTask {
+    color: whitesmoke;
     background-color: rgb(204, 0, 0);
     border-radius: 25px;
   }
-  .statusGreenTask{
-    color:whitesmoke;
+  .statusGreenTask {
+    color: whitesmoke;
     background-color: rgb(0, 138, 0);
     border-radius: 25px;
   }
-  .statusOrangeTask{
-    color:whitesmoke;
+  .statusOrangeTask {
+    color: whitesmoke;
     background-color: rgb(233, 124, 0);
     border-radius: 25px;
   }
-  .chooseTaskDisplay{
+  .chooseTaskDisplay {
     position: absolute;
     top: -30px;
     right: 20px;
@@ -445,14 +510,14 @@ export default {
     border-radius: 5px;
     background-color: #e2e2e2;
   }
-  .btnChooseDisplayFormatActive{
+  .btnChooseDisplayFormatActive {
     background-color: white;
     color: #2196f3;
     border-radius: 5px;
   }
-  .btnFormatTaskList:hover{
+  .btnFormatTaskList:hover {
     cursor: pointer;
-    border-radius: '5px';
+    border-radius: "5px";
   }
 }
 </style>
