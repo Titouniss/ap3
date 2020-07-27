@@ -7,13 +7,13 @@
     />
     <feather-icon
       icon="ArchiveIcon"
-      svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
-      @click="confirmDeleteRecord('archive')"
+      :svgClasses="this.archiveSvg"
+      @click="params.data.deleted_at ? confirmActionRecord('restore') : confirmActionRecord('archive')"
     />
     <feather-icon
       icon="Trash2Icon"
       svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
-      @click="confirmDeleteRecord('delete')"
+      @click="confirmActionRecord('delete')"
     />
   </div>
 </template>
@@ -28,6 +28,11 @@ export default {
     url() {
       return `/${modelPlurial}/${model}-view/${this.params.data.id}`;
     },
+    archiveSvg() {
+      return this.params.data.deleted_at
+        ? "h-5 w-5 mr-4 text-warning hover:text-success cursor-pointer"
+        : "h-5 w-5 mr-4 hover:text-primary cursor-pointer";
+    },
   },
   methods: {
     editRecord() {
@@ -38,22 +43,45 @@ export default {
           console.error(err);
         });
     },
-    confirmDeleteRecord(type) {
+    confirmActionRecord(type) {
       this.$vs.dialog({
         type: "confirm",
-        color: "danger",
+        color:
+          type === "delete"
+            ? "danger"
+            : type === "archive"
+            ? "warning"
+            : "success",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
+          type === "delete"
+            ? "Confirmer suppression"
+            : type === "archive"
+            ? "Confirmer archivage"
+            : "Confirmer restauration",
         text:
           type === "delete"
             ? `Voulez vous vraiment supprimer le projet ` +
               this.params.data.name +
               ` ?`
-            : `Voulez vous vraiment archiver le projet ` +
+            : type === "archive"
+            ? `Voulez vous vraiment archiver le projet ` +
+              this.params.data.name +
+              ` ?`
+            : `Voulez vous vraiment restaurer le projet ` +
               this.params.data.name +
               ` ?`,
-        accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer" : "Archiver",
+        accept:
+          type === "delete"
+            ? this.deleteRecord
+            : type === "archive"
+            ? this.archiveRecord
+            : this.restoreRecord,
+        acceptText:
+          type === "delete"
+            ? "Supprimer"
+            : type === "archive"
+            ? "Archiver"
+            : "Restaurer",
         cancelText: "Annuler",
       });
     },
@@ -61,7 +89,7 @@ export default {
       this.$store
         .dispatch("projectManagement/forceRemoveItem", this.params.data.id)
         .then(() => {
-          this.showDeleteSuccess("delete");
+          this.showActionSuccess("delete");
         })
         .catch((err) => {
           console.error(err);
@@ -71,17 +99,36 @@ export default {
       this.$store
         .dispatch("projectManagement/removeItem", this.params.data.id)
         .then((data) => {
-          this.showDeleteSuccess("archive");
+          this.showActionSuccess("archive");
         })
         .catch((err) => {
           console.error(err);
         });
     },
-    showDeleteSuccess(type) {
+    restoreRecord() {
+      this.$store
+        .dispatch("projectManagement/restoreItem", this.params.data.id)
+        .then((response) => {
+          if (response.data.success) {
+            this.showActionSuccess("restore");
+          } else {
+            this.showActionError();
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    },
+    showActionSuccess(type) {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: type === "delete" ? `Projet supprimé` : `Projet archivé`,
+        text:
+          type === "delete"
+            ? `Projet supprimé`
+            : type === "archive"
+            ? `Projet archivé`
+            : `Projet restauré`,
       });
     },
   },

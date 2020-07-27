@@ -34,6 +34,17 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  restoreItem({ commit }, id) {
+    return new Promise((resolve, reject) => {
+      axios.put(`/api/project-management/restore/${id}`)
+        .then((response) => {
+          console.log(['response', response]);
+          commit('UPDATE_ITEM', Object.assign({}, response.data.success))
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
   fetchItems({ commit }) {
     return new Promise((resolve, reject) => {
       axios.get('/api/project-management/index')
@@ -57,7 +68,7 @@ export default {
     return new Promise((resolve, reject) => {
       axios.delete(`/api/project-management/destroy/${id}`)
         .then((response) => {
-          commit('REMOVE_ITEM', id)
+          commit('UPDATE_ITEM', Object.assign({}, response.data.success))
           resolve(response)
         })
         .catch((error) => { reject(error) })

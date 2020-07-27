@@ -33,7 +33,7 @@ class ProjectController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Project::all()->load('company')->load('customer');
+            $items = Project::withTrashed()->get()->load('company')->load('customer');
         } else if ($user->company_id != null) {
             $items = Project::where('company_id',$user->company_id)->get()->load('company')->load('customer');
         }
@@ -184,7 +184,22 @@ class ProjectController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+    */
+    public function restore($id)
+    {
+        $item = Project::withTrashed()->findOrFail($id)->restore();
+        if($item) {
+            $item = Project::where('id', $id)->first()->load('company');
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
+
+    /**
+     * Archive the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -193,7 +208,9 @@ class ProjectController extends Controller
     {
         $item = Project::findOrFail($id);
         $item->delete();
-        return '';
+
+        $item = Project::withTrashed()->where('id', $id)->first()->load('company');
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
