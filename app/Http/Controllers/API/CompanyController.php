@@ -27,7 +27,8 @@ class CompanyController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Company::all()->load('skills');
+            //$items = Company::all()->load('skills');
+            $items = Company::withTrashed()->get()->load('skills');
         } else if ($user->company_id != null) {
             $items = Company::where('id', $user->company_id)->get()->load('skills');
         }
@@ -96,22 +97,34 @@ class CompanyController extends Controller
         $item = Company::where('id', $id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
         return response()->json(['success' => $item], $this->successStatus);
     }
+    
+
+     /**
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function restore($id)
+    {
+        $item = Company::withTrashed()->findOrFail($id)->restore();
+        if($item) {
+            $item = Company::where('id', $id)->first();
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
 
     /**
-     * Remove the specified resource from storage.
+     * Archive the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        $controllerLog = new Logger('company');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('company', ['destroy']);
-
         $item = Company::findOrFail($id);
         $item->delete();
-        return '';
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**

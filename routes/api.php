@@ -114,6 +114,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit companies']], function () {
             Route::post('update/{id}', 'API\CompanyController@update');
+            Route::put('restore/{id}', 'API\CompanyController@restore');
         });
         Route::group(['middleware' => ['can:delete companies']], function () {
             Route::delete('destroy/{id}', 'API\CompanyController@destroy');
