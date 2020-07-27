@@ -29,7 +29,7 @@ class RangeController extends Controller
         $user = Auth::user();
         $listObject = [];
         if ($user->hasRole('superAdmin')) {
-            $listObject = Range::all()->load('company');
+            $listObject = Range::withTrashed()->get()->load('company');
         } else if ($user->company_id != null) {
             $listObject = Range::where('company_id',$user->company_id);
         }
@@ -108,14 +108,31 @@ class RangeController extends Controller
         return response()->json(['success' => true, 'item' => $item], $this-> successStatus); 
     } 
 
+    /**
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+    */
+    public function restore($id)
+    {
+        $item = Range::withTrashed()->findOrFail($id)->restore();
+        if($item) {
+            $item = Range::where('id', $id)->first();
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
+
     /** 
-     * delete item api 
+     * Archive the specified resource from storage. 
      * 
+     * @param  int  $id
      * @return \Illuminate\Http\Response 
      */ 
     public function destroy($id) 
     { 
-        $item = Range::where('id',$id)->delete();
+        $item = Range::findOrFail($id);
+        $item->delete();
         return response()->json(['success' => $item], $this-> successStatus); 
     }
 

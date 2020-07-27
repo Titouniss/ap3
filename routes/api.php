@@ -201,6 +201,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit ranges']], function () {
             Route::post('update/{id}', 'API\RangeController@update');
+            Route::put('restore/{id}', 'API\RangeController@restore');
         });
         Route::group(['middleware' => ['can:delete ranges']], function () {
             Route::delete('destroy/{id}', 'API\RangeController@destroy');
