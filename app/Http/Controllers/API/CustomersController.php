@@ -27,7 +27,7 @@ class CustomersController extends Controller
         $user = Auth::user();
         $customers = [];
         if ($user->hasRole('superAdmin')) {
-            $customers = Customers::all();
+            $customers = Customers::withTrashed()->get();
         } else {
             $customers = Customers::all();
             // Add link to specific company ?
@@ -98,16 +98,33 @@ class CustomersController extends Controller
                 $customer->save();
             }
         return response()->json(['success' => true, 'item' => $customer], $this->successStatus); 
-    } 
+    }
+
+    /**
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function restore($id)
+    {
+        $item = Customers::withTrashed()->findOrFail($id)->restore();
+        if($item) {
+            $item = Customers::where('id', $id)->first();
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
 
     /** 
-     * delete item api 
+     * Archive the specified resource from storage. 
      * 
+     * @param  int  $id
      * @return \Illuminate\Http\Response 
      */ 
     public function destroy($id) 
     { 
-        $item = Customers::where('id',$id)->delete();
+        $item = Customers::findOrFail($id);
+        $item->delete();
         return response()->json(['success' => $item], $this->successStatus); 
     }
 

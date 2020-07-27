@@ -306,6 +306,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit customers']], function () {
             Route::post('update/{id}', 'API\CustomersController@update');
+            Route::put('restore/{id}', 'API\CustomersController@restore');
         });
         Route::group(['middleware' => ['can:delete customers']], function () {
             Route::delete('destroy/{id}', 'API\CustomersController@destroy');
