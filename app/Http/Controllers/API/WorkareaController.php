@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 class WorkareaController extends Controller
 {
     use SoftDeletes;
@@ -25,11 +28,11 @@ class WorkareaController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Workarea::all()->load('company', 'skills');
+            $items = Workarea::withTrashed()->get()->load('company', 'skills');
         } else if ($user->company_id != null) {
             $items = Workarea::where('company_id',$user->company_id)->get()->load('company')->load('skills');
         }
-        return response()->json(['success' => $items], $this-> successStatus);  
+        return response()->json(['success' => $items], $this->successStatus);  
     }
 
     /**
@@ -41,7 +44,7 @@ class WorkareaController extends Controller
     public function show($id)
     {
         $item = Workarea::where('id',$id)->first()->load('skills', 'company');
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => $item], $this->successStatus); 
     }
 
     /**
@@ -67,7 +70,7 @@ class WorkareaController extends Controller
             }
         }
         
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => $item], $this->successStatus); 
     }
 
     /**
@@ -110,11 +113,26 @@ class WorkareaController extends Controller
             $item->save();
         }
         $item = Workarea::find($id)->load('skills', 'company'); 
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => $item], $this->successStatus); 
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+    */
+    public function restore($id)
+    {
+        $item = Workarea::withTrashed()->findOrFail($id)->restore();
+        if($item) {
+            $item = Workarea::where('id',$id)->first()->load('skills', 'company');
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
+
+    /**
+     * Archive the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -123,7 +141,9 @@ class WorkareaController extends Controller
     {
         $item = Workarea::findOrFail($id);
         $item->delete();
-        return '';
+
+        $item = Workarea::withTrashed()->where('id', $id)->first()->load('skills', 'company');
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**

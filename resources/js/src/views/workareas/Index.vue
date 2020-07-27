@@ -145,7 +145,7 @@ export default {
     CellRendererLink,
     CellRendererActions,
     CellRendererRelations,
-    CellRendererRelationSkills
+    CellRendererRelationSkills,
   },
   data() {
     return {
@@ -154,12 +154,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun îlot" }
+        localeText: { noRowsToShow: "Aucun îlot" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
@@ -168,33 +168,30 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
-          resizable: true
+          resizable: true,
         },
         {
           headerName: "Nom",
           field: "name",
-          width: 100,
-          filter: true
+          filter: true,
         },
         {
           headerName: "Société",
           field: "company",
-          width: 100,
           filter: true,
-          cellRendererFramework: "CellRendererRelations"
+          cellRendererFramework: "CellRendererRelations",
         },
         {
           headerName: "Compétences",
           field: "skills",
-          width: 150,
-          cellRendererFramework: "CellRendererRelationSkills"
+          cellRendererFramework: "CellRendererRelationSkills",
         },
         {
           headerName: "Actions",
+          width: 90,
           field: "transactions",
-          width: 40,
-          cellRendererFramework: "CellRendererActions"
-        }
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
@@ -202,8 +199,8 @@ export default {
         CellRendererLink,
         CellRendererActions,
         CellRendererRelations,
-        CellRendererRelationSkills
-      }
+        CellRendererRelationSkills,
+      },
     };
   },
   watch: {},
@@ -229,8 +226,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     updateSearchQuery(val) {
@@ -258,22 +255,22 @@ export default {
             : `Voulez vous vraiment archiver l'îlot ${singleWorkarea.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
       console.log("DELETE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("workareaManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -284,15 +281,15 @@ export default {
     archiveRecord() {
       console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("workareaManagement/removeItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -314,7 +311,7 @@ export default {
             ? `Îlot supprimé`
             : selectedRowLength > 1
             ? `Îlots archivés`
-            : `Îlot archivé`
+            : `Îlot archivé`,
       });
     },
     onResize(event) {
@@ -325,7 +322,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -371,13 +368,13 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
+    this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+    this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -390,7 +387,7 @@ export default {
     this.$store.unregisterModule("workareaManagement");
     this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("companyManagement");
-  }
+  },
 };
 </script>
 

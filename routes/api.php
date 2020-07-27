@@ -156,6 +156,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit workareas']], function () {
             Route::post('update/{id}', 'API\WorkareaController@update');
+            Route::put('restore/{id}', 'API\WorkareaController@restore');
         });
         Route::group(['middleware' => ['can:delete workareas']], function () {
             Route::delete('destroy/{id}', 'API\WorkareaController@destroy');
