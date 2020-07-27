@@ -139,7 +139,7 @@ export default {
     AddForm,
     // Cell Renderer
     CellRendererActions,
-    CellRendererBoolean
+    CellRendererBoolean,
   },
   data() {
     return {
@@ -148,12 +148,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun client" }
+        localeText: { noRowsToShow: "Aucun client" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
@@ -161,45 +161,45 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          width: 40
+          width: 40,
         },
         {
           headerName: "Société",
           field: "name",
           filter: true,
-          width: 100
+          width: 100,
         },
         {
           headerName: "Nom",
           field: "lastname",
           filter: true,
-          width: 100
+          width: 100,
         },
         {
           headerName: "Siret",
           field: "siret",
           filter: true,
-          width: 150
+          width: 150,
         },
         {
           headerName: "Type",
           field: "professional",
           filter: true,
           width: 100,
-          cellRendererFramework: "CellRendererBoolean"
+          cellRendererFramework: "CellRendererBoolean",
         },
         {
           headerName: "Actions",
           field: "transactions",
           width: 60,
-          cellRendererFramework: "CellRendererActions"
-        }
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
       // Cell Renderer Components
       components: {
         CellRendererActions,
-        CellRendererBoolean
-      }
+        CellRendererBoolean,
+      },
     };
   },
   computed: {
@@ -233,8 +233,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     authorizedTo(action, model = "customers") {
@@ -259,7 +259,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all"
+        value: "all",
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -276,7 +276,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces clients ?`
@@ -287,21 +287,21 @@ export default {
             : `Voulez vous vraiment archiver le client ${singleCustomer.lastname} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("customerManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -311,15 +311,15 @@ export default {
     },
     archiveRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("customerManagement/removeItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -338,7 +338,7 @@ export default {
             ? `Client supprimé`
             : selectedRowLength > 1
             ? `Clients archivés`
-            : `Client archivé`
+            : `Client archivé`,
       });
     },
     onResize(event) {
@@ -349,7 +349,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -397,7 +397,7 @@ export default {
 
     moduleCustomerManagement.isRegistered = false;
     this.$store.unregisterModule("customerManagement");
-  }
+  },
 };
 </script>
 

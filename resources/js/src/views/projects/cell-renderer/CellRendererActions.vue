@@ -27,14 +27,14 @@ export default {
   computed: {
     url() {
       return `/${modelPlurial}/${model}-view/${this.params.data.id}`;
-    }
+    },
   },
   methods: {
     editRecord() {
       this.$store
         .dispatch("projectManagement/editItem", this.params.data)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -43,7 +43,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete"
             ? `Voulez vous vraiment supprimer le projet ` +
@@ -54,7 +54,7 @@ export default {
               ` ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
@@ -63,17 +63,17 @@ export default {
         .then(() => {
           this.showDeleteSuccess("delete");
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
     archiveRecord() {
       this.$store
         .dispatch("projectManagement/removeItem", this.params.data.id)
-        .then(data => {
+        .then((data) => {
           this.showDeleteSuccess("archive");
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -81,9 +81,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: type === "delete" ? `Projet supprimé` : `Projet archivé`
+        text: type === "delete" ? `Projet supprimé` : `Projet archivé`,
       });
-    }
-  }
+    },
+  },
 };
 </script>

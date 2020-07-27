@@ -118,7 +118,7 @@ export default {
     vSelect,
 
     // Cell Renderer
-    CellRendererActions
+    CellRendererActions,
   },
   data() {
     return {
@@ -126,12 +126,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune gamme" }
+        localeText: { noRowsToShow: "Aucune gamme" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
@@ -140,30 +140,30 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true
+          resizable: true,
         },
         {
           headerName: "Titre",
           field: "name",
-          width: 100
+          width: 100,
         },
         {
           headerName: "Description",
           field: "description",
-          width: 200
+          width: 200,
         },
         {
           headerName: "Actions",
           field: "transactions",
           width: 40,
-          cellRendererFramework: "CellRendererActions"
-        }
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererActions
-      }
+        CellRendererActions,
+      },
     };
   },
   computed: {
@@ -197,8 +197,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     setColumnFilter(column, val) {
@@ -220,7 +220,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all"
+        value: "all",
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -239,7 +239,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces gammes ?`
@@ -250,22 +250,22 @@ export default {
             : `Voulez vous vraiment archiver la gamme ${singleRange.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
       console.log("DELETE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("rangeManagement/forceRemoveRecord", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -276,15 +276,15 @@ export default {
     archiveRecord() {
       console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("rangeManagement/removeRecord", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -305,7 +305,7 @@ export default {
             ? `Gamme supprimé`
             : selectedRowLength > 1
             ? `Gammes archivés`
-            : `Gamme archivé`
+            : `Gamme archivé`,
       });
     },
     onResize(event) {
@@ -316,7 +316,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -349,7 +349,7 @@ export default {
       this.$store.registerModule("rangeManagement", moduleRangeManagement);
       moduleRangeManagement.isRegistered = true;
     }
-    this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
+    this.$store.dispatch("rangeManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -358,6 +358,6 @@ export default {
 
     moduleRangeManagement.isRegistered = false;
     this.$store.unregisterModule("rangeManagement");
-  }
+  },
 };
 </script>

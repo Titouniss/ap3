@@ -133,7 +133,7 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererActions
+    CellRendererActions,
   },
   data() {
     return {
@@ -142,12 +142,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune société" }
+        localeText: { noRowsToShow: "Aucune société" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
@@ -156,33 +156,33 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true
+          resizable: true,
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 150
+          width: 150,
         },
         {
           headerName: "Siret",
           field: "siret",
           filter: true,
-          width: 150
+          width: 150,
         },
         {
           headerName: "Actions",
           field: "transactions",
           width: 40,
-          cellRendererFramework: "CellRendererActions"
-        }
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererActions
-      }
+        CellRendererActions,
+      },
     };
   },
   watch: {},
@@ -208,8 +208,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     updateSearchQuery(val) {
@@ -223,7 +223,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces sociétés ?`
@@ -234,21 +234,21 @@ export default {
             : `Voulez vous vraiment archiver la société ${singleCompany.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("companyManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -259,15 +259,15 @@ export default {
     archiveRecord() {
       console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("companyManagement/removeItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -289,7 +289,7 @@ export default {
             ? `Société supprimé`
             : selectedRowLength > 1
             ? `Sociétés archivés`
-            : `Société archivé`
+            : `Société archivé`,
       });
     },
     onResize(event) {
@@ -300,7 +300,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -335,7 +335,7 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -344,7 +344,7 @@ export default {
 
     moduleCompanyManagement.isRegistered = false;
     this.$store.unregisterModule("companyManagement");
-  }
+  },
 };
 </script>
 

@@ -36,7 +36,7 @@ export default {
     },
     authorizedToDelete() {
       return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
-    }
+    },
   },
   methods: {
     editRecord() {
@@ -49,7 +49,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete"
             ? `Voulez vous vraiment supprimer la gamme ` +
@@ -60,7 +60,7 @@ export default {
               ` ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
@@ -69,17 +69,17 @@ export default {
         .then(() => {
           this.showDeleteSuccess("delete");
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
     archiveRecord() {
       this.$store
         .dispatch("rangeManagement/removeRecord", this.params.data.id)
-        .then(data => {
+        .then((data) => {
           this.showDeleteSuccess("archive");
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -87,9 +87,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: type === "delete" ? `Gamme supprimé` : `Gamme archivé`
+        text: type === "delete" ? `Gamme supprimé` : `Gamme archivé`,
       });
-    }
-  }
+    },
+  },
 };
 </script>

@@ -244,7 +244,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces îlots ?`

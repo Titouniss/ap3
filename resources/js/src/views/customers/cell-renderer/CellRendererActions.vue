@@ -48,7 +48,7 @@ export default {
             ? "warning"
             : "success",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete"
             ? `Voulez vous vraiment supprimer le Client ` +

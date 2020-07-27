@@ -139,7 +139,7 @@ export default {
     // Cell Renderer
     CellRendererActions,
     CellRendererLink,
-    CellRendererRelations
+    CellRendererRelations,
   },
   data() {
     return {
@@ -148,64 +148,64 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun projet" }
+        localeText: { noRowsToShow: "Aucun projet" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
           width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
           width: 100,
-          cellRendererFramework: "CellRendererLink"
+          cellRendererFramework: "CellRendererLink",
         },
         {
           headerName: "Date de création",
           field: "created_at",
           filter: true,
           width: 50,
-          cellRenderer: data => {
+          cellRenderer: (data) => {
             moment.locale("fr");
             return moment(data.value).format("DD MMMM YYYY");
-          }
+          },
         },
         {
           headerName: "Avancement",
           field: "status",
           width: 50,
-          filter: true
+          filter: true,
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
           width: 100,
-          cellRendererFramework: "CellRendererRelations"
+          cellRendererFramework: "CellRendererRelations",
         },
         {
           headerName: "Actions",
           field: "transactions",
           width: 40,
-          cellRendererFramework: "CellRendererActions"
-        }
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations
-      }
+        CellRendererRelations,
+      },
     };
   },
   computed: {
@@ -230,8 +230,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     updateSearchQuery(val) {
@@ -245,7 +245,7 @@ export default {
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces projets ?`
@@ -256,21 +256,21 @@ export default {
             : `Voulez vous vraiment archiver le projet ${singleProject.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("projectManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -280,15 +280,15 @@ export default {
     },
     archiveRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("projectManagement/removeItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -307,7 +307,7 @@ export default {
             ? `Projet supprimé`
             : selectedRowLength > 1
             ? `Projets archivés`
-            : `Projet archivé`
+            : `Projet archivé`,
       });
     },
     onResize(event) {
@@ -318,7 +318,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -368,19 +368,19 @@ export default {
       );
       moduleCustomerManagement.isRegistered = true;
     }
-    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
+    this.$store.dispatch("projectManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    this.$store.dispatch("customerManagement/fetchItems").catch(err => {
+    this.$store.dispatch("customerManagement/fetchItems").catch((err) => {
       console.error(err);
     });
     if (this.$store.getters.userHasPermissionTo(`read companies`)) {
-      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
         console.error(err);
       });
     }
     if (this.$store.getters.userHasPermissionTo(`read ranges`)) {
-      this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
+      this.$store.dispatch("rangeManagement/fetchItems").catch((err) => {
         console.error(err);
       });
     }
@@ -396,7 +396,7 @@ export default {
     this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("rangeManagement");
     this.$store.unregisterModule("customerManagement");
-  }
+  },
 };
 </script>
 

@@ -53,7 +53,7 @@ export default {
           type === "delete"
             ? "Confirmer suppression"
             : type === "archive"
-            ? "Confirmer archivation"
+            ? "Confirmer archivage"
             : "Confirmer restauration",
         text:
           type === "delete"
