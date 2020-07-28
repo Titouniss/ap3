@@ -37,6 +37,7 @@
       :allDaySlot="false"
       :plugins="calendarPlugins"
       :weekends="calendarWeekends"
+      :firstDay="1"
       :events="calendarEvents"
       @eventDrop="handleEventDrop"
       @dateClick="handleDateClick"
