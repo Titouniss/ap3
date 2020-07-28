@@ -199,7 +199,7 @@ export default {
   },
   computed: {
     projectsData() {
-      return this.$store.state.projectManagement.projects;
+      return this.sortProjects(this.$store.state.projectManagement.projects);
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -304,7 +304,20 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
+    sortProjects(projects){
+
+      let todoProjects = projects.filter(project => project.status ==  'todo').reverse()
+      let doingProjects = projects.filter(project => project.status ==  'doing').reverse()
+      let doneProjects = projects.filter(project => project.status ==  'done').reverse()
+
+      let response = []
+      response = response.concat(todoProjects)
+      response = response.concat(doingProjects)
+      response = response.concat(doneProjects)
+
+      return response
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
