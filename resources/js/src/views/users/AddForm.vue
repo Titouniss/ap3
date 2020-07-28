@@ -169,7 +169,7 @@ var modelPlurial = "users";
 
 export default {
   components: {
-    vSelect,
+    vSelect
   },
   data() {
     return {
@@ -180,9 +180,9 @@ export default {
         email: "",
         company_id: null,
         roles: [],
-        skills: [],
+        skills: []
       },
-      companySkills: [],
+      companySkills: []
     };
   },
   computed: {
@@ -211,7 +211,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -230,7 +230,7 @@ export default {
         this.itemLocal.company_id != null &&
         this.itemLocal.roles > 0
       );
-    },
+    }
   },
   methods: {
     authorizedTo(action, model = "users") {
@@ -241,45 +241,40 @@ export default {
         itemLocal: {
           email: "",
           company_id: null,
-          roles: [],
-        },
+          roles: []
+        }
       });
     },
     addItem() {
-      this.$validator.validateAll().then((result) => {
-        if (result) {
-          this.$store
-            .dispatch(
-              "userManagement/addItem",
-              Object.assign({}, this.itemLocal)
-            )
-            .then(() => {
-              this.$vs.loading.close();
+      if (this.validateForm) {
+        this.$store
+          .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
+          .then(response => {
+            this.$vs.loading.close();
+            if (response.status === 200) {
               this.back();
               this.$vs.notify({
                 title: "Ajout d'un utilisateur",
                 text: `Utilisateur ajouté avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "success",
+                color: "success"
               });
-            })
-            .catch((error) => {
-              this.$vs.loading.close();
+            } else {
               this.$vs.notify({
                 title: "Error",
-                text: error.message,
+                text: response.data.error,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger",
+                color: "danger"
               });
-            });
-        }
-      });
+            }
+          });
+      }
     },
     selectCompanySkills(item) {
       this.companySkills = this.companiesData.find(
-        (company) => company.id === item
+        company => company.id === item
       ).skills;
     },
     filterItemsAdmin($items) {
@@ -288,11 +283,11 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           $filteredItems = $items.filter(
-            (item) => item.company_id === this.itemLocal.company_id
+            item => item.company_id === this.itemLocal.company_id
           );
         } else {
           $filteredItems = $items;
@@ -302,7 +297,7 @@ export default {
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
-    },
+    }
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
@@ -348,6 +343,6 @@ export default {
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");
-  },
+  }
 };
 </script>

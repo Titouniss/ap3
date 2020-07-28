@@ -274,6 +274,11 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
+
+        if (User::where('email', $arrayRequest['email'])->exists()) {
+            return response()->json(['error' => 'Émail déjà utilisé'], 409);
+        }
+
         $arrayRequest['password'] = Hash::make(Str::random(12)); // on créer un password temporaire
         $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
         $arrayRequest['isTermsConditionAccepted'] = false;
