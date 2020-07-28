@@ -54,42 +54,48 @@
         <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
           <!-- Role -->
           <div>
-            <vs-select
+            <v-select
               v-validate="'required'"
               name="role"
-              label="Rôle"
+              label="name"
               :multiple="false"
-              v-model="itemLocal.roles[0].id"
+              v-model="itemLocal.roles[0]"
+              :reduce="name => name.id"
               class="w-full"
               autocomplete
+              :options="rolesData"
             >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.name"
-                v-for="(item,index) in rolesData"
-              />
-            </vs-select>
+              <template #header>
+                <div style="opacity: .8 font-size: .60rem">Rôle</div>
+              </template>
+              <template #option="role">
+                <span>{{`${role.name}`}}</span>
+              </template>
+            </v-select>
             <span class="text-danger text-sm" v-show="errors.has('role')">{{ errors.first('role') }}</span>
           </div>
 
           <!-- Company -->
           <div v-if="!disabled">
-            <vs-select
-              v-on:change="selectCompanySkills"
+            <v-select
               v-validate="'required'"
-              name="company_id"
-              label="Société"
+              @input="selectCompanySkills"
+              name="company"
+              label="name"
+              :multiple="false"
               v-model="itemLocal.company_id"
+              :reduce="name => name.id"
               class="w-full mt-5"
+              autocomplete
+              :options="companiesData"
             >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.name"
-                v-for="(item,index) in companiesData"
-              />
-            </vs-select>
+              <template #header>
+                <div style="opacity: .8 font-size: .85rem">Société</div>
+              </template>
+              <template #option="company">
+                <span>{{`${company.name}`}}</span>
+              </template>
+            </v-select>
             <span
               class="text-danger text-sm"
               v-show="errors.has('company_id')"
@@ -110,21 +116,25 @@
                 :to="{ path: '/skills' }"
               >Ajouter une compétence</router-link>
             </div>
-            <vs-select
-              v-if="companySkills.length > 0"
-              label="Compétences"
+            <v-select
+              v-validate="'required'"
+              v-if="companySkills.length !== 0"
+              name="skill"
+              label="name"
+              :multiple="true"
               v-model="itemLocal.skills"
+              :reduce="name => name.id"
               class="w-full mt-5"
-              multiple
               autocomplete
+              :options="companySkills"
             >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.name"
-                v-for="(item,index) in companySkills"
-              />
-            </vs-select>
+              <template #header>
+                <div style="opacity: .8 font-size: .85rem">Compétences</div>
+              </template>
+              <template #option="companyskill">
+                <span>{{`${companyskill.name}`}}</span>
+              </template>
+            </v-select>
             <span
               class="text-danger text-sm"
               v-show="errors.has('company_id')"
@@ -147,6 +157,8 @@
 </template>
 
 <script>
+import vSelect from "vue-select";
+
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
@@ -157,6 +169,9 @@ var model = "user";
 var modelPlurial = "users";
 
 export default {
+  components: {
+    vSelect,
+  },
   data() {
     return {
       itemLocal: {
@@ -165,10 +180,11 @@ export default {
         email: "",
         company_id: null,
         roles: [],
-        skills: []
+        skills: [],
       },
+      company_id_temps: null,
       companySkills: [],
-      selected: []
+      selected: [],
     };
   },
   computed: {
@@ -189,7 +205,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -208,40 +224,47 @@ export default {
         this.itemLocal.company_id != null &&
         this.itemLocal.roles.length > 0
       );
-    }
+    },
   },
   methods: {
     authorizedTo(action, model = "users") {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     selectCompanySkills(item) {
+      if (
+        this.company_id_temps &&
+        this.company_id_temps !== this.itemLocal.company_id
+      ) {
+        this.itemLocal.skills = [];
+      }
       this.companySkills = this.companiesData.find(
-        company => company.id === item
+        (company) => company.id === item
       ).skills;
-      this.itemLocal.skills = [];
     },
     fetch_data(id) {
       this.$vs.loading();
 
       this.$store
         .dispatch("userManagement/fetchItem", id)
-        .then(res => {
+        .then((res) => {
           let item = res.data.success;
 
+          // Get skills
           let skill_ids = [];
           if (item.skills.length > 0) {
-            item.skills.forEach(element => {
+            item.skills.forEach((element) => {
               skill_ids.push(element.id);
             });
           }
           item.skills = skill_ids;
           this.itemLocal = item;
           if (item.company_id) {
+            this.company_id_temps = item.company_id;
             this.selectCompanySkills(item.company_id);
           }
           this.$vs.loading.close();
         })
-        .catch(err => {
+        .catch((err) => {
           this.$vs.loading.close();
           console.error(err);
         });
@@ -251,7 +274,7 @@ export default {
       this.itemLocal.roles = [
         this.$store.getters["roleManagement/getItem"](
           this.itemLocal.roles[0].id
-        )
+        ),
       ];
       this.$store
         .dispatch("userManagement/updateItem", this.itemLocal)
@@ -263,23 +286,23 @@ export default {
             text: "Utilisateur modifier avec succès",
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success"
+            color: "success",
           });
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
-    }
+    },
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
@@ -324,6 +347,6 @@ export default {
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");
-  }
+  },
 };
 </script>

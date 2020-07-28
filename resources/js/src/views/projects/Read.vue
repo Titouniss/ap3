@@ -143,23 +143,42 @@ export default {
     startProject() {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
-        .then(() => {
-          this.$vs.notify({
-            title: "Ajout",
-            text: "Gamme ajoutée avec succès",
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "success"
-          });
-          this.$router
-            .push({
+        .then(data => {
+          console.log(data.data)
+          if(data.data.success){
+            this.$vs.notify({
+              title: "Planification",
+              text: "Projet planifié avec succès",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success"
+            });
+          }
+          else{
+            let message = 'Le nombre d\'heure de travail disponible est insuffisant'
+
+            this.$vs.notify({
+              title: "Planification",
+              text: message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
+          }
+          this.$router.push({
               path: `/schedules/schedules-read`,
               query: { id: this.project_data.id, type: "projects" }
             })
             .catch(() => {});
         })
         .catch(err => {
-          console.error(err);
+          this.$vs.notify({
+            title: "Planification",
+            text: "Une erreur c'est produite",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
         });
     },
     editRecord() {

@@ -41,19 +41,24 @@
                 </div>
                 <vs-divider />
                 <div>
-                  <vs-select
+                  <v-select
                     v-validate="'required'"
-                    label="Société"
+                    name="company"
+                    label="name"
+                    :multiple="false"
                     v-model="itemLocal.company_id"
+                    :reduce="name => name.id"
                     class="w-full mt-5"
+                    autocomplete
+                    :options="companiesData"
                   >
-                    <vs-select-item
-                      :key="index"
-                      :value="item.id"
-                      :text="item.name"
-                      v-for="(item,index) in companiesData"
-                    />
-                  </vs-select>
+                    <template #header>
+                      <div style="opacity: .8 font-size: .85rem">Société</div>
+                    </template>
+                    <template #option="company">
+                      <span>{{`${company.name}`}}</span>
+                    </template>
+                  </v-select>
                 </div>
               </div>
             </div>
@@ -65,6 +70,7 @@
 </template>
 
 <script>
+import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -75,15 +81,18 @@ export default {
   props: {
     itemId: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
+  },
+  components: {
+    vSelect,
   },
   data() {
     return {
       itemLocal: Object.assign(
         {},
         this.$store.getters["skillManagement/getItem"](this.itemId)
-      )
+      ),
     };
   },
   computed: {
@@ -95,10 +104,10 @@ export default {
         this.$store
           .dispatch("skillManagement/editItem", {})
           .then(() => {})
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
-      }
+      },
     },
     companiesData() {
       return this.$store.state.companyManagement.companies;
@@ -111,7 +120,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -127,7 +136,7 @@ export default {
         this.itemLocal.name != "" &&
         this.itemLocal.company_id != null
       );
-    }
+    },
   },
   methods: {
     init() {
@@ -146,20 +155,20 @@ export default {
             text: `"${this.itemLocal.name}" modifiée avec succès`,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success"
+            color: "success",
           });
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Error",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
-    }
-  }
+    },
+  },
 };
 </script>

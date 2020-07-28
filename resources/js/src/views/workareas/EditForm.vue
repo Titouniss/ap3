@@ -25,21 +25,25 @@
             <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
 
             <div v-if="itemLocal.company_id && disabled">
-              <vs-select
+              <v-select
                 v-validate="'required'"
-                label="Compétences"
+                v-if="companySkills.length !== 0"
+                name="skill"
+                label="name"
+                :multiple="true"
                 v-model="itemLocal.skills"
+                :reduce="name => name.id"
                 class="w-full mt-5"
-                multiple
                 autocomplete
+                :options="skillsData"
               >
-                <vs-select-item
-                  :key="index"
-                  :value="item.id"
-                  :text="item.name"
-                  v-for="(item,index) in skillsData"
-                />
-              </vs-select>
+                <template #header>
+                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
+                </template>
+                <template #option="skill">
+                  <span>{{`${skill.name}`}}</span>
+                </template>
+              </v-select>
               <span
                 class="text-danger text-sm"
                 v-show="errors.has('company_id')"
@@ -53,40 +57,49 @@
                 </div>
                 <vs-divider />
                 <div>
-                  <vs-select
-                    v-on:change="selectCompanySkills"
+                  <v-select
                     v-validate="'required'"
-                    label="Société"
+                    @input="selectCompanySkills"
+                    name="company"
+                    label="name"
+                    :multiple="false"
                     v-model="itemLocal.company_id"
+                    :reduce="name => name.id"
                     class="w-full mt-5"
+                    autocomplete
+                    :options="companiesData"
                   >
-                    <vs-select-item
-                      :key="index"
-                      :value="item.id"
-                      :text="item.name"
-                      v-for="(item,index) in companiesData"
-                    />
-                  </vs-select>
+                    <template #header>
+                      <div style="opacity: .8 font-size: .85rem">Société</div>
+                    </template>
+                    <template #option="company">
+                      <span>{{`${company.name}`}}</span>
+                    </template>
+                  </v-select>
                   <span
                     class="text-danger text-sm"
                     v-show="errors.has('company_id')"
                   >{{ errors.first('company_id') }}</span>
                 </div>
                 <div v-if="itemLocal.company_id">
-                  <vs-select
-                    label="Compétences"
+                  <v-select
+                    v-validate="'required'"
+                    name="skill"
+                    label="name"
+                    :multiple="true"
                     v-model="itemLocal.skills"
+                    :reduce="name => name.id"
                     class="w-full mt-5"
-                    multiple
                     autocomplete
+                    :options="companySkills"
                   >
-                    <vs-select-item
-                      :key="index"
-                      :value="item.id"
-                      :text="item.name"
-                      v-for="(item,index) in companySkills"
-                    />
-                  </vs-select>
+                    <template #header>
+                      <div style="opacity: .8 font-size: .85rem">Compétences</div>
+                    </template>
+                    <template #option="companyskill">
+                      <span>{{`${companyskill.name}`}}</span>
+                    </template>
+                  </v-select>
                   <span
                     class="text-danger text-sm"
                     v-show="errors.has('company_id')"
@@ -102,6 +115,7 @@
 </template>
 
 <script>
+import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -112,8 +126,11 @@ export default {
   props: {
     itemId: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
+  },
+  components: {
+    vSelect,
   },
   data() {
     return {
@@ -121,7 +138,8 @@ export default {
         {},
         this.$store.getters["workareaManagement/getItem"](this.itemId)
       ),
-      companySkills: []
+      company_id_temps: null,
+      companySkills: [],
     };
   },
   computed: {
@@ -133,14 +151,14 @@ export default {
         this.$store
           .dispatch("workareaManagement/editItem", {})
           .then(() => {})
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
-      }
+      },
     },
     companiesData() {
       this.companySkills = this.$store.state.companyManagement.companies.find(
-        company => company.id === this.itemLocal.company_id
+        (company) => company.id === this.itemLocal.company_id
       ).skills;
       return this.$store.state.companyManagement.companies;
     },
@@ -152,7 +170,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -164,7 +182,7 @@ export default {
     },
     validateForm() {
       return !this.errors.any() && this.itemLocal.name != "";
-    }
+    },
   },
   methods: {
     init() {
@@ -175,13 +193,18 @@ export default {
       this.companySkills = [];
     },
     selectCompanySkills(item) {
+      if (
+        this.company_id_temps &&
+        this.company_id_temps !== this.itemLocal.company_id
+      ) {
+        this.itemLocal.skills = [];
+      }
       this.companySkills = this.companiesData.find(
-        company => company.id === item
+        (company) => company.id === item
       ).skills;
-      this.itemLocal.skills = [];
     },
     submitItem() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         if (result) {
           this.$store
             .dispatch(
@@ -195,22 +218,22 @@ export default {
                 text: `"${this.itemLocal.name}" modifié avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "success"
+                color: "success",
               });
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
               });
             });
         }
       });
-    }
-  }
+    },
+  },
 };
 </script>
