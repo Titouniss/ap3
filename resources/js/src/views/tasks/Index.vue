@@ -247,7 +247,6 @@ export default {
           width: 300,
           cellRenderer: data => {
             moment.locale("fr");
-            console.log(["data.value", data.value]);
 
             return moment(data.value).format("DD MMMM YYYY, HH:mm");
           },
