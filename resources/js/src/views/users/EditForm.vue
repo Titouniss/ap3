@@ -272,9 +272,7 @@ export default {
     submitTodo() {
       this.$vs.loading();
       this.itemLocal.roles = [
-        this.$store.getters["roleManagement/getItem"](
-          this.itemLocal.roles[0].id
-        ),
+        this.$store.getters["roleManagement/getItem"](this.itemLocal.roles[0]),
       ];
       this.$store
         .dispatch("userManagement/updateItem", this.itemLocal)
