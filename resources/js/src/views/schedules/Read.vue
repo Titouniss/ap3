@@ -1,55 +1,65 @@
 <template>
-  <div class="vx-card w-full p-6">
-    <h2 class="mb-4 color-primary">{{scheduleTitle}}</h2>
-    <!-- <div>
-      <button @click="toggleWeekends">toggle weekends</button>
-      <button @click="gotoPast">go to a date in the past</button>
-      (also, click a date/time to add an event)
-    </div>-->
-    <add-form
-      :activeAddPrompt="this.activeAddPrompt"
-      :handleClose="handleClose"
-      :dateData="this.dateData"
-      :project_data="project_data"
-      :tasks_list="this.tasksEvent"
-      :customTask="false"
-      :type="this.$route.query.type"
-      :idType="parseInt(this.$route.query.id, 10)"
-    />
-    <FullCalendar
-      locale="fr"
-      class="demo-app-calendar border-c"
-      ref="fullCalendar"
-      defaultView="timeGridWeek"
-      :editable="true"
-      :header="{
-        left: 'prev today next',
-        center: 'dayGridMonth, timeGridWeek, timeGridDay',
-        right: 'title'
-      }"
-      :buttonText="{
-        today: 'Aujourd\'hui',
-        month: 'Mois',
-        week: 'Semaine',
-        day: 'Jour',
-        list: 'Liste'
-      }"
-      :allDaySlot="false"
-      :plugins="calendarPlugins"
-      :weekends="calendarWeekends"
-      :events="calendarEvents"
-      @eventDrop="handleEventDrop"
-      @dateClick="handleDateClick"
-      @eventClick="handleEventClick"
-      @eventResize="handleEventResize"
-    />
-    <edit-form
-      :reload="calendarEvents"
-      :itemId="itemIdToEdit"
-      :type="this.$route.query.type"
-      :idType="parseInt(this.$route.query.id, 10)"
-      v-if="itemIdToEdit && authorizedToEdit "
-    />
+  <div>
+    <router-link :to="'/schedules'" class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3">
+      <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
+      <span class="ml-2"> Retour à la liste des plannings </span>
+    </router-link>
+
+    <div class="vx-card w-full p-6">
+
+      
+
+      <h2 class="mb-4 color-primary">{{scheduleTitle}}</h2>
+      <!-- <div>
+        <button @click="toggleWeekends">toggle weekends</button>
+        <button @click="gotoPast">go to a date in the past</button>
+        (also, click a date/time to add an event)
+      </div>-->
+      <add-form
+        :activeAddPrompt="this.activeAddPrompt"
+        :handleClose="handleClose"
+        :dateData="this.dateData"
+        :project_data="project_data"
+        :tasks_list="this.tasksEvent"
+        :customTask="false"
+        :type="this.$route.query.type"
+        :idType="parseInt(this.$route.query.id, 10)"
+      />
+      <FullCalendar
+        locale="fr"
+        class="demo-app-calendar border-c"
+        ref="fullCalendar"
+        defaultView="timeGridWeek"
+        :editable="true"
+        :header="{
+          left: 'prev today next',
+          center: 'dayGridMonth, timeGridWeek, timeGridDay',
+          right: 'title'
+        }"
+        :buttonText="{
+          today: 'Aujourd\'hui',
+          month: 'Mois',
+          week: 'Semaine',
+          day: 'Jour',
+          list: 'Liste'
+        }"
+        :allDaySlot="false"
+        :plugins="calendarPlugins"
+        :weekends="calendarWeekends"
+        :events="calendarEvents"
+        @eventDrop="handleEventDrop"
+        @dateClick="handleDateClick"
+        @eventClick="handleEventClick"
+        @eventResize="handleEventResize"
+      />
+      <edit-form
+        :reload="calendarEvents"
+        :itemId="itemIdToEdit"
+        :type="this.$route.query.type"
+        :idType="parseInt(this.$route.query.id, 10)"
+        v-if="itemIdToEdit && authorizedToEdit "
+      />
+    </div>
   </div>
 </template>
 
@@ -522,5 +532,9 @@ export default {
 .fc-button:hover {
   background-color: rgb(40, 61, 116);
   text-decoration: none;
+}
+
+.btnBack {
+  line-height: 2;
 }
 </style>
