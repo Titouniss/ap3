@@ -167,7 +167,7 @@ export default {
           }
           this.$router.push({
               path: `/schedules/schedules-read`,
-              query: { id: this.project_data.id, type: 'projects' }
+              query: { id: this.project_data.id, type: "projects" }
             })
             .catch(() => {});
         })
@@ -194,7 +194,7 @@ export default {
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
-        text: `Vous allez supprimer "${this.project_data.name}"`,
+        text: `Voulez vous vraiment supprimer le projet "${this.project_data.name}"`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
         cancelText: "Annuler"
@@ -244,7 +244,10 @@ export default {
       moduleCompanyManagement.isRegistered = true;
     }
     if (!moduleCustomerManagement.isRegistered) {
-      this.$store.registerModule("customerManagement", moduleCustomerManagement);
+      this.$store.registerModule(
+        "customerManagement",
+        moduleCustomerManagement
+      );
       moduleCustomerManagement.isRegistered = true;
     }
 
@@ -293,11 +296,10 @@ export default {
     }
 
     //if (this.authorizedTo("read", "customers")) {
-      this.$store.dispatch("customerManagement/fetchItems").catch(err => {
-        console.error(err);
-      });
+    this.$store.dispatch("customerManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
     //}
-
   },
   beforeDestroy() {
     moduleProjectManagement.isRegistered = false;

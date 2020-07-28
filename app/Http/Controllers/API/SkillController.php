@@ -18,6 +18,7 @@ class SkillController extends Controller
     use SoftDeletes;
 
     public $successStatus = 200;
+    public $errorStatus = 400;
     /**
      * Display a listing of the resource.
      *

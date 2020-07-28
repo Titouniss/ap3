@@ -56,20 +56,25 @@
                   </div>
                   <vs-divider />
                   <div>
-                    <vs-select
-                      v-on:change="selectCompanySkills"
+                    <v-select
                       v-validate="'required'"
-                      label="Société"
+                      @input="selectCompanySkills"
+                      name="company"
+                      label="name"
+                      :multiple="false"
                       v-model="itemLocal.company_id"
+                      :reduce="name => name.id"
                       class="w-full mt-5"
+                      autocomplete
+                      :options="companiesData"
                     >
-                      <vs-select-item
-                        :key="index"
-                        :value="item.id"
-                        :text="item.name"
-                        v-for="(item,index) in companiesData"
-                      />
-                    </vs-select>
+                      <template #header>
+                        <div style="opacity: .8 font-size: .85rem">Société</div>
+                      </template>
+                      <template #option="company">
+                        <span>{{`${company.name}`}}</span>
+                      </template>
+                    </v-select>
                     <span
                       class="text-danger text-sm"
                       v-show="errors.has('company_id')"
@@ -81,25 +86,29 @@
                       class="msgTxt"
                     >Aucune compétences trouvées.</span>
                     <router-link
-                      v-if="companySkills.length == 0"
+                      v-if="companySkills.length > 0"
                       class="linkTxt"
                       :to="{ path: '/skills' }"
                     >Ajouter une compétence</router-link>
-                    <vs-select
-                      v-if="companySkills.length > 0"
-                      label="Compétences"
+                    <v-select
+                      v-validate="'required'"
+                      v-if="companySkills.length !== 0"
+                      name="skill"
+                      label="name"
+                      :multiple="true"
                       v-model="itemLocal.skills"
-                      class="w-full"
-                      multiple
+                      :reduce="name => name.id"
+                      class="w-full mt-5"
                       autocomplete
+                      :options="companySkills"
                     >
-                      <vs-select-item
-                        :key="index"
-                        :value="item.id"
-                        :text="item.name"
-                        v-for="(item,index) in companySkills"
-                      />
-                    </vs-select>
+                      <template #header>
+                        <div style="opacity: .8 font-size: .85rem">Compétences</div>
+                      </template>
+                      <template #option="companyskill">
+                        <span>{{`${companyskill.name}`}}</span>
+                      </template>
+                    </v-select>
                     <span
                       class="text-danger text-sm"
                       v-show="errors.has('company_id')"
@@ -116,6 +125,7 @@
 </template>
 
 <script>
+import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -123,6 +133,9 @@ import errorMessage from "./errorValidForm";
 Validator.localize("fr", errorMessage);
 
 export default {
+  components: {
+    vSelect,
+  },
   data() {
     return {
       activePrompt: false,
@@ -130,9 +143,9 @@ export default {
       itemLocal: {
         name: "",
         company_id: null,
-        skills: []
+        skills: [],
       },
-      companySkills: []
+      companySkills: [],
     };
   },
   computed: {
@@ -147,7 +160,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -159,23 +172,23 @@ export default {
     },
     validateForm() {
       return !this.errors.any() && this.itemLocal.name != "";
-    }
+    },
   },
   methods: {
     clearFields() {
       this.itemLocal = {
         name: "",
         company_id: null,
-        skills: []
+        skills: [],
       };
     },
     selectCompanySkills(item) {
       this.companySkills = this.companiesData.find(
-        company => company.id === item
+        (company) => company.id === item
       ).skills;
     },
     addItem() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         if (result) {
           this.$store
             .dispatch(
@@ -190,23 +203,23 @@ export default {
                 text: `"${this.itemLocal.name}" ajoutée avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "success"
+                color: "success",
               });
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
               });
             });
         }
       });
-    }
-  }
+    },
+  },
 };
 </script>
 

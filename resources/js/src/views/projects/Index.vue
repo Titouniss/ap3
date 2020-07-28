@@ -14,64 +14,66 @@
       <div class="flex flex-wrap items-center">
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
-          <vs-dropdown vs-trigger-click class="cursor-pointer">
-            <div
-              class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
-            >
-              <span
-                class="mr-2"
-              >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ projectsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : projectsData.length }} of {{ projectsData.length }}</span>
-              <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-            </div>
-            <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
-            <vs-dropdown-menu>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
-                <span>10</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
-                <span>20</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
-                <span>25</span>
-              </vs-dropdown-item>
-              <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
-                <span>30</span>
-              </vs-dropdown-item>
-            </vs-dropdown-menu>
-          </vs-dropdown>
+          <vs-row type="flex">
+            <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
+
+            <!-- ACTION - DROPDOWN -->
+            <vs-dropdown vs-trigger-click class="cursor-pointer">
+              <div
+                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+              >
+                <span class="mr-2 leading-none">Actions</span>
+                <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+              </div>
+
+              <vs-dropdown-menu>
+                <vs-dropdown-item @click="confirmDeleteRecord('delete')">
+                  <span class="flex items-center">
+                    <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <span>Supprimer</span>
+                  </span>
+                </vs-dropdown-item>
+
+                <vs-dropdown-item @click="confirmDeleteRecord('archive')">
+                  <span class="flex items-center">
+                    <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <span>Archiver</span>
+                  </span>
+                </vs-dropdown-item>
+              </vs-dropdown-menu>
+            </vs-dropdown>
+
+            <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
+            <vs-input
+              class="ml-5"
+              v-model="searchQuery"
+              @input="updateSearchQuery"
+              placeholder="Rechercher..."
+            />
+          </vs-row>
         </div>
-
-        <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-        <vs-input
-          class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
-          v-model="searchQuery"
-          @input="updateSearchQuery"
-          placeholder="Rechercher..."
-        />
-        <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
-
-        <!-- ACTION - DROPDOWN -->
         <vs-dropdown vs-trigger-click class="cursor-pointer">
           <div
-            class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+            class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span class="mr-2 leading-none">Actions</span>
+            <span
+              class="mr-2"
+            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ projectsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : projectsData.length }} sur {{ projectsData.length }}</span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
-
+          <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
           <vs-dropdown-menu>
-            <vs-dropdown-item @click="confirmDeleteRecord('delete')">
-              <span class="flex items-center">
-                <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Supprimer</span>
-              </span>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
+              <span>10</span>
             </vs-dropdown-item>
-
-            <vs-dropdown-item @click="confirmDeleteRecord('archive')">
-              <span class="flex items-center">
-                <feather-icon icon="ArchiveIcon" svgClasses="h-4 w-4" class="mr-2" />
-                <span>Archiver</span>
-              </span>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
+              <span>20</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
+              <span>25</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
+              <span>30</span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
         </vs-dropdown>
@@ -83,6 +85,7 @@
         :components="components"
         :gridOptions="gridOptions"
         class="ag-theme-material w-100 my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
         :rowData="projectsData"
@@ -122,7 +125,7 @@ import moduleCustomerManagement from "@/store/customer-management/moduleCustomer
 // Cell Renderer
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
-import CellRendererLink from './cell-renderer/CellRendererLink.vue'
+import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 
 var modelTitle = "Projet";
 
@@ -136,7 +139,7 @@ export default {
     // Cell Renderer
     CellRendererActions,
     CellRendererLink,
-    CellRendererRelations
+    CellRendererRelations,
   },
   data() {
     return {
@@ -144,57 +147,65 @@ export default {
 
       // AgGrid
       gridApi: null,
-      gridOptions: {},
+      gridOptions: {
+        localeText: { noRowsToShow: "Aucun projet" },
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
+          width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          cellRendererFramework: 'CellRendererLink'
+          width: 100,
+          cellRendererFramework: "CellRendererLink",
         },
         {
           headerName: "Date de création",
           field: "created_at",
           filter: true,
-          cellRenderer: data => {
+          width: 50,
+          cellRenderer: (data) => {
             moment.locale("fr");
             return moment(data.value).format("DD MMMM YYYY");
-          }
+          },
         },
         {
           headerName: "Avancement",
           field: "status",
-          filter: true
+          width: 50,
+          filter: true,
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          cellRendererFramework: "CellRendererRelations"
+          width: 100,
+          cellRendererFramework: "CellRendererRelations",
         },
         {
           headerName: "Actions",
           field: "transactions",
-          cellRendererFramework: "CellRendererActions"
-        }
+          width: 40,
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations
-      }
+        CellRendererRelations,
+      },
     };
   },
   computed: {
@@ -219,44 +230,47 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
     },
     confirmDeleteRecord(type) {
+      let selectedRow = this.gridApi.getSelectedRows();
+      let singleProject = selectedRow[0];
+
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
         title:
-          type === "delete" ? "Confirmer suppression" : "Confirmer archivation",
+          type === "delete" ? "Confirmer suppression" : "Confirmer archivage",
         text:
           type === "delete" && this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces projets ?`
             : type === "delete" && this.gridApi.getSelectedRows().length === 1
-            ? `Voulez vous vraiment supprimer ce projet ?`
+            ? `Voulez vous vraiment supprimer le projet ${singleProject.name} ?`
             : this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment archiver ces projets ?`
-            : `Voulez vous vraiment archiver ce projet ?`,
+            : `Voulez vous vraiment archiver le projet ${singleProject.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
-        acceptText: type === "delete" ? "Supprimer !" : "Archiver !",
-        cancelText: "Annuler"
+        acceptText: type === "delete" ? "Supprimer" : "Archiver",
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("projectManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -266,15 +280,15 @@ export default {
     },
     archiveRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("projectManagement/removeItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -293,7 +307,7 @@ export default {
             ? `Projet supprimé`
             : selectedRowLength > 1
             ? `Projets archivés`
-            : `Projet archivé`
+            : `Projet archivé`,
       });
     },
     onResize(event) {
@@ -329,6 +343,8 @@ export default {
 
       // resize columns in the grid to fit the available space
       this.gridApi.sizeColumnsToFit();
+
+      this.gridApi.showLoadingOverlay();
     }
 
     /* =================================================================
@@ -359,22 +375,25 @@ export default {
       moduleRangeManagement.isRegistered = true;
     }
     if (!moduleCustomerManagement.isRegistered) {
-      this.$store.registerModule("customerManagement", moduleCustomerManagement);
+      this.$store.registerModule(
+        "customerManagement",
+        moduleCustomerManagement
+      );
       moduleCustomerManagement.isRegistered = true;
     }
-    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
+    this.$store.dispatch("projectManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    this.$store.dispatch("customerManagement/fetchItems").catch(err => {
+    this.$store.dispatch("customerManagement/fetchItems").catch((err) => {
       console.error(err);
     });
     if (this.$store.getters.userHasPermissionTo(`read companies`)) {
-      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
         console.error(err);
       });
     }
     if (this.$store.getters.userHasPermissionTo(`read ranges`)) {
-      this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
+      this.$store.dispatch("rangeManagement/fetchItems").catch((err) => {
         console.error(err);
       });
     }
@@ -390,7 +409,7 @@ export default {
     this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("rangeManagement");
     this.$store.unregisterModule("customerManagement");
-  }
+  },
 };
 </script>
 

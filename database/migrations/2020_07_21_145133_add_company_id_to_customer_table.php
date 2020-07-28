@@ -16,7 +16,7 @@ class AddCompanyIdToCustomerTable extends Migration
         $column = Schema::hasColumn('customers', 'company_id');
         if (!$column) {
             Schema::table('customers', function (Blueprint $table) {
-                $table->unsignedBigInteger('company_id')->nullable();
+                $table->bigInteger('company_id')->nullable();
                 $table->foreign('company_id')->references('id')->on('company')->onDelete('cascade');
             });
         }

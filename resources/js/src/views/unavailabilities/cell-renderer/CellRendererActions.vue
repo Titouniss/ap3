@@ -18,6 +18,12 @@ var modelTitle = "Indisponibilité";
 export default {
   name: "CellRendererActions",
   methods: {
+    parseDateTime(dateTime) {
+      let date = dateTime.split(" ")[0];
+      let hour = dateTime.split(" ")[1];
+      hour = hour.split(":")[0] + ":" + hour.split(":")[1];
+      return date + " à " + hour;
+    },
     editRecord() {
       this.$store
         .dispatch("unavailabilityManagement/editItem", this.params.data)
@@ -31,7 +37,10 @@ export default {
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
-        text: `Vous allez supprimer cette indisponibilité`,
+        text: `Voulez vous vraiment supprimer l'indisponibilité du 
+              ${this.parseDateTime(
+                this.params.data.starts_at
+              )} au ${this.parseDateTime(this.params.data.ends_at)} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
         cancelText: "Annuler"

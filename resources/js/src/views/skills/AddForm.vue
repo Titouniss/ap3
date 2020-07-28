@@ -36,19 +36,24 @@
                   </div>
                   <vs-divider />
                   <div>
-                    <vs-select
+                    <v-select
                       v-validate="'required'"
-                      label="Société"
+                      name="company"
+                      label="name"
+                      :multiple="false"
                       v-model="itemLocal.company_id"
+                      :reduce="name => name.id"
                       class="w-full mt-5"
+                      autocomplete
+                      :options="companiesData"
                     >
-                      <vs-select-item
-                        :key="index"
-                        :value="item.id"
-                        :text="item.name"
-                        v-for="(item,index) in companiesData"
-                      />
-                    </vs-select>
+                      <template #header>
+                        <div style="opacity: .8 font-size: .85rem">Société</div>
+                      </template>
+                      <template #option="company">
+                        <span>{{`${company.name}`}}</span>
+                      </template>
+                    </v-select>
                   </div>
                 </div>
               </div>
@@ -62,6 +67,7 @@
 </template>
 
 <script>
+import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -69,14 +75,17 @@ import errorMessage from "./errorValidForm";
 Validator.localize("fr", errorMessage);
 
 export default {
+  components: {
+    vSelect,
+  },
   data() {
     return {
       activePrompt: false,
 
       itemLocal: {
         name: "",
-        company_id: null
-      }
+        company_id: null,
+      },
     };
   },
   computed: {
@@ -95,7 +104,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -104,17 +113,17 @@ export default {
           return true;
         }
       } else return true;
-    }
+    },
   },
   methods: {
     clearFields() {
       Object.assign(this.itemLocal, {
         name: "",
-        company_id: null
+        company_id: null,
       });
     },
     addSkill() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         if (result) {
           this.$store
             .dispatch(
@@ -128,23 +137,23 @@ export default {
                 text: `"${this.itemLocal.name}" ajoutée avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "success"
+                color: "success",
               });
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
               });
             });
         }
         this.clearFields();
       });
-    }
-  }
+    },
+  },
 };
 </script>

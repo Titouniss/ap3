@@ -1,43 +1,59 @@
 <template>
-    <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}">
-      <feather-icon icon="Edit3Icon" svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer" @click="editRecord" />
-      <feather-icon icon="Trash2Icon" svgClasses="h-5 w-5 hover:text-danger cursor-pointer" @click="confirmDeleteRecord" />
-    </div>
+  <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}">
+    <feather-icon
+      icon="Edit3Icon"
+      svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
+      @click="editRecord"
+    />
+    <feather-icon
+      icon="Trash2Icon"
+      svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+      @click="confirmDeleteRecord"
+    />
+  </div>
 </template>
 
 <script>
-var modelTitle = 'Tâche'
+var modelTitle = "Tâche";
 export default {
-  name: 'CellRendererActions',
+  name: "CellRendererActions",
   methods: {
-    editRecord () {
-      this.$store.dispatch("taskManagement/editItem", this.params.data)
-        .then(()   => {  })
-        .catch(err => { console.error(err)       })
+    editRecord() {
+      this.$store
+        .dispatch("taskManagement/editItem", this.params.data)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
     },
-    confirmDeleteRecord () {
+    confirmDeleteRecord() {
       this.$vs.dialog({
-        type: 'confirm',
-        color: 'danger',
-        title: 'Confirmer suppression',
-        text: `Vous allez supprimer "${this.params.data.name}"`,
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text: `Voulez vous vraiment supprimer la tâche "${this.params.data.name}"`,
         accept: this.deleteRecord,
-        acceptText: 'Supprimer',
-        cancelText: 'Annuler',
-      })
+        acceptText: "Supprimer",
+        cancelText: "Annuler"
+      });
     },
-    deleteRecord () {
-      this.$store.dispatch("taskManagement/removeItem", this.params.data.id)
-        .then(()   => { this.showDeleteSuccess() })
-        .catch(err => { console.error(err)       })
+    deleteRecord() {
+      this.$store
+        .dispatch("taskManagement/removeItem", this.params.data.id)
+        .then(() => {
+          this.showDeleteSuccess();
+        })
+        .catch(err => {
+          console.error(err);
+        });
     },
-    showDeleteSuccess () {
+    showDeleteSuccess() {
       this.$vs.notify({
-        color: 'success',
+        color: "success",
         title: modelTitle,
         text: `${modelTitle} supprimé`
-      })
+      });
     }
   }
-}
+};
 </script>

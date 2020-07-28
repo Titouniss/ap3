@@ -114,6 +114,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit companies']], function () {
             Route::post('update/{id}', 'API\CompanyController@update');
+            Route::put('restore/{id}', 'API\CompanyController@restore');
         });
         Route::group(['middleware' => ['can:delete companies']], function () {
             Route::delete('destroy/{id}', 'API\CompanyController@destroy');
@@ -155,6 +156,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit workareas']], function () {
             Route::post('update/{id}', 'API\WorkareaController@update');
+            Route::put('restore/{id}', 'API\WorkareaController@restore');
         });
         Route::group(['middleware' => ['can:delete workareas']], function () {
             Route::delete('destroy/{id}', 'API\WorkareaController@destroy');
@@ -177,6 +179,8 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::get('start/{id}', 'API\ProjectController@start');
             Route::post('store-range/{id}', 'API\ProjectController@addRange');
             Route::post('update/{id}', 'API\ProjectController@update');
+            Route::put('restore/{id}', 'API\ProjectController@restore');
+
         });
         Route::group(['middleware' => ['can:delete projects']], function () {
             Route::delete('destroy/{id}', 'API\ProjectController@destroy');
@@ -197,6 +201,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit ranges']], function () {
             Route::post('update/{id}', 'API\RangeController@update');
+            Route::put('restore/{id}', 'API\RangeController@restore');
         });
         Route::group(['middleware' => ['can:delete ranges']], function () {
             Route::delete('destroy/{id}', 'API\RangeController@destroy');
@@ -305,6 +310,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:edit customers']], function () {
             Route::post('update/{id}', 'API\CustomersController@update');
+            Route::put('restore/{id}', 'API\CustomersController@restore');
         });
         Route::group(['middleware' => ['can:delete customers']], function () {
             Route::delete('destroy/{id}', 'API\CustomersController@destroy');

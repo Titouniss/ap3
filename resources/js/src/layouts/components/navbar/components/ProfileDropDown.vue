@@ -111,7 +111,9 @@ export default {
         });
     },
     profil() {
-      this.$router.push("/users/user-edit/" + this.userId).catch(() => {});
+      this.$router
+        .push("/users/user-profil-edit/" + this.userId)
+        .catch(() => {});
     }
   }
 };
