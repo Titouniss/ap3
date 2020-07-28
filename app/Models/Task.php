@@ -29,7 +29,6 @@ class Task extends Model
     public function user()
     {
         return $this->belongsTo('App\User', 'user_id', 'id');
-
     }
 
     public function skills()
@@ -45,5 +44,15 @@ class Task extends Model
     public function previousTasks()
     {
         return $this->hasMany('App\Models\PreviousTask', 'task_id');
+    }
+
+    public function project()
+    {
+        return $this->hasOneThrough('App\Models\Project', 'App\Models\TasksBundle', 'id', 'id', 'tasks_bundle_id', 'project_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany('App\Models\Document', 'id', 'task_id');
     }
 }

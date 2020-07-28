@@ -7,7 +7,7 @@
             <v-select
               v-validate="'required'"
               name="project_id"
-              label="Projet"
+              label="name"
               :multiple="false"
               v-model="data_local.project_id"
               :reduce="name => name.id"
@@ -31,10 +31,10 @@
             <v-select
               v-validate="'required'"
               name="user_id"
-              label="Utilisateur"
+              label="lastname"
               :multiple="false"
               v-model="data_local.user_id"
-              :reduce="name => name.id"
+              :reduce="lastname => lastname.id"
               class="w-full"
               autocomplete
               :options="users"
