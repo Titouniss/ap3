@@ -222,6 +222,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
         Route::group(['middleware' => ['can:publish tasks']], function () {
             Route::post('store-comment/{id}', 'API\TaskController@addComment');
+            Route::post('update-partial/{id}', 'API\TaskController@updatePartial');
             Route::post('update/{id}', 'API\TaskController@update');
         });
         Route::group(['middleware' => ['can:delete tasks']], function () {
@@ -297,7 +298,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
     });
 
-     /***********************************************************************************/
+    /***********************************************************************************/
     /***********************************   Customers   *************************************/
     /***********************************************************************************/
     Route::prefix('customer-management')->group(function () {
