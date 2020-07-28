@@ -11,40 +11,48 @@
       <div slot="no-body" class="tabs-container px-6 pt-6">
         <vs-row vs-justify="center" vs-type="flex" vs-w="12">
           <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
-            <vs-select
+            <v-select
               v-validate="'required'"
               name="project_id"
-              label="Projet"
+              label="name"
+              :multiple="false"
               v-model="data_local.project_id"
+              :reduce="name => name.id"
               class="w-full"
+              autocomplete
+              :options="projects"
             >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.name"
-                v-for="(item,index) in projects"
-              />
-            </vs-select>
+              <template #header>
+                <div style="opacity: .8 font-size: .60rem">Projet</div>
+              </template>
+              <template #option="project">
+                <span>{{`${project.name}`}}</span>
+              </template>
+            </v-select>
             <span
               class="text-danger text-sm"
               v-show="errors.has('project_id')"
             >{{ errors.first('project_id') }}</span>
           </vs-col>
           <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6" v-if="authorizedToReadUsers">
-            <vs-select
+            <v-select
               v-validate="'required'"
               name="user_id"
-              label="Utilisateur"
+              label="lastname"
+              :multiple="false"
               v-model="data_local.user_id"
+              :reduce="lastname => lastname.id"
               class="w-full"
+              autocomplete
+              :options="users"
             >
-              <vs-select-item
-                :key="index"
-                :value="item.id"
-                :text="item.firstname + ' ' + item.lastname"
-                v-for="(item,index) in users"
-              />
-            </vs-select>
+              <template #header>
+                <div style="opacity: .8 font-size: .60rem">Utilisateur</div>
+              </template>
+              <template #option="user">
+                <span>{{`${user.firstname} ${user.lastname}`}}</span>
+              </template>
+            </v-select>
             <span
               class="text-danger text-sm"
               v-show="errors.has('user_id')"
@@ -102,6 +110,7 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
@@ -121,7 +130,7 @@ export default {
         duration: null,
         description: "",
         project_id: null,
-        user_id: user.id
+        user_id: user.id,
       },
       hours_not_found: false,
       configTimePicker: () => ({
@@ -129,19 +138,20 @@ export default {
         enableTime: true,
         locale: FrenchLocale,
         noCalendar: true,
-        defaultHour: 0
+        defaultHour: 0,
       }),
       configDatePicker: () => ({
         disableMobile: "true",
         enableTime: false,
         locale: FrenchLocale,
         altFormat: "j F Y",
-        altInput: true
-      })
+        altInput: true,
+      }),
     };
   },
   components: {
-    flatPickr
+    flatPickr,
+    vSelect,
   },
   computed: {
     authorizedToReadUsers() {
@@ -161,16 +171,16 @@ export default {
         this.data_local.date &&
         this.data_local.duration
       );
-    }
+    },
   },
   methods: {
     fetch_data(id) {
       this.$store
         .dispatch("hoursManagement/fetchItem", id)
-        .then(res => {
+        .then((res) => {
           this.data_local = res.data.success;
         })
-        .catch(err => {
+        .catch((err) => {
           if (err.response.status === 404) {
             this.hours_not_found = true;
             return;
@@ -186,7 +196,7 @@ export default {
       const payload = { ...this.data_local };
       this.$store
         .dispatch("hoursManagement/updateItem", payload)
-        .then(data => {
+        .then((data) => {
           if (data.data.error) {
             this.$vs.loading.close();
             this.$vs.notify({
@@ -195,7 +205,7 @@ export default {
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "danger",
-              time: 8000
+              time: 8000,
             });
           } else {
             this.$vs.loading.close();
@@ -204,25 +214,25 @@ export default {
               text: "Heures modifiées avec succès",
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "success"
+              color: "success",
             });
             this.$router.push(`/${modelPlurial}`).catch(() => {});
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
-    }
+    },
   },
   created() {
     if (!moduleHoursManagement.isRegistered) {
@@ -250,6 +260,6 @@ export default {
     this.$store.unregisterModule("hoursManagement");
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("userManagement");
-  }
+  },
 };
 </script>
