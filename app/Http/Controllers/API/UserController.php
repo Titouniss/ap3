@@ -42,6 +42,9 @@ class UserController extends Controller
     {
         if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
             $user = Auth::user();
+            if ($user->company_id && !Company::where("id", $user->company_id)->exists()) {
+                return response()->json(['success' => false, 'error' => 'Account deactivated']);
+            }
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
             }

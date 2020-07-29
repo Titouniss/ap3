@@ -48,6 +48,7 @@
         :weekends="calendarWeekends"
         :events="calendarEvents"
         :firstDay="1"
+        :weekNumbers="true"
         @eventDrop="handleEventDrop"
         @dateClick="handleDateClick"
         @eventClick="handleEventClick"
@@ -77,6 +78,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 
 // Component
 import EditForm from "./EditForm.vue";
@@ -400,7 +402,8 @@ export default {
     }
   },
   created() {
-    console.log(["state", this.$store.state]);
+    // console.log(["state", this.$store.state]);
+    console.log(this.$route.query.type);
 
     // Add store management
     if (!moduleScheduleManagement.isRegistered) {
