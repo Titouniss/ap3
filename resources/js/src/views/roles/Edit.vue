@@ -73,12 +73,15 @@
               -->
               <th
                 class="font-semibold text-base text-left px-3 py-2"
-                v-for="heading in ['Module', 'Consulter','Créer', 'Editer',  'Supprimer']"
+                v-for="heading in ['Module', 'Tout', 'Consulter', 'Créer', 'Editer', 'Supprimer']"
                 :key="heading"
               >{{ heading }}</th>
             </tr>
             <tr v-for="(items,index) in permissions" :key="index">
               <td class="px-3 py-2">{{ capitalizeFirstLetter(index) }}</td>
+              <td class="px-3 py-2">
+                <vs-checkbox v-on:change="checkAll(items)" :checked="checkOrNot(items)" />
+              </td>
               <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
                 <vs-checkbox v-model="selected[item.id]" />
               </td>
@@ -143,7 +146,6 @@ export default {
         permissions = permissionsStore.reduce(function (acc, valeurCourante) {
           let permissionName = valeurCourante.name;
           let titles = permissionName.split(" ");
-
           if (!acc) {
             acc = {};
           }
@@ -156,7 +158,6 @@ export default {
           return acc;
         }, {});
       }
-
       return permissions;
     },
     validateForm() {
@@ -170,10 +171,12 @@ export default {
         .then((res) => {
           this.role_data = res.data.success;
           if (this.role_data && this.role_data.permissions.length) {
+            console.log(["permissions", this.role_data.permissions]);
             this.role_data.permissions.forEach((permission) => {
               this.selected[permission.id] = true;
             });
           }
+          console.log(["this.selected_FETCH", this.selected]);
         })
         .catch((err) => {
           if (err.response.status === 404) {
@@ -187,6 +190,7 @@ export default {
       /* eslint-disable */
       if (!this.validateForm) return;
       this.$vs.loading();
+      console.log(["this.selected", this.selected]);
       this.role_data.permissions = _.keys(_.pickBy(this.selected));
 
       const payload = { ...this.role_data };
@@ -217,6 +221,61 @@ export default {
             color: "danger",
           });
         });
+    },
+    checkOrNot(items) {
+      let items_id = [];
+
+      // get items_id
+      for (const perm in items) {
+        items_id.push(items[perm].id);
+      }
+      console.log(["items_id", items_id]);
+
+      // Check if already full check
+      let missPerm = false;
+      items_id.forEach((id) => {
+        if (!this.selected[id] === true) {
+          missPerm = true;
+        }
+      });
+
+      if (missPerm) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    checkAll(items) {
+      let items_id = [];
+
+      // get items_id
+      for (const perm in items) {
+        items_id.push(items[perm].id);
+      }
+
+      // Check if already full check
+      let missPerm = false;
+      items_id.forEach((id) => {
+        if (!this.selected[id] === true) {
+          missPerm = true;
+        }
+      });
+
+      if (missPerm) {
+        // add items_id if not already in
+        items_id.forEach((id) => {
+          if (!this.selected[id] === true) {
+            this.selected.splice(id, 1, true);
+          }
+        });
+      } else {
+        // remove items_id from selected
+        items_id.forEach((id) => {
+          if (this.selected[id] === true) {
+            this.selected.splice(id, 1, false);
+          }
+        });
+      }
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
