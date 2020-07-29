@@ -77,10 +77,14 @@ class HoursController extends Controller
                     $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
                     return $morning->add($afternoon)->totalHours;
                 })->sum();
+                $workDayHours = HoursController::getTargetWorkHours($userId, $request->date);
 
                 $defaultWorkHours = 0;
                 if ($request->date) {
                     switch ($request->period_type) {
+                        case 'day':
+                            $defaultWorkHours = $workDayHours;
+                            break;
                         case 'week':
                             $defaultWorkHours = $workWeekHours;
                             break;
