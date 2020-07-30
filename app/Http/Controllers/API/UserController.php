@@ -180,7 +180,7 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        if (User::where('email', $input['email'])->exists()) {
+        if (User::where('email', $input['email'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
         $input = $request->all();
@@ -283,7 +283,7 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        if (User::where('email', $arrayRequest['email'])->exists()) {
+        if (User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
@@ -342,7 +342,7 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        if ($user->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->exists()) {
+        if ($user->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
