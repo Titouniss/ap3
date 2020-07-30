@@ -454,6 +454,21 @@ class UserController extends Controller
     }
 
     /**
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function restore($id)
+    {
+        $item = User::withTrashed()->findOrFail($id)->restore();
+        if ($item) {
+            $item = User::where('id', $id)->first();
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
+
+    /**
      * delete item api
      *
      * @return \Illuminate\Http\Response
@@ -462,8 +477,7 @@ class UserController extends Controller
     {
         $item = User::findOrFail($id);
         $item->delete();
-
-        return '';
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -477,6 +491,6 @@ class UserController extends Controller
         $item = User::withTrashed()->findOrFail(intval($id));
 
         $item->forceDelete();
-        return '';
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

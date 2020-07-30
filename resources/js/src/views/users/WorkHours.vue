@@ -48,26 +48,23 @@
               v-model="data_local.work_hours[day].afternoon_ends_at"
             />
           </vs-col>
-          <vs-col vs-w="1" vs-xs="12">
+          <vs-col vs-w="1" vs-xs="12" vs-align="center" vs-type="flex">
             <vs-row vs-justify="center" vs-type="flex">
               <vs-col vs-w="6" vs-justify="center" vs-type="flex">
-                <vs-button
-                  color="dark"
-                  type="flat"
-                  icon-pack="feather"
-                  icon="icon-x"
+                <feather-icon
+                  v-if="day !== 'Dimanche'"
+                  icon="XIcon"
+                  svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                   @click="emptyRow(day)"
-                ></vs-button>
+                />
               </vs-col>
               <vs-col vs-w="6" vs-justify="center" vs-type="flex">
-                <vs-button
+                <feather-icon
                   v-if="day !== 'Dimanche'"
-                  color="dark"
-                  type="flat"
-                  icon-pack="feather"
-                  icon="icon-corner-right-down"
+                  icon="CornerRightDownIcon"
+                  svgClasses="h-5 w-5 hover:text-primary cursor-pointer"
                   @click="copyRowDown(day)"
-                ></vs-button>
+                />
               </vs-col>
             </vs-row>
           </vs-col>
