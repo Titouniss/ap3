@@ -153,11 +153,14 @@
         </div>
       </div>
     </vx-card>
+
+    <work-hours :data="itemLocal" />
   </div>
 </template>
 
 <script>
 import vSelect from "vue-select";
+import WorkHours from "./WorkHours";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
@@ -171,6 +174,7 @@ var modelPlurial = "users";
 export default {
   components: {
     vSelect,
+    WorkHours
   },
   data() {
     return {
@@ -181,10 +185,11 @@ export default {
         company_id: null,
         roles: [],
         skills: [],
+        work_hours: []
       },
       company_id_temps: null,
       companySkills: [],
-      selected: [],
+      selected: []
     };
   },
   computed: {
@@ -199,13 +204,12 @@ export default {
     skillsData() {
       return this.$store.state.skillManagement.skills;
     },
-
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -224,7 +228,7 @@ export default {
         this.itemLocal.company_id != null &&
         this.itemLocal.roles.length > 0
       );
-    },
+    }
   },
   methods: {
     authorizedTo(action, model = "users") {
@@ -238,7 +242,7 @@ export default {
         this.itemLocal.skills = [];
       }
       this.companySkills = this.companiesData.find(
-        (company) => company.id === item
+        company => company.id === item
       ).skills;
     },
     fetch_data(id) {
@@ -246,25 +250,26 @@ export default {
 
       this.$store
         .dispatch("userManagement/fetchItem", id)
-        .then((res) => {
+        .then(res => {
           let item = res.data.success;
 
           // Get skills
           let skill_ids = [];
           if (item.skills.length > 0) {
-            item.skills.forEach((element) => {
+            item.skills.forEach(element => {
               skill_ids.push(element.id);
             });
           }
           item.skills = skill_ids;
           this.itemLocal = item;
+          console.log(this.itemLocal);
           if (item.company_id) {
             this.company_id_temps = item.company_id;
             this.selectCompanySkills(item.company_id);
           }
           this.$vs.loading.close();
         })
-        .catch((err) => {
+        .catch(err => {
           this.$vs.loading.close();
           console.error(err);
         });
@@ -272,7 +277,9 @@ export default {
     submitTodo() {
       this.$vs.loading();
       this.itemLocal.roles = [
-        this.$store.getters["roleManagement/getItem"](this.itemLocal.roles[0]),
+        this.$store.getters["roleManagement/getItem"](
+          this.itemLocal.roles[0].id
+        )
       ];
       this.$store
         .dispatch("userManagement/updateItem", this.itemLocal)
@@ -284,23 +291,23 @@ export default {
             text: "Utilisateur modifier avec succès",
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success",
+            color: "success"
           });
         })
-        .catch((error) => {
+        .catch(error => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger",
+            color: "danger"
           });
         });
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
-    },
+    }
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
@@ -345,6 +352,6 @@ export default {
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");
-  },
+  }
 };
 </script>
