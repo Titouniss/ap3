@@ -25,7 +25,7 @@
                     ref="password"
                     type="password"
                     data-vv-validate-on="blur"
-                    v-validate="'required|min:8|max:10'"
+                    v-validate="'required|min:8|max:50'"
                     name="password"
                     label-placeholder="Mot de passe"
                     placeholder="Mot de passe"
@@ -35,7 +35,7 @@
                   <span class="text-danger text-sm">{{ errors.first('password') }}</span>
                   <vs-input
                     type="password"
-                    v-validate="'min:8|max:10|confirmed:password'"
+                    v-validate="'required|min:8|max:50|confirmed:password'"
                     data-vv-validate-on="blur"
                     data-vv-as="password"
                     name="c_password"
