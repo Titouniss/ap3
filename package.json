@@ -87,6 +87,7 @@
         "@fullcalendar/daygrid": "^4.4.2",
         "@fullcalendar/interaction": "^4.4.2",
         "@fullcalendar/list": "^4.4.2",
+        "@fullcalendar/moment": "^4.4.2",
         "@fullcalendar/timegrid": "^4.4.2",
         "@fullcalendar/vue": "^4.4.2",
         "js-cookie": "^2.2.1",

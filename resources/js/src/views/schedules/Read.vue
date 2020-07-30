@@ -1,68 +1,73 @@
 <template>
-  <div>
-    <router-link
-      :to="'/schedules'"
-      class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3"
-    >
-      <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
-      <span class="ml-2">Retour à la liste des plannings</span>
-    </router-link>
+    <div>
+        <router-link
+            :to="'/schedules'"
+            class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3"
+        >
+            <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
+            <span class="ml-2">Retour à la liste des plannings</span>
+        </router-link>
 
-    <div class="vx-card w-full p-6">
-      <h2 class="mb-4 color-primary">{{scheduleTitle}}</h2>
-      <!-- <div>
+        <div class="vx-card w-full p-6">
+            <h2 class="mb-4 color-primary">{{ scheduleTitle }}</h2>
+            <!-- <div>
         <button @click="toggleWeekends">toggle weekends</button>
         <button @click="gotoPast">go to a date in the past</button>
         (also, click a date/time to add an event)
       </div>-->
-      <add-form
-        :activeAddPrompt="this.activeAddPrompt"
-        :handleClose="handleClose"
-        :dateData="this.dateData"
-        :project_data="project_data"
-        :tasks_list="this.tasksEvent"
-        :customTask="false"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-      />
-      <FullCalendar
-        locale="fr"
-        class="demo-app-calendar border-c"
-        ref="fullCalendar"
-        defaultView="timeGridWeek"
-        :editable="true"
-        :header="{
-          left: 'prev today next',
-          center: 'dayGridMonth, timeGridWeek, timeGridDay',
-          right: 'title'
-        }"
-        :buttonText="{
-          today: 'Aujourd\'hui',
-          month: 'Mois',
-          week: 'Semaine',
-          day: 'Jour',
-          list: 'Liste'
-        }"
-        :allDaySlot="false"
-        :plugins="calendarPlugins"
-        :weekends="calendarWeekends"
-        :events="calendarEvents"
-        :firstDay="1"
-        :weekNumbers="true"
-        @eventDrop="handleEventDrop"
-        @dateClick="handleDateClick"
-        @eventClick="handleEventClick"
-        @eventResize="handleEventResize"
-      />
-      <edit-form
-        :reload="calendarEvents"
-        :itemId="itemIdToEdit"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedToEdit "
-      />
+            <add-form
+                :activeAddPrompt="this.activeAddPrompt"
+                :handleClose="handleClose"
+                :dateData="this.dateData"
+                :project_data="project_data"
+                :tasks_list="this.tasksEvent"
+                :customTask="false"
+                :type="this.$route.query.type"
+                :idType="parseInt(this.$route.query.id, 10)"
+            />
+            <FullCalendar
+                locale="fr"
+                class="demo-app-calendar border-c"
+                ref="fullCalendar"
+                defaultView="timeGridWeek"
+                :editable="true"
+                :header="{
+                    left: 'prev today next',
+                    center: 'dayGridMonth, timeGridWeek, timeGridDay',
+                    right: 'title'
+                }"
+                :views="{
+                    timeGridWeek: {
+                        titleFormat: '{dddd DD MMM}, [Semaine] w, YYYY'
+                    }
+                }"
+                :buttonText="{
+                    today: 'Aujourd\'hui',
+                    month: 'Mois',
+                    week: 'Semaine',
+                    day: 'Jour',
+                    list: 'Liste'
+                }"
+                :allDaySlot="false"
+                :plugins="calendarPlugins"
+                :weekends="calendarWeekends"
+                :events="calendarEvents"
+                :firstDay="1"
+                :weekNumbers="true"
+                @eventDrop="handleEventDrop"
+                @dateClick="handleDateClick"
+                @eventClick="handleEventClick"
+                @eventResize="handleEventResize"
+            />
+            <edit-form
+                :reload="calendarEvents"
+                :itemId="itemIdToEdit"
+                :type="this.$route.query.type"
+                :idType="parseInt(this.$route.query.id, 10)"
+                v-if="itemIdToEdit && authorizedToEdit"
+            />
+        </div>
     </div>
-  </div>
 </template>
 
 <script>
@@ -73,6 +78,7 @@ import FullCalendar from "@fullcalendar/vue";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import momentPlugin from "@fullcalendar/moment";
 
 // Store Module
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
@@ -94,451 +100,465 @@ var modelPlurial = "schedules";
 var modelTitle = "Plannings";
 
 export default {
-  components: {
-    EditForm,
-    AddForm,
-    FullCalendar // make the <FullCalendar> tag available
-  },
-  data: function() {
-    return {
-      calendarPlugins: [
-        // plugins must be defined in the JS
-        dayGridPlugin,
-        timeGridPlugin,
-        interactionPlugin // needed for dateClick
-      ],
-      activeAddPrompt: false,
-      scheduleTitle: "",
-      dateData: {},
-      taskBundle: null,
-      calendarWeekends: true,
-      customButtons: {
-        AddEventBtn: {
-          text: "custom!",
-          click: function() {
-            alert("clicked the custom button!");
-          }
-        }
-      }
-    };
-  },
-  computed: {
-    itemIdToEdit() {
-      return this.$store.state.scheduleManagement.event.id || -1;
+    components: {
+        EditForm,
+        AddForm,
+        FullCalendar // make the <FullCalendar> tag available
     },
-    calendarEvents() {
-      // Get all task and parse to show
-      var eventsParse = [];
-      if (this.$route.query.type === "projects") {
-        if (this.tasksEvent !== []) {
-          this.tasksEvent.forEach(t => {
-            eventsParse.push({
-              id: t.id,
-              title: t.name,
-              start: t.date,
-              estimated_time: t.estimated_time,
-              order: t.order,
-              description: t.description,
-              time_spent: t.time_spent,
-              workarea_id: t.workarea_id,
-              status: t.status,
-              end: moment(t.date)
-                .add(t.estimated_time, "hour")
-                .format("YYYY-MM-DD HH:mm:ss"),
-              user_id: t.user_id,
-              project_id: parseInt(this.$route.query.id, 10)
+    data: function() {
+        return {
+            calendarPlugins: [
+                // plugins must be defined in the JS
+                dayGridPlugin,
+                timeGridPlugin,
+                interactionPlugin, // needed for dateClick
+                momentPlugin
+            ],
+            activeAddPrompt: false,
+            scheduleTitle: "",
+            dateData: {},
+            taskBundle: null,
+            calendarWeekends: true,
+            customButtons: {
+                AddEventBtn: {
+                    text: "custom!",
+                    click: function() {
+                        alert("clicked the custom button!");
+                    }
+                }
+            }
+        };
+    },
+    computed: {
+        itemIdToEdit() {
+            return this.$store.state.scheduleManagement.event.id || -1;
+        },
+        calendarEvents() {
+            // Get all task and parse to show
+            var eventsParse = [];
+            if (this.$route.query.type === "projects") {
+                if (this.tasksEvent !== []) {
+                    this.tasksEvent.forEach(t => {
+                        eventsParse.push({
+                            id: t.id,
+                            title: t.name,
+                            start: t.date,
+                            estimated_time: t.estimated_time,
+                            order: t.order,
+                            description: t.description,
+                            time_spent: t.time_spent,
+                            workarea_id: t.workarea_id,
+                            status: t.status,
+                            end: moment(t.date)
+                                .add(t.estimated_time, "hour")
+                                .format("YYYY-MM-DD HH:mm:ss"),
+                            user_id: t.user_id,
+                            project_id: parseInt(this.$route.query.id, 10)
+                        });
+                    });
+                }
+            } else if (this.$route.query.type === "users") {
+                if (this.tasksEvent !== []) {
+                    this.tasksEvent.forEach(t => {
+                        if (
+                            t.user_id.toString() === this.$route.query.id ||
+                            t.user_id === this.$route.query.id
+                        ) {
+                            // Get project id
+                            let project_id = null;
+                            this.$store.state.projectManagement.projects.forEach(
+                                p => {
+                                    p.tasks_bundles.forEach(tb => {
+                                        if (t.tasks_bundle_id === tb.id) {
+                                            project_id = tb.project_id;
+                                        }
+                                    });
+                                }
+                            );
+
+                            eventsParse.push({
+                                id: t.id,
+                                title: t.name,
+                                start: t.date,
+                                estimated_time: t.estimated_time,
+                                order: t.order,
+                                description: t.description,
+                                time_spent: t.time_spent,
+                                workarea_id: t.workarea_id,
+                                status: t.status,
+                                end: moment(t.date)
+                                    .add(t.estimated_time, "hour")
+                                    .format("YYYY-MM-DD HH:mm:ss"),
+                                user_id: t.user_id,
+                                project_id: project_id
+                            });
+                        }
+                    });
+                }
+            } else if (this.$route.query.type === "workarea") {
+                if (this.tasksEvent !== []) {
+                    console.log(["this.tasksEvent", this.tasksEvent]);
+
+                    this.tasksEvent.forEach(t => {
+                        if (
+                            t.workarea_id !== null &&
+                            (t.workarea_id.toString() ===
+                                this.$route.query.id ||
+                                t.workarea_id === this.$route.query.id)
+                        ) {
+                            // Get project id
+                            let project_id = null;
+                            this.$store.state.projectManagement.projects.forEach(
+                                p => {
+                                    p.tasks_bundles.forEach(tb => {
+                                        if (t.tasks_bundle_id === tb.id) {
+                                            project_id = tb.project_id;
+                                        }
+                                    });
+                                }
+                            );
+
+                            eventsParse.push({
+                                id: t.id,
+                                title: t.name,
+                                start: t.date,
+                                estimated_time: t.estimated_time,
+                                order: t.order,
+                                description: t.description,
+                                time_spent: t.time_spent,
+                                workarea_id: t.workarea_id,
+                                status: t.status,
+                                end: moment(t.date)
+                                    .add(t.estimated_time, "hour")
+                                    .format("YYYY-MM-DD HH:mm:ss"),
+                                user_id: t.user_id,
+                                project_id: project_id
+                            });
+                        }
+                    });
+                }
+            }
+
+            this.$store
+                .dispatch("scheduleManagement/addEvents", eventsParse)
+                .catch(err => {
+                    this.manageErrors(err);
+                });
+
+            return eventsParse;
+        },
+        authorizedToEdit() {
+            return (
+                this.$store.getters.userHasPermissionTo(
+                    `edit ${modelPlurial}`
+                ) > -1
+            );
+        },
+        tasksEvent() {
+            console.log(["tasksEvent", this.$store.state.taskManagement.tasks]);
+
+            return this.$store.state.taskManagement
+                ? this.$store.state.taskManagement.tasks
+                : [];
+        },
+        project_data() {
+            if (this.$route.query.type === "projects") {
+                var project_data = this.$store.state.projectManagement.projects.find(
+                    p => (p.id = parseInt(this.$route.query.id, 10))
+                );
+                console.log(["ICI", project_data]);
+
+                if (project_data) {
+                    return project_data;
+                }
+            } else {
+                return null;
+            }
+        },
+        user_data() {
+            var user_data = this.$store.state.userManagement.users.find(
+                u => (u.id = this.$route.query.id)
+            );
+            return user_data;
+        },
+        workarea_data() {
+            var workarea_data = this.$store.state.workareaManagement.workareas.find(
+                w => (w.id = this.$route.query.id)
+            );
+            return workarea_data;
+        }
+    },
+    methods: {
+        refresh() {
+            // if (this.$route.query.type === "projects") {
+            //   console.log("Planning d'un projet");
+            //   this.$store
+            //     .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
+            //     .catch(err => {
+            //       this.manageErrors(err);
+            //     });
+            // }
+        },
+        toggleWeekends() {
+            this.calendarWeekends = !this.calendarWeekends; // update a property
+        },
+        gotoPast() {
+            let calendarApi = this.$refs.fullCalendar.getApi(); // from the ref="..."
+            calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
+        },
+        handleDateClick(arg) {
+            this.activeAddPrompt = true;
+            this.dateData = arg;
+        },
+        handleEventClick(arg) {
+            var targetEvent = this.calendarEvents.find(
+                event => event.id.toString() === arg.event.id
+            );
+
+            this.$store
+                .dispatch("scheduleManagement/editEvent", targetEvent)
+                .catch(err => {
+                    console.error(err);
+                });
+        },
+        handleEventDrop(arg) {
+            var itemTemp = this.calendarEvents.find(
+                e => e.id.toString() === arg.event.id
+            );
+            //Parse new item to update task
+
+            var itemToSave = {
+                id: itemTemp.id,
+                name: itemTemp.title,
+                date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                estimated_time: itemTemp.estimated_time,
+                order: itemTemp.order,
+                description: itemTemp.description,
+                time_spent: itemTemp.time_spent,
+                workarea_id: itemTemp.workarea_id,
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                status: itemTemp.status,
+                from: "schedule"
+            };
+
+            this.$store
+                .dispatch("taskManagement/updateItem", itemToSave)
+                .then(data => {
+                    if (data && data.status === 200) {
+                        //this.refresh();
+                    } else {
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
+        handleEventResize(arg) {
+            var itemTemp = this.calendarEvents.find(
+                e => e.id.toString() === arg.event.id
+            );
+
+            //Parse new item to update task
+
+            var start = moment(arg.event.start);
+            var end = moment(arg.event.end);
+
+            var itemToSave = {
+                id: itemTemp.id,
+                name: itemTemp.title,
+                date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                estimated_time: end.diff(start, "hours"),
+                order: itemTemp.order,
+                description: itemTemp.description,
+                time_spent: itemTemp.time_spent,
+                workarea_id: itemTemp.workarea_id,
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                status: itemTemp.status,
+                from: "schedule"
+            };
+
+            this.$store
+                .dispatch("taskManagement/updateItem", itemToSave)
+                .then(data => {
+                    if (data && data.status === 200) {
+                        //this.refresh();
+                    } else {
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
+        handleClose() {
+            this.refresh();
+            (this.activeAddPrompt = false), (this.dateData = {});
+        }
+    },
+    mounted() {
+        if (this.$route.query.type === "projects") {
+            let project = this.$store.state.projectManagement.projects.find(
+                p => p.id === parseInt(this.$route.query.id, 10)
+            );
+            this.scheduleTitle = "Planning du projet : " + project.name;
+        } else if (this.$route.query.type === "users") {
+            let user = this.$store.state.userManagement.users.find(
+                u => u.id === parseInt(this.$route.query.id, 10)
+            );
+            this.scheduleTitle =
+                "Planning de l'utilisateur : " +
+                user.firstname +
+                " " +
+                user.lastname;
+        } else if (this.$route.query.type === "workarea") {
+            let workarea = this.$store.state.workareaManagement.workareas.find(
+                w => w.id === parseInt(this.$route.query.id, 10)
+            );
+            this.scheduleTitle = "Planning de l'îlot : " + workarea.name;
+        }
+    },
+    created() {
+        // console.log(["state", this.$store.state]);
+        console.log(this.$route.query.type);
+
+        // Add store management
+        if (!moduleScheduleManagement.isRegistered) {
+            this.$store.registerModule(
+                "scheduleManagement",
+                moduleScheduleManagement
+            );
+            moduleScheduleManagement.isRegistered = true;
+        }
+        if (!moduleTaskManagement.isRegistered) {
+            this.$store.registerModule("taskManagement", moduleTaskManagement);
+            moduleTaskManagement.isRegistered = true;
+        }
+        if (!moduleSkillManagement.isRegistered) {
+            this.$store.registerModule(
+                "skillManagement",
+                moduleSkillManagement
+            );
+            moduleSkillManagement.isRegistered = true;
+        }
+
+        //this.$store.state.taskManagement.tasks = [];
+
+        if (this.$route.query.type === "projects") {
+            console.log("je passe");
+
+            var id_bundle = null;
+
+            this.$store.state.projectManagement.projects.forEach(p => {
+                p.tasks_bundles.forEach(t => {
+                    if (t.project_id === parseInt(this.$route.query.id, 10)) {
+                        id_bundle = t.id;
+                    }
+                });
             });
-          });
-        }
-      } else if (this.$route.query.type === "users") {
-        if (this.tasksEvent !== []) {
-          this.tasksEvent.forEach(t => {
-            if (
-              t.user_id.toString() === this.$route.query.id ||
-              t.user_id === this.$route.query.id
-            ) {
-              // Get project id
-              let project_id = null;
-              this.$store.state.projectManagement.projects.forEach(p => {
-                p.tasks_bundles.forEach(tb => {
-                  if (t.tasks_bundle_id === tb.id) {
-                    project_id = tb.project_id;
-                  }
-                });
-              });
+            console.log(["id_bundle", id_bundle]);
 
-              eventsParse.push({
-                id: t.id,
-                title: t.name,
-                start: t.date,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: moment(t.date)
-                  .add(t.estimated_time, "hour")
-                  .format("YYYY-MM-DD HH:mm:ss"),
-                user_id: t.user_id,
-                project_id: project_id
-              });
+            if (id_bundle != null) {
+                this.$store
+                    .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+                    .catch(err => {
+                        this.manageErrors(err);
+                    });
             }
-          });
+        } else if (this.$route.query.type === "users") {
+            this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+                this.manageErrors(err);
+            });
+        } else if (this.$route.query.type === "workarea") {
+            this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+                this.manageErrors(err);
+            });
         }
-      } else if (this.$route.query.type === "workarea") {
-        if (this.tasksEvent !== []) {
-          console.log(["this.tasksEvent", this.tasksEvent]);
-
-          this.tasksEvent.forEach(t => {
-            if (
-              t.workarea_id !== null &&
-              (t.workarea_id.toString() === this.$route.query.id ||
-                t.workarea_id === this.$route.query.id)
-            ) {
-              // Get project id
-              let project_id = null;
-              this.$store.state.projectManagement.projects.forEach(p => {
-                p.tasks_bundles.forEach(tb => {
-                  if (t.tasks_bundle_id === tb.id) {
-                    project_id = tb.project_id;
-                  }
-                });
-              });
-
-              eventsParse.push({
-                id: t.id,
-                title: t.name,
-                start: t.date,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: moment(t.date)
-                  .add(t.estimated_time, "hour")
-                  .format("YYYY-MM-DD HH:mm:ss"),
-                user_id: t.user_id,
-                project_id: project_id
-              });
-            }
-          });
-        }
-      }
-
-      this.$store
-        .dispatch("scheduleManagement/addEvents", eventsParse)
-        .catch(err => {
-          this.manageErrors(err);
-        });
-
-      return eventsParse;
-    },
-    authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
-    },
-    tasksEvent() {
-      console.log(["tasksEvent", this.$store.state.taskManagement.tasks]);
-
-      return this.$store.state.taskManagement
-        ? this.$store.state.taskManagement.tasks
-        : [];
-    },
-    project_data() {
-      if (this.$route.query.type === "projects") {
-        var project_data = this.$store.state.projectManagement.projects.find(
-          p => (p.id = parseInt(this.$route.query.id, 10))
-        );
-        console.log(["ICI", project_data]);
-
-        if (project_data) {
-          return project_data;
-        }
-      } else {
-        return null;
-      }
-    },
-    user_data() {
-      var user_data = this.$store.state.userManagement.users.find(
-        u => (u.id = this.$route.query.id)
-      );
-      return user_data;
-    },
-    workarea_data() {
-      var workarea_data = this.$store.state.workareaManagement.workareas.find(
-        w => (w.id = this.$route.query.id)
-      );
-      return workarea_data;
-    }
-  },
-  methods: {
-    refresh() {
-      // if (this.$route.query.type === "projects") {
-      //   console.log("Planning d'un projet");
-      //   this.$store
-      //     .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
-      //     .catch(err => {
-      //       this.manageErrors(err);
-      //     });
-      // }
-    },
-    toggleWeekends() {
-      this.calendarWeekends = !this.calendarWeekends; // update a property
-    },
-    gotoPast() {
-      let calendarApi = this.$refs.fullCalendar.getApi(); // from the ref="..."
-      calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
-    },
-    handleDateClick(arg) {
-      this.activeAddPrompt = true;
-      this.dateData = arg;
-    },
-    handleEventClick(arg) {
-      var targetEvent = this.calendarEvents.find(
-        event => event.id.toString() === arg.event.id
-      );
-
-      this.$store
-        .dispatch("scheduleManagement/editEvent", targetEvent)
-        .catch(err => {
-          console.error(err);
-        });
-    },
-    handleEventDrop(arg) {
-      var itemTemp = this.calendarEvents.find(
-        e => e.id.toString() === arg.event.id
-      );
-      //Parse new item to update task
-
-      var itemToSave = {
-        id: itemTemp.id,
-        name: itemTemp.title,
-        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-        estimated_time: itemTemp.estimated_time,
-        order: itemTemp.order,
-        description: itemTemp.description,
-        time_spent: itemTemp.time_spent,
-        workarea_id: itemTemp.workarea_id,
-        user_id: itemTemp.user_id,
-        project_id: itemTemp.project_id,
-        status: itemTemp.status,
-        from: "schedule"
-      };
-
-      this.$store
-        .dispatch("taskManagement/updateItem", itemToSave)
-        .then(data => {
-          if (data && data.status === 200) {
-            //this.refresh();
-          } else {
-          }
-        })
-        .catch(err => {
-          console.error(err);
-        });
-    },
-    handleEventResize(arg) {
-      var itemTemp = this.calendarEvents.find(
-        e => e.id.toString() === arg.event.id
-      );
-
-      //Parse new item to update task
-
-      var start = moment(arg.event.start);
-      var end = moment(arg.event.end);
-
-      var itemToSave = {
-        id: itemTemp.id,
-        name: itemTemp.title,
-        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-        estimated_time: end.diff(start, "hours"),
-        order: itemTemp.order,
-        description: itemTemp.description,
-        time_spent: itemTemp.time_spent,
-        workarea_id: itemTemp.workarea_id,
-        user_id: itemTemp.user_id,
-        project_id: itemTemp.project_id,
-        status: itemTemp.status,
-        from: "schedule"
-      };
-
-      this.$store
-        .dispatch("taskManagement/updateItem", itemToSave)
-        .then(data => {
-          if (data && data.status === 200) {
-            //this.refresh();
-          } else {
-          }
-        })
-        .catch(err => {
-          console.error(err);
-        });
-    },
-    handleClose() {
-      this.refresh();
-      (this.activeAddPrompt = false), (this.dateData = {});
-    }
-  },
-  mounted() {
-    if (this.$route.query.type === "projects") {
-      let project = this.$store.state.projectManagement.projects.find(
-        p => p.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle = "Planning du projet : " + project.name;
-    } else if (this.$route.query.type === "users") {
-      let user = this.$store.state.userManagement.users.find(
-        u => u.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle =
-        "Planning de l'utilisateur : " + user.firstname + " " + user.lastname;
-    } else if (this.$route.query.type === "workarea") {
-      let workarea = this.$store.state.workareaManagement.workareas.find(
-        w => w.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle = "Planning de l'îlot : " + workarea.name;
-    }
-  },
-  created() {
-    // console.log(["state", this.$store.state]);
-    console.log(this.$route.query.type);
-
-    // Add store management
-    if (!moduleScheduleManagement.isRegistered) {
-      this.$store.registerModule(
-        "scheduleManagement",
-        moduleScheduleManagement
-      );
-      moduleScheduleManagement.isRegistered = true;
-    }
-    if (!moduleTaskManagement.isRegistered) {
-      this.$store.registerModule("taskManagement", moduleTaskManagement);
-      moduleTaskManagement.isRegistered = true;
-    }
-    if (!moduleSkillManagement.isRegistered) {
-      this.$store.registerModule("skillManagement", moduleSkillManagement);
-      moduleSkillManagement.isRegistered = true;
-    }
-
-    //this.$store.state.taskManagement.tasks = [];
-
-    if (this.$route.query.type === "projects") {
-      console.log("je passe");
-
-      var id_bundle = null;
-
-      this.$store.state.projectManagement.projects.forEach(p => {
-        p.tasks_bundles.forEach(t => {
-          if (t.project_id === parseInt(this.$route.query.id, 10)) {
-            id_bundle = t.id;
-          }
-        });
-      });
-      console.log(["id_bundle", id_bundle]);
-
-      if (id_bundle != null) {
-        this.$store
-          .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
-          .catch(err => {
+        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
             this.manageErrors(err);
-          });
-      }
-    } else if (this.$route.query.type === "users") {
-      this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-        this.manageErrors(err);
-      });
-    } else if (this.$route.query.type === "workarea") {
-      this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-        this.manageErrors(err);
-      });
+        });
+    },
+    updated() {
+        // if (this.$route.query.type === "projects") {
+        //   console.log("je passe");
+        //   var id_bundle = null;
+        //   this.$store.state.projectManagement.projects.forEach(p => {
+        //     p.tasks_bundles.forEach(t => {
+        //       if (t.project_id === this.$route.query.id) {
+        //         id_bundle = t.id;
+        //       }
+        //     });
+        //   });
+        //   if (id_bundle != null) {
+        //     this.$store
+        //       .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+        //       .catch(err => {
+        //         this.manageErrors(err);
+        //       });
+        //   }
+        // } else if (this.$route.query.type === "users") {
+        //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        //     this.manageErrors(err);
+        //   });
+        // } else if (this.$route.query.type === "workarea") {
+        //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        //     this.manageErrors(err);
+        //   });
+        // }
+        // this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+        //   this.manageErrors(err);
+        // });
+    },
+    beforeDestroy() {
+        moduleScheduleManagement.isRegistered = false;
+        moduleTaskManagement.isRegistered = false;
+        moduleSkillManagement.isRegistered = false;
+        this.$store.unregisterModule("scheduleManagement");
+        this.$store.unregisterModule("taskManagement");
+        this.$store.unregisterModule("skillManagement");
     }
-    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-      this.manageErrors(err);
-    });
-  },
-  updated() {
-    // if (this.$route.query.type === "projects") {
-    //   console.log("je passe");
-    //   var id_bundle = null;
-    //   this.$store.state.projectManagement.projects.forEach(p => {
-    //     p.tasks_bundles.forEach(t => {
-    //       if (t.project_id === this.$route.query.id) {
-    //         id_bundle = t.id;
-    //       }
-    //     });
-    //   });
-    //   if (id_bundle != null) {
-    //     this.$store
-    //       .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
-    //       .catch(err => {
-    //         this.manageErrors(err);
-    //       });
-    //   }
-    // } else if (this.$route.query.type === "users") {
-    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-    //     this.manageErrors(err);
-    //   });
-    // } else if (this.$route.query.type === "workarea") {
-    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-    //     this.manageErrors(err);
-    //   });
-    // }
-    // this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-    //   this.manageErrors(err);
-    // });
-  },
-  beforeDestroy() {
-    moduleScheduleManagement.isRegistered = false;
-    moduleTaskManagement.isRegistered = false;
-    moduleSkillManagement.isRegistered = false;
-    this.$store.unregisterModule("scheduleManagement");
-    this.$store.unregisterModule("taskManagement");
-    this.$store.unregisterModule("skillManagement");
-  }
 };
 </script>
 
 <style>
 .demo-app {
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
-  font-size: 14px;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+    font-size: 14px;
 }
 .demo-app-top {
-  margin: 0 0 3em;
+    margin: 0 0 3em;
 }
 .demo-app-calendar {
-  margin: 0 auto;
-  max-width: 100%;
+    margin: 0 auto;
+    max-width: 100%;
 }
 
 .fc-timeGridDay-button {
-  background-color: rgb(55, 136, 216);
-  border-color: rgb(55, 136, 216);
+    background-color: rgb(55, 136, 216);
+    border-color: rgb(55, 136, 216);
 }
 
 .fc-button {
-  background-color: rgb(55, 136, 216);
-  border-color: rgb(55, 136, 216);
+    background-color: rgb(55, 136, 216);
+    border-color: rgb(55, 136, 216);
 }
 
 .fc-button-primary {
-  background-color: rgb(55, 136, 216);
-  border-color: rgb(55, 136, 216);
+    background-color: rgb(55, 136, 216);
+    border-color: rgb(55, 136, 216);
 }
 
 .fc-button-active {
-  background-color: rgb(32, 70, 168);
-  border-color: rgb(32, 71, 168);
+    background-color: rgb(32, 70, 168);
+    border-color: rgb(32, 71, 168);
 }
 
 .fc-button:hover {
-  background-color: rgb(40, 61, 116);
-  text-decoration: none;
+    background-color: rgb(40, 61, 116);
+    text-decoration: none;
 }
 
 .btnBack {
-  line-height: 2;
+    line-height: 2;
 }
 </style>
