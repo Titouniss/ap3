@@ -147,7 +147,7 @@
       <div class="vx-row">
         <div class="vx-col w-full">
           <div class="mt-8 flex flex-wrap items-center justify-end">
-            <vs-button class="ml-auto mt-2" @click="submitTodo" :disabled="!validateForm">Modifier</vs-button>
+            <vs-button class="ml-auto mt-2" @click="updateItem" :disabled="!validateForm">Modifier</vs-button>
             <vs-button class="ml-4 mt-2" type="border" color="warning" @click="back">Annuler</vs-button>
           </div>
         </div>
@@ -274,7 +274,7 @@ export default {
           console.error(err);
         });
     },
-    submitTodo() {
+    updateItem() {
       this.$vs.loading();
       this.itemLocal.roles = [
         this.$store.getters["roleManagement/getItem"](

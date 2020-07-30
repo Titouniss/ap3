@@ -6,11 +6,14 @@ export default {
             axios
                 .post("/api/user-management/store", item)
                 .then(response => {
-                    commit(
-                        "ADD_ITEM",
-                        Object.assign(item, { id: response.data.id })
-                    );
-                    resolve(response);
+                    if (response.data.success) {
+                        commit(
+                            "ADD_ITEM",
+                            Object.assign(item, { id: response.data.success })
+                        );
+                        resolve(response);
+                    }
+                    reject({ message: response.data.error });
                 })
                 .catch(error => {
                     reject(error);
@@ -51,7 +54,11 @@ export default {
             axios
                 .post(`/api/user-management/update/${payload.id}`, payload)
                 .then(response => {
-                    resolve(response);
+                    if (response.data.success) {
+                        commit("UPDATE_ITEM", response.data.success);
+                        resolve(response);
+                    }
+                    reject({ message: response.data.error });
                 })
                 .catch(error => {
                     reject(error);
@@ -137,7 +144,6 @@ export default {
             axios
                 .delete(`/api/user-management/destroy/${id}`)
                 .then(response => {
-                    console.log(["res", response]);
                     commit("UPDATE_ITEM", response.data.success);
                     resolve(response);
                 })

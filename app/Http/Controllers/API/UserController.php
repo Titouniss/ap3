@@ -167,6 +167,7 @@ class UserController extends Controller
      */
     public function register(Request $request)
     {
+        $input = $request->all();
         $validator = Validator::make($request->all(), [
             'firstname' => 'required',
             'lastname' => 'required',
@@ -177,6 +178,10 @@ class UserController extends Controller
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
+        }
+
+        if (User::where('email', $input['email'])->exists()) {
+            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
@@ -279,7 +284,7 @@ class UserController extends Controller
         }
 
         if (User::where('email', $arrayRequest['email'])->exists()) {
-            return response()->json(['error' => 'Émail déjà utilisé'], 409);
+            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
         $arrayRequest['password'] = Hash::make(Str::random(12)); // on créer un password temporaire
@@ -300,7 +305,7 @@ class UserController extends Controller
 
         //$item->notify(new UserRegistration($item));
 
-        return response()->json(['success' => $arrayRequest], $this->successStatus);
+        return response()->json(['success' => $item], $this->successStatus);
         //Il faut envoyer un email avec lien d'inscription
 
     }
@@ -335,6 +340,10 @@ class UserController extends Controller
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
+        }
+
+        if ($user->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->exists()) {
+            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
         if ($user != null) {

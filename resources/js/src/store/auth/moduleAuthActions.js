@@ -128,7 +128,6 @@ export default {
             )
                 .then(response => {
                     const data = response.data;
-                    console.log(data);
                     // Redirect User
                     if (data && data.success) {
                         localStorage.setItem("loggedIn", true);
@@ -143,8 +142,9 @@ export default {
                         });
                         // Update data in localStorage
                         router.push(router.currentRoute.query.to || "/");
+                        resolve(response);
                     }
-                    resolve(response);
+                    reject({ message: response.data.error });
                 })
                 .catch(error => {
                     reject(error);

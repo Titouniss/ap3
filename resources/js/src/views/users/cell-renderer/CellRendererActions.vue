@@ -131,7 +131,7 @@ export default {
     showActionSuccess(type) {
       this.$vs.notify({
         color: "success",
-        title: modelTitle,
+        title: "Succès",
         text:
           type === "delete"
             ? `Utilisateur supprimé`
