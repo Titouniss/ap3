@@ -22,9 +22,8 @@
           <div>
             <vs-input
               v-validate="'required|alpha_dash|min:3|max:255'"
-              label-placeholder="Nom"
               name="lastname"
-              placeholder="Nom"
+              label-placeholder="Nom"
               v-model="lastname"
               class="w-full my-8"
               :success="lastname.length > 0 && !errors.first('lastname')"
@@ -34,9 +33,8 @@
 
             <vs-input
               v-validate="'required|alpha_dash|min:3|max:255'"
-              label-placeholder="Prénom"
               name="firstname"
-              placeholder="Prénom"
+              label-placeholder="Prénom"
               v-model="firstname"
               class="w-full my-8"
               :success="firstname.length > 0 && !errors.first('firstname')"
@@ -49,7 +47,6 @@
               name="email"
               type="email"
               label-placeholder="Email"
-              placeholder="Email"
               v-model="email"
               class="w-full my-8"
               :success="email.length > 0 && !errors.first('email')"
@@ -63,7 +60,6 @@
               v-validate="'required|min:8|max:50'"
               name="password"
               label-placeholder="Mot de passe"
-              placeholder="Mot de passe"
               v-model="password"
               class="w-full my-8"
               :success="password.length > 0 && !errors.first('password')"
@@ -76,12 +72,22 @@
               v-validate="'required|min:8|max:50|confirmed:password'"
               name="confirm_password"
               label-placeholder="Confirmation mot de passe"
-              placeholder="Confirmation mot de passe"
               v-model="confirm_password"
               class="w-full my-8"
               :success="confirm_password.length > 0 && !errors.first('confirm_password')"
               :danger="errors.first('confirm_password')"
               :danger-text="errors.first('confirm_password')"
+            />
+
+            <vs-input
+              v-validate="'required|alpha_dash|min:3|max:255'"
+              name="company"
+              label-placeholder="Société"
+              v-model="company"
+              class="w-full my-8"
+              :success="company.length > 0 && !errors.first('company')"
+              :danger="errors.first('company')"
+              :danger-text="errors.first('company')"
             />
 
             <vs-checkbox v-model="isTermsConditionAccepted" class="mt-6 text-center">
@@ -115,6 +121,7 @@ export default {
       email: "",
       password: "",
       confirm_password: "",
+      company: "",
       isTermsConditionAccepted: false,
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
@@ -166,17 +173,14 @@ export default {
           email: this.email,
           password: this.password,
           confirmPassword: this.confirm_password,
+          companyName: this.company,
           isTermsConditionAccepted: this.isTermsConditionAccepted
         },
         notify: this.$vs.notify
       };
       this.$store
         .dispatch("auth/registerUserJWT", payload)
-        .then(() => {
-          this.$vs.loading.close();
-        })
         .catch(error => {
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Error",
             text: error.message,
@@ -184,7 +188,8 @@ export default {
             icon: "icon-alert-circle",
             color: "danger"
           });
-        });
+        })
+        .finally(() => this.$vs.loading.close());
     },
     goLogin() {
       if (!this.checkLogin()) return;

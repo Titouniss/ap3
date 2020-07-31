@@ -168,12 +168,13 @@ class UserController extends Controller
     public function register(Request $request)
     {
         $input = $request->all();
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($input, [
             'firstname' => 'required',
             'lastname' => 'required',
             'email' => 'required|email',
             'password' => 'required',
             'c_password' => 'required|same:password',
+            'company_name' => 'required',
             'isTermsConditionAccepted' => 'required',
         ]);
         if ($validator->fails()) {
@@ -183,7 +184,9 @@ class UserController extends Controller
         if (User::where('email', $input['email'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
-        $input = $request->all();
+
+
+
         $input['password'] = bcrypt($input['password']);
         $user = User::create($input);
         if ($user == null) {
@@ -193,7 +196,7 @@ class UserController extends Controller
         if ($role != null) {
             $user->assignRole('Utilisateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
-        $company = Company::where(['siret' => 'test_users'])->first();
+        $company = Company::create(['name' => $input['company_name'], 'is_trial' => true, 'expires_at' => (new Carbon())->addWeeks(4)]);
         $user->company()->associate($company);
         $user->save();
         $user->sendEmailVerificationNotification();

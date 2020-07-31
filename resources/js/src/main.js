@@ -47,7 +47,8 @@ fr.attributes = {
     firstname: "prénom",
     lastname: "nom",
     password: "mot de passe",
-    confirm_password: "confirmation de mot de passe"
+    confirm_password: "confirmation de mot de passe",
+    company: "société"
 };
 Vue.use(VeeValidate, {
     events: "input",
