@@ -25,9 +25,9 @@
               <user-edit-tab-account class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
-          <vs-tab label="Horaires" icon-pack="feather" icon="icon-clock">
+          <vs-tab label="Indisponibilités" icon-pack="feather" icon="icon-clock">
             <div class="tab-text">
-              <user-edit-tab-work-hours class="mt-4" :data="user_data" />
+              <UnavailabilitiesIndex class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
           <vs-tab label="Notifications" icon-pack="feather" icon="icon-alert-triangle">
@@ -48,9 +48,9 @@
 
 <script>
 import UserEditTabAccount from "./UserEditTabAccount.vue";
-import UserEditTabWorkHours from "./UserEditTabWorkHours.vue";
 import UserEditTabNotifications from "./UserEditTabNotifications.vue";
 import UserEditTabPassword from "./UserEditTabPassword.vue";
+import UnavailabilitiesIndex from "../../unavailabilities/Index.vue";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
@@ -58,9 +58,9 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 export default {
   components: {
     UserEditTabAccount,
-    UserEditTabWorkHours,
+    UnavailabilitiesIndex,
     UserEditTabNotifications,
-    UserEditTabPassword
+    UserEditTabPassword,
   },
   data() {
     return {
@@ -72,29 +72,29 @@ export default {
 
         Please check it's watcher
       */
-      activeTab: 0
+      activeTab: 0,
     };
   },
   watch: {
     activeTab() {
       this.fetch_user_data(this.$route.params.userId);
-    }
+    },
   },
   methods: {
     fetch_user_data(userId) {
       this.$store
         .dispatch("userManagement/fetchItem", userId)
-        .then(res => {
+        .then((res) => {
           this.user_data = res.data.success;
         })
-        .catch(err => {
+        .catch((err) => {
           if (err.response.status === 404) {
             this.user_not_found = true;
             return;
           }
           console.error(err);
         });
-    }
+    },
   },
   created() {
     // Register Module UserManagement Module
@@ -103,6 +103,6 @@ export default {
       moduleUserManagement.isRegistered = true;
     }
     this.fetch_user_data(this.$route.params.userId);
-  }
+  },
 };
 </script>
