@@ -1,6 +1,5 @@
 <template>
   <div class="p-3 mb-4 mr-4">
-    <span>RAF : Bloquer l'ajout d'une indisponibilité qui se superpose avec une déjà présente</span>
     <vs-button
       type="border"
       class="items-center p-3 w-full"
@@ -31,24 +30,44 @@
               />
               <flat-pickr
                 name="ends_at"
-                class="w-full mb-4 mt-5"
+                class="w-full mb-2 mt-5"
                 :config="configEndsAtDateTimePicker"
                 v-model="itemLocal.ends_at"
                 placeholder="Date de fin"
                 @on-change="onEndsAtChange"
               />
-              <vs-input
-                name="reason"
-                class="w-full mb-4 mt-5"
-                placeholder="Motif"
-                v-model="itemLocal.reason"
+              <v-select
                 v-validate="'required'"
-                :color="!errors.has('reason') ? 'success' : 'danger'"
-              />
+                name="reason"
+                label="name"
+                :multiple="false"
+                v-model="itemLocal.reason"
+                :reduce="name => name.name"
+                class="w-full mt-2 mb-2"
+                autocomplete
+                :options="reasons"
+              >
+                <template #header>
+                  <div style="opacity: .8 font-size: .85rem">Motif</div>
+                </template>
+                <template #option="reason">
+                  <span>{{`${reason.name}`}}</span>
+                </template>
+              </v-select>
               <span
+                v-if="itemLocal.reason === 'Autre...'"
                 class="text-danger text-sm"
                 v-show="errors.has('reason')"
               >{{ errors.first('reason') }}</span>
+              <vs-input
+                v-if="itemLocal.reason === 'Autre...'"
+                name="custom_reason"
+                class="w-full mb-4 mt-6"
+                placeholder="Motif personnalisé"
+                v-model="custom_reason"
+                v-validate="'required'"
+                :color="!errors.has('custom_reason') ? 'success' : 'danger'"
+              />
             </div>
           </div>
         </form>
@@ -61,6 +80,7 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import flatPickr from "vue-flatpickr-component";
+import vSelect from "vue-select";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
@@ -69,7 +89,8 @@ Validator.localize("fr", errorMessage);
 
 export default {
   components: {
-    flatPickr
+    flatPickr,
+    vSelect,
   },
   data() {
     return {
@@ -78,22 +99,28 @@ export default {
       itemLocal: {
         starts_at: null,
         ends_at: null,
-        reason: ""
+        reason: "",
       },
+      custom_reason: "",
+      reasons: [
+        { name: "Utilisation heures suplémentaires" },
+        { name: "Réunion" },
+        { name: "Autre..." },
+      ],
 
       configStartsAtDateTimePicker: {
         disableMobile: "true",
         enableTime: true,
         locale: FrenchLocale,
         minDate: new Date(),
-        maxDate: null
+        maxDate: null,
       },
       configEndsAtDateTimePicker: {
         disableMobile: "true",
         enableTime: true,
         locale: FrenchLocale,
-        minDate: null
-      }
+        minDate: null,
+      },
     };
   },
   computed: {
@@ -102,29 +129,31 @@ export default {
         !this.errors.any() &&
         this.itemLocal.starts_at &&
         this.itemLocal.ends_at &&
-        this.itemLocal.reason
+        this.itemLocal.reason !== "" &&
+        this.custom_reason !== ""
       );
-    }
+    },
   },
   methods: {
     clearFields() {
       Object.assign(this.itemLocal, {
         starts_at: null,
         ends_at: null,
-        reason: ""
+        reason: "",
       });
+      this.custom_reason = "";
       Object.assign(this.configStartsAtDateTimePicker, {
         disableMobile: "true",
         enableTime: true,
         locale: FrenchLocale,
         minDate: new Date(),
-        maxDate: null
+        maxDate: null,
       });
       Object.assign(this.configEndsAtDateTimePicker, {
         disableMobile: "true",
         enableTime: true,
         locale: FrenchLocale,
-        minDate: null
+        minDate: null,
       });
     },
     onStartsAtChange(selectedDates, dateStr, instance) {
@@ -134,37 +163,43 @@ export default {
       this.$set(this.configStartsAtDateTimePicker, "maxDate", dateStr);
     },
     addUnavailability() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         if (result) {
+          if (this.itemLocal.reason === "Autre...") {
+            this.itemLocal.reason = this.custom_reason;
+          }
           this.$store
             .dispatch(
               "unavailabilityManagement/addItem",
               Object.assign({}, this.itemLocal)
             )
-            .then(() => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Ajout d'une indisponibilité",
-                text: `"Indisponibilité ajoutée avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
-              });
+            .then((data) => {
+              if (!data.error) {
+                this.$vs.loading.close();
+                this.$vs.notify({
+                  title: "Ajout d'une indisponibilité",
+                  text: `"Indisponibilité ajoutée avec succès`,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "success",
+                });
+              }
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
-                title: "Error",
+                title: "Erreur",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
+                time: 10000,
               });
             });
           this.clearFields();
         }
       });
-    }
-  }
+    },
+  },
 };
 </script>
