@@ -250,26 +250,25 @@ export default {
         this.$store
           .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
           .then(response => {
-            this.$vs.loading.close();
-            if (response.status === 200) {
-              this.back();
-              this.$vs.notify({
-                title: "Ajout d'un utilisateur",
-                text: `Utilisateur ajouté avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
-              });
-            } else {
-              this.$vs.notify({
-                title: "Error",
-                text: response.data.error,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "danger"
-              });
-            }
-          });
+            this.back();
+            this.$vs.notify({
+              title: "Ajout d'un utilisateur",
+              text: `Utilisateur ajouté avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success"
+            });
+          })
+          .catch(error => {
+            this.$vs.notify({
+              title: "Echec",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
+          })
+          .finally(() => this.$vs.loading.close());
       }
     },
     selectCompanySkills(item) {
