@@ -7,7 +7,6 @@
     Author URL: http://www.themeforest.net/user/pixinvent
 ========================================================================================== -->
 
-
 <template>
   <div
     v-bind:style="cssProps"
@@ -20,71 +19,75 @@
           <div class="vx-card__title">
             <h4 class="mb-8 text-center">Création de compte</h4>
           </div>
-          <div class="flex-column clearfix">
+          <div>
             <vs-input
-              v-validate="'required|alpha_dash|min:3'"
-              data-vv-validate-on="blur"
+              v-validate="'required|alpha_dash|min:3|max:255'"
               label-placeholder="Nom"
               name="lastname"
               placeholder="Nom"
               v-model="lastname"
-              class="w-full"
+              class="w-full my-8"
+              :success="lastname.length > 0 && !errors.first('lastname')"
+              :danger="errors.first('lastname')"
+              :danger-text="errors.first('lastname')"
             />
-            <span class="text-danger text-sm">{{ errors.first('lastname') }}</span>
 
             <vs-input
-              v-validate="'required|alpha_dash|min:3'"
-              data-vv-validate-on="blur"
+              v-validate="'required|alpha_dash|min:3|max:255'"
               label-placeholder="Prénom"
               name="firstname"
               placeholder="Prénom"
               v-model="firstname"
-              class="w-full"
+              class="w-full my-8"
+              :success="firstname.length > 0 && !errors.first('firstname')"
+              :danger="errors.first('firstname')"
+              :danger-text="errors.first('firstname')"
             />
-            <span class="text-danger text-sm">{{ errors.first('firstname') }}</span>
 
             <vs-input
-              v-validate="'required|email'"
-              data-vv-validate-on="blur"
+              v-validate="'required|email|max:255'"
               name="email"
               type="email"
               label-placeholder="Email"
               placeholder="Email"
               v-model="email"
-              class="w-full mt-6"
+              class="w-full my-8"
+              :success="email.length > 0 && !errors.first('email')"
+              :danger="errors.first('email')"
+              :danger-text="errors.first('email')"
             />
-            <span class="text-danger text-sm">{{ errors.first('email') }}</span>
 
             <vs-input
               ref="password"
               type="password"
-              data-vv-validate-on="blur"
               v-validate="'required|min:8|max:50'"
               name="password"
               label-placeholder="Mot de passe"
               placeholder="Mot de passe"
               v-model="password"
-              class="w-full mt-6"
+              class="w-full my-8"
+              :success="password.length > 0 && !errors.first('password')"
+              :danger="errors.first('password')"
+              :danger-text="errors.first('password')"
             />
-            <span class="text-danger text-sm">{{ errors.first('password') }}</span>
 
             <vs-input
               type="password"
               v-validate="'required|min:8|max:50|confirmed:password'"
-              data-vv-validate-on="blur"
-              data-vv-as="password"
               name="confirm_password"
               label-placeholder="Confirmation mot de passe"
               placeholder="Confirmation mot de passe"
               v-model="confirm_password"
-              class="w-full mt-6"
+              class="w-full my-8"
+              :success="confirm_password.length > 0 && !errors.first('confirm_password')"
+              :danger="errors.first('confirm_password')"
+              :danger-text="errors.first('confirm_password')"
             />
-            <span class="text-danger text-sm">{{ errors.first('confirm_password') }}</span>
 
-            <vs-checkbox
-              v-model="isTermsConditionAccepted"
-              class="mt-6 text-center"
-            >J'accepte les conditions générales d'utilisation.</vs-checkbox>
+            <vs-checkbox v-model="isTermsConditionAccepted" class="mt-6 text-center">
+              J'accepte les conditions générales
+              d'utilisation.
+            </vs-checkbox>
             <vs-row vs-align="center" vs-type="flex" vs-justify="space-around" class="mt-10">
               <router-link to="login" @click="goLogin" class="ml-2 mr-2">retour</router-link>
               <vs-button
@@ -190,7 +193,6 @@ export default {
   }
 };
 </script>
-
 
 <style lang="scss">
 .register-tabs-container {
