@@ -114,6 +114,7 @@ export default {
             email,
             password,
             confirmPassword,
+            companyName,
             isTermsConditionAccepted
         } = payload.userDetails;
 
@@ -124,6 +125,7 @@ export default {
                 email,
                 password,
                 confirmPassword,
+                companyName,
                 isTermsConditionAccepted
             )
                 .then(response => {

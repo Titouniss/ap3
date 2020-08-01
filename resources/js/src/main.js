@@ -7,62 +7,70 @@
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
-
-import Vue from 'vue'
-import App from './App.vue'
+import Vue from "vue";
+import App from "./App.vue";
 
 // Vuesax Component Framework
-import Vuesax from 'vuesax'
+import Vuesax from "vuesax";
 
-Vue.use(Vuesax)
-
+Vue.use(Vuesax);
 
 // axios
-import axios from './axios.js'
-Vue.prototype.$http = axios
+import axios from "./axios.js";
+Vue.prototype.$http = axios;
 
 // ACL
-import acl from './acl/acl'
+import acl from "./acl/acl";
 
 // Theme Configurations
-import '../themeConfig.js'
-
+import "../themeConfig.js";
 
 // Globally Registered Components
-import './globalComponents.js'
+import "./globalComponents.js";
 
 // Vue Router
-import router from './router'
-
+import router from "./router";
 
 // Vuex Store
-import store from './store/store'
+import store from "./store/store";
 
 // Tour
-import VueTour from 'vue-tour'
-Vue.use(VueTour)
-require('vue-tour/dist/vue-tour.css')
-
+import VueTour from "vue-tour";
+Vue.use(VueTour);
+require("vue-tour/dist/vue-tour.css");
 
 // VeeValidate
-import VeeValidate from 'vee-validate'
-Vue.use(VeeValidate)
+import VeeValidate from "vee-validate";
+import fr from "vee-validate/dist/locale/fr";
+fr.attributes = {
+    ...fr.attributes,
+    firstname: "prénom",
+    lastname: "nom",
+    password: "mot de passe",
+    confirm_password: "confirmation de mot de passe",
+    company: "société"
+};
+Vue.use(VeeValidate, {
+    events: "input",
+    locale: "fr",
+    dictionary: {
+        fr
+    }
+});
 
 // Vuejs - Vue wrapper for hammerjs
-import { VueHammer } from 'vue2-hammer'
-Vue.use(VueHammer)
-
+import { VueHammer } from "vue2-hammer";
+Vue.use(VueHammer);
 
 // PrismJS
-import 'prismjs'
-import 'prismjs/themes/prism-tomorrow.css'
+import "prismjs";
+import "prismjs/themes/prism-tomorrow.css";
 
-
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 new Vue({
-  router,
-  store,
-  acl,
-  render: h => h(App)
-}).$mount('#app')
+    router,
+    store,
+    acl,
+    render: h => h(App)
+}).$mount("#app");

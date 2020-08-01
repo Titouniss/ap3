@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Company extends Model
 {
     use SoftDeletes;
-    
-    protected $fillable = [ 'name', 'siret', 'expire_at'];
+
+    protected $fillable = ['name', 'siret', 'is_trial', 'expires_at'];
 
     public function skills()
     {
