@@ -42,8 +42,13 @@ class UserController extends Controller
     {
         if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
             $user = Auth::user();
-            if ($user->company_id && !Company::where("id", $user->company_id)->exists()) {
-                return response()->json(['success' => false, 'error' => 'Account deactivated']);
+            if ($user->company_id) {
+                $company = Company::find($user->company_id);
+                if (!$company) {
+                    return response()->json(['success' => false, 'error' => 'Account deactivated']);
+                } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
+                    return response()->json(['success' => false, 'error' => 'Trial ended']);
+                }
             }
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
