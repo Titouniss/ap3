@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use Carbon\Carbon;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,7 +16,7 @@ use Monolog\Handler\StreamHandler;
 class CompanyController extends Controller
 {
     use SoftDeletes;
-    
+
     public $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -58,12 +59,17 @@ class CompanyController extends Controller
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
-            'siret' => 'required'
+            'siret' => 'required',
+            'is_trial' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Company::create($arrayRequest);
+        if ($item->is_trial && !$item->expires_at) {
+            $item->expires_at = Carbon::now()->addWeeks(4);
+            $item->save();
+        }
         return response()->json(['success' => $item], $this->successStatus);
     }
 
@@ -87,19 +93,30 @@ class CompanyController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = Auth::user();
         $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
-            'siret' => 'required'
+            'siret' => 'required',
+            'is_trial' => 'required'
         ]);
 
-        $item = Company::where('id', $id)->update(['name' => $arrayRequest['name'], 'siret' => $arrayRequest['siret']]);
+        $item = Company::find($id);
+        $item->name = $arrayRequest['name'];
+        $item->siret = $arrayRequest['siret'];
+        if ($user->hasRole('superAdmin') || $user->hasRole('littleAdmin')) {
+            $item->is_trial = $arrayRequest['is_trial'];
+            if ($item->is_trial && !$item->expires_at) {
+                $item->expires_at = Carbon::now()->addWeeks(4);
+            }
+        }
+        $item->save();
         return response()->json(['success' => $item], $this->successStatus);
     }
-    
 
-     /**
+
+    /**
      * Restore the specified resource in storage.
      *
      * @param  int  $id
@@ -108,7 +125,7 @@ class CompanyController extends Controller
     public function restore($id)
     {
         $item = Company::withTrashed()->findOrFail($id)->restore();
-        if($item) {
+        if ($item) {
             $item = Company::where('id', $id)->first();
             return response()->json(['success' => $item], $this->successStatus);
         }
@@ -137,7 +154,7 @@ class CompanyController extends Controller
     {
         $item = Company::findOrFail($id);
         $item->delete();
-        
+
         $controllerLog = new Logger('company');
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('company', ['forceDelete']);

@@ -84,6 +84,11 @@ export default {
                             message:
                                 "Connexion impossible le compte est désactivé."
                         });
+                    } else if (data.error.includes("Trial")) {
+                        reject({
+                            message:
+                                "Connexion impossible la période d'essaie est terminée."
+                        });
                     } else {
                         reject({
                             message:
