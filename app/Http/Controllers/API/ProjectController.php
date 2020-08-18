@@ -194,15 +194,11 @@ class ProjectController extends Controller
     public function restore($id)
     {
         try {
-            $success = Project::withTrashed()->findOrFail($id)->restore();
+            $item = Project::withTrashed()->findOrFail($id);
+            $success = $item->restoreCascade();
 
             if ($success) {
-                $item = Project::where('id', $id)->first()->load('company');
-                TasksBundle::withTrashed()->where('project_id', $id)->restore();
-                foreach ($item->tasksBundles as $t) {
-                    Task::where('tasks_bundle_id', $t->id)->restore();
-                }
-                return response()->json(['success' => $item], $this->successStatus);
+                return response()->json(['success' => $item->load('company')], $this->successStatus);
             } else {
                 throw new Exception('Impossible de restaurer le projet');
             }
@@ -221,15 +217,13 @@ class ProjectController extends Controller
     {
         try {
             $item = Project::findOrFail($id);
+            $success = $item->deleteCascade();
 
-            foreach ($item->tasksBundles as $t) {
-                Task::where('tasks_bundle_id', $t->id)->delete();
+            if (!$success) {
+                throw new Exception('Impossible d\'archiver le projet');
             }
-            TasksBundle::where('project_id', $id)->delete();
-            $item->delete();
 
-            $item = Project::withTrashed()->where('id', $id)->first()->load('company');
-            return response()->json(['success' => $item], $this->successStatus);
+            return response()->json(['success' => $item->load('company')], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
@@ -245,12 +239,12 @@ class ProjectController extends Controller
     {
         try {
             $item = Project::withTrashed()->findOrFail($id);
+            $success = $item->forceDeleteCascade();
 
-            foreach ($item->tasksBundles as $t) {
-                Task::withTrashed()->where('tasks_bundle_id', $t->id)->forceDelete();
+            if (!$success) {
+                throw new Exception('Impossible de supprimer le projet');
             }
-            TasksBundle::withTrashed()->where('project_id', $id)->forceDelete();
-            $item->forceDelete();
+
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 404);

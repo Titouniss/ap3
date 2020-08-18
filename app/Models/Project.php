@@ -40,4 +40,32 @@ class Project extends Model
         }
         return $tasks;
     }
+
+    public function restoreCascade()
+    {
+        $this->restore();
+        TasksBundle::withTrashed()->where('project_id', $this->id)->restore();
+        foreach ($this->tasksBundles as $t) {
+            Task::where('tasks_bundle_id', $t->id)->restore();
+        }
+        return true;
+    }
+
+    public function deleteCascade()
+    {
+        foreach ($this->tasksBundles as $t) {
+            Task::where('tasks_bundle_id', $t->id)->delete();
+        }
+        TasksBundle::where('project_id', $this->id)->delete();
+        return $this->delete();
+    }
+
+    public function forceDeleteCascade()
+    {
+        foreach ($this->tasksBundles as $t) {
+            Task::withTrashed()->where('tasks_bundle_id', $t->id)->forceDelete();
+        }
+        TasksBundle::withTrashed()->where('project_id', $this->id)->forceDelete();
+        return $this->forceDelete();
+    }
 }

@@ -118,15 +118,14 @@ class RangeController extends Controller
     public function restore($id)
     {
         try {
-            $success = Range::withTrashed()->findOrFail($id)->restore();
+            $item = Range::withTrashed()->findOrFail($id);
+            $success = $item->restoreCascade();
 
-            if ($success) {
-                $item = Range::where('id', $id)->first();
-                RepetitiveTask::withTrashed()->where('range_id', $id)->restore();
-                return response()->json(['success' => $item], $this->successStatus);
-            } else {
+            if (!$success) {
                 throw new Exception('Impossible de restaurer la gamme');
             }
+
+            return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
@@ -141,10 +140,13 @@ class RangeController extends Controller
     public function destroy($id)
     {
         try {
-            $item = Range::findOrFail($id);
+            $item = Range::withTrashed()->findOrFail($id);
+            $success = $item->deleteCascade();
 
-            RepetitiveTask::where('range_id', $id)->delete();
-            $item->delete();
+            if (!$success) {
+                throw new Exception('Impossible d\'archiver la gamme');
+            }
+
             return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
@@ -161,9 +163,12 @@ class RangeController extends Controller
     {
         try {
             $item = Range::withTrashed()->findOrFail($id);
+            $success = $item->forceDeleteCascade();
 
-            RepetitiveTask::withTrashed()->where('range_id', $id)->forceDelete();
-            $item->forceDelete();
+            if (!$success) {
+                throw new Exception('Impossible de supprimer la gamme');
+            }
+
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
