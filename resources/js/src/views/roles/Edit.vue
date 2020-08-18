@@ -171,12 +171,10 @@ export default {
         .then((res) => {
           this.role_data = res.data.success;
           if (this.role_data && this.role_data.permissions.length) {
-            console.log(["permissions", this.role_data.permissions]);
             this.role_data.permissions.forEach((permission) => {
               this.selected[permission.id] = true;
             });
           }
-          console.log(["this.selected_FETCH", this.selected]);
         })
         .catch((err) => {
           if (err.response.status === 404) {
@@ -190,7 +188,6 @@ export default {
       /* eslint-disable */
       if (!this.validateForm) return;
       this.$vs.loading();
-      console.log(["this.selected", this.selected]);
       this.role_data.permissions = _.keys(_.pickBy(this.selected));
 
       const payload = { ...this.role_data };
@@ -229,7 +226,6 @@ export default {
       for (const perm in items) {
         items_id.push(items[perm].id);
       }
-      console.log(["items_id", items_id]);
 
       // Check if already full check
       let missPerm = false;
@@ -264,18 +260,19 @@ export default {
       if (missPerm) {
         // add items_id if not already in
         items_id.forEach((id) => {
-          if (!this.selected[id] === true) {
-            this.selected.splice(id, 1, true);
+          if (!this.selected[id] === true || this.selected[id] === undefined) {
+            this.selected[id] = true;
           }
         });
       } else {
         // remove items_id from selected
         items_id.forEach((id) => {
           if (this.selected[id] === true) {
-            this.selected.splice(id, 1, false);
+            this.selected[id] = false;
           }
         });
       }
+      this.selected = Object.assign({}, this.selected);
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});

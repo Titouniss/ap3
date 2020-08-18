@@ -22,23 +22,86 @@ export default {
       this.$store
         .dispatch("skillManagement/editItem", this.params.data)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
-    confirmDeleteRecord() {
-      this.$vs.dialog({
-        type: "confirm",
-        color: "danger",
-        title: "Confirmer suppression",
-        text:
-          `Voulez vous vraiment supprimer la compétence ` +
-          this.params.data.name +
-          ` ?`,
-        accept: this.deleteRecord,
-        acceptText: "Supprimer",
-        cancelText: "Annuler"
-      });
+    async confirmDeleteRecord() {
+      console.log(["params", this.params]);
+      let workareas = this.$store.state.workareaManagement.workareas;
+
+      let haveSkill = [];
+      if (workareas) {
+        workareas.forEach((w) => {
+          if (w.skills) {
+            w.skills.forEach((s) => {
+              if (s.id === this.params.data.id) {
+                haveSkill.push({ id: w.id, name: w.name });
+              }
+            });
+          }
+        });
+      }
+
+      let tasks = [];
+      this.$store
+        .dispatch("taskManagement/fetchItemsBySkill", this.params.data.id)
+        .then((data) => {
+          console.log(["data", data]);
+          if (data && data.data.success) {
+            tasks = data.data.success;
+            console.log(["tasks", tasks]);
+            console.log(["haveSkill", haveSkill]);
+
+            let message = "";
+            if (haveSkill.length > 0 && tasks.length > 0) {
+              message =
+                "La compétence " +
+                this.params.data.name +
+                " est utilisée dans des îlots et des tâches. Voulez vous vraiment la supprimer ?";
+            } else if (tasks.length > 0) {
+              message =
+                "La compétence " +
+                this.params.data.name +
+                " est utilisée dans une tâche ou plus. Voulez vous vraiment la supprimer ?";
+            } else if (haveSkill.length > 0) {
+              message =
+                "La compétence " +
+                this.params.data.name +
+                " est utilisée dans un îlot ou plus. Voulez vous vraiment la supprimer ?";
+            } else {
+              console.log("dans le else");
+            }
+
+            if (message !== "") {
+              this.$vs.dialog({
+                type: "confirm",
+                color: "danger",
+                title: "Confirmer suppression",
+                text: message,
+                accept: this.deleteRecord,
+                acceptText: "Supprimer",
+                cancelText: "Annuler",
+              });
+            } else {
+              this.$vs.dialog({
+                type: "confirm",
+                color: "danger",
+                title: "Confirmer suppression",
+                text:
+                  `Voulez vous vraiment supprimer la compétence ` +
+                  this.params.data.name +
+                  ` ?`,
+                accept: this.deleteRecord,
+                acceptText: "Supprimer",
+                cancelText: "Annuler",
+              });
+            }
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     },
     deleteRecord() {
       this.$store
@@ -46,7 +109,7 @@ export default {
         .then(() => {
           this.showDeleteSuccess();
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -54,9 +117,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: `Compétence supprimé`
+        text: `Compétence supprimé`,
       });
-    }
-  }
+    },
+  },
 };
 </script>

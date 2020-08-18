@@ -31,9 +31,51 @@ class TaskController extends Controller
         return response()->json(['success' => $items], $this->successStatus);
     }
 
+    /**
+     * Display a listing of the resource by bundle.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function getByBundle(int $bundle_id)
     {
         $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks')->get();
+        return response()->json(['success' => $items], $this->successStatus);
+    }
+
+    /**
+     * Display a listing of the resource by skill.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getBySkill(int $skill_id)
+    {
+        $items = TasksSkill::select('task_id')->where('skill_id', $skill_id)->get();
+        return response()->json(['success' => $items], $this->successStatus);
+    }
+
+    /**
+     * Display a listing of the resource by skills.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getBySkills(Request $request)
+    {
+        $arrayRequest = $request->all();
+
+        $items = [];
+        if(!empty($arrayRequest)){
+            foreach($arrayRequest as $skill_id){
+                $tasks_id = TasksSkill::select('task_id')->where('skill_id', $skill_id)->get();
+
+                //check if task_id is not already in $items
+                foreach($tasks_id as $t_id) {
+                    if (!in_array($t_id, $items)) {
+                        array_push($items, $t_id);
+                    }
+                }
+            }
+        }
+
         return response()->json(['success' => $items], $this->successStatus);
     }
 

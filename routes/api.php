@@ -215,6 +215,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:read tasks']], function () {
             Route::get('index', 'API\TaskController@index');
             Route::get('bundle/{id}', 'API\TaskController@getByBundle');
+            Route::get('skill/{id}', 'API\TaskController@getBySkill');
+            Route::post('skills', 'API\TaskController@getBySkills');
             Route::get('show/{id}', 'API\TaskController@show');
         });
         Route::group(['middleware' => ['can:publish tasks']], function () {
