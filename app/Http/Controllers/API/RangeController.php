@@ -128,7 +128,7 @@ class RangeController extends Controller
                 throw new Exception('Impossible de restaurer la gamme');
             }
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], $this->successStatus);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
@@ -147,7 +147,7 @@ class RangeController extends Controller
             $item->delete();
             return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], $this->successStatus);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
@@ -166,7 +166,7 @@ class RangeController extends Controller
             $item->forceDelete();
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], $this->successStatus);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 

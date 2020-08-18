@@ -207,7 +207,7 @@ class ProjectController extends Controller
                 throw new Exception('Impossible de restaurer le projet');
             }
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], $this->successStatus);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
@@ -231,7 +231,7 @@ class ProjectController extends Controller
             $item = Project::withTrashed()->where('id', $id)->first()->load('company');
             return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], $this->successStatus);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
@@ -253,7 +253,7 @@ class ProjectController extends Controller
             $item->forceDelete();
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], $this->successStatus);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
