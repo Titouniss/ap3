@@ -3,38 +3,49 @@
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
+      v-if="authorizedToEdit && !params.data.deleted_at"
       @click="editRecord"
     />
     <feather-icon
       icon="ArchiveIcon"
       :svgClasses="this.archiveSvg"
+      v-if="authorizedToDelete"
       @click="params.data.deleted_at ? confirmActionRecord('restore') : confirmActionRecord('archive')"
     />
     <feather-icon
       icon="Trash2Icon"
       svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+      v-if="authorizedToDelete"
       @click="confirmActionRecord('delete')"
     />
   </div>
 </template>
 
 <script>
+var model = "customer";
+var modelPlurial = "customers";
 var modelTitle = "Client";
 export default {
   name: "CellRendererActions",
   computed: {
+    authorizedToEdit() {
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
+    },
+    authorizedToDelete() {
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
+    },
     archiveSvg() {
       return this.params.data.deleted_at
-        ? "h-5 w-5 mr-4 text-warning hover:text-success cursor-pointer"
-        : "h-5 w-5 mr-4 hover:text-primary cursor-pointer";
-    },
+        ? "h-5 w-5 mr-4 text-success cursor-pointer"
+        : "h-5 w-5 mr-4 hover:text-warning cursor-pointer";
+    }
   },
   methods: {
     editRecord() {
       this.$store
         .dispatch("customerManagement/editItem", this.params.data)
         .then(() => {})
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -73,7 +84,7 @@ export default {
             : type === "archive"
             ? "Archiver"
             : "Restaurer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
@@ -82,31 +93,31 @@ export default {
         .then(() => {
           this.showActionSuccess("delete");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     archiveRecord() {
       this.$store
         .dispatch("customerManagement/removeItem", this.params.data.id)
-        .then((data) => {
+        .then(data => {
           this.showActionSuccess("archive");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     restoreRecord() {
       this.$store
         .dispatch("customerManagement/restoreItem", this.params.data.id)
-        .then((response) => {
+        .then(response => {
           if (response.data.success) {
             this.showActionSuccess("restore");
           } else {
             this.showActionError();
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -119,9 +130,9 @@ export default {
             ? `Client supprimé`
             : type === "archive"
             ? `Client archivé`
-            : `Client restauré`,
+            : `Client restauré`
       });
-    },
-  },
+    }
+  }
 };
 </script>

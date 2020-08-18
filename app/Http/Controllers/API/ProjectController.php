@@ -17,7 +17,7 @@ use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Carbon\CarbonPeriod;
-
+use Exception;
 
 class ProjectController extends Controller
 {
@@ -36,9 +36,9 @@ class ProjectController extends Controller
         if ($user->hasRole('superAdmin')) {
             $items = Project::withTrashed()->get()->load('company')->load('customer');
         } else if ($user->company_id != null) {
-            $items = Project::where('company_id',$user->company_id)->get()->load('company')->load('customer');
+            $items = Project::where('company_id', $user->company_id)->get()->load('company')->load('customer');
         }
-        return response()->json(['success' => $items], $this-> successStatus);  
+        return response()->json(['success' => $items], $this->successStatus);
     }
 
     /**
@@ -49,8 +49,8 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
-        $item = Project::where('id',$id)->first();
-        return response()->json(['success' => $item], $this-> successStatus); 
+        $item = Project::where('id', $id)->first();
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -62,16 +62,16 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [ 
+        $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'date' => 'required',
             'company_id' => 'required',
         ]);
-        if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Project::create($arrayRequest)->load('company');
-        return response()->json(['success' => $item], $this-> successStatus); 
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     public function addRange(Request $request, $id)
@@ -86,9 +86,9 @@ class ProjectController extends Controller
 
         $test = [];
 
-        foreach($item->repetitive_tasks as $repetitive_task){
+        foreach ($item->repetitive_tasks as $repetitive_task) {
             $task = Task::create([
-                'name' => $prefix. ' - ' .$repetitive_task->name,
+                'name' => $prefix . ' - ' . $repetitive_task->name,
                 'order' => $repetitive_task->order,
                 'description' => $repetitive_task->description,
                 'estimated_time' => $repetitive_task->estimated_time,
@@ -98,42 +98,45 @@ class ProjectController extends Controller
                 'status' => 'todo',
             ]);
             isset($tasksArrayByOrder[$task->order]) ?
-            array_push($tasksArrayByOrder[$task->order], $task->id) : $tasksArrayByOrder[$task->order] = [$task->id] ;
-            
+                array_push($tasksArrayByOrder[$task->order], $task->id) : $tasksArrayByOrder[$task->order] = [$task->id];
+
             $key = array_search($task->order, array_keys($tasksArrayByOrder));
             array_push($test, ['name_key' => $key]);
             $key > 0 ? $this->attributePreviousTask($tasksArrayByOrder, $key, $task->id) : '';
 
             $this->storeSkills($task->id, $repetitive_task->skills);
         }
-        
+
         $items = Task::where('tasks_bundle_id', $taskBundle->id)->with('workarea', 'skills', 'comments', 'previousTasks')->get();
-        return response()->json(['success' => $items], $this-> successStatus); 
+        return response()->json(['success' => $items], $this->successStatus);
     }
 
-    private function storeSkills(int $task_id, $skills){
-        if(count($skills) > 0 && $task_id){
+    private function storeSkills(int $task_id, $skills)
+    {
+        if (count($skills) > 0 && $task_id) {
             foreach ($skills as $skill) {
                 TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill->id]);
-            } 
+            }
         }
     }
 
-    private function checkIfTaskBundleExist(int $project_id){
+    private function checkIfTaskBundleExist(int $project_id)
+    {
 
         $exist = TasksBundle::where('project_id', $project_id)->first();
-        if(!$exist){
+        if (!$exist) {
             $project = Project::find($project_id);
             if ($project) {
                 return TasksBundle::create(['company_id' => $project->company_id, 'project_id' => $project_id]);
             }
-        } 
+        }
         return $exist;
     }
 
-    private function attributePreviousTask($tasksArrayByOrder, $key, $taskId){
+    private function attributePreviousTask($tasksArrayByOrder, $key, $taskId)
+    {
         $keys = array_keys($tasksArrayByOrder);
-        foreach ($tasksArrayByOrder[$keys[$key-1]] as $previousTaskId){
+        foreach ($tasksArrayByOrder[$keys[$key - 1]] as $previousTaskId) {
             PreviousTask::create(['task_id' => $taskId, 'previous_task_id' => $previousTaskId]);
         }
     }
@@ -159,29 +162,27 @@ class ProjectController extends Controller
     public function update(Request $request, $id)
     {
         $arrayRequest = $request->all();
-        
-        $validator = Validator::make($arrayRequest, [ 
+
+        $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'date' => 'required',
             'company_id' => 'required'
-            ]);
-        
-        $update = Project::where('id',$id)
+        ]);
+
+        $update = Project::where('id', $id)
             ->update([
-                'name' => $arrayRequest['name'], 
+                'name' => $arrayRequest['name'],
                 'date' => $arrayRequest['date'],
                 'company_id' => $arrayRequest['company_id'],
                 'customer_id' => $arrayRequest['customer_id']
             ]);
-        
-        if($update){
+
+        if ($update) {
             $item = Project::find($id)->load('company')->load('customer');
-            return response()->json(['success' => $item], $this-> successStatus); 
+            return response()->json(['success' => $item], $this->successStatus);
+        } else {
+            return response()->json(['error' => 'error'], $this->errorStatus);
         }
-        else{
-            return response()->json(['error' => 'error'], $this-> errorStatus); 
-        }
-        
     }
 
     /**
@@ -189,13 +190,20 @@ class ProjectController extends Controller
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
-    */
+     */
     public function restore($id)
     {
-        $item = Project::withTrashed()->findOrFail($id)->restore();
-        if($item) {
-            $item = Project::where('id', $id)->first()->load('company');
-            return response()->json(['success' => $item], $this->successStatus);
+        try {
+            $item = Project::withTrashed()->findOrFail($id);
+            $success = $item->restoreCascade();
+
+            if ($success) {
+                return response()->json(['success' => $item->load('company')], $this->successStatus);
+            } else {
+                throw new Exception('Impossible de restaurer le projet');
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
@@ -207,11 +215,18 @@ class ProjectController extends Controller
      */
     public function destroy($id)
     {
-        $item = Project::findOrFail($id);
-        $item->delete();
+        try {
+            $item = Project::findOrFail($id);
+            $success = $item->deleteCascade();
 
-        $item = Project::withTrashed()->where('id', $id)->first()->load('company');
-        return response()->json(['success' => $item], $this->successStatus);
+            if (!$success) {
+                throw new Exception('Impossible d\'archiver le projet');
+            }
+
+            return response()->json(['success' => $item->load('company')], $this->successStatus);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+        }
     }
 
     /**
@@ -222,15 +237,22 @@ class ProjectController extends Controller
      */
     public function forceDelete($id)
     {
-        $item = Project::findOrFail($id);
-        $item->delete();
+        try {
+            $item = Project::withTrashed()->findOrFail($id);
+            $success = $item->forceDelete();
 
-        $item = Project::withTrashed()->findOrFail($id);
-        $item->forceDelete();
-        return '';
+            if (!$success) {
+                throw new Exception('Impossible de supprimer le projet');
+            }
+
+            return response()->json(['success' => true], $this->successStatus);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+        }
     }
 
-    public function start($id){
+    public function start($id)
+    {
 
         // RAF :
         //  - Gestion des heures indispo de + de 3,5h 
@@ -240,33 +262,33 @@ class ProjectController extends Controller
 
 
         $project = Project::find($id);
-        $nbHoursRequired = 0; 
+        $nbHoursRequired = 0;
         $nbHoursAvailable = 0;
         $nbHoursUnvailable = 0;
 
-        foreach($project->tasks as $task){
+        foreach ($project->tasks as $task) {
             // Hours required
             $nbHoursRequired += $task->estimated_time;
         }
 
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
-     
+
         // Hours Available & Hours Unavailable
         $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
 
-        if( $TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired ){
+        if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
 
             $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
             //$response =  $tasksPlanified  //RAF : Gestion des erreurs ou non
-        }
-        else{
-            $response = $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error' => 'time_less'], $this-> successStatus) : response()->json(['error' => 'user_time_less'], $this-> successStatus);
+        } else {
+            $response = $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
         }
 
-        return response()->json(['success' => $response], $this-> successStatus);  
+        return response()->json(['success' => $response], $this->successStatus);
     }
 
-    private function setDateToTasks($tasks, $TimeData, $users, $project){
+    private function setDateToTasks($tasks, $TimeData, $users, $project)
+    {
 
         $tasksTemp = $this->orderTasksByPrevious($tasks);
         $NoPlanTasks = [];
@@ -274,35 +296,35 @@ class ProjectController extends Controller
         //Foreach jours jusqu'a la date de livraison
 
 
-        foreach($TimeData['details'] as $date){
+        foreach ($TimeData['details'] as $date) {
 
             // On regarde si on a des heures disponibles pour plannifier une tache
-            if(($date['total_hours'] - $date['total_hours_unavailable']) > 0){
+            if (($date['total_hours'] - $date['total_hours_unavailable']) > 0) {
 
                 //On parcours chaque tache 
-                foreach($tasksTemp as $keytask => $task){
+                foreach ($tasksTemp as $keytask => $task) {
 
-                    if($task->date == null){
+                    if ($task->date == null) {
                         // On récupère les compétences de la tache
                         $taskSkills = $task->skills;
                         $taskPlan = false;
 
                         //On parcours la liste des périodes disponible et on regarde si la durée de la tache est inférieur ou égale a la periode disponilbe
-                        foreach($date['periods_available'] as $key => $period){
+                        foreach ($date['periods_available'] as $key => $period) {
 
-                            if($task->estimated_time <= $period['hours'] && !$taskPlan){
+                            if ($task->estimated_time <= $period['hours'] && !$taskPlan) {
 
                                 $previousOk = true;
                                 //On regarde si la tache est dépendante d'autre(s) tache(s)
-                                if($task->previousTasks && count($task->previousTasks) > 0){
+                                if ($task->previousTasks && count($task->previousTasks) > 0) {
 
                                     //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède  
-                                    foreach($task->previousTasks as $previous){
+                                    foreach ($task->previousTasks as $previous) {
                                         $previous_task = Task::find($previous->previous_task_id);
-                                        if($previous_task->date == null || $previous_task->dateEnd > $period['start_time']){
-                                            $previousOk = false; 
+                                        if ($previous_task->date == null || $previous_task->dateEnd > $period['start_time']) {
+                                            $previousOk = false;
                                             break;
-                                        } 
+                                        }
                                     }
                                 }
 
@@ -310,52 +332,53 @@ class ProjectController extends Controller
                                 $workareaOk = null;
                                 $workareas = $this->getWorkareasBySkills($task->skills, $project->company_id);
 
-                                foreach($workareas as $workarea){
+                                foreach ($workareas as $workarea) {
                                     $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->where('status', '!=', 'done')->get();
-                                    if(count($tasksWorkarea) > 0){
-                                        foreach($tasksWorkarea as $taskWorkarea){
+                                    if (count($tasksWorkarea) > 0) {
+                                        foreach ($tasksWorkarea as $taskWorkarea) {
                                             $workareaTaskperiod = CarbonPeriod::create($taskWorkarea->date, $taskWorkarea->dateEnd);
-    
-                                            if(!$workareaTaskperiod->contains($period['start_time'])
-                                            && !$workareaTaskperiod->contains($period['end_time'])
-                                            && !($period['start_time'] <= $taskWorkarea->date && $taskWorkarea->dateEnd <= $period['end_time'])){
-    
+
+                                            if (
+                                                !$workareaTaskperiod->contains($period['start_time'])
+                                                && !$workareaTaskperiod->contains($period['end_time'])
+                                                && !($period['start_time'] <= $taskWorkarea->date && $taskWorkarea->dateEnd <= $period['end_time'])
+                                            ) {
+
 
                                                 $workareaOk = $workarea;
                                                 break;
                                             }
                                         }
-                                    } 
-                                    else{
+                                    } else {
                                         $workareaOk = $workarea;
                                     }
                                 }
-                                
+
 
 
                                 //On regarde si la tache est conforme pour être programmée
-                                if($previousOk && $workareaOk){
+                                if ($previousOk && $workareaOk) {
 
                                     // On regarde si l'utilisateur de la période possède les compétences nécéssaires
-                                    if(count($period['user']->skills) > 0){
+                                    if (count($period['user']->skills) > 0) {
                                         $haveSkillsNb = 0;
-                                        foreach($taskSkills as $skill){
+                                        foreach ($taskSkills as $skill) {
 
-                                            foreach($period['user']->skills as $userskill){
-                                                if($skill->id == $userskill->id){
+                                            foreach ($period['user']->skills as $userskill) {
+                                                if ($skill->id == $userskill->id) {
                                                     $haveSkillsNb++;
                                                     break;
                                                 }
                                             }
                                         }
 
-                                        if($haveSkillsNb == count($taskSkills)){
+                                        if ($haveSkillsNb == count($taskSkills)) {
                                             $tasksTemp[$keytask] = tap(Task::findOrFail($task->id))->update(['date' => $period['start_time'], 'user_id' => $period['user']->id, 'workarea_id' => $workareaOk->id])->fresh();
                                             $taskPlan = true;
 
                                             //On enlève la période des heures dispo de l'utilisateur
                                             $date['periods_available'][$key]['hours'] = $period['hours'] - $task->estimated_time;
-                                            if($date['periods_available'][$key]['hours'] > 0){
+                                            if ($date['periods_available'][$key]['hours'] > 0) {
                                                 $date['periods_available'][$key]['start_time'] = Carbon::parse($period['start_time'])->addHours($task->estimated_time);
                                             }
                                         }
@@ -366,7 +389,7 @@ class ProjectController extends Controller
 
                         //On informe si les utilisateurs ne possèdent pas les compétences nécessaires pour une certaine tache
                         //return response()->json(['error' => 'No enought users with skills'], 401); 
-                    }  
+                    }
                 }
             }
         }
@@ -375,22 +398,21 @@ class ProjectController extends Controller
         $allPlanified = true;
         $taskIds = [];
 
-        foreach($tasksTemp as $taskTemp){
+        foreach ($tasksTemp as $taskTemp) {
             array_push($taskIds, $taskTemp->id);
 
-            if(!$taskTemp->date || !$taskTemp->user_id){
+            if (!$taskTemp->date || !$taskTemp->user_id) {
                 $allPlanified = false;
             }
         }
 
 
         //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
-        if($allPlanified){
+        if ($allPlanified) {
             Project::findOrFail($project->id)->update(['status' => 'doing']);
 
             $alerts = ['success' => 'All good'];
-        }
-        else{ // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
+        } else { // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
 
             Task::whereIn('id', $taskIds)->update(['date' => null, 'user_id' => null, 'workarea_id' => null]);
         }
@@ -398,7 +420,8 @@ class ProjectController extends Controller
         return $alerts;
     }
 
-    private function calculTimeAvailable($users, $date_end){
+    private function calculTimeAvailable($users, $date_end)
+    {
         $hoursAvailable = [];
 
         // Get days today date -> end date
@@ -407,19 +430,19 @@ class ProjectController extends Controller
 
         $period = CarbonPeriod::create($start_date, $end_date);
 
-        foreach($period as $t){
+        foreach ($period as $t) {
             $hoursAvailable[] = [
                 'date' => $t,
                 'day_label' => $t->format('l')
             ];
         }
 
-        $totalHours = 0;     
-        $totalHoursUnavailable = 0;     
+        $totalHours = 0;
+        $totalHoursUnavailable = 0;
 
         // foreach days foreach users get day get hours
-        foreach($hoursAvailable as $key => $data){
-            $test[] = $data['day_label']; 
+        foreach ($hoursAvailable as $key => $data) {
+            $test[] = $data['day_label'];
             $totalDateHours = 0;
             switch (true) {
                 case ($data['day_label'] == 'Monday' || $data['day_label'] == 'Lundi'):
@@ -427,7 +450,7 @@ class ProjectController extends Controller
                     $dayHours = $this->getHoursAvailableByDay('lundi', $data['date'], $users);
                     //Raf already task in this date
 
-                    if($dayHours){
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -444,7 +467,7 @@ class ProjectController extends Controller
                     $dayHours = $this->getHoursAvailableByDay('mardi', $data['date'], $users);
                     //Raf already task in this date
 
-                    if($dayHours){
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -461,7 +484,7 @@ class ProjectController extends Controller
                     $dayHours = $this->getHoursAvailableByDay('mercredi', $data['date'], $users);
                     //Raf already task in this date
 
-                    if($dayHours){
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -477,8 +500,8 @@ class ProjectController extends Controller
 
                     $dayHours = $this->getHoursAvailableByDay('jeudi', $data['date'], $users);
                     //Raf already task in this date
-    
-                    if($dayHours){
+
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -495,7 +518,7 @@ class ProjectController extends Controller
                     $dayHours = $this->getHoursAvailableByDay('vendredi', $data['date'], $users);
                     //Raf already task in this date
 
-                    if($dayHours){
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -512,7 +535,7 @@ class ProjectController extends Controller
                     $dayHours = $this->getHoursAvailableByDay('samedi', $data['date'], $users);
                     //Raf already task in this date
 
-                    if($dayHours){
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -529,7 +552,7 @@ class ProjectController extends Controller
                     $dayHours = $this->getHoursAvailableByDay('dimanche', $data['date'], $users);
                     //Raf already task in this date
 
-                    if($dayHours){
+                    if ($dayHours) {
                         $totalHours += $dayHours['total'];
                         $totalHoursUnavailable += $dayHours['total_unavailable'];
                         $data['users'] = $dayHours['users'];
@@ -540,9 +563,9 @@ class ProjectController extends Controller
                         $hoursAvailable[$key] = $data;
                     }
                     break;
-                }
+            }
 
-            $totalHours += $totalDateHours;   
+            $totalHours += $totalDateHours;
         }
 
         return $response = [
@@ -550,10 +573,10 @@ class ProjectController extends Controller
             'total_hours' => $totalHours,
             'total_hours_unavailable' => $totalHoursUnavailable
         ];
-        
     }
 
-    private function getHoursAvailableByDay($day, $date, $users){
+    private function getHoursAvailableByDay($day, $date, $users)
+    {
         $hours = [
             'total' => 0,
             'total_unavailable' => 0,
@@ -562,7 +585,7 @@ class ProjectController extends Controller
         ];
         $conflictUnavailableDate = false;
 
-        foreach($users as $user){
+        foreach ($users as $user) {
             $userHours = [
                 'user_id' => $user->id,
                 'hours' => 0,
@@ -570,58 +593,57 @@ class ProjectController extends Controller
                 'hours_tasks_other_project' => 0,
                 'periods_available' => []
             ];
-            
-            $unAvailablePeriods = count($user->unavailabilities) > 0? $this->transformDatesToPeriod($user->unavailabilities) : null;
 
-            foreach($user->workHours as $dayHours){
+            $unAvailablePeriods = count($user->unavailabilities) > 0 ? $this->transformDatesToPeriod($user->unavailabilities) : null;
 
-                if($dayHours->day == $day && (string)$dayHours->is_active){
+            foreach ($user->workHours as $dayHours) {
+
+                if ($dayHours->day == $day && (string) $dayHours->is_active) {
 
                     //Hours available
-                    if($dayHours->morning_ends_at && $dayHours->morning_starts_at){
-                        $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' .$dayHours->morning_ends_at);
-                        $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' .$dayHours->morning_starts_at);
+                    if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
+                        $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+                        $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
 
                         $userHours['hours'] += Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart));
                     }
-                    if($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at){
-                        $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' .$dayHours->afternoon_ends_at);
-                        $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' .$dayHours->afternoon_starts_at);
+                    if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
+                        $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+                        $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
 
                         $userHours['hours'] += Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart));
                     }
 
                     //Hours unavailable
-                    if($unAvailablePeriods){
+                    if ($unAvailablePeriods) {
 
                         $workDate = Carbon::createFromFormat('Y-m-d H:i:s', $date);
                         $hoursUnavailableByPeriod = [];
 
-                        foreach($unAvailablePeriods as $period){
-                            
+                        foreach ($unAvailablePeriods as $period) {
+
                             //On regarde si la période ne comprend que une seule journée
-                            if(count($period['period']) == 1){
+                            if (count($period['period']) == 1) {
 
                                 $unavailableDate = $period['period']->getStartDate();
 
-                                if($unavailableDate == $workDate){
+                                if ($unavailableDate == $workDate) {
 
                                     //On calcul le nombre d'heures d'indisponibilité
                                     $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailable($dayHours, $period);
                                 }
-                            } 
-                            else{ //plusieurs journées
+                            } else { //plusieurs journées
                                 $startDate = $period['period']->getStartDate();
                                 $endDate = $period['period']->getEndDate();
 
-                                foreach($period['period'] as $periodDay){
-  
-                                    if($periodDay == $workDate){
-                                        if($workDate == $startDate){
+                                foreach ($period['period'] as $periodDay) {
+
+                                    if ($periodDay == $workDate) {
+                                        if ($workDate == $startDate) {
                                             $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, $period['start_date']);
-                                        }else if($workDate == $endDate){
+                                        } else if ($workDate == $endDate) {
                                             $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, null, $period['end_date']);
-                                        }else{
+                                        } else {
                                             $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay);
                                         }
                                     }
@@ -635,81 +657,79 @@ class ProjectController extends Controller
                     }
 
                     //Hours Tasks other Project
-                    $tasks_user_day = Task::where('user_id', $user->id)->where('date', 'like', '%'. $date->format('Y-m-d') .'%')->get();
-                    if(count($tasks_user_day) > 0){
+                    $tasks_user_day = Task::where('user_id', $user->id)->where('date', 'like', '%' . $date->format('Y-m-d') . '%')->get();
+                    if (count($tasks_user_day) > 0) {
 
                         $nbHours = 0;
                         $other_tasks_project_periods = [
                             'morning' => [],
                             'afternoon' => []
                         ];
-                        
-                        foreach($tasks_user_day as $task){
+
+                        foreach ($tasks_user_day as $task) {
                             $nbHours += $task->estimated_time;
                             $start_time = $task->date;
                             $end_time = Carbon::parse($task->date)->addHours($task->estimated_time);
 
-                            if($morningEnd && $period['start_date'] < $morningEnd){
+                            if ($morningEnd && $period['start_date'] < $morningEnd) {
                                 $other_tasks_project_periods['morning'][] = array('start_time' => $start_time, 'end_time' => $end_time);
                             }
 
-                            if($AfternoonStart && $period['end_date'] > $AfternoonStart){
+                            if ($AfternoonStart && $period['end_date'] > $AfternoonStart) {
                                 $other_tasks_project_periods['afternoon'][] = array('start_time' => $start_time, 'end_time' => $end_time);
                             }
                         }
 
                         $userHours['hours_tasks_other_project'] = $nbHours;
                     }
-                    
+
                     //On construit un planning de l'utilisateur avec les heures disponibles de la journée 
                     $periods = [];
-                    if( $userHours['hours_unavailable'] > 0 || $userHours['hours_tasks_other_project'] > 0 ){
+                    if ($userHours['hours_unavailable'] > 0 || $userHours['hours_tasks_other_project'] > 0) {
                         $periods = [];
                         $periods_unavailable = [
                             'morning' => [],
                             'afternoon' => []
                         ];
 
-                        if(isset($userHours['hours_unavailable_details'])){
-                            $periods_unavailable['afternoon'] = array_merge( $periods_unavailable['afternoon'], $userHours['hours_unavailable_details']['afternoon']['periods']);
-                            $periods_unavailable['morning'] = array_merge( $periods_unavailable['morning'], $userHours['hours_unavailable_details']['morning']['periods']);
+                        if (isset($userHours['hours_unavailable_details'])) {
+                            $periods_unavailable['afternoon'] = array_merge($periods_unavailable['afternoon'], $userHours['hours_unavailable_details']['afternoon']['periods']);
+                            $periods_unavailable['morning'] = array_merge($periods_unavailable['morning'], $userHours['hours_unavailable_details']['morning']['periods']);
                         }
 
-                        if(isset($userHours['hours_tasks_other_project'])){
+                        if (isset($userHours['hours_tasks_other_project'])) {
                             $periods_unavailable['afternoon'] = array_merge($periods_unavailable['afternoon'], $other_tasks_project_periods['afternoon']);
                             $periods_unavailable['morning'] = array_merge($periods_unavailable['morning'], $other_tasks_project_periods['morning']);
                         }
 
                         $periods = $this->reversePeriodsUnavailableToPeriods(
-                            $periods_unavailable, 
+                            $periods_unavailable,
                             array('morningStart' => $morningStart, 'morningEnd' => $morningEnd, 'afternoonStart' => $AfternoonStart, 'afternoonEnd' => $AfternoonEnd),
                             $user
                         );
-
-                    }    
-                    else{
+                    } else {
                         $periods[] = array(
                             'start_time' => $morningStart,
-                            'end_time' => $morningEnd, 
-                            'hours' => Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart)), 
-                            'user' => $user 
+                            'end_time' => $morningEnd,
+                            'hours' => Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart)),
+                            'user' => $user
                         );
 
                         $periods[] = array(
-                            'start_time' => $AfternoonStart, 
-                            'end_time' => $AfternoonEnd, 
-                            'hours' => Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart)), 
+                            'start_time' => $AfternoonStart,
+                            'end_time' => $AfternoonEnd,
+                            'hours' => Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart)),
                             'user' => $user
                         );
-                    }   
-                    
+                    }
+
                     $userHours['periods_available'] = $periods;
                 }
             }
 
 
 
-            if($userHours['hours'] != 0){
+            if ($userHours['hours'] != 0) {
                 $hours['total'] += $userHours['hours'];
                 $hours['total_unavailable'] += $userHours['hours_unavailable'];
                 $hours['users'][] = $userHours;
@@ -721,7 +741,8 @@ class ProjectController extends Controller
         return empty($hours) ? null : $hours;
     }
 
-    private function calculNbHoursUnavailable($dayHours, $period, $hours_unavailable = null){
+    private function calculNbHoursUnavailable($dayHours, $period, $hours_unavailable = null)
+    {
 
         $hours_unavailable_morning = [
             'hours' => 0,
@@ -739,28 +760,26 @@ class ProjectController extends Controller
         ];
 
         //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
-        if($dayHours->morning_ends_at && $dayHours->morning_starts_at){
-            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->morning_ends_at);
-            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->morning_starts_at);
+        if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
+            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
 
             //Matin
-            if($period['start_date'] < $morningEnd){
+            if ($period['start_date'] < $morningEnd) {
                 $startMorningUnavailable = null;
                 $endMorningUnavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche du matin
-                if($period['start_date'] > $morningStart){
+                if ($period['start_date'] > $morningStart) {
                     $startMorningUnavailable = $period['start_date'];
-                }
-                else{ //Sinon, on prend l'heure d'embauche
+                } else { //Sinon, on prend l'heure d'embauche
                     $startMorningUnavailable = $morningStart;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du midi
-                if($period['end_date'] <= $morningEnd){
+                if ($period['end_date'] <= $morningEnd) {
                     $endMorningUnavailable = $period['end_date'];
-                }
-                else{ //Sinon, on prend de débauche du midi.
+                } else { //Sinon, on prend de débauche du midi.
                     $endMorningUnavailable = $morningEnd;
                 }
 
@@ -771,31 +790,29 @@ class ProjectController extends Controller
                         'end_time' => $endMorningUnavailable
                     ]
                 ];
-            }            
+            }
         }
 
-        if($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at){
-            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->afternoon_ends_at);
-            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d'). ' ' .$dayHours->afternoon_starts_at);
+        if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
+            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
 
             //Après midi
-            if($period['end_date'] > $AfternoonStart){
+            if ($period['end_date'] > $AfternoonStart) {
                 $startAfternoonUnavailable = null;
                 $endAfternoonUnavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche d'après-midi
-                if($period['start_date'] > $AfternoonStart){
+                if ($period['start_date'] > $AfternoonStart) {
                     $startAfternoonUnavailable = $period['start_date'];
-                }
-                else{ //Sinon, on prend l'heure d'embauche d'après-midi
+                } else { //Sinon, on prend l'heure d'embauche d'après-midi
                     $startAfternoonUnavailable = $AfternoonStart;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
-                if($period['end_date'] <= $AfternoonEnd){
+                if ($period['end_date'] <= $AfternoonEnd) {
                     $endAfternoonUnavailable = $period['end_date'];
-                }
-                else{ //Sinon, on prend de débauche du midi.
+                } else { //Sinon, on prend de débauche du midi.
                     $endAfternoonUnavailable = $AfternoonEnd;
                 }
 
@@ -813,7 +830,8 @@ class ProjectController extends Controller
     }
 
 
-    private function calculNbHoursUnavailablePeriod($dayHours, $day, $fisrt_date = null, $last_date = null){
+    private function calculNbHoursUnavailablePeriod($dayHours, $day, $fisrt_date = null, $last_date = null)
+    {
 
         $hours_unavailable_morning = [
             'hours' => 0,
@@ -843,28 +861,26 @@ class ProjectController extends Controller
         //return array($startDateTime, $endDateTime);
 
         //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
-        if($dayHours->morning_ends_at && $dayHours->morning_starts_at){
-            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->morning_ends_at);
-            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->morning_starts_at);
+        if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
+            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
 
             //Matin
-            if($startDateTime < $morningEnd){
+            if ($startDateTime < $morningEnd) {
                 $startMorningUnavailable = null;
                 $endMorningUnavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche du matin
-                if($startDateTime > $morningStart){
+                if ($startDateTime > $morningStart) {
                     $startMorningUnavailable = $startDateTime;
-                }
-                else{ //Sinon, on prend l'heure d'embauche
+                } else { //Sinon, on prend l'heure d'embauche
                     $startMorningUnavailable = $morningStart;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du midi
-                if($endDateTime <= $morningEnd){
+                if ($endDateTime <= $morningEnd) {
                     $endMorningUnavailable = $endDateTime;
-                }
-                else{ //Sinon, on prend de débauche du midi.
+                } else { //Sinon, on prend de débauche du midi.
                     $endMorningUnavailable = $morningEnd;
                 }
 
@@ -875,31 +891,29 @@ class ProjectController extends Controller
                         'end_time' => $endMorningUnavailable
                     ]
                 ];
-            }            
+            }
         }
 
-        if($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at){
-            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->afternoon_ends_at);
-            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d'). ' ' .$dayHours->afternoon_starts_at);
+        if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
+            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
 
             //Après midi
-            if($endDateTime > $AfternoonStart){
+            if ($endDateTime > $AfternoonStart) {
                 $startAfternoonUnavailable = null;
                 $endAfternoonUnavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche d'après-midi
-                if($startDateTime > $AfternoonStart){
+                if ($startDateTime > $AfternoonStart) {
                     $startAfternoonUnavailable = $startDateTime;
-                }
-                else{ //Sinon, on prend l'heure d'embauche d'après-midi
+                } else { //Sinon, on prend l'heure d'embauche d'après-midi
                     $startAfternoonUnavailable = $AfternoonStart;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
-                if($endDateTime <= $AfternoonEnd){
+                if ($endDateTime <= $AfternoonEnd) {
                     $endAfternoonUnavailable = $endDateTime;
-                }
-                else{ //Sinon, on prend de débauche du soir.
+                } else { //Sinon, on prend de débauche du soir.
                     $endAfternoonUnavailable = $AfternoonEnd;
                 }
 
@@ -916,13 +930,13 @@ class ProjectController extends Controller
         return array('morning' => $hours_unavailable_morning, 'afternoon' => $hours_unavailable_afternoon);
     }
 
-    private function mergeHoursUnavailable($hoursUnavailableByPeriod){
+    private function mergeHoursUnavailable($hoursUnavailableByPeriod)
+    {
 
         //On regarde si la journée contient une ou plusieurs indisponnibilités
-        if(count($hoursUnavailableByPeriod) == 1){
+        if (count($hoursUnavailableByPeriod) == 1) {
             $response = $hoursUnavailableByPeriod[0];
-        }
-        else{
+        } else {
             $hoursUnavailable = [
                 'morning' => [
                     'hours' => 0,
@@ -934,14 +948,14 @@ class ProjectController extends Controller
                 ]
             ];
 
-            foreach($hoursUnavailableByPeriod as $hours){
+            foreach ($hoursUnavailableByPeriod as $hours) {
 
-                if($hours['morning']['hours'] != 0){
+                if ($hours['morning']['hours'] != 0) {
                     $hoursUnavailable['morning']['hours'] += $hours['morning']['hours'];
                     $hoursUnavailable['morning']['periods'][] = $hours['morning']['periods'];
                 }
 
-                if($hours['afternoon']['hours'] != 0){
+                if ($hours['afternoon']['hours'] != 0) {
                     $hoursUnavailable['afternoon']['hours'] += $hours['afternoon']['hours'];
                     $hoursUnavailable['afternoon']['periods'][] = $hours['afternoon']['periods'];
                 }
@@ -949,14 +963,14 @@ class ProjectController extends Controller
             $response = $hoursUnavailable;
         }
         return $response;
-
     }
- 
-    private function transformDatesToPeriod($unavailabilities){
 
-        if(isset($unavailabilities[0])){
+    private function transformDatesToPeriod($unavailabilities)
+    {
+
+        if (isset($unavailabilities[0])) {
             $periods = [];
-            foreach($unavailabilities as $unavailability){
+            foreach ($unavailabilities as $unavailability) {
                 $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
                 $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
@@ -969,24 +983,24 @@ class ProjectController extends Controller
                 ];
             }
             return $periods;
-        }
-        else{
+        } else {
             return false;
         }
     }
 
     //Permet de transformer le planning des periodes indisponibles en périodes disponibles
-    private function reversePeriodsUnavailableToPeriods($periods_unavailable, $hours_work, $user){
+    private function reversePeriodsUnavailableToPeriods($periods_unavailable, $hours_work, $user)
+    {
 
         $periods = [];
-        
+
         count($periods_unavailable['morning']) > 1 ? usort($periods_unavailable['morning'], array($this, 'date_sort')) : null;
         count($periods_unavailable['afternoon']) > 1 ? usort($periods_unavailable['afternoon'], array($this, 'date_sort')) : null;
 
         //Matin
-        if($hours_work['morningStart'] && $hours_work['morningEnd']){
+        if ($hours_work['morningStart'] && $hours_work['morningEnd']) {
             //Si pas d'indiponibilité ni de tache d'autre projet
-            if(count($periods_unavailable['morning']) == 0){
+            if (count($periods_unavailable['morning']) == 0) {
                 $period_available = [
                     'start_time' => $hours_work['morningStart'],
                     'end_time' => $hours_work['morningEnd'],
@@ -994,17 +1008,15 @@ class ProjectController extends Controller
                     'user' => $user
                 ];
                 $periods[] = $period_available;
-            }
-
-            elseif(count($periods_unavailable['morning']) == 1){
+            } elseif (count($periods_unavailable['morning']) == 1) {
 
                 // 1er cas : On regarde si la periode d'indispo est égale ou déborde de la période de travail
-                if($periods_unavailable['morning'][0]['start_time'] <= $hours_work['morningStart'] && $hours_work['morningEnd'] <= $periods_unavailable['morning'][0]['end_time']){
+                if ($periods_unavailable['morning'][0]['start_time'] <= $hours_work['morningStart'] && $hours_work['morningEnd'] <= $periods_unavailable['morning'][0]['end_time']) {
                     $period_available = null;
                 }
 
                 // 2ème cas : On regarde si la période est strictement dans la periode de travail
-                elseif($periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart'] && $hours_work['morningEnd'] > $periods_unavailable['morning'][0]['end_time']){
+                elseif ($periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart'] && $hours_work['morningEnd'] > $periods_unavailable['morning'][0]['end_time']) {
 
                     $period_available1 = [
                         'start_time' => $hours_work['morningStart'],
@@ -1022,9 +1034,7 @@ class ProjectController extends Controller
 
                     $periods[] = $period_available1;
                     $periods[] = $period_available2;
-                }
-
-                else{
+                } else {
                     $start_time = $periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart'] ? $periods_unavailable['morning'][0]['start_time'] : $hours_work['morningStart'];
                     $end_time = $hours_work['morningEnd'] > $periods_unavailable['morning'][0]['end_time'] ? $periods_unavailable['morning'][0]['end_time'] : $end_time = $hours_work['morningEnd'];
                     $period_available = [
@@ -1039,9 +1049,9 @@ class ProjectController extends Controller
             }
 
             // Si + de 1 indisponibilité
-            else{
+            else {
                 //On regarde si le premier élément du tableau est supérieur a la l'heure d'embauche du matin
-                if($periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart']){
+                if ($periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart']) {
                     $period_available = [
                         'start_time' => $hours_work['morningStart'],
                         'end_time' => $periods_unavailable['morning'][0]['start_time'],
@@ -1051,7 +1061,7 @@ class ProjectController extends Controller
                     $periods[] = $period_available;
                 }
 
-                foreach($periods_unavailable['morning'] as $key => $morningPeriod){
+                foreach ($periods_unavailable['morning'] as $key => $morningPeriod) {
                     $start_time = $morningPeriod['end_time'];
                     $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['morningEnd'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['morningEnd'];
                     $period_available = [
@@ -1063,15 +1073,13 @@ class ProjectController extends Controller
 
                     $periods[] = $period_available;
                 }
-
             }
-
         }
 
         //Après-midi
-        if($hours_work['afternoonStart'] && $hours_work['afternoonEnd']){
+        if ($hours_work['afternoonStart'] && $hours_work['afternoonEnd']) {
             //Si pas d'indiponibilité ni de tache d'autre proje
-            if(count($periods_unavailable['afternoon']) == 0){
+            if (count($periods_unavailable['afternoon']) == 0) {
                 $period_available = [
                     'start_time' => $hours_work['afternoonStart'],
                     'end_time' => $hours_work['afternoonEnd'],
@@ -1079,17 +1087,15 @@ class ProjectController extends Controller
                     'user' => $user
                 ];
                 $periods[] = $period_available;
-            }
-
-            elseif(count($periods_unavailable['afternoon']) == 1){
+            } elseif (count($periods_unavailable['afternoon']) == 1) {
 
                 // 1er cas : On regarde si la periode d'indispo est égale ou déborde de la période de travail
-                if($periods_unavailable['afternoon'][0]['start_time'] <= $hours_work['afternoonStart'] && $hours_work['afternoonEnd'] <= $periods_unavailable['afternoon'][0]['end_time']){
+                if ($periods_unavailable['afternoon'][0]['start_time'] <= $hours_work['afternoonStart'] && $hours_work['afternoonEnd'] <= $periods_unavailable['afternoon'][0]['end_time']) {
                     $period_available = null;
                 }
 
                 // 2ème cas : On regarde si la période est strictement dans la periode de travail
-                elseif($periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart'] && $hours_work['afternoonEnd'] > $periods_unavailable['afternoon'][0]['end_time']){
+                elseif ($periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart'] && $hours_work['afternoonEnd'] > $periods_unavailable['afternoon'][0]['end_time']) {
 
                     $period_available1 = [
                         'start_time' => $hours_work['afternoonStart'],
@@ -1107,9 +1113,7 @@ class ProjectController extends Controller
 
                     $periods[] = $period_available1;
                     $periods[] = $period_available2;
-                }
-
-                else{
+                } else {
                     $start_time = $periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart'] ? $periods_unavailable['afternoon'][0]['start_time'] : $hours_work['afternoonStart'];
                     $end_time = $hours_work['afternoonEnd'] > $periods_unavailable['afternoon'][0]['end_time'] ? $periods_unavailable['afternoon'][0]['end_time'] : $end_time = $hours_work['afternoonEnd'];
                     $period_available = [
@@ -1123,9 +1127,9 @@ class ProjectController extends Controller
                 }
             }
             // Si + de 1 indisponibilité
-            else{
+            else {
                 //On regarde si le premier élément du tableau est supérieur a la l'heure d'embauche du matin
-                if($periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart']){
+                if ($periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart']) {
                     $period_available = [
                         'start_time' => $hours_work['afternoonStart'],
                         'end_time' => $periods_unavailable['afternoon'][0]['start_time'],
@@ -1135,7 +1139,7 @@ class ProjectController extends Controller
                     $periods[] = $period_available;
                 }
 
-                foreach($periods_unavailable['afternoon'] as $key => $afternoonPeriod){
+                foreach ($periods_unavailable['afternoon'] as $key => $afternoonPeriod) {
                     $start_time = $afternoonPeriod['end_time'];
                     $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['afternoonEnd'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['afternoonEnd'];
                     $period_available = [
@@ -1147,27 +1151,27 @@ class ProjectController extends Controller
 
                     $periods[] = $period_available;
                 }
-
             }
-
         }
 
 
         return $periods;
-    }     
+    }
 
-    private function date_sort($a, $b) {
+    private function date_sort($a, $b)
+    {
         return strtotime($a['start_time']) - strtotime($b['start_time']);
     }
 
     //On tri les taches pour éviter les programmations des tâches enfantes avant les tâches parentes
-    private function orderTasksByPrevious($tasks){
+    private function orderTasksByPrevious($tasks)
+    {
 
         $tasksOrdered = [];
-        foreach($tasks as $task){
-            if($task->previousTasks && count($task->previousTasks) > 0){
+        foreach ($tasks as $task) {
+            if ($task->previousTasks && count($task->previousTasks) > 0) {
 
-                foreach($task->previousTasks as $previous){
+                foreach ($task->previousTasks as $previous) {
                     $prior_task = $previous->previousTask;
                     $tasksOrdered = $this->checkIfPreviousTasks($prior_task, $tasksOrdered);
                 }
@@ -1178,11 +1182,12 @@ class ProjectController extends Controller
         return $tasksOrdered;
     }
 
-    private function checkIfPreviousTasks($task, $tasksOrdered){
+    private function checkIfPreviousTasks($task, $tasksOrdered)
+    {
 
-        if($task->previousTasks && count($task->previousTasks) > 0){
+        if ($task->previousTasks && count($task->previousTasks) > 0) {
 
-            foreach($task->previousTasks as $previous){
+            foreach ($task->previousTasks as $previous) {
                 $prior_task = $previous->previousTask;
                 $tasksOrdered = $this->checkIfPreviousTasks($prior_task, $tasksOrdered);
             }
@@ -1192,37 +1197,36 @@ class ProjectController extends Controller
         return $tasksOrdered;
     }
 
-    private function containsObject($obj, $list) {
-        
+    private function containsObject($obj, $list)
+    {
+
         for ($i = 0; $i < count($list); $i++) {
             if ($list[$i]->id == $obj->id) {
                 return true;
             }
         }
-    
+
         return false;
     }
 
-    private function getWorkareasBySkills($skills, $company_id){
+    private function getWorkareasBySkills($skills, $company_id)
+    {
 
         $workareas = Workarea::where('company_id', $company_id)->with('skills')->get();
         $response = [];
 
         $workareaIds = [];
-        foreach($workareas as $workarea){
+        foreach ($workareas as $workarea) {
             $nbTime = count($skills);
-            foreach($skills as $skill){
+            foreach ($skills as $skill) {
                 $nbTime = $this->containsObject($skill, $workarea->skills) ? $nbTime - 1 : $nbTime;
             }
 
-            if($nbTime == 0){
+            if ($nbTime == 0) {
                 array_push($response, $workarea);
             }
         }
 
         return $response;
     }
-    
-    
-
 }

@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RepetitiveTask extends Model
 {
-
+    use  SoftDeletes;
     protected $fillable = ['name', 'order', 'description', 'estimated_time', 'range_id', 'workarea_id'];
 
     public function workarea()
