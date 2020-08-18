@@ -3,12 +3,13 @@
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
-      v-if="authorizedToEdit"
+      v-if="authorizedToEdit && !params.data.deleted_at"
       @click="editRecord"
     />
     <feather-icon
       icon="ArchiveIcon"
       :svgClasses="this.archiveSvg"
+      v-if="authorizedToDelete"
       @click="params.data.deleted_at ? confirmActionRecord('restore') : confirmActionRecord('archive')"
     />
     <feather-icon
@@ -38,9 +39,9 @@ export default {
     },
     archiveSvg() {
       return this.params.data.deleted_at
-        ? "h-5 w-5 mr-4 text-warning hover:text-success cursor-pointer"
-        : "h-5 w-5 mr-4 hover:text-primary cursor-pointer";
-    },
+        ? "h-5 w-5 mr-4 text-success cursor-pointer"
+        : "h-5 w-5 mr-4 hover:text-warning cursor-pointer";
+    }
   },
   methods: {
     editRecord() {
@@ -87,7 +88,7 @@ export default {
             : type === "archive"
             ? "Archiver"
             : "Restaurer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
@@ -96,31 +97,31 @@ export default {
         .then(() => {
           this.showActionSuccess("delete");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     archiveRecord() {
       this.$store
         .dispatch("rangeManagement/removeRecord", this.params.data.id)
-        .then((data) => {
+        .then(data => {
           this.showActionSuccess("archive");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     restoreRecord() {
       this.$store
         .dispatch("rangeManagement/restoreItem", this.params.data.id)
-        .then((response) => {
+        .then(response => {
           if (response.data.success) {
             this.showActionSuccess("restore");
           } else {
             this.showActionError();
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -133,9 +134,9 @@ export default {
             ? `${modelTitle} supprimée`
             : type === "archive"
             ? `${modelTitle} archivée`
-            : `${modelTitle} restaurée`,
+            : `${modelTitle} restaurée`
       });
-    },
-  },
+    }
+  }
 };
 </script>
