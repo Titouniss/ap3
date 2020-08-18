@@ -155,7 +155,7 @@ class CustomersController extends Controller
     {
         try {
             $item = Customers::withTrashed()->findOrFail($id);
-            $success = $item->forceDeleteCascade();
+            $success = $item->forceDelete();
 
             if (!$success) {
                 throw new Exception('Impossible de supprimer le client');

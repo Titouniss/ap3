@@ -33,13 +33,4 @@ class Customers extends Model
         }
         return $this->delete();
     }
-
-    public function forceDeleteCascade()
-    {
-        $projects = Project::withTrashed()->where('customer_id', $this->id)->get();
-        foreach ($projects as $project) {
-            $project->forceDeleteCascade();
-        }
-        return $this->forceDelete();
-    }
 }

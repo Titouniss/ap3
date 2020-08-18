@@ -59,13 +59,4 @@ class Project extends Model
         TasksBundle::where('project_id', $this->id)->delete();
         return $this->delete();
     }
-
-    public function forceDeleteCascade()
-    {
-        foreach ($this->tasksBundles as $t) {
-            Task::withTrashed()->where('tasks_bundle_id', $t->id)->forceDelete();
-        }
-        TasksBundle::withTrashed()->where('project_id', $this->id)->forceDelete();
-        return $this->forceDelete();
-    }
 }

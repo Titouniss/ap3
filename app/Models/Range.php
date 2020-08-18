@@ -32,10 +32,4 @@ class Range extends Model
         RepetitiveTask::where('range_id', $this->id)->delete();
         return $this->delete();
     }
-
-    public function forceDeleteCascade()
-    {
-        RepetitiveTask::withTrashed()->where('range_id', $this->id)->forceDelete();
-        return $this->forceDelete();
-    }
 }

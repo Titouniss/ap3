@@ -163,7 +163,7 @@ class RangeController extends Controller
     {
         try {
             $item = Range::withTrashed()->findOrFail($id);
-            $success = $item->forceDeleteCascade();
+            $success = $item->forceDelete();
 
             if (!$success) {
                 throw new Exception('Impossible de supprimer la gamme');

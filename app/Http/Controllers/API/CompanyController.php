@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use Carbon\Carbon;
+use Exception;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -124,10 +125,17 @@ class CompanyController extends Controller
      */
     public function restore($id)
     {
-        $item = Company::withTrashed()->findOrFail($id)->restore();
-        if ($item) {
-            $item = Company::where('id', $id)->first();
-            return response()->json(['success' => $item], $this->successStatus);
+        try {
+            $item = Company::withTrashed()->findOrFail($id);
+            $success = $item->restoreCascade();
+
+            if ($success) {
+                return response()->json(['success' => $item], $this->successStatus);
+            } else {
+                throw new Exception('Impossible de restaurer le projet');
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
         }
     }
 
@@ -139,9 +147,18 @@ class CompanyController extends Controller
      */
     public function destroy($id)
     {
-        $item = Company::findOrFail($id);
-        $item->delete();
-        return response()->json(['success' => $item], $this->successStatus);
+        try {
+            $item = Company::findOrFail($id);
+            $success = $item->deleteCascade();
+
+            if (!$success) {
+                throw new Exception('Impossible d\'archiver le projet');
+            }
+
+            return response()->json(['success' => $item], $this->successStatus);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+        }
     }
 
     /**

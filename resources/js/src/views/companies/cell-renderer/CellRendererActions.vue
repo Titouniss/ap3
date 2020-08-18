@@ -3,39 +3,50 @@
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
+      v-if="authorizedToEdit && !params.data.deleted_at"
       @click="editRecord"
     />
     <feather-icon
       icon="ArchiveIcon"
       :svgClasses="this.archiveSvg"
+      v-if="authorizedToDelete"
       @click="params.data.deleted_at ? confirmActionRecord('restore') : confirmActionRecord('archive')"
     />
     <feather-icon
       icon="Trash2Icon"
       svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+      v-if="authorizedToDelete"
       @click="confirmActionRecord('delete')"
     />
   </div>
 </template>
 
 <script>
+var model = "company";
+var modelPlurial = "companies";
 var modelTitle = "Société";
 
 export default {
   name: "CellRendererActions",
   computed: {
+    authorizedToEdit() {
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
+    },
+    authorizedToDelete() {
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
+    },
     archiveSvg() {
       return this.params.data.deleted_at
-        ? "h-5 w-5 mr-4 text-warning hover:text-success cursor-pointer"
-        : "h-5 w-5 mr-4 hover:text-primary cursor-pointer";
-    },
+        ? "h-5 w-5 mr-4 text-success cursor-pointer"
+        : "h-5 w-5 mr-4 hover:text-warning cursor-pointer";
+    }
   },
   methods: {
     editRecord() {
       this.$store
         .dispatch("companyManagement/editItem", this.params.data)
         .then(() => {})
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -78,26 +89,27 @@ export default {
             : type === "archive"
             ? "Archiver"
             : "Restaurer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
       this.$store
         .dispatch("companyManagement/forceRemoveItem", this.params.data.id)
-        .then(() => {
+        .then(response => {
+          console.log(response);
           this.showActionSuccess("delete");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     archiveRecord() {
       this.$store
         .dispatch("companyManagement/removeItem", this.params.data.id)
-        .then((data) => {
+        .then(data => {
           this.showActionSuccess("archive");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -105,7 +117,7 @@ export default {
       console.log([" this.params.data.id", this.params.data.id]);
       this.$store
         .dispatch("companyManagement/restoreItem", this.params.data.id)
-        .then((response) => {
+        .then(response => {
           console.log(["response", response]);
           if (response.data.success) {
             this.showActionSuccess("restore");
@@ -113,7 +125,7 @@ export default {
             this.showActionError();
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -126,16 +138,16 @@ export default {
             ? `Société supprimée`
             : type === "archive"
             ? `Société archivée`
-            : `Société restaurée`,
+            : `Société restaurée`
       });
     },
     showActionError() {
       this.$vs.notify({
         color: "error",
         title: modelTitle,
-        text: "Une erreur est survenue.",
+        text: "Une erreur est survenue."
       });
-    },
-  },
+    }
+  }
 };
 </script>
