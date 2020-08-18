@@ -48,11 +48,11 @@ class UserRegistration extends Notification
     {
         $link = url( "/pages/register/".$this->user->register_token."/".$notifiable->getEmailForPasswordReset());
         return (new MailMessage)
-                    ->subject('Invitation à rejoindre projetx!') // TODO rename projetx
+                    ->subject('Invitation à rejoindre plannigo !')
                     ->greeting('Bonjour '.$notifiable->firstname)
-                    ->line('ICI un texte pour dire à l utilisateur de cliquer sur le bouton')  // TODO le texte avant bouton clique
+                    ->line("Vous êtes invité à rejoindre plannigo, clickez sur le bouton pour vous rendre sur la page d'inscription.")  // TODO le texte avant bouton clique
                     ->action('S\'inscrire',  $link)
-                    ->line('Merci d\'utiliser projetX'); // TODO rename projetx + modification text potentiellement
+                    ->line('Merci d\'utiliser plannigo'); //modification text potentiellement
     }
 
     /**
