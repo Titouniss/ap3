@@ -94,12 +94,7 @@
                   <h5 v-if="isPeriodFilter()">{{ filterDate }}</h5>
                 </vs-col>
                 <vs-col vs-type="flex" vs-justify="center">
-                  <h5
-                    class="mt-1"
-                    v-if="
-                                            this.filters.period_type === 'week'
-                                        "
-                  >{{ currentWeek }}</h5>
+                  <h5 class="mt-1" v-if="this.filters.period_type === 'week'">{{ currentWeek }}</h5>
                 </vs-col>
                 <vs-col vs-type="flex" vs-justify="center">
                   <flat-pickr
@@ -280,12 +275,13 @@ var model = "hours";
 var modelPlurial = "hours";
 var modelTitle = "Heures";
 
+moment.locale("fr");
+
 export default {
   components: {
     AgGridVue,
     vSelect,
     flatPickr,
-    AddForm,
     // Cell Renderer
     CellRendererActions,
     CellRendererRelations,
@@ -363,7 +359,7 @@ export default {
         project: null,
         user: null,
         date: moment(),
-        period_type: "year",
+        period_type: "month",
       },
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
@@ -718,7 +714,6 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
-    moduleDealingHoursManagement.isRegistered = false;
     moduleProjectManagement.isRegistered = false;
     moduleUserManagement.isRegistered = false;
     moduleHoursManagement.isRegistered = false;
