@@ -124,6 +124,9 @@ export default {
       return this.$store.state.scheduleManagement.event.id || -1;
     },
     calendarEvents() {
+
+      console.log('calendarEvent')
+      
       // Get all task and parse to show
       var eventsParse = [];
       if (this.$route.query.type === "projects") {
@@ -185,8 +188,7 @@ export default {
         }
       } else if (this.$route.query.type === "workarea") {
         if (this.tasksEvent !== []) {
-          console.log(["this.tasksEvent", this.tasksEvent]);
-
+          
           this.tasksEvent.forEach(t => {
             if (
               t.workarea_id !== null &&

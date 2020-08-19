@@ -224,6 +224,16 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: '/hours/hours-view',
+                    name: 'hours-hours-view',
+                    component: () => import('@/views/hours/Read.vue'),
+                    meta: {
+                        pageTitle: 'Gestion des heures',
+                        rule: 'admin',
+                        requiresAuth: true
+                    }
+                },
                 /////---Schedules---/////
                 {
                     path: '/schedules',
