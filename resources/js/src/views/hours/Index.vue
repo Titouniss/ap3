@@ -296,7 +296,7 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Pas d'heures à afficher" },
+        localeText: { noRowsToShow: "Aucune heure à afficher" },
       },
       defaultColDef: {
         sortable: true,
@@ -310,12 +310,10 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true,
         },
         {
           headerName: "Date",
           field: "date",
-          width: 70,
           cellRenderer: (data) => {
             moment.locale("fr");
             return moment(data.value).format("D MMMM YYYY");
@@ -324,23 +322,21 @@ export default {
         {
           headerName: "Durée",
           field: "duration",
-          width: 60,
         },
         {
           headerName: "Description",
           field: "description",
-          width: 100,
         },
         {
           headerName: "Projet",
           field: "project",
-          width: 80,
           cellRendererFramework: "CellRendererRelations",
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 40,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],
