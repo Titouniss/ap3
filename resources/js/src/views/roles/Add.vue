@@ -66,14 +66,21 @@
               -->
               <th
                 class="font-semibold text-base text-left px-3 py-2"
-                v-for="heading in ['Module', 'Consulter','Créer', 'Editer',  'Supprimer']"
+                v-for="heading in ['Module', 'Tout', 'Consulter', 'Créer', 'Editer', 'Supprimer']"
                 :key="heading"
               >{{ heading }}</th>
             </tr>
             <tr v-for="(items,index) in permissions" :key="index">
               <td class="px-3 py-2">{{ capitalizeFirstLetter(index) }}</td>
+              <td class="px-3 py-2">
+                <vs-checkbox v-on:change="checkAll(items)" :checked="checkOrNot(items)" />
+              </td>
               <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
-                <vs-checkbox v-model="selected[item.id]" />
+                <vs-checkbox
+                  :disabled="forceConsult(items, item)"
+                  v-on:change="checkConsult(items, item)"
+                  v-model="selected[item.id]"
+                />
               </td>
             </tr>
           </table>
@@ -114,10 +121,10 @@ export default {
         guard_name: "web",
         description: "",
         isPublic: false,
-        company_id: null
+        company_id: null,
       },
       selected: [],
-      role_not_found: false
+      role_not_found: false,
     };
   },
   computed: {
@@ -126,7 +133,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -139,7 +146,7 @@ export default {
         .permissions;
       let permissions = [];
       if (permissionsStore && permissionsStore.length > 0) {
-        permissions = permissionsStore.reduce(function(acc, valeurCourante) {
+        permissions = permissionsStore.reduce(function (acc, valeurCourante) {
           let permissionName = valeurCourante.name;
           let titles = permissionName.split(" ");
 
@@ -160,7 +167,7 @@ export default {
     },
     validateForm() {
       return !this.errors.any() && this.role_data.name != "";
-    }
+    },
   },
   methods: {
     save_changes() {
@@ -179,11 +186,11 @@ export default {
             text: "Rôle ajouté avec succès",
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success"
+            color: "success",
           });
           this.$router.push(`/${modelPlurial}`).catch(() => {});
         })
-        .catch(error => {
+        .catch((error) => {
           const unauthorize = error.message
             ? error.message.includes("status code 403")
             : false;
@@ -194,9 +201,90 @@ export default {
             text: unauthorize ? unauthorizeMessage : error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
+    },
+    checkOrNot(items) {
+      let items_id = [];
+
+      // get items_id
+      for (const perm in items) {
+        items_id.push(items[perm].id);
+      }
+
+      // Check if already full check
+      let missPerm = false;
+      items_id.forEach((id) => {
+        if (!this.selected[id] === true) {
+          missPerm = true;
+        }
+      });
+
+      if (missPerm) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    checkAll(items) {
+      let items_id = [];
+
+      // get items_id
+      for (const perm in items) {
+        items_id.push(items[perm].id);
+      }
+
+      // Check if already full check
+      let missPerm = false;
+      items_id.forEach((id) => {
+        if (!this.selected[id] === true) {
+          missPerm = true;
+        }
+      });
+
+      if (missPerm) {
+        // add items_id if not already in
+        items_id.forEach((id) => {
+          if (!this.selected[id] === true || this.selected[id] === undefined) {
+            this.selected[id] = true;
+          }
+        });
+      } else {
+        // remove items_id from selected
+        items_id.forEach((id) => {
+          if (this.selected[id] === true) {
+            this.selected[id] = false;
+          }
+        });
+      }
+      this.selected = Object.assign({}, this.selected);
+    },
+    checkConsult(items, item) {
+      if (items.read.id !== item.id && !this.selected[items.read.id]) {
+        if (
+          !this.selected[items.read.id] === true ||
+          this.selected[items.read.id] === undefined
+        )
+          if (
+            !this.selected[items.read.id] === true ||
+            this.selected[items.read.id] === undefined
+          ) {
+            this.selected[items.read.id] = true;
+          }
+      }
+      this.selected = Object.assign({}, this.selected);
+    },
+    forceConsult(items, item) {
+      if (
+        items.read.id === item.id &&
+        (this.selected[items.delete.id] === true ||
+          this.selected[items.edit.id] === true ||
+          this.selected[items.publish.id] === true)
+      ) {
+        return true;
+      }
+      return false;
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
@@ -204,7 +292,7 @@ export default {
     capitalizeFirstLetter(word) {
       if (typeof word !== "string") return "";
       return word.charAt(0).toUpperCase() + word.slice(1);
-    }
+    },
   },
   created() {
     // Register Module roleManagement Module
@@ -219,7 +307,7 @@ export default {
       );
       modulePermissionManagement.isRegistered = true;
     }
-    this.$store.dispatch("permissionManagement/fetchItems").catch(err => {
+    this.$store.dispatch("permissionManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -228,6 +316,6 @@ export default {
     modulePermissionManagement.isRegistered = false;
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("permissionManagement");
-  }
+  },
 };
 </script>

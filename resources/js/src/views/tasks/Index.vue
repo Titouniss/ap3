@@ -13,13 +13,21 @@
       <feather-icon
         icon="GridIcon"
         svgClasses="h-5 w-5"
-        v-bind:class="[formatActive == 'grid' ? 'btnChooseDisplayFormatActive p-3' : 'btnFormatTaskList p-3']"
+        v-bind:class="[
+                    formatActive == 'grid'
+                        ? 'btnChooseDisplayFormatActive p-3'
+                        : 'btnFormatTaskList p-3'
+                ]"
         @click="formatActive = 'grid'"
       />
       <feather-icon
         icon="ListIcon"
         svgClasses="h-5 w-5"
-        v-bind:class="[formatActive == 'list' ? 'btnChooseDisplayFormatActive p-3' : 'btnFormatTaskList p-3']"
+        v-bind:class="[
+                    formatActive == 'list'
+                        ? 'btnChooseDisplayFormatActive p-3'
+                        : 'btnFormatTaskList p-3'
+                ]"
         @click="formatActive = 'list'"
       />
     </div>
@@ -65,15 +73,15 @@
               v-if="item.status == 'todo'"
               class="statusRedTask mr-1"
             />
-            <span class="nameTask">{{item.name}}</span>
+            <span class="nameTask">{{ item.name }}</span>
           </div>
 
-          <div class="dateTask">{{momentTransform(item.date)}}</div>
+          <div class="dateTask">{{ momentTransform(item.date) }}</div>
           <div
             v-show="showEditDeleteByIndex !== item.id"
             style="display: flex; flex-direction: row; align-self: flex-end;"
           >
-            <div v-if="item.workarea" class="workareaTask mr-4">{{item.workarea.name}}</div>
+            <div v-if="item.workarea" class="workareaTask mr-4">{{ item.workarea.name }}</div>
             <feather-icon
               v-if="item.description"
               icon="AlignLeftIcon"
@@ -115,9 +123,21 @@
             <div
               class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
             >
-              <span
-                class="mr-2"
-              >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ tasksData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : tasksData.length }} sur {{ tasksData.length }}</span>
+              <span class="mr-2">
+                {{
+                currentPage * paginationPageSize -
+                (paginationPageSize - 1)
+                }}
+                -
+                {{
+                tasksData.length -
+                currentPage * paginationPageSize >
+                0
+                ? currentPage * paginationPageSize
+                : tasksData.length
+                }}
+                sur {{ tasksData.length }}
+              </span>
               <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
             </div>
             <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -154,6 +174,7 @@
         :components="components"
         :gridOptions="gridOptions"
         class="ag-theme-material w-100 my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
         :columnDefs="columnDefs"
         :defaultColDef="defaultColDef"
         :rowData="tasksData"
@@ -204,8 +225,8 @@ import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
 export default {
   props: {
     project_data: {
-      required: true
-    }
+      required: true,
+    },
   },
   components: {
     AgGridVue,
@@ -217,7 +238,7 @@ export default {
     CellRendererLink,
     CellRendererActions,
     CellRendererRelations,
-    CellRendererStatus
+    CellRendererStatus,
   },
   data() {
     return {
@@ -227,69 +248,65 @@ export default {
 
       // AgGrid
       gridApi: null,
-      gridOptions: {},
+      gridOptions: {
+        localeText: { noRowsToShow: "Aucune tâche à afficher" },
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          resizable: true
         },
         {
           headerName: "Plannifié le",
           field: "date",
           filter: true,
-          width: 300,
-          cellRenderer: data => {
+          cellRenderer: (data) => {
             moment.locale("fr");
 
             return moment(data.value).format("DD MMMM YYYY, HH:mm");
           },
-          resizable: true
         },
         {
           headerName: "Estimation",
           field: "estimated_time",
           filter: true,
-          width: 200,
-          cellRenderer: data => {
+          cellRenderer: (data) => {
             return data.value + "h";
           },
-          resizable: true
         },
         {
           headerName: "Ilôt",
           field: "workarea",
           filter: true,
           cellRendererFramework: "CellRendererRelations",
-          resizable: true
         },
         {
           headerName: "Avancement",
           field: "status",
           filter: true,
           cellRendererFramework: "CellRendererStatus",
-          resizable: true
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-          resizable: true
-        }
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations
-      }
+        CellRendererRelations,
+      },
     };
   },
   computed: {
@@ -314,8 +331,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     updateSearchQuery(val) {
@@ -339,7 +356,7 @@ export default {
       this.$store
         .dispatch("taskManagement/editItem", item)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -351,7 +368,7 @@ export default {
         text: `Voulez vous vraiment supprimer la tâche "${item.name}"`,
         accept: this.deleteRecord(item),
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord(item) {
@@ -360,7 +377,7 @@ export default {
         .then(() => {
           this.showDeleteSuccess();
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -368,9 +385,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: "Tâche",
-        text: `${modelTitle} supprimé`
+        text: `${modelTitle} supprimé`,
       });
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -382,6 +399,8 @@ export default {
 
       // resize columns in the grid to fit the available space
       this.gridApi.sizeColumnsToFit();
+
+      this.gridApi.showLoadingOverlay();
     }
 
     /* =================================================================
@@ -412,11 +431,11 @@ export default {
         "taskManagement/fetchItemsByBundle",
         this.project_data.tasks_bundles[0].id
       )
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
 
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
+    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
       this.manageErrors(err);
     });
   },
@@ -428,7 +447,7 @@ export default {
 
     moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("userManagement");
-  }
+  },
 };
 </script>
 

@@ -77,6 +77,30 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  fetchItemsBySkill({ commit }, skill_id) {
+    return new Promise((resolve, reject) => {
+      axios.get(`/api/task-management/skill/${skill_id}`)
+        .then((response) => {
+          resolve(response)
+          reject({ message: response.data.error })
+        })
+        .catch((error) => { console.log(error.response); reject(error) })
+    })
+  },
+  fetchItemsBySkills({ commit }, items) {
+    console.log(["1", items]);
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/task-management/skills`, items)
+        .then((response) => {
+          console.log(["2", response]);
+          if (response.data && response.data.success) {
+            resolve(response)
+          }
+          reject({ message: response.data.error })
+        })
+        .catch((error) => { console.log(error.response); reject(error) })
+    })
+  },
   fetchItem(context, id) {
     return new Promise((resolve, reject) => {
       axios.get(`/api/task-management/show/${id}`)

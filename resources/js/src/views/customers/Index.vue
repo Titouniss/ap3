@@ -57,9 +57,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ customersData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : customersData.length }} sur {{ customersData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              customersData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : customersData.length
+              }}
+              sur {{ customersData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -105,7 +117,7 @@
     <edit-form
       :reload="customersData"
       :itemId="itemIdToEdit"
-      v-if="itemIdToEdit && authorizedToEdit "
+      v-if="itemIdToEdit && authorizedToEdit"
     />
   </div>
 </template>
@@ -148,10 +160,9 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun client" },
+        localeText: { noRowsToShow: "Aucun client à afficher" },
       },
       defaultColDef: {
-        sortable: true,
         resizable: true,
         suppressMenu: true,
       },
@@ -167,31 +178,31 @@ export default {
           headerName: "Société",
           field: "name",
           filter: true,
-          width: 100,
+          sortable: true,
         },
         {
           headerName: "Nom",
           field: "lastname",
           filter: true,
-          width: 100,
+          sortable: true,
         },
         {
           headerName: "Siret",
           field: "siret",
           filter: true,
-          width: 150,
+          sortable: true,
         },
         {
           headerName: "Type",
           field: "professional",
           filter: true,
-          width: 100,
+          sortable: true,
           cellRendererFramework: "CellRendererBoolean",
         },
         {
           headerName: "Actions",
           field: "transactions",
-          width: 60,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],
@@ -401,5 +412,4 @@ export default {
 };
 </script>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>

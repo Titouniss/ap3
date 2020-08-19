@@ -52,13 +52,14 @@ const router = new Router({
                         pageTitle: 'Gestion des utilisateurs',
                         rule: 'admin',
                         requiresAuth: true
-                    }
+                    },
                 },
                 {
                     path: '/users/user-add',
                     name: 'users-user-add',
                     component: () => import('./views/users/AddForm.vue'),
                     meta: {
+                        parent: 'users',
                         pageTitle: 'Ajout d\'un utilisateur',
                         rule: 'admin',
                         requiresAuth: true
@@ -69,6 +70,7 @@ const router = new Router({
                     name: 'users-user-edit',
                     component: () => import('./views/users/EditForm.vue'),
                     meta: {
+                        parent: 'users',
                         pageTitle: 'Édition d\'un utilisateur',
                         rule: 'admin',
                         requiresAuth: true
@@ -120,6 +122,7 @@ const router = new Router({
                     name: 'roles-role-add',
                     component: () => import('@/views/roles/Add.vue'),
                     meta: {
+                        parent: 'roles',
                         pageTitle: 'Ajout de rôle',
                         rule: 'admin',
                         requiresAuth: true
@@ -130,6 +133,7 @@ const router = new Router({
                     name: 'roles-role-edit',
                     component: () => import('@/views/roles/Edit.vue'),
                     meta: {
+                        parent: 'roles',
                         pageTitle: 'Edition de rôle',
                         rule: 'admin',
                         requiresAuth: true
@@ -160,6 +164,7 @@ const router = new Router({
                     name: 'projects-project-view',
                     component: () => import('./views/projects/Read.vue'),
                     meta: {
+                        parent: 'projects',
                         rule: 'admin',
                         requiresAuth: true
                     }
@@ -179,6 +184,7 @@ const router = new Router({
                     name: 'ranges-range-add',
                     component: () => import('@/views/ranges/Add.vue'),
                     meta: {
+                        parent: 'ranges',
                         pageTitle: 'Ajouter une gamme',
                         rule: 'admin',
                         requiresAuth: true
@@ -189,6 +195,7 @@ const router = new Router({
                     name: 'ranges-range-edit',
                     component: () => import('@/views/ranges/Edit.vue'),
                     meta: {
+                        parent: 'ranges',
                         pageTitle: 'Edition de gamme',
                         rule: 'admin',
                         requiresAuth: true
@@ -209,6 +216,7 @@ const router = new Router({
                     name: 'hours-hours-add',
                     component: () => import('@/views/hours/Add.vue'),
                     meta: {
+                        parent: 'hours',
                         pageTitle: 'Ajouter des heures',
                         rule: 'admin',
                         requiresAuth: true
@@ -219,6 +227,7 @@ const router = new Router({
                     name: 'hours-hours-edit',
                     component: () => import('@/views/hours/Edit.vue'),
                     meta: {
+                        parent: 'hours',
                         pageTitle: 'Edition des heures',
                         rule: 'admin',
                         requiresAuth: true
@@ -249,6 +258,7 @@ const router = new Router({
                     name: 'schedules-read',
                     component: () => import('@/views/schedules/Read.vue'),
                     meta: {
+                        parent: 'schedules',
                         rule: 'admin',
                         requiresAuth: true
                     }

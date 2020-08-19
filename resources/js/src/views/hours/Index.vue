@@ -24,7 +24,11 @@
           <div
             class="p-3 rounded-lg border border-solid d-theme-border-grey-light cursor-pointer flex items-center justify-between text-lg font-medium w-32"
           >
-            <span class="mx-2 leading-none">{{period_types[filters.period_type].name}}</span>
+            <span class="mx-2 leading-none">
+              {{
+              period_types[filters.period_type].name
+              }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
 
@@ -34,7 +38,11 @@
               :key="period_type"
               @click="setPeriodType(period_type)"
             >
-              <span class="flex items-center">{{period_types[period_type].name}}</span>
+              <span class="flex items-center">
+                {{
+                period_types[period_type].name
+                }}
+              </span>
             </vs-dropdown-item>
           </vs-dropdown-menu>
         </vs-dropdown>
@@ -52,7 +60,11 @@
               <div style="opacity: .8">Utilisateur</div>
             </template>
             <template #option="user">
-              <span>{{`${user.lastname} ${user.firstname}`}}</span>
+              <span>
+                {{
+                `${user.lastname} ${user.firstname}`
+                }}
+              </span>
             </template>
           </v-select>
         </div>
@@ -79,10 +91,15 @@
             <div class="m-3 flex" style="width: 300px">
               <vs-row vs-type="flex" vs-justify="center">
                 <vs-col vs-type="flex" vs-justify="center">
-                  <h5 v-if="isPeriodFilter()">{{filterDate}}</h5>
+                  <h5 v-if="isPeriodFilter()">{{ filterDate }}</h5>
                 </vs-col>
                 <vs-col vs-type="flex" vs-justify="center">
-                  <h5 class="mt-1" v-if="this.filters.period_type === 'week'">{{currentWeek}}</h5>
+                  <h5
+                    class="mt-1"
+                    v-if="
+                                            this.filters.period_type === 'week'
+                                        "
+                  >{{ currentWeek }}</h5>
                 </vs-col>
                 <vs-col vs-type="flex" vs-justify="center">
                   <flat-pickr
@@ -115,55 +132,15 @@
         <h4 class="ml-3">Résumé</h4>
       </div>
       <vs-row vs-justify="center" vs-align="center" vs-type="flex" vs-w="12">
-        <vs-col
-          vs-w="6"
-          vs-type="flex"
-          vs-justify="center"
-          vs-align="center"
-        >Heures travaillées sur la période : {{" " + getStats('total')}}</vs-col>
-        <vs-col
-          v-if="stats.overtime"
-          vs-w="6"
-          vs-type="flex"
-          vs-justify="center"
-          vs-align="center"
-        >Heures supplémentaires sur la période : {{" " + getStats('overtime')}}</vs-col>
+        <vs-col vs-w="6" vs-type="flex" vs-justify="center" vs-align="center">
+          Heures travaillées sur la période :
+          {{ " " + getStats("total") }}
+        </vs-col>
+        <vs-col v-if="stats.overtime" vs-w="6" vs-type="flex" vs-justify="center" vs-align="center">
+          Heures supplémentaires sur la période :
+          {{ " " + getStats("overtime") }}
+        </vs-col>
       </vs-row>
-      <vs-row
-        v-if="dealingHours"
-        vs-justify="center"
-        vs-align="center"
-        vs-type="flex"
-        vs-w="12"
-        class="mt-5 mb-5"
-      >
-        <vs-col
-          v-if="filters.user !== null && filters.period_type === 'year'"
-          vs-w="4"
-          vs-type="flex"
-          vs-justify="center"
-          vs-align="center"
-        >Heures supplémentaires : {{dealingHours.overtimes ? Math.abs(dealingHours.overtimes) : dealingHours.overtimes}}</vs-col>
-        <vs-col
-          v-if="filters.user !== null && filters.period_type === 'year'"
-          vs-w="4"
-          vs-type="flex"
-          vs-justify="center"
-          vs-align="center"
-        >Heures manquantes : {{dealingHours.missHours ? Math.abs(dealingHours.missHours) : dealingHours.missHours}}</vs-col>
-        <vs-col
-          v-if="filters.user !== null && filters.period_type === 'year'"
-          vs-w="4"
-          vs-type="flex"
-          vs-justify="center"
-          vs-align="center"
-        >Heures récupérées / payées : {{dealingHours.usedHours ? dealingHours.usedHours : dealingHours.usedHours}}</vs-col>
-      </vs-row>
-      <add-form
-        v-if="filters.user !== null && filters.period_type === 'year'"
-        :user="filters.user"
-        :dealingHours="dealingHours"
-      />
     </div>
     <div class="vx-card p-6 mt-1">
       <div class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3">
@@ -221,9 +198,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ hoursData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : hoursData.length }} sur {{ hoursData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              hoursData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : hoursData.length
+              }}
+              sur {{ hoursData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -278,7 +267,6 @@ import vSelect from "vue-select";
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
-import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement.js";
 
 // FlatPickr import
 import flatPickr from "vue-flatpickr-component";
@@ -288,9 +276,6 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 // Cell Renderer
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
-
-//Component
-import AddForm from "../dealing-hours/AddForm.vue";
 
 import moment from "moment";
 
@@ -306,7 +291,7 @@ export default {
     AddForm,
     // Cell Renderer
     CellRendererActions,
-    CellRendererRelations
+    CellRendererRelations,
   },
   data() {
     return {
@@ -314,12 +299,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune heure" }
+        localeText: { noRowsToShow: "Aucune heure à afficher" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
@@ -328,45 +313,41 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true
         },
         {
           headerName: "Date",
           field: "date",
-          width: 70,
-          cellRenderer: data => {
+          cellRenderer: (data) => {
             moment.locale("fr");
             return moment(data.value).format("D MMMM YYYY");
-          }
+          },
         },
         {
           headerName: "Durée",
           field: "duration",
-          width: 60
         },
         {
           headerName: "Description",
           field: "description",
-          width: 100
         },
         {
           headerName: "Projet",
           field: "project",
-          width: 80,
-          cellRendererFramework: "CellRendererRelations"
+          cellRendererFramework: "CellRendererRelations",
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 40,
-          cellRendererFramework: "CellRendererActions"
-        }
+          type: "numericColumn",
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererActions,
-        CellRendererRelations
+        CellRendererRelations,
       },
 
       // Excel
@@ -376,7 +357,7 @@ export default {
         "Projet",
         "Date",
         "Durée",
-        "Description"
+        "Description",
       ],
       headerVal: ["id", "user", "project", "date", "duration", "description"],
 
@@ -385,40 +366,40 @@ export default {
         project: null,
         user: null,
         date: moment(),
-        period_type: "year"
+        period_type: "year",
       },
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
         date: {
           name: "Date",
           symbol: "d",
-          format: "D MMMM YYYY"
+          format: "D MMMM YYYY",
         },
         day: {
           name: "Jour",
           symbol: "d",
-          format: "D MMMM YYYY"
+          format: "D MMMM YYYY",
         },
         week: {
           name: "Semaine",
           symbol: "w",
-          format: "[Semaine] w, YYYY"
+          format: "[Semaine] w, YYYY",
         },
         month: {
           name: "Mois",
           symbol: "M",
-          format: "MMMM YYYY"
+          format: "MMMM YYYY",
         },
         year: {
           name: "Année",
           symbol: "y",
-          format: "YYYY"
+          format: "YYYY",
         },
         full: {
           name: "Total",
           symbol: null,
-          format: null
-        }
+          format: null,
+        },
       },
       currentWeek: "",
       configDatePicker: () => ({
@@ -426,12 +407,12 @@ export default {
         enableTime: false,
         locale: FrenchLocale,
         altFormat: "j F Y",
-        altInput: true
+        altInput: true,
       }),
       refreshDataTimeout: null,
 
       // Stats
-      stats: { total: 0 }
+      stats: { total: 0 },
     };
   },
   computed: {
@@ -480,15 +461,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
+      },
     },
-    dealingHours() {
-      if (this.$store.state.dealingHoursManagement) {
-        return this.$store.state.dealingHoursManagement.dealingHour;
-      } else {
-        return {};
-      }
-    }
   },
   methods: {
     authorizedTo(action, model = "hours") {
@@ -522,7 +496,7 @@ export default {
         user.roles &&
         user.roles.length > 0 &&
         user.roles.find(
-          r => r.name === "superAdmin" || r.name === "littleAdmin"
+          (r) => r.name === "superAdmin" || r.name === "littleAdmin"
         )
       ) {
         return true;
@@ -561,23 +535,19 @@ export default {
       this.clearRefreshDataTimeout();
       this.refreshDataTimeout = setTimeout(() => {
         this.$vs.loading();
-        // refresh DealingHours
-        if (this.filters.user && this.filters.period_type === "year") {
-          this.getdealingHours();
-        }
         // refresh Hours
         this.$store
           .dispatch("hoursManagement/fetchItems", filter)
-          .then(response => {
+          .then((response) => {
             this.stats = response.data.stats;
           })
-          .catch(error => {
+          .catch((error) => {
             this.$vs.notify({
               title: "Erreur",
               text: error.message,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger"
+              color: "danger",
             });
           })
           .finally(() => this.$vs.loading.close());
@@ -602,7 +572,7 @@ export default {
       // Reset Filter Options
       this.hoursFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all"
+        value: "all",
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -630,17 +600,17 @@ export default {
               } ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("hoursManagement/removeRecord", selectRow.id)
-          .then(data => {
+          .then((data) => {
             this.showDeleteSuccess();
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -652,7 +622,7 @@ export default {
         text:
           this.gridApi.getSelectedRows().length > 1
             ? `Heures supprimés`
-            : `Heure supprimé`
+            : `Heure supprimé`,
       });
     },
     onResize(event) {
@@ -671,20 +641,20 @@ export default {
       this.$router.push(`/${modelPlurial}/${model}-view/`).catch(() => {});
     },
     onExport() {
-      import("@/vendor/Export2Excel").then(excel => {
+      import("@/vendor/Export2Excel").then((excel) => {
         const data = this.formatJson(this.headerVal, this.hoursData);
         excel.export_json_to_excel({
           header: this.headerTitle,
           data,
           filename: moment().format("YYYY-MM-DD HH:mm") + "_Heures_effectuées",
           autoWidth: true,
-          bookType: "xlsx"
+          bookType: "xlsx",
         });
       });
     },
     formatJson(filterVal, jsonData) {
-      return jsonData.map(v =>
-        filterVal.map(j => {
+      return jsonData.map((v) =>
+        filterVal.map((j) => {
           let value;
           switch (j) {
             case "user":
@@ -753,19 +723,13 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    if (!moduleDealingHoursManagement.isRegistered) {
-      this.$store.registerModule(
-        "dealingHoursManagement",
-        moduleDealingHoursManagement
-      );
-      moduleDealingHoursManagement.isRegistered = true;
-    }
+
     this.$store
       .dispatch("hoursManagement/fetchItems", {
         date: moment().format("DD-MM-YYYY"),
-        period_type: "month"
+        period_type: "month",
       })
-      .then(response => (this.stats = response.data.stats));
+      .then((response) => (this.stats = response.data.stats));
     this.$store.dispatch("projectManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
       this.$store.dispatch("userManagement/fetchItems");
@@ -782,7 +746,6 @@ export default {
     this.$store.unregisterModule("hoursManagement");
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("userManagement");
-    this.$store.unregisterModule("dealingHoursManagement");
-  }
+  },
 };
 </script>

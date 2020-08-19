@@ -3,14 +3,20 @@
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
-      v-if="authorizedToEdit"
+      v-if="authorizedToEdit && !params.data.deleted_at"
       @click="editRecord"
     />
     <feather-icon
+      v-if="authorizedToEdit"
+      icon="ArchiveIcon"
+      :svgClasses="this.archiveSvg"
+      @click="params.data.deleted_at ? confirmActionRecord('restore') : confirmActionRecord('archive')"
+    />
+    <feather-icon
+      v-if="authorizedToDelete"
       icon="Trash2Icon"
       svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
-      v-if="authorizedToDelete"
-      @click="confirmDeleteRecord"
+      @click="confirmActionRecord('delete')"
     />
   </div>
 </template>
@@ -22,6 +28,11 @@ var modelTitle = "Utilisateur";
 export default {
   name: "CellRendererActions",
   computed: {
+    archiveSvg() {
+      return this.params.data.deleted_at
+        ? "h-5 w-5 mr-4 text-success cursor-pointer"
+        : "h-5 w-5 mr-4 hover:text-warning cursor-pointer";
+    },
     authorizedToDelete() {
       return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
     },
@@ -41,32 +52,99 @@ export default {
         .push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`)
         .catch(() => {});
     },
-    confirmDeleteRecord() {
+    confirmActionRecord(type) {
+      const name = `${this.params.data.firstname} ${this.params.data.lastname}`;
       this.$vs.dialog({
         type: "confirm",
-        color: "danger",
-        title: "Confirmer suppression",
-        text: `Voulez vous vraiment supprimer l'utilisateur ${this.params.data.firstname} ${this.params.data.lastname}`,
-        accept: this.deleteRecord,
-        acceptText: "Supprimer",
+        color:
+          type === "delete"
+            ? "danger"
+            : type === "archive"
+            ? "warning"
+            : "success",
+        title:
+          type === "delete"
+            ? "Confirmer suppression"
+            : type === "archive"
+            ? "Confirmer archivage"
+            : "Confirmer restauration",
+        text:
+          type === "delete"
+            ? `Voulez vous vraiment supprimer l'utilisateur ${name}`
+            : type === "archive"
+            ? `Voulez vous vraiment archiver l'utilisateur ${name}`
+            : `Voulez vous vraiment restaurer l'utilisateur ${name}`,
+        accept:
+          type === "delete"
+            ? this.deleteRecord
+            : type === "archive"
+            ? this.archiveRecord
+            : this.restoreRecord,
+        acceptText:
+          type === "delete"
+            ? "Supprimer"
+            : type === "archive"
+            ? "Archiver"
+            : "Restaurer",
         cancelText: "Annuler"
       });
     },
-    deleteRecord() {
+    archiveRecord() {
       this.$store
-        .dispatch("userManagement/forceRemoveItem", this.params.data.id)
-        .then(() => {
-          this.showDeleteSuccess();
+        .dispatch("userManagement/removeItem", this.params.data.id)
+        .then(response => {
+          if (response.data.success) {
+            this.showActionSuccess("archive");
+          } else {
+            this.showActionError();
+          }
+        });
+    },
+    restoreRecord() {
+      this.$store
+        .dispatch("userManagement/restoreItem", this.params.data.id)
+        .then(response => {
+          if (response.data.success) {
+            this.showActionSuccess("restore");
+          } else {
+            this.showActionError();
+          }
         })
         .catch(err => {
           console.error(err);
         });
     },
-    showDeleteSuccess() {
+    deleteRecord() {
+      this.$store
+        .dispatch("userManagement/forceRemoveItem", this.params.data.id)
+        .then(response => {
+          if (response.data.success) {
+            this.showActionSuccess("delete");
+          } else {
+            this.showActionError();
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    },
+    showActionSuccess(type) {
       this.$vs.notify({
         color: "success",
+        title: "Succès",
+        text:
+          type === "delete"
+            ? `Utilisateur supprimé`
+            : type === "archive"
+            ? `Utilisateur archivé`
+            : `Utilisateur restauré`
+      });
+    },
+    showActionError() {
+      this.$vs.notify({
+        color: "error",
         title: modelTitle,
-        text: `${modelTitle} supprimé`
+        text: "Une erreur est survenue."
       });
     }
   }

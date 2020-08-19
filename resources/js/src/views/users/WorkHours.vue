@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <vx-card class="mt-4">
     <ul class="vx-timeline">
       <li v-for="day in days_of_week" :key="day">
         <div class="timeline-icon" :class="`bg-primary`">
@@ -48,6 +48,26 @@
               v-model="data_local.work_hours[day].afternoon_ends_at"
             />
           </vs-col>
+          <vs-col vs-w="1" vs-xs="12" vs-align="center" vs-type="flex">
+            <vs-row vs-justify="center" vs-type="flex">
+              <vs-col vs-w="6" vs-justify="center" vs-type="flex">
+                <feather-icon
+                  v-if="day !== 'Dimanche'"
+                  icon="XIcon"
+                  svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+                  @click="emptyRow(day)"
+                />
+              </vs-col>
+              <vs-col vs-w="6" vs-justify="center" vs-type="flex">
+                <feather-icon
+                  v-if="day !== 'Dimanche'"
+                  icon="CornerRightDownIcon"
+                  svgClasses="h-5 w-5 hover:text-primary cursor-pointer"
+                  @click="copyRowDown(day)"
+                />
+              </vs-col>
+            </vs-row>
+          </vs-col>
         </vs-row>
       </li>
     </ul>
@@ -56,16 +76,17 @@
     <div class="vx-row my-5">
       <div class="vx-col w-full">
         <div class="flex flex-wrap items-center justify-end">
-          <vs-button class="ml-auto" @click="save_changes" :disabled="!validateForm">Sauvegarder</vs-button>
+          <vs-button
+            class="ml-auto"
+            type="border"
+            @click="save_changes"
+            :disabled="!validateForm"
+          >Sauvegarder</vs-button>
           <vs-button class="ml-4" type="border" color="warning" @click="reset_data">Réinitialiser</vs-button>
         </div>
       </div>
     </div>
-
-    <vs-divider />
-
-    <unavailabilities-index />
-  </div>
+  </vx-card>
 </template>
 
 <script>
@@ -73,7 +94,6 @@ import Moment from "moment";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
-import UnavailabilitiesIndex from "../../unavailabilities/Index.vue";
 
 const daysOfweek = [
   "Lundi",
@@ -92,6 +112,13 @@ export default {
       required: true
     }
   },
+  watch: {
+    data: function(newData, oldData) {
+      if (newData.work_hours.length !== oldData.work_hours.length) {
+        this.data_local = this.getDataWithWorkHours();
+      }
+    }
+  },
   data() {
     return {
       selected: [], // used by checkbox to delete
@@ -107,8 +134,7 @@ export default {
     };
   },
   components: {
-    flatPickr,
-    UnavailabilitiesIndex
+    flatPickr
   },
   computed: {
     validateForm() {
@@ -116,12 +142,35 @@ export default {
     }
   },
   methods: {
-    addNewData() {
-      return;
+    emptyRow(day) {
+      this.data_local.work_hours[day].is_active = false;
+      this.data_local.work_hours[day].morning_starts_at = null;
+      this.data_local.work_hours[day].morning_ends_at = null;
+      this.data_local.work_hours[day].afternoon_starts_at = null;
+      this.data_local.work_hours[day].afternoon_ends_at = null;
+    },
+    copyRowDown(day) {
+      const nextDay = this.days_of_week[this.days_of_week.indexOf(day) + 1];
+      this.data_local.work_hours[
+        nextDay
+      ].is_active = this.data_local.work_hours[day].is_active;
+      this.data_local.work_hours[
+        nextDay
+      ].morning_starts_at = this.data_local.work_hours[day].morning_starts_at;
+      this.data_local.work_hours[
+        nextDay
+      ].morning_ends_at = this.data_local.work_hours[day].morning_ends_at;
+      this.data_local.work_hours[
+        nextDay
+      ].afternoon_starts_at = this.data_local.work_hours[
+        day
+      ].afternoon_starts_at;
+      this.data_local.work_hours[
+        nextDay
+      ].afternoon_ends_at = this.data_local.work_hours[day].afternoon_ends_at;
     },
     save_changes() {
       if (!this.validateForm) return;
-
       this.$store
         .dispatch("userManagement/updateWorkHoursItem", this.data_local)
         .then(response => {
@@ -133,7 +182,6 @@ export default {
             icon: "icon-alert-circle",
             color: "success"
           });
-          console.log(response.data);
         })
         .catch(error => {
           this.$vs.loading.close();
@@ -172,6 +220,7 @@ export default {
       });
 
       const newData = JSON.parse(JSON.stringify(this.data));
+      newData.id = this.$route.params.userId;
       newData.work_hours = workHours;
       return newData;
     }

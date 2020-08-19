@@ -23,14 +23,27 @@ export default {
   name: "CellRendererActions",
   computed: {
     disabled() {
-      return this.params.data.company_id === null && !this.params.data.isPublic;
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          return false;
+        } else {
+          return (
+            this.params.data.company_id === null && this.params.data.isPublic
+          );
+        }
+      } else return true;
     },
     authorizedToEdit() {
       return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
     },
     authorizedToDelete() {
       return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
-    }
+    },
   },
   methods: {
     editRecord() {
@@ -46,7 +59,7 @@ export default {
         text: `Voulez vous vraiment supprimer le rôle ${this.params.data.name} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
@@ -55,7 +68,7 @@ export default {
         .then(() => {
           this.showDeleteSuccess();
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -63,9 +76,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: `${modelTitle} supprimé`
+        text: `${modelTitle} supprimé`,
       });
-    }
-  }
+    },
+  },
 };
 </script>

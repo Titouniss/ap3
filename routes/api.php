@@ -55,6 +55,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::post('updateAccount/{user}', 'API\UserController@updateAccount');
             Route::post('updatePassword/{user}', 'API\UserController@updatePassword');
             Route::post('updateWorkHours/{user}', 'API\UserController@updateWorkHours');
+            Route::put('restore/{id}', 'API\UserController@restore');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
             Route::delete('destroy/{id}', 'API\UserController@destroy');
@@ -180,7 +181,6 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::post('store-range/{id}', 'API\ProjectController@addRange');
             Route::post('update/{id}', 'API\ProjectController@update');
             Route::put('restore/{id}', 'API\ProjectController@restore');
-
         });
         Route::group(['middleware' => ['can:delete projects']], function () {
             Route::delete('destroy/{id}', 'API\ProjectController@destroy');
@@ -215,6 +215,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:read tasks']], function () {
             Route::get('index', 'API\TaskController@index');
             Route::get('bundle/{id}', 'API\TaskController@getByBundle');
+            Route::get('skill/{id}', 'API\TaskController@getBySkill');
+            Route::post('skills', 'API\TaskController@getBySkills');
             Route::get('show/{id}', 'API\TaskController@show');
         });
         Route::group(['middleware' => ['can:publish tasks']], function () {

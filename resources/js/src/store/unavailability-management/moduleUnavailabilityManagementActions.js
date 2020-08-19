@@ -6,8 +6,11 @@ export default {
         return new Promise((resolve, reject) => {
             axios.post("/api/unavailability-management/store", item)
                 .then((response) => {
-                    commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id }))
-                    resolve(response)
+                    if (response.data && response.data.success) {
+                        commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id }))
+                        resolve(response)
+                    }
+                    reject({ message: response.data.error })
                 })
                 .catch((error) => { console.log(error.response); reject(error) })
         })

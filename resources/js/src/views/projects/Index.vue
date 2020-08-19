@@ -56,9 +56,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ projectsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : projectsData.length }} sur {{ projectsData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              projectsData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : projectsData.length
+              }}
+              sur {{ projectsData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -148,7 +160,7 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun projet" },
+        localeText: { noRowsToShow: "Aucun projet à afficher" },
       },
       defaultColDef: {
         sortable: true,
@@ -166,14 +178,12 @@ export default {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 100,
           cellRendererFramework: "CellRendererLink",
         },
         {
           headerName: "Date de création",
           field: "created_at",
           filter: true,
-          width: 50,
           cellRenderer: (data) => {
             moment.locale("fr");
             return moment(data.value).format("DD MMMM YYYY");
@@ -182,20 +192,19 @@ export default {
         {
           headerName: "Avancement",
           field: "status",
-          width: 50,
           filter: true,
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          width: 100,
           cellRendererFramework: "CellRendererRelations",
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 40,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],
@@ -319,18 +328,23 @@ export default {
         this.gridApi.sizeColumnsToFit();
       }
     },
-    sortProjects(projects){
+    sortProjects(projects) {
+      let todoProjects = projects
+        .filter((project) => project.status == "todo")
+        .reverse();
+      let doingProjects = projects
+        .filter((project) => project.status == "doing")
+        .reverse();
+      let doneProjects = projects
+        .filter((project) => project.status == "done")
+        .reverse();
 
-      let todoProjects = projects.filter(project => project.status ==  'todo').reverse()
-      let doingProjects = projects.filter(project => project.status ==  'doing').reverse()
-      let doneProjects = projects.filter(project => project.status ==  'done').reverse()
+      let response = [];
+      response = response.concat(todoProjects);
+      response = response.concat(doingProjects);
+      response = response.concat(doneProjects);
 
-      let response = []
-      response = response.concat(todoProjects)
-      response = response.concat(doingProjects)
-      response = response.concat(doneProjects)
-
-      return response
+      return response;
     },
   },
   mounted() {

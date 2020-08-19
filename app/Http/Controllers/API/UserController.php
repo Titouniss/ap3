@@ -42,6 +42,14 @@ class UserController extends Controller
     {
         if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
             $user = Auth::user();
+            if ($user->company_id) {
+                $company = Company::find($user->company_id);
+                if (!$company) {
+                    return response()->json(['success' => false, 'error' => 'Account deactivated']);
+                } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
+                    return response()->json(['success' => false, 'error' => 'Trial ended']);
+                }
+            }
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
             }
@@ -164,18 +172,26 @@ class UserController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $input = $request->all();
+        $validator = Validator::make($input, [
             'firstname' => 'required',
             'lastname' => 'required',
             'email' => 'required|email',
             'password' => 'required',
             'c_password' => 'required|same:password',
+            'company_name' => 'required',
             'isTermsConditionAccepted' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $input = $request->all();
+
+        if (User::where('email', $input['email'])->withTrashed()->exists()) {
+            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
+        }
+
+
+
         $input['password'] = bcrypt($input['password']);
         $user = User::create($input);
         if ($user == null) {
@@ -185,7 +201,7 @@ class UserController extends Controller
         if ($role != null) {
             $user->assignRole('Utilisateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
-        $company = Company::where(['siret' => 'test_users'])->first();
+        $company = Company::create(['name' => $input['company_name'], 'is_trial' => true, 'expires_at' => (new Carbon())->addWeeks(4)]);
         $user->company()->associate($company);
         $user->save();
         $user->sendEmailVerificationNotification();
@@ -274,6 +290,11 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
+
+        if (User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
+            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
+        }
+
         $arrayRequest['password'] = Hash::make(Str::random(12)); // on créer un password temporaire
         $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
         $arrayRequest['isTermsConditionAccepted'] = false;
@@ -292,7 +313,7 @@ class UserController extends Controller
 
         //$item->notify(new UserRegistration($item));
 
-        return response()->json(['success' => $arrayRequest], $this->successStatus);
+        return response()->json(['success' => $item], $this->successStatus);
         //Il faut envoyer un email avec lien d'inscription
 
     }
@@ -327,6 +348,10 @@ class UserController extends Controller
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
+        }
+
+        if ($user->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
+            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
         if ($user != null) {
@@ -446,6 +471,21 @@ class UserController extends Controller
     }
 
     /**
+     * Restore the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function restore($id)
+    {
+        $item = User::withTrashed()->findOrFail($id)->restore();
+        if ($item) {
+            $item = User::where('id', $id)->first();
+            return response()->json(['success' => $item], $this->successStatus);
+        }
+    }
+
+    /**
      * delete item api
      *
      * @return \Illuminate\Http\Response
@@ -454,8 +494,7 @@ class UserController extends Controller
     {
         $item = User::findOrFail($id);
         $item->delete();
-
-        return '';
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -469,6 +508,6 @@ class UserController extends Controller
         $item = User::withTrashed()->findOrFail(intval($id));
 
         $item->forceDelete();
-        return '';
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

@@ -44,6 +44,19 @@
               class="text-danger text-sm"
               v-show="errors.has('siret')"
             >{{ errors.first('siret') }}</span>
+            <div class="vx-row mt-4" v-if="isAdmin">
+              <div class="vx-col w-full">
+                <div class="flex items-end px-3">
+                  <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
+                  <span class="font-medium text-lg leading-none">Admin</span>
+                </div>
+                <vs-divider />
+                <div>
+                  <small class="ml-1" for>Période d'essaie</small>
+                  <vs-switch v-model="itemLocal.is_trial" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </form>
@@ -86,6 +99,16 @@ export default {
             console.error(err);
           });
       }
+    },
+    isAdmin() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles.find(
+          r => r.name === "superAdmin" || r.name === "littleAdmin"
+        );
+      }
+
+      return false;
     },
     permissions() {
       return this.$store.state.roleManagement.permissions;

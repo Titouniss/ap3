@@ -47,7 +47,7 @@ class MailVerifyEmailNotification extends Notification
 
         return (new MailMessage)
             ->subject(Lang::get('Verification de votre adresse e-mail'))
-            ->greeting('Hello!')
+            ->greeting('Bonjour !')
             ->line(Lang::get('Cliquez sur le lien ci-dessous afin de confirmer votre adresse e-mail.'))
             ->action(Lang::get('Vérifier adresse e-mail'), $verificationUrl)
             ->line(Lang::get('Si vous n\'avez pas fait de demandes ignorez ce message.'));

@@ -50,9 +50,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ skillsData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : skillsData.length }} sur {{ skillsData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              skillsData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : skillsData.length
+              }}
+              sur {{ skillsData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -112,6 +124,8 @@ import EditForm from "./EditForm.vue";
 // Store Module
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
@@ -130,7 +144,7 @@ export default {
     // Cell Renderer
     CellRendererLink,
     CellRendererActions,
-    CellRendererRelations
+    CellRendererRelations,
   },
   data() {
     return {
@@ -139,52 +153,48 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune compétence" }
+        localeText: { noRowsToShow: "Aucune compétence à afficher" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
+          sortable: false,
           filter: false,
-          width: 30,
+          width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 100,
-          resizable: true
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          width: 100,
-          resizable: true,
-          cellRendererFramework: "CellRendererRelations"
+          cellRendererFramework: "CellRendererRelations",
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 30,
-          resizable: true,
-          cellRendererFramework: "CellRendererActions"
-        }
+          type: "numericColumn",
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations
-      }
+        CellRendererRelations,
+      },
     };
   },
   watch: {},
@@ -210,8 +220,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     authorizedTo(action, model = "skills") {
@@ -222,33 +232,103 @@ export default {
     },
     confirmDeleteRecord() {
       let selectedRow = this.gridApi.getSelectedRows();
-      let singleSkill = selectedRow[0];
+      let workareas = this.$store.state.workareaManagement.workareas;
 
-      this.$vs.dialog({
-        type: "confirm",
-        color: "danger",
-        title: "Confirmer suppression",
-        text:
-          this.gridApi.getSelectedRows().length > 1
-            ? `Voulez vous vraiment supprimer cette compétence ?`
-            : `Voulez vous vraiment archiver la compétences ${singleSkill.name} ?`,
-        accept: this.deleteRecord,
-        acceptText: "Supprimer",
-        cancelText: "Annuler"
+      let selected_skills_id = [];
+      selectedRow.forEach((row) => {
+        selected_skills_id.push(row.id);
       });
+
+      // Check if the skills are in an workarea
+      let haveSkill = [];
+      if (workareas) {
+        workareas.forEach((w) => {
+          if (w.skills) {
+            w.skills.forEach((ws) => {
+              if (
+                selected_skills_id.find((ssi) => ssi === ws.id) &&
+                haveSkill.find((hs) => hs.id === w.id) === undefined
+              ) {
+                haveSkill.push({ id: w.id, name: w.name });
+              }
+            });
+          }
+        });
+      }
+
+      // Check if the skills are in an task
+      this.$store
+        .dispatch("taskManagement/fetchItemsBySkills", selected_skills_id)
+        .then((data) => {
+          if (data && data.data.success) {
+            let tasks = data.data.success;
+
+            let message = "";
+            if (haveSkill.length > 0 && tasks.length > 0) {
+              message =
+                selectedRow.length > 1
+                  ? "Ces compétences sont utilisées dans des îlots et des tâches. Voulez vous vraiment les supprimer ?"
+                  : "La compétences " +
+                    selectedRow[0].name +
+                    " est utilisées dans des îlots et des tâches. Voulez vous vraiment la supprimer ?";
+            } else if (tasks.length > 0) {
+              message =
+                selectedRow.length > 1
+                  ? "Ces compétences sont utilisées dans des tâches. Voulez vous vraiment les supprimer ?"
+                  : "La compétences " +
+                    selectedRow[0].name +
+                    " est utilisée dans des tâches. Voulez vous vraiment la supprimer ?";
+            } else if (haveSkill.length > 0) {
+              message =
+                selectedRow.length > 1
+                  ? "Ces compétences sont est utilisées dans des îlots. Voulez vous vraiment les supprimer ?"
+                  : "La compétences " +
+                    selectedRow[0].name +
+                    " est est utilisée dans des îlots. Voulez vous vraiment la supprimer ?";
+            }
+
+            if (message !== "") {
+              this.$vs.dialog({
+                type: "confirm",
+                color: "danger",
+                title: "Confirmer suppression",
+                text: message,
+                accept: this.deleteRecord,
+                acceptText: "Supprimer",
+                cancelText: "Annuler",
+              });
+            } else {
+              this.$vs.dialog({
+                type: "confirm",
+                color: "danger",
+                title: "Confirmer suppression",
+                text:
+                  selectedRow.length > 1
+                    ? `Voulez vous vraiment supprimer ces compétence ?`
+                    : `Voulez vous vraiment supprimer la compétence ${selectedRow[0].name} ?`,
+                accept: this.deleteRecord,
+                acceptText: "Supprimer",
+                cancelText: "Annuler",
+              });
+            }
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("skillManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             console.log(["data", data]);
             if (selectedRowLength === 1) {
               this.showDeleteSuccess(selectedRowLength);
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -260,7 +340,7 @@ export default {
         text:
           selectedRowLength > 1
             ? `Compétences supprimées`
-            : `Compétence supprimée`
+            : `Compétence supprimée`,
       });
     },
     onResize(event) {
@@ -271,7 +351,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -310,23 +390,46 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+    if (!moduleWorkareaManagement.isRegistered) {
+      this.$store.registerModule(
+        "workareaManagement",
+        moduleWorkareaManagement
+      );
+      moduleWorkareaManagement.isRegistered = true;
+    }
+    if (!moduleTaskManagement.isRegistered) {
+      this.$store.registerModule("taskManagement", moduleTaskManagement);
+      moduleTaskManagement.isRegistered = true;
+    }
+
+    this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
       console.error(err);
     });
     if (this.authorizedTo("read", "companies")) {
-      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
+      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
         console.error(err);
       });
     }
+    this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
+    this.$store.dispatch("taskManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
 
     moduleSkillManagement.isRegistered = false;
     moduleCompanyManagement.isRegistered = false;
+    moduleWorkareaManagement.isRegistered = false;
+    moduleTaskManagement.isRegistered = false;
+
     this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("companyManagement");
-  }
+    this.$store.unregisterModule("workareaManagement");
+    this.$store.unregisterModule("taskManagement");
+  },
 };
 </script>
 

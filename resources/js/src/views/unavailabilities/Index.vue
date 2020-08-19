@@ -39,9 +39,21 @@
         <div
           class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
         >
-          <span
-            class="mr-2"
-          >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ unavailabilitiesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : unavailabilitiesData.length }} sur {{ unavailabilitiesData.length }}</span>
+          <span class="mr-2">
+            {{
+            currentPage * paginationPageSize -
+            (paginationPageSize - 1)
+            }}
+            -
+            {{
+            unavailabilitiesData.length -
+            currentPage * paginationPageSize >
+            0
+            ? currentPage * paginationPageSize
+            : unavailabilitiesData.length
+            }}
+            sur {{ unavailabilitiesData.length }}
+          </span>
           <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
         </div>
         <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -67,7 +79,7 @@
       ref="agGridTable"
       :components="components"
       :gridOptions="gridOptions"
-      class="ag-theme-material w-100 my-4 ag-grid-table"
+      class="ag-theme-material w-full my-4 ag-grid-table"
       overlayLoadingTemplate="Chargement..."
       :columnDefs="columnDefs"
       :defaultColDef="defaultColDef"
@@ -80,6 +92,7 @@
       :paginationPageSize="paginationPageSize"
       :suppressPaginationPanel="true"
       :enableRtl="$vs.rtl"
+      @firstDataRendered="onResize"
     ></ag-grid-vue>
 
     <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -106,6 +119,7 @@ import moment from "moment";
 
 var model = "unavailabilitie";
 var modelPlurial = "unavailabilities";
+var modelTitle = "Indisponibilité";
 
 export default {
   components: {
@@ -115,7 +129,7 @@ export default {
     EditForm,
 
     // Cell Renderer
-    CellRendererActions
+    CellRendererActions,
   },
   data() {
     return {
@@ -124,54 +138,53 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune indisponibilité" }
+        localeText: {
+          noRowsToShow: "Aucune indisponibilité à afficher",
+        },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
           filter: false,
-          width: 40,
+          maxWidth: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
-          resizable: true
         },
         {
           headerName: "Début",
           field: "starts_at",
           filter: true,
-          width: 80,
-          valueFormatter: param => this.formatDateTime(param.value)
+          valueFormatter: (param) => this.formatDateTime(param.value),
         },
         {
           headerName: "Fin",
           field: "ends_at",
           filter: true,
-          width: 80,
-          valueFormatter: param => this.formatDateTime(param.value)
+          valueFormatter: (param) => this.formatDateTime(param.value),
         },
         {
           headerName: "Motif",
           field: "reason",
           filter: true,
-          width: 150
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 40,
-          cellRendererFramework: "CellRendererActions"
-        }
+          type: "numericColumn",
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererActions
-      }
+        CellRendererActions,
+      },
     };
   },
   computed: {
@@ -199,8 +212,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     formatDateTime(value) {
@@ -233,24 +246,26 @@ export default {
               )} au ${this.parseDateTime(singleUnavailabilities.ends_at)} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
-      this.$store
-        .dispatch("unavailabilityManagement/removeItem", this.params.data.id)
-        .then(() => {
-          this.showDeleteSuccess();
-        })
-        .catch(err => {
-          console.error(err);
-        });
+      this.gridApi.getSelectedRows().map((selectRow) => {
+        this.$store
+          .dispatch("unavailabilityManagement/removeItem", selectRow.id)
+          .then(() => {
+            this.showDeleteSuccess();
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      });
     },
     showDeleteSuccess() {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: `${modelTitle} supprimée`
+        text: `${modelTitle} supprimée`,
       });
     },
     onResize(event) {
@@ -261,7 +276,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -299,7 +314,7 @@ export default {
       );
       moduleUnavailabilityManagement.isRegistered = true;
     }
-    this.$store.dispatch("unavailabilityManagement/fetchItems").catch(err => {
+    this.$store.dispatch("unavailabilityManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -308,6 +323,6 @@ export default {
 
     moduleUnavailabilityManagement.isRegistered = false;
     this.$store.unregisterModule("unavailabilityManagement");
-  }
+  },
 };
 </script>

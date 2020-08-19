@@ -57,9 +57,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ workareasData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : workareasData.length }} sur {{ workareasData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              workareasData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : workareasData.length
+              }}
+              sur {{ workareasData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -154,7 +166,7 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun îlot" },
+        localeText: { noRowsToShow: "Aucun îlot à afficher" },
       },
       defaultColDef: {
         sortable: true,
@@ -187,9 +199,10 @@ export default {
           cellRendererFramework: "CellRendererRelationSkills",
         },
         {
+          sortable: false,
           headerName: "Actions",
-          width: 90,
           field: "transactions",
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],

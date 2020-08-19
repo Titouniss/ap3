@@ -42,9 +42,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ usersData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : usersData.length }} sur {{ usersData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              usersData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : usersData.length
+              }}
+              sur {{ usersData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -119,52 +131,46 @@ var columnDef = [
     checkboxSelection: true,
     headerCheckboxSelectionFilteredOnly: true,
     headerCheckboxSelection: true,
-    resizable: true
+    resizable: true,
   },
   {
     headerName: "Nom",
     field: "lastname",
     filter: true,
-    width: 100,
-    resizable: true
+    resizable: true,
   },
   {
     headerName: "Prénom",
     field: "firstname",
     filter: true,
-    width: 100,
-    resizable: true
+    resizable: true,
   },
   {
     headerName: "Email",
     field: "email",
     filter: true,
-    width: 200,
-    resizable: true
+    resizable: true,
   },
   {
     headerName: "Rôle",
     field: "roles",
     filter: true,
-    width: 100,
     cellRendererFramework: "CellRendererRelations",
-    resizable: true
+    resizable: true,
   },
   {
     headerName: "Société",
     field: "company",
     filter: true,
-    width: 100,
     cellRendererFramework: "CellRendererRelations",
-    resizable: true
+    resizable: true,
   },
   {
     headerName: "Actions",
     field: "transactions",
-    width: 60,
+    type: "numericColumn",
     cellRendererFramework: "CellRendererActions",
-    resizable: true
-  }
+  },
 ];
 
 export default {
@@ -174,7 +180,7 @@ export default {
     // Cell Renderer
     CellRendererLink,
     CellRendererRelations,
-    CellRendererActions
+    CellRendererActions,
   },
   data() {
     return {
@@ -183,12 +189,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun utilisateur" }
+        localeText: { noRowsToShow: "Aucun 'utilisateur à afficher" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: this.getColumnDef(),
 
@@ -196,8 +202,8 @@ export default {
       components: {
         CellRendererLink,
         CellRendererRelations,
-        CellRendererActions
-      }
+        CellRendererActions,
+      },
     };
   },
   watch: {
@@ -214,7 +220,7 @@ export default {
     },
     departmentFilter(obj) {
       this.setColumnFilter("department", obj.value);
-    }
+    },
   },
   computed: {
     itemIdToEdit() {
@@ -247,8 +253,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     authorizedTo(action, model = "users") {
@@ -257,7 +263,7 @@ export default {
     getColumnDef() {
       if (
         this.$store.state.AppActiveUser.roles.findIndex(
-          r => r.name === "superAdmin"
+          (r) => r.name === "superAdmin"
         ) > -1
       ) {
         return columnDef;
@@ -285,7 +291,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all"
+        value: "all",
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -308,17 +314,17 @@ export default {
               ${singleUser.firstname} ${singleUser.lastname} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("userManagement/forceRemoveItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             this.showDeleteSuccess();
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -330,7 +336,7 @@ export default {
         text:
           this.gridApi.getSelectedRows().length > 1
             ? `Utilisateurs supprimés?`
-            : `Utilisateur supprimé`
+            : `Utilisateur supprimé`,
       });
     },
     onResize(event) {
@@ -344,7 +350,7 @@ export default {
     },
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-    }
+    },
   },
   mounted() {
     const user = this.$store.state.AppActiveUser;
@@ -420,7 +426,7 @@ export default {
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");
-  }
+  },
 };
 </script>
 

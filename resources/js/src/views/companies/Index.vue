@@ -56,9 +56,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ companiesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : companiesData.length }} sur {{ companiesData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              companiesData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : companiesData.length
+              }}
+              sur {{ companiesData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -142,10 +154,9 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune société" },
+        localeText: { noRowsToShow: "Aucune société à afficher" },
       },
       defaultColDef: {
-        sortable: true,
         resizable: true,
         suppressMenu: true,
       },
@@ -156,24 +167,23 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true,
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 150,
+          sortable: true,
         },
         {
           headerName: "Siret",
           field: "siret",
           filter: true,
-          width: 150,
+          sortable: true,
         },
         {
           headerName: "Actions",
           field: "transactions",
-          width: 40,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],

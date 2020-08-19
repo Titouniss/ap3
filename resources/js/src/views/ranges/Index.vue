@@ -49,9 +49,21 @@
           <div
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
-            <span
-              class="mr-2"
-            >{{ currentPage * paginationPageSize - (paginationPageSize - 1) }} - {{ rangesData.length - currentPage * paginationPageSize > 0 ? currentPage * paginationPageSize : rangesData.length }} sur {{ rangesData.length }}</span>
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              rangesData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : rangesData.length
+              }}
+              sur {{ rangesData.length }}
+            </span>
             <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
           </div>
           <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
@@ -126,7 +138,7 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune gamme" },
+        localeText: { noRowsToShow: "Aucune gamme à afficher" },
       },
       defaultColDef: {
         sortable: true,
@@ -140,22 +152,20 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true,
         },
         {
           headerName: "Titre",
           field: "name",
-          width: 100,
         },
         {
           headerName: "Description",
           field: "description",
-          width: 200,
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 40,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],
