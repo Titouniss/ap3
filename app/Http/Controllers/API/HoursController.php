@@ -58,7 +58,7 @@ class HoursController extends Controller
             }
         }
 
-        $items = $items->with('project', 'user')->orderBy('date')->get();
+        $items = $items->with('project', 'user')->orderBy('start_at')->get();
 
         // Stats
         $stats = [];
@@ -144,19 +144,21 @@ class HoursController extends Controller
         $validator = Validator::make($arrayRequest, [
             'user_id' => 'required',
             'project_id' => 'required',
-            'date' => 'required',
-            'duration' => 'required'
+            'start_at' => 'required',
+            'end_at' => 'required'
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+            return response()->json(['error' => $validator->errors()], $this->successStatus);
         }
 
-        // Parse duration from time to double
-        $parts = explode(':', $arrayRequest['duration']);
-        $parseDuration = $parts[0] + $parts[1]/60*100 / 100;
+        //Set duration
+        $start_at = Carbon::parse($arrayRequest['start_at']);
+        $end_at = Carbon::parse($arrayRequest['end_at']);
+
+        $parseDuration = $start_at->floatDiffInHours($end_at);     
 
         if($parseDuration === 0) {
-            return response()->json(['error' => "Veuillez inserer une durée"]); 
+            return response()->json(['error' => "Veuillez inserer une durée"], $this->successStatus); 
         }
 
         // How many hour user worked this day
@@ -167,8 +169,16 @@ class HoursController extends Controller
         if ($target_work_hours === 0) {
             setlocale(LC_TIME, "fr_FR", "French");
             $target_day = strftime("%A", strtotime($arrayRequest['date']));
-            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " + $target_day], 401);
+            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day], $this->successStatus);
         }
+
+        // Check if user have already hour on this new entry period
+        $noLayering = $this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at);
+
+        if(!$noLayering){
+            return response()->json(['error' => "Attention, vous ne pouvez pas superposer deux horaires"],  $this->successStatus);
+        }
+        
 
         // Compare to user_workhours to define overtimes or not
         if ($nb_worked_hours > $target_work_hours) {
@@ -189,10 +199,46 @@ class HoursController extends Controller
                 );
             }
         } else { 
+            $arrayRequest['start_at'] = $start_at->ToDateTimeString();
+            $arrayRequest['end_at'] = $end_at->ToDateTimeString();
             $item = Hours::create($arrayRequest);
         }
 
+        $item = Hours::where('id', $item->id)->with('project', 'user')->first();
+
         return response()->json(['success' => $item], $this->successStatus);
+    }
+
+    private function checkIfNewEntryLayeringOtherHours($user_id, $start_at, $end_at, $hour_id = null){
+
+        $test = $start_at->format('Y-m-d');
+        $usersHours = $hour_id ? Hours::where('user_id', $user_id)->where('start_at', 'like', '%' . $start_at->format('Y-m-d') . '%')->where('id', '!=', $hour_id)->get()
+                      : Hours::where('user_id', $user_id)->where('start_at', 'like', '%' . $start_at->format('Y-m-d') . '%')->get();
+
+        if(count($usersHours) > 0){
+
+            $newPeriod = CarbonPeriod::create($start_at, $end_at);
+
+            foreach($usersHours as $hour){
+
+                $hourPeriod = CarbonPeriod::create($hour->start_at, $hour->end_at);
+    
+                if( ($newPeriod->contains($hour->start_at) && ($hour->start_at != $start_at && $hour->start_at != $end_at)) 
+                    || ($newPeriod->contains($hour->end_at) && ($hour->end_at != $start_at && $hour->end_at != $end_at)) 
+                    || ($hourPeriod->contains($start_at) && $hourPeriod->contains($end_at))
+                ){
+
+                    return false;
+                }
+            }
+
+        }
+        else{
+            return true;
+        }
+        return true;
+        
+
     }
 
     /**
@@ -206,13 +252,13 @@ class HoursController extends Controller
     private function getNbWorkedHours($user_id, $duration, $date)
     {
         // How many hour user worked this day
-        $worked_hours = Hours::where([['user_id', $user_id], ['date', $date]])->select('duration')->get();
+        $worked_hours = $date ? Hours::where([['user_id', $user_id], ['start_at', 'LIKE', '%' . $date . '%']])->get() : [];
 
         if(!$worked_hours->isEmpty()){
             $nb_worked_hours = 0;
+
             foreach ($worked_hours as $wh) {
-                $parts = explode(':', $wh['duration']);
-                $nb_worked_hours += $parts[0] + $parts[1]/60*100 / 100;
+                $nb_worked_hours += $wh->durationInFloatHour;
             }
             // Add current insert work hours
             return $nb_worked_hours += $duration;
@@ -290,8 +336,8 @@ class HoursController extends Controller
         $validator = Validator::make($arrayRequest, [
             'user_id' => 'required',
             'project_id' => 'required',
-            'date' => 'required',
-            'duration' => 'required'
+            'start_at' => 'required',
+            'end_at' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
@@ -302,18 +348,29 @@ class HoursController extends Controller
             if ($target_work_hours === 0) {
                 setlocale(LC_TIME, "fr_FR", "French");
                 $target_day = strftime("%A", strtotime($arrayRequest['date']));
-                return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le $target_day"], 401);
+                return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le $target_day"], $this->successStatus);
             }
+
+        // Check if user have already hour on this new entry period
+        $start_at = Carbon::parse($arrayRequest['start_at']);
+        $end_at = Carbon::parse($arrayRequest['end_at']);
+
+        $noLayering = $this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at, $arrayRequest['id']);
+        if(!$noLayering){
+            return response()->json(['error' => "Attention, vous ne pouvez pas superposer deux horaires"], $this->successStatus);
+        }
 
         // get old hour data
         $old_hours = Hours::where('id', $id)->first();
+        $old_date = Carbon::parse($old_hours['start_at']);
+        $old_hours['date'] = $old_date->format('Y-m-d');
 
         $update = Hours::where('id', $id)
             ->update([
                 'user_id' => $arrayRequest['user_id'],
                 'project_id' => $arrayRequest['project_id'],
-                'date' => $arrayRequest['date'],
-                'duration' => $arrayRequest['duration'],
+                'start_at' => $arrayRequest['start_at'],
+                'end_at' => $arrayRequest['end_at'],
                 'description' => $arrayRequest['description'],
             ]);
         
@@ -365,7 +422,7 @@ class HoursController extends Controller
             }
         
         if ($update) {
-            $item = Hours::find($id);
+            $item = Hours::find($id)->load('project', 'user');
             return response()->json(['success' => $item], $this->successStatus);
         } else {
             return response()->json(['error' => 'error'], $this->errorStatus);
@@ -381,11 +438,12 @@ class HoursController extends Controller
     public function destroy($id)
     {
         $item = Hours::findOrFail($id);
+        $date = Carbon::parse($item->start_at);
         $item->delete();
 
         //reset overtimes compteur for this user and date
         // How many hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $item->date);
+        $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $date->format('Y-m-d'));
 
         // Expected hours for this day
         $target_work_hours = HoursController::getTargetWorkHours($item->user_id, $item->date);

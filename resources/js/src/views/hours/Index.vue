@@ -145,6 +145,9 @@
           <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="addRecord">Ajouter des heures</vs-button>
           </div>
+          <div class="px-6 py-2" v-if="authorizedTo('publish')">
+            <vs-button @click="readRecord">Gérer mes heures</vs-button>
+          </div>
         </div>
         <vs-button type="border" @click="onExport">
           <div class="flex flex-row">
@@ -437,7 +440,7 @@ export default {
       return this.$store.state.userManagement.users;
     },
     hoursData() {
-      return this.$store.state.hoursManagement.allHours;
+      return this.$store.state.hoursManagement.hours;
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -576,7 +579,6 @@ export default {
     confirmDeleteRecord() {
       let selectedRow = this.gridApi.getSelectedRows();
       let singleHour = selectedRow[0];
-      console.log(["singleHour", singleHour.duration.split(":")]);
 
       this.$vs.dialog({
         type: "confirm",
@@ -631,6 +633,9 @@ export default {
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
     },
+    readRecord() {
+      this.$router.push(`/${modelPlurial}/${model}-view/`).catch(() => {});
+    },
     onExport() {
       import("@/vendor/Export2Excel").then((excel) => {
         const data = this.formatJson(this.headerVal, this.hoursData);
@@ -662,6 +667,22 @@ export default {
         })
       );
     },
+    getdealingHours() {
+      let item = {
+        year: this.filterDate,
+        user_id: this.filters.user ? this.filters.user.id : null
+      };
+      this.$store
+        .dispatch("dealingHoursManagement/getOvertimesByYear", item)
+        .then(data => {
+          if (data && data.status === 200) {
+          } else {
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
