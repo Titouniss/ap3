@@ -142,11 +142,11 @@
         <div class="flex flex-row justify-start items-center">
           <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
           <h4 class="ml-3">Heures effectuées</h4>
-          <div class="px-6 py-2" v-if="authorizedTo('publish')">
+          <!-- <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="addRecord">Ajouter des heures</vs-button>
-          </div>
+          </div> -->
           <div class="px-6 py-2" v-if="authorizedTo('publish')">
-            <vs-button @click="readRecord">Gérer mes heures</vs-button>
+            <vs-button @click="readRecord">{{ isAdmin() ? 'Gérer les heures' : 'Gérer mes heures'}}</vs-button>
           </div>
         </div>
         <vs-button type="border" @click="onExport">
