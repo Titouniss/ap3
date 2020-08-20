@@ -1,12 +1,56 @@
 <template>
   <div>
-    <router-link :to="'/hours'" class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3">
+    <router-link :to="'/hours'" class="btnBack flex cursor-pointer text-inherit hover:text-primary p-3 mb-3">
       <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
       <span class="ml-2"> Retour aux heures </span>
     </router-link>
 
-    <div class="vx-card w-full p-6">
+    <div class="vx-card p-6 mt-3 mb-5">
+      <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+        <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
+        <h4 class="ml-3">Filtres</h4>
+      </div>
+      <div class="flex flex-wrap justify-center items-end">
+        <div class="mr-10" style="min-width: 15em">
+          <v-select
+            label="name"
+            v-model="filters.company"
+            :options="companiesData"
+            v-bind:class="{ disabled: activeUserRole() != 'superAdmin' ? true : false}" 
+            @input="refreshDataUsers"
+            class="w-full"
+          >
+            <template #header>
+              <div style="opacity: .8">Société</div>
+            </template>
+          </v-select>
+        </div>
+        <div style="min-width: 15em">
+          <v-select
+            label="lastname"
+            v-model="filters.user"
+            :options="usersData"
+            v-bind:class="{ disabled: !filters.company || (activeUserRole() != 'superAdmin' && activeUserRole() != 'Administrateur') ? true : false}" 
+            @input="refreshDataCalendar"
+            class="w-full"
+          >
+          <!-- Finir le filtre -->
+            <template #header>
+              <div style="opacity: .8">Utilisateur</div>
+            </template>
+            <template #option="user">
+              <span>
+                {{
+                `${user.lastname} ${user.firstname}`
+                }}
+              </span>
+            </template>
+          </v-select>
+        </div>
+      </div>
+    </div>
 
+    <div class="vx-card w-full p-6" v-if="filters.user">
       <add-form
         :activeAddPrompt="this.activeAddPrompt"
         :clickDate="this.dateData"
@@ -47,6 +91,7 @@
       />
     </div>
   </div>
+  
 </template>
 
 <script>
@@ -62,6 +107,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 // Component
 import EditForm from "./EditForm.vue";
@@ -79,6 +125,7 @@ var modelTitle = "Plannings";
 export default {
   components: {
     FullCalendar, 
+    vSelect,
     AddForm,
     EditForm
   },
@@ -102,7 +149,12 @@ export default {
             alert("clicked the custom button!");
           }
         }
-      }
+      },
+      // Filters
+      filters: {
+        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null,
+        user: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser : null,
+      },
     };
   },
   computed: {
@@ -110,7 +162,13 @@ export default {
       return this.$store.state.hoursManagement.hour.id || -1;
     },
     calendarEvents() {
-      return this.$store.state.hoursManagement ? this.$store.state.hoursManagement.hoursCalendar : null;
+      return this.filters.user ? this.$store.state.hoursManagement.hoursCalendar.filter((item) => item.user_id === this.filters.user.id) : [];
+    },
+    companiesData() {
+      return this.$store.state.companyManagement.companies;
+    },
+    usersData() {
+      return this.filters.company ? this.$store.state.userManagement.users.filter((item) => item.company_id === this.filters.company.id) : [];
     },
     authorizedToEdit() {
       return (
@@ -147,108 +205,46 @@ export default {
           console.error(err);
         });
     },
-    // handleEventDrop(arg) {
-    //   var itemTemp = this.calendarEvents.find(
-    //     e => e.id.toString() === arg.event.id
-    //   );
-    //   //Parse new item to update task
-
-    //   var itemToSave = {
-    //     id: itemTemp.id,
-    //     name: itemTemp.title,
-    //     date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-    //     estimated_time: itemTemp.estimated_time,
-    //     order: itemTemp.order,
-    //     description: itemTemp.description,
-    //     time_spent: itemTemp.time_spent,
-    //     workarea_id: itemTemp.workarea_id,
-    //     user_id: itemTemp.user_id,
-    //     project_id: itemTemp.project_id,
-    //     status: itemTemp.status,
-    //     from: "schedule"
-    //   };
-
-    //   this.$store
-    //     .dispatch("taskManagement/updateItem", itemToSave)
-    //     .then(data => {
-    //       if (data && data.status === 200) {
-    //         //this.refresh();
-    //       } else {
-    //       }
-    //     })
-    //     .catch(err => {
-    //       console.error(err);
-    //     });
-    // },
-    // handleEventResize(arg) {
-    //   var itemTemp = this.calendarEvents.find(
-    //     e => e.id.toString() === arg.event.id
-    //   );
-
-    //   //Parse new item to update task
-
-    //   var start = moment(arg.event.start);
-    //   var end = moment(arg.event.end);
-
-    //   var itemToSave = {
-    //     id: itemTemp.id,
-    //     name: itemTemp.title,
-    //     date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-    //     estimated_time: end.diff(start, "hours"),
-    //     order: itemTemp.order,
-    //     description: itemTemp.description,
-    //     time_spent: itemTemp.time_spent,
-    //     workarea_id: itemTemp.workarea_id,
-    //     user_id: itemTemp.user_id,
-    //     project_id: itemTemp.project_id,
-    //     status: itemTemp.status,
-    //     from: "schedule"
-    //   };
-
-    //   this.$store
-    //     .dispatch("taskManagement/updateItem", itemToSave)
-    //     .then(data => {
-    //       if (data && data.status === 200) {
-    //         //this.refresh();
-    //       } else {
-    //       }
-    //     })
-    //     .catch(err => {
-    //       console.error(err);
-    //     });
-    // },
     handleClose() {
       this.calendarEvents = []
       let test = this.calendarEvents;
 
       //this.refresh();
       (this.activeAddPrompt = false), (this.dateData = {});
-    }
+    },
+    refreshDataUsers() {
+      this.filters.user = null
+    },
+    refreshDataCalendar() {
+      const filter = {};
+      if (this.filters.company) {
+        filter.company_id = this.filters.company.id;
+      }
+      if (this.filters.company && this.filters.user) {
+        filter.user_id = this.filters.user.id;
+      }
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if ( user.roles && user.roles.length > 0 ) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
   },
   mounted() {
-    if (this.$route.query.type === "projects") {
-      let project = this.$store.state.projectManagement.projects.find(
-        p => p.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle = "Planning du projet : " + project.name;
-    } else if (this.$route.query.type === "users") {
-      let user = this.$store.state.userManagement.users.find(
-        u => u.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle =
-        "Planning de l'utilisateur : " + user.firstname + " " + user.lastname;
-    } else if (this.$route.query.type === "workarea") {
-      let workarea = this.$store.state.workareaManagement.workareas.find(
-        w => w.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle = "Planning de l'îlot : " + workarea.name;
-    }
+
   },
   created() {
 
     if (!moduleHourManagement.isRegistered) {
       this.$store.registerModule("hoursManagement", moduleHourManagement);
       moduleHourManagement.isRegistered = true;
+    }
+
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
     }
 
     if (!moduleProjectManagement.isRegistered) {
@@ -263,47 +259,25 @@ export default {
       this.manageErrors(err);
     });
 
-    this.$store.dispatch("projectManagement/fetchItems");
-    this.$store.dispatch("userManagement/fetchItems");
+    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
+
+    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
+
+    this.$store.dispatch("projectManagement/fetchItems");   
     
-  },
-  updated() {
-    // if (this.$route.query.type === "projects") {
-    //   console.log("je passe");
-    //   var id_bundle = null;
-    //   this.$store.state.projectManagement.projects.forEach(p => {
-    //     p.tasks_bundles.forEach(t => {
-    //       if (t.project_id === this.$route.query.id) {
-    //         id_bundle = t.id;
-    //       }
-    //     });
-    //   });
-    //   if (id_bundle != null) {
-    //     this.$store
-    //       .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
-    //       .catch(err => {
-    //         this.manageErrors(err);
-    //       });
-    //   }
-    // } else if (this.$route.query.type === "users") {
-    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-    //     this.manageErrors(err);
-    //   });
-    // } else if (this.$route.query.type === "workarea") {
-    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-    //     this.manageErrors(err);
-    //   });
-    // }
-    // this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-    //   this.manageErrors(err);
-    // });
   },
   beforeDestroy() {
     moduleHourManagement.isRegistered = false;
     moduleProjectManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
     moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("hoursManagement");
     this.$store.unregisterModule("projectManagement");
+    this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("userManagement");
   },
 };
@@ -349,5 +323,16 @@ export default {
 
 .btnBack {
   line-height: 2;
+}
+
+.disabled {
+  pointer-events:none;
+  cursor: not-allowed;
+  color: #bfcbd9;
+  border-color: #d1dbe5;   
+  opacity: 0.7;
+}
+.disabled:hover {
+  cursor: not-allowed;
 }
 </style>
