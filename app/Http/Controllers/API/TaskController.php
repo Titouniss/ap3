@@ -27,7 +27,7 @@ class TaskController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $items = Task::all()->load('project');
+        $items = Task::all()->load('project', 'comments');
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -63,12 +63,12 @@ class TaskController extends Controller
         $arrayRequest = $request->all();
 
         $items = [];
-        if(!empty($arrayRequest)){
-            foreach($arrayRequest as $skill_id){
+        if (!empty($arrayRequest)) {
+            foreach ($arrayRequest as $skill_id) {
                 $tasks_id = TasksSkill::select('task_id')->where('skill_id', $skill_id)->get();
 
                 //check if task_id is not already in $items
-                foreach($tasks_id as $t_id) {
+                foreach ($tasks_id as $t_id) {
                     if (!in_array($t_id, $items)) {
                         array_push($items, $t_id);
                     }
