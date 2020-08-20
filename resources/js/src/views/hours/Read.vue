@@ -1,0 +1,338 @@
+<template>
+  <div>
+    <router-link :to="'/hours'" class="btnBack flex cursor-pointer text-inherit hover:text-primary p-3 mb-3">
+      <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
+      <span class="ml-2"> Retour aux heures </span>
+    </router-link>
+
+    <div class="vx-card p-6 mt-3 mb-5">
+      <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+        <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
+        <h4 class="ml-3">Filtres</h4>
+      </div>
+      <div class="flex flex-wrap justify-center items-end">
+        <div class="mr-10" style="min-width: 15em">
+          <v-select
+            label="name"
+            v-model="filters.company"
+            :options="companiesData"
+            v-bind:class="{ disabled: activeUserRole() != 'superAdmin' ? true : false}" 
+            @input="refreshDataUsers"
+            class="w-full"
+          >
+            <template #header>
+              <div style="opacity: .8">Société</div>
+            </template>
+          </v-select>
+        </div>
+        <div style="min-width: 15em">
+          <v-select
+            label="lastname"
+            v-model="filters.user"
+            :options="usersData"
+            v-bind:class="{ disabled: !filters.company || (activeUserRole() != 'superAdmin' && activeUserRole() != 'Administrateur') ? true : false}" 
+            @input="refreshDataCalendar"
+            class="w-full"
+          >
+          <!-- Finir le filtre -->
+            <template #header>
+              <div style="opacity: .8">Utilisateur</div>
+            </template>
+            <template #option="user">
+              <span>
+                {{
+                `${user.lastname} ${user.firstname}`
+                }}
+              </span>
+            </template>
+          </v-select>
+        </div>
+      </div>
+    </div>
+
+    <div class="vx-card w-full p-6" v-if="filters.user">
+      <add-form
+        :activeAddPrompt="this.activeAddPrompt"
+        :clickDate="this.dateData"
+        :hours_list="this.hoursData"
+        :handleClose="handleClose"
+      />
+
+      <FullCalendar
+        locale="fr"
+        class="demo-app-calendar border-c"
+        ref="fullCalendar"
+        defaultView="timeGridWeek"
+        :editable="true"
+        :droppable="false"
+        :header="{
+          left: 'prev today next',
+          center: 'dayGridMonth, timeGridWeek, timeGridDay',
+          right: 'title'
+        }"
+        :buttonText="{
+          today: 'Aujourd\'hui',
+          month: 'Mois',
+          week: 'Semaine',
+          day: 'Jour',
+          list: 'Liste'
+        }"
+        :allDaySlot="false"
+        :plugins="calendarPlugins"
+        :weekends="calendarWeekends"
+        :events="calendarEvents"
+        @dateClick="handleDateClick"
+        @eventClick="handleEventClick"
+      />
+      <edit-form
+        :reload="calendarEvents"
+        :itemId="itemIdToEdit"
+        v-if="itemIdToEdit && authorizedToEdit "
+      />
+    </div>
+  </div>
+  
+</template>
+
+<script>
+import vSelect from "vue-select";
+import moment from "moment";
+
+import FullCalendar from "@fullcalendar/vue";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+
+// Store Module
+import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
+import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+
+// Component
+import EditForm from "./EditForm.vue";
+import AddForm from "./AddForm.vue";
+
+// must manually include stylesheets for each plugin
+import "@fullcalendar/core/main.css";
+import "@fullcalendar/daygrid/main.css";
+import "@fullcalendar/timegrid/main.css";
+
+var model = "schedule";
+var modelPlurial = "schedules";
+var modelTitle = "Plannings";
+
+export default {
+  components: {
+    FullCalendar, 
+    vSelect,
+    AddForm,
+    EditForm
+  },
+  data: function() {
+    return {
+      calendarPlugins: [
+        // plugins must be defined in the JS
+        dayGridPlugin,
+        timeGridPlugin,
+        interactionPlugin // needed for dateClick
+      ],
+      activeAddPrompt: false,
+      scheduleTitle: "",
+      dateData: {},
+      taskBundle: null,
+      calendarWeekends: true,
+      customButtons: {
+        AddEventBtn: {
+          text: "custom!",
+          click: function() {
+            alert("clicked the custom button!");
+          }
+        }
+      },
+      // Filters
+      filters: {
+        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null,
+        user: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser : null,
+      },
+    };
+  },
+  computed: {
+    itemIdToEdit() {
+      return this.$store.state.hoursManagement.hour.id || -1;
+    },
+    calendarEvents() {
+      return this.filters.user ? this.$store.state.hoursManagement.hoursCalendar.filter((item) => item.user_id === this.filters.user.id) : [];
+    },
+    companiesData() {
+      return this.$store.state.companyManagement.companies;
+    },
+    usersData() {
+      return this.filters.company ? this.$store.state.userManagement.users.filter((item) => item.company_id === this.filters.company.id) : [];
+    },
+    authorizedToEdit() {
+      return (
+        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
+      );
+    },
+    hoursData() {
+      return this.$store.state.hoursManagement ? this.$store.state.hoursManagement.hours : null;
+    },
+  },
+  methods: {
+    refresh() {
+    },
+    toggleWeekends() {
+      this.calendarWeekends = !this.calendarWeekends; // update a property
+    },
+    gotoPast() {
+      let calendarApi = this.$refs.fullCalendar.getApi(); // from the ref="..."
+      calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
+    },
+    handleDateClick(arg) {
+      this.activeAddPrompt = true;
+      this.dateData = arg;
+    },
+    handleEventClick(arg) {
+      
+      var targetEvent = this.calendarEvents.find(
+        event => event.id.toString() === arg.event.id
+      );
+
+      this.$store
+        .dispatch("hoursManagement/editItem", targetEvent)
+        .catch(err => {
+          console.error(err);
+        });
+    },
+    handleClose() {
+      this.calendarEvents = []
+      let test = this.calendarEvents;
+
+      //this.refresh();
+      (this.activeAddPrompt = false), (this.dateData = {});
+    },
+    refreshDataUsers() {
+      this.filters.user = null
+    },
+    refreshDataCalendar() {
+      const filter = {};
+      if (this.filters.company) {
+        filter.company_id = this.filters.company.id;
+      }
+      if (this.filters.company && this.filters.user) {
+        filter.user_id = this.filters.user.id;
+      }
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if ( user.roles && user.roles.length > 0 ) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
+  },
+  mounted() {
+
+  },
+  created() {
+
+    if (!moduleHourManagement.isRegistered) {
+      this.$store.registerModule("hoursManagement", moduleHourManagement);
+      moduleHourManagement.isRegistered = true;
+    }
+
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
+
+    if (!moduleProjectManagement.isRegistered) {
+      this.$store.registerModule("projectManagement", moduleProjectManagement);
+      moduleProjectManagement.isRegistered = true;
+    }
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
+    this.$store.dispatch("hoursManagement/fetchItems").catch(err => {
+      this.manageErrors(err);
+    });
+
+    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
+
+    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
+
+    this.$store.dispatch("projectManagement/fetchItems");   
+    
+  },
+  beforeDestroy() {
+    moduleHourManagement.isRegistered = false;
+    moduleProjectManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
+    moduleUserManagement.isRegistered = false;
+    this.$store.unregisterModule("hoursManagement");
+    this.$store.unregisterModule("projectManagement");
+    this.$store.unregisterModule("companyManagement");
+    this.$store.unregisterModule("userManagement");
+  },
+};
+</script>
+
+<style>
+.demo-app {
+  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  font-size: 14px;
+}
+.demo-app-top {
+  margin: 0 0 3em;
+}
+.demo-app-calendar {
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.fc-timeGridDay-button {
+  background-color: rgb(55, 136, 216);
+  border-color: rgb(55, 136, 216);
+}
+
+.fc-button {
+  background-color: rgb(55, 136, 216);
+  border-color: rgb(55, 136, 216);
+}
+
+.fc-button-primary {
+  background-color: rgb(55, 136, 216);
+  border-color: rgb(55, 136, 216);
+}
+
+.fc-button-active {
+  background-color: rgb(32, 70, 168);
+  border-color: rgb(32, 71, 168);
+}
+
+.fc-button:hover {
+  background-color: rgb(40, 61, 116);
+  text-decoration: none;
+}
+
+.btnBack {
+  line-height: 2;
+}
+
+.disabled {
+  pointer-events:none;
+  cursor: not-allowed;
+  color: #bfcbd9;
+  border-color: #d1dbe5;   
+  opacity: 0.7;
+}
+.disabled:hover {
+  cursor: not-allowed;
+}
+</style>

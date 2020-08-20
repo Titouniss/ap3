@@ -47,12 +47,12 @@ class MailResetPasswordNotification extends ResetPassword
         $link = url( "/pages/reset-password/".$this->token."/".$notifiable->getEmailForPasswordReset() );
         return ( new MailMessage )
             ->subject( 'Réinitialisation mot de passe' )
-            ->greeting('Bonjour!')
-            ->line( "Bonjour! Vous recevez cet email car nous avons reçu une demande de changement de mot de passe." )
+            ->greeting('Bonjour !')
+            ->line( "Vous recevez cet email car nous avons reçu une demande de changement de mot de passe." )
             ->action('Réinitialiser', $link)
             ->line( "Ce lien expire dans ".config('auth.passwords.users.expire')." minutes" )
-            ->line( "Ignorez ce message si vous n'avez pas fait de demande." );    
-    }
+            ->line( "Ignorez ce message si vous n'avez pas fait de demande." );
+        }
     /**
      * Get the array representation of the notification.
      *

@@ -1,4 +1,5 @@
 export default {
-    allHours: [],
-    hours: {},
+    hours: [],
+    hoursCalendar: [],
+    hour: {},
 }

@@ -119,6 +119,7 @@ import moment from "moment";
 
 var model = "unavailabilitie";
 var modelPlurial = "unavailabilities";
+var modelTitle = "Indisponibilité";
 
 export default {
   components: {
@@ -128,7 +129,7 @@ export default {
     EditForm,
 
     // Cell Renderer
-    CellRendererActions
+    CellRendererActions,
   },
   data() {
     return {
@@ -138,54 +139,52 @@ export default {
       gridApi: null,
       gridOptions: {
         localeText: {
-          noRowsToShow: "Pas d'indisponibilités à afficher"
-        }
+          noRowsToShow: "Aucune indisponibilité à afficher",
+        },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
           filter: false,
-          maxWidth: 70,
+          maxWidth: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
-          resizable: true
         },
         {
           headerName: "Début",
           field: "starts_at",
           filter: true,
-          maxWidth: 200,
-          valueFormatter: param => this.formatDateTime(param.value)
+          valueFormatter: (param) => this.formatDateTime(param.value),
         },
         {
           headerName: "Fin",
           field: "ends_at",
           filter: true,
-          maxWidth: 200,
-          valueFormatter: param => this.formatDateTime(param.value)
+          valueFormatter: (param) => this.formatDateTime(param.value),
         },
         {
           headerName: "Motif",
           field: "reason",
-          filter: true
+          filter: true,
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          maxWidth: 150,
-          cellRendererFramework: "CellRendererActions"
-        }
+          type: "numericColumn",
+          cellRendererFramework: "CellRendererActions",
+        },
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererActions
-      }
+        CellRendererActions,
+      },
     };
   },
   computed: {
@@ -213,8 +212,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     formatDateTime(value) {
@@ -247,24 +246,26 @@ export default {
               )} au ${this.parseDateTime(singleUnavailabilities.ends_at)} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
-      this.$store
-        .dispatch("unavailabilityManagement/removeItem", this.params.data.id)
-        .then(() => {
-          this.showDeleteSuccess();
-        })
-        .catch(err => {
-          console.error(err);
-        });
+      this.gridApi.getSelectedRows().map((selectRow) => {
+        this.$store
+          .dispatch("unavailabilityManagement/removeItem", selectRow.id)
+          .then(() => {
+            this.showDeleteSuccess();
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      });
     },
     showDeleteSuccess() {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: `${modelTitle} supprimée`
+        text: `${modelTitle} supprimée`,
       });
     },
     onResize(event) {
@@ -275,7 +276,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -313,7 +314,7 @@ export default {
       );
       moduleUnavailabilityManagement.isRegistered = true;
     }
-    this.$store.dispatch("unavailabilityManagement/fetchItems").catch(err => {
+    this.$store.dispatch("unavailabilityManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -322,6 +323,6 @@ export default {
 
     moduleUnavailabilityManagement.isRegistered = false;
     this.$store.unregisterModule("unavailabilityManagement");
-  }
+  },
 };
 </script>

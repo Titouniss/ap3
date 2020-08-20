@@ -83,7 +83,11 @@
                 <vs-checkbox v-on:change="checkAll(items)" :checked="checkOrNot(items)" />
               </td>
               <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
-                <vs-checkbox v-model="selected[item.id]" />
+                <vs-checkbox
+                  :disabled="forceConsult(items, item)"
+                  v-on:change="checkConsult(items, item)"
+                  v-model="selected[item.id]"
+                />
               </td>
             </tr>
           </table>
@@ -274,6 +278,32 @@ export default {
       }
       this.selected = Object.assign({}, this.selected);
     },
+    checkConsult(items, item) {
+      if (items.read.id !== item.id && !this.selected[items.read.id]) {
+        if (
+          !this.selected[items.read.id] === true ||
+          this.selected[items.read.id] === undefined
+        )
+          if (
+            !this.selected[items.read.id] === true ||
+            this.selected[items.read.id] === undefined
+          ) {
+            this.selected[items.read.id] = true;
+          }
+      }
+      this.selected = Object.assign({}, this.selected);
+    },
+    forceConsult(items, item) {
+      if (
+        items.read.id === item.id &&
+        (this.selected[items.delete.id] === true ||
+          this.selected[items.edit.id] === true ||
+          this.selected[items.publish.id] === true)
+      ) {
+        return true;
+      }
+      return false;
+    },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
     },
@@ -283,7 +313,7 @@ export default {
     },
   },
   created() {
-    // Register Module roleManagement Module
+    // Register roleManagement Module
     if (!moduleManagement.isRegistered) {
       this.$store.registerModule("roleManagement", moduleManagement);
       moduleManagement.isRegistered = true;

@@ -94,12 +94,7 @@
                   <h5 v-if="isPeriodFilter()">{{ filterDate }}</h5>
                 </vs-col>
                 <vs-col vs-type="flex" vs-justify="center">
-                  <h5
-                    class="mt-1"
-                    v-if="
-                                            this.filters.period_type === 'week'
-                                        "
-                  >{{ currentWeek }}</h5>
+                  <h5 class="mt-1" v-if="this.filters.period_type === 'week'">{{ currentWeek }}</h5>
                 </vs-col>
                 <vs-col vs-type="flex" vs-justify="center">
                   <flat-pickr
@@ -147,8 +142,11 @@
         <div class="flex flex-row justify-start items-center">
           <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
           <h4 class="ml-3">Heures effectuées</h4>
-          <div class="px-6 py-2" v-if="authorizedTo('publish')">
+          <!-- <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="addRecord">Ajouter des heures</vs-button>
+          </div>-->
+          <div class="px-6 py-2" v-if="authorizedTo('publish')">
+            <vs-button @click="readRecord">{{ isAdmin() ? 'Gérer les heures' : 'Gérer mes heures'}}</vs-button>
           </div>
         </div>
         <vs-button type="border" @click="onExport">
@@ -280,12 +278,13 @@ var model = "hours";
 var modelPlurial = "hours";
 var modelTitle = "Heures";
 
+moment.locale("fr");
+
 export default {
   components: {
     AgGridVue,
     vSelect,
     flatPickr,
-    AddForm,
     // Cell Renderer
     CellRendererActions,
     CellRendererRelations,
@@ -296,7 +295,7 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Pas d'heures à afficher" },
+        localeText: { noRowsToShow: "Aucune heure à afficher" },
       },
       defaultColDef: {
         sortable: true,
@@ -310,12 +309,10 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true,
         },
         {
           headerName: "Date",
           field: "date",
-          width: 70,
           cellRenderer: (data) => {
             moment.locale("fr");
             return moment(data.value).format("D MMMM YYYY");
@@ -324,23 +321,21 @@ export default {
         {
           headerName: "Durée",
           field: "duration",
-          width: 60,
         },
         {
           headerName: "Description",
           field: "description",
-          width: 100,
         },
         {
           headerName: "Projet",
           field: "project",
-          width: 80,
           cellRendererFramework: "CellRendererRelations",
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 40,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],
@@ -367,7 +362,7 @@ export default {
         project: null,
         user: null,
         date: moment(),
-        period_type: "year",
+        period_type: "month",
       },
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
@@ -445,7 +440,7 @@ export default {
       return this.$store.state.userManagement.users;
     },
     hoursData() {
-      return this.$store.state.hoursManagement.allHours;
+      return this.$store.state.hoursManagement.hours;
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -584,7 +579,6 @@ export default {
     confirmDeleteRecord() {
       let selectedRow = this.gridApi.getSelectedRows();
       let singleHour = selectedRow[0];
-      console.log(["singleHour", singleHour.duration.split(":")]);
 
       this.$vs.dialog({
         type: "confirm",
@@ -639,6 +633,9 @@ export default {
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
     },
+    readRecord() {
+      this.$router.push(`/${modelPlurial}/${model}-view/`).catch(() => {});
+    },
     onExport() {
       import("@/vendor/Export2Excel").then((excel) => {
         const data = this.formatJson(this.headerVal, this.hoursData);
@@ -669,6 +666,22 @@ export default {
           return value;
         })
       );
+    },
+    getdealingHours() {
+      let item = {
+        year: this.filterDate,
+        user_id: this.filters.user ? this.filters.user.id : null,
+      };
+      this.$store
+        .dispatch("dealingHoursManagement/getOvertimesByYear", item)
+        .then((data) => {
+          if (data && data.status === 200) {
+          } else {
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     },
   },
   mounted() {
@@ -722,7 +735,6 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
-    moduleDealingHoursManagement.isRegistered = false;
     moduleProjectManagement.isRegistered = false;
     moduleUserManagement.isRegistered = false;
     moduleHoursManagement.isRegistered = false;

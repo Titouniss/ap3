@@ -59,7 +59,7 @@
               name="role"
               label="name"
               :multiple="false"
-              v-model="itemLocal.roles[0]"
+              v-model="itemLocal.roles"
               :reduce="name => name.id"
               class="w-full"
               autocomplete
@@ -174,7 +174,7 @@ var modelPlurial = "users";
 export default {
   components: {
     vSelect,
-    WorkHours
+    WorkHours,
   },
   data() {
     return {
@@ -185,11 +185,11 @@ export default {
         company_id: null,
         roles: [],
         skills: [],
-        work_hours: []
+        work_hours: [],
       },
       company_id_temps: null,
       companySkills: [],
-      selected: []
+      selected: [],
     };
   },
   computed: {
@@ -209,7 +209,7 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -226,9 +226,9 @@ export default {
         this.itemLocal.firstname != "" &&
         this.itemLocal.email != "" &&
         this.itemLocal.company_id != null &&
-        this.itemLocal.roles.length > 0
+        this.itemLocal.roles != null
       );
-    }
+    },
   },
   methods: {
     authorizedTo(action, model = "users") {
@@ -242,7 +242,7 @@ export default {
         this.itemLocal.skills = [];
       }
       this.companySkills = this.companiesData.find(
-        company => company.id === item
+        (company) => company.id === item
       ).skills;
     },
     fetch_data(id) {
@@ -250,13 +250,13 @@ export default {
 
       this.$store
         .dispatch("userManagement/fetchItem", id)
-        .then(res => {
+        .then((res) => {
           let item = res.data.success;
 
           // Get skills
           let skill_ids = [];
           if (item.skills.length > 0) {
-            item.skills.forEach(element => {
+            item.skills.forEach((element) => {
               skill_ids.push(element.id);
             });
           }
@@ -269,18 +269,19 @@ export default {
           }
           this.$vs.loading.close();
         })
-        .catch(err => {
+        .catch((err) => {
           this.$vs.loading.close();
           console.error(err);
         });
     },
     updateItem() {
       this.$vs.loading();
+      console.log(["itemLocal", this.itemLocal]);
+
       this.itemLocal.roles = [
-        this.$store.getters["roleManagement/getItem"](
-          this.itemLocal.roles[0].id
-        )
+        this.$store.getters["roleManagement/getItem"](this.itemLocal.roles),
       ];
+      console.log(["itemLocal", this.itemLocal]);
       this.$store
         .dispatch("userManagement/updateItem", this.itemLocal)
         .then(() => {
@@ -291,23 +292,23 @@ export default {
             text: "Utilisateur modifier avec succès",
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success"
+            color: "success",
           });
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
-    }
+    },
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
@@ -352,6 +353,6 @@ export default {
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");
-  }
+  },
 };
 </script>

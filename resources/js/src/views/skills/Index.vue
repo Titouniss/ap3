@@ -153,7 +153,7 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Pas de compétences à afficher" },
+        localeText: { noRowsToShow: "Aucune compétence à afficher" },
       },
       defaultColDef: {
         sortable: true,
@@ -162,33 +162,29 @@ export default {
       },
       columnDefs: [
         {
+          sortable: false,
           filter: false,
-          width: 30,
+          width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          resizable: true,
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          width: 100,
-          resizable: true,
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          width: 100,
-          resizable: true,
           cellRendererFramework: "CellRendererRelations",
         },
         {
+          sortable: false,
           headerName: "Actions",
           field: "transactions",
-          width: 30,
-          resizable: true,
+          type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
         },
       ],
