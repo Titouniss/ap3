@@ -55,7 +55,7 @@
                 <span>Tache dépendante de :</span>
                 <li :key="index" v-for="(item, index) in previousTasks">{{ item }}</li>
               </div>
-              <div class="my-3" style="font-size: 0.9em;">
+              <div class="my-3" style="font-size: 0.9em;" v-if="hideUserInput == false">
                 <small class="date-label mb-1" style="display: block;">Date</small>
                 <flat-pickr
                   :config="configdateTimePicker"
@@ -189,17 +189,6 @@
                   />
                 </div>
               </div>
-              <ul class="mt-3">
-                <li class="mr-3">
-                  <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
-                </li>
-                <li class="mr-3">
-                  <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
-                </li>
-                <li v-on:click="setTimeSpent">
-                  <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
-                </li>
-              </ul>
               <div class="my-4 mt-3 mb-2">
                 <small class="date-label">Temps estimé (en h)</small>
                 <vs-input-number
@@ -286,7 +275,7 @@ export default {
         name: "",
         order: "",
         description: "",
-        date: new Date(),
+        date: "",
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,

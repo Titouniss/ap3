@@ -110,7 +110,6 @@ class TaskController extends Controller
             'date' => 'required',
             'status' => 'required',
             'estimated_time' => 'required',
-            'user_id' => 'required'
         ]);
         if ($validator->fails()) {
 

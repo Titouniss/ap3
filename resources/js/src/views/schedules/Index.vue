@@ -53,7 +53,7 @@
           <!-- project list-->
           <div v-if="schedulList === 'projects'" style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center">
 
-            <div v-for="project in projectsData" v-bind:key="project.id" class="card-task-project p-2 m-3" @click="goDetail(project.id, 'project')">
+            <div v-for="project in projectsData" v-bind:key="project.id" class="card-task-project p-2 m-3" @click="goDetail(project.id, 'projects')">
               <div class="mt-3 projectStatus" :class="project.status">{{ project.status == 'todo' ? 'A compléter' : (project.status == 'doing' ? 'En cours' : null) }}</div>
               <feather-icon icon="ActivityIcon" svgClasses="h-8 w-8" style="color: #000, margin-top: -5px" />
               <div class="mt-2" style="font-size: 1.1em; color: #000; font-weight: 600">{{ project.name }}</div>
