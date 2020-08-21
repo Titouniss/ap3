@@ -279,10 +279,9 @@ export default {
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
-        //workarea_id: this.type === "workarea" ? this.idType : null,
         created_by: "",
         status: "todo",
-        project_id: this.type === "projects" ? this.idType : null,
+        project_id: this.project_data ? this.project_data.id : null,
         comment: "",
         skills: [],
         previousTasksIds: [],
@@ -355,7 +354,7 @@ export default {
         name: "",
         order: "",
         description: "",
-        date: new Date(),
+        date: "",
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
@@ -384,10 +383,10 @@ export default {
         this.isSubmiting = true;
 
         this.$validator.validateAll().then(result => {
-          this.itemLocal.date = moment(
+          this.itemLocal.date = this.itemLocal.date ? moment(
             this.itemLocal.date,
             "DD-MM-YYYY HH:mm"
-          ).format("YYYY-MM-DD HH:mm");
+          ).format("YYYY-MM-DD HH:mm") : null;
 
           // this.itemLocal.workarea_id =
           //   this.itemLocal.workarea_id == "null"
@@ -401,8 +400,6 @@ export default {
           //   this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
 
           if (result) {
-            console.log(["result", result]);
-
             this.$store
               .dispatch(
                 "taskManagement/addItem",

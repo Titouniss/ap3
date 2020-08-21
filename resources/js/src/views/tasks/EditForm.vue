@@ -25,13 +25,13 @@
                         <vs-textarea rows="2" label="Ajouter une description" name="description" class="w-full mb-1 mt-1" v-model="itemLocal.description" />  
                       </div>
                     </div>
-                    <div class="my-3" v-if="previousTasks.length > 0">
+                    <div class="my-3" v-if="previousTasks && previousTasks.length > 0">
                        <span> Tache dépendante de : </span> 
                         <li :key="index" v-for="(item, index) in previousTasks">
                           {{ item }}
                         </li>
                     </div>
-                    <div class="my-3" style="font-size: 0.9em;">
+                    <div class="my-3" style="font-size: 0.9em;" v-if="project_data && project_data.status == 'doing'">
                       <small class="date-label mb-1" style="display: block;">Date</small>
                       <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
                     </div>
@@ -46,7 +46,7 @@
                     </div>
                     
                     <span
-                      v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
                       class="text-danger text-sm"
                     >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
@@ -69,7 +69,7 @@
                         <vs-input-number min="1" name="order" class="inputNumber" v-model="itemLocal.order" />
                       </div>
                     </div>
-                    <ul class="mt-3">
+                    <ul class="mt-3" v-if="project_data && project_data.status == 'doing'">
                       <li class="mr-3">
                         <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
                       </li>
@@ -168,6 +168,7 @@ export default {
       type: Number,
       required: true
     },
+    project_data: { type: Object },
     tasks_list: { required: true }
   },
   data() {
@@ -245,11 +246,13 @@ export default {
         this.addComment();
       }
 
+      console.log(['itemLocal.date', this.itemLocal.date])
+
       this.$validator.validateAll().then(result => {
-        this.itemLocal.date = moment(
+        this.itemLocal.date = this.itemLocal.date ? moment(
           this.itemLocal.date,
           "DD-MM-YYYY HH:mm"
-        ).format("YYYY-MM-DD HH:mm");
+        ).format("YYYY-MM-DD HH:mm") : null;
         // this.itemLocal.workarea_id =
         //   this.itemLocal.workarea_id == "null"
         //     ? null

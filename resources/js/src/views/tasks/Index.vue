@@ -89,7 +89,7 @@
               class="mr-2"
             />
             <feather-icon
-              v-if="item.comments.length > 0"
+              v-if="item.comments && item.comments.length > 0"
               icon="MessageSquareIcon"
               svgClasses="h-4 w-4"
             />
@@ -194,6 +194,7 @@
     <edit-form
       :itemId="itemIdToEdit"
       :companyId="project_data.company_id"
+      :project_data="this.project_data"
       v-if="itemIdToEdit"
       :tasks_list="tasksData"
     />
