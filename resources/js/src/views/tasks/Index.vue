@@ -243,6 +243,7 @@ export default {
   },
   data() {
     return {
+      itemToDel: null,
       searchQuery: "",
       showEditDeleteByIndex: null,
       formatActive: "grid",
@@ -362,25 +363,28 @@ export default {
         });
     },
     confirmDeleteRecord(item) {
+      this.itemToDel = item
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
         text: `Voulez vous vraiment supprimer la tâche "${item.name}"`,
-        accept: this.deleteRecord(item),
+        accept: this.deleteRecord,
         acceptText: "Supprimer",
         cancelText: "Annuler",
       });
     },
-    deleteRecord(item) {
+    deleteRecord() {
       this.$store
-        .dispatch("taskManagement/removeItem", item)
+        .dispatch("taskManagement/removeItem", this.itemToDel.id)
         .then(() => {
           this.showDeleteSuccess();
         })
         .catch((err) => {
           console.error(err);
         });
+
+        this.itemToDel = null
     },
     showDeleteSuccess() {
       this.$vs.notify({

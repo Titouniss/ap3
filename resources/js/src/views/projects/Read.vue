@@ -153,6 +153,12 @@ export default {
               icon: "icon-alert-circle",
               color: "success"
             });
+
+            this.$router.push({
+              path: `/schedules/schedules-read`,
+              query: { id: this.project_data.id, type: "projects" }
+            })
+            .catch(() => {});
           }
           else{
             let message = 'Le nombre d\'heure de travail disponible est insuffisant'
@@ -165,11 +171,6 @@ export default {
               color: "danger"
             });
           }
-          this.$router.push({
-              path: `/schedules/schedules-read`,
-              query: { id: this.project_data.id, type: "projects" }
-            })
-            .catch(() => {});
         })
         .catch(err => {
           this.$vs.notify({
