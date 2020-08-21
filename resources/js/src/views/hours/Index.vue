@@ -144,7 +144,7 @@
           <h4 class="ml-3">Heures effectuées</h4>
           <!-- <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="addRecord">Ajouter des heures</vs-button>
-          </div> -->
+          </div>-->
           <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="readRecord">{{ isAdmin() ? 'Gérer les heures' : 'Gérer mes heures'}}</vs-button>
           </div>
@@ -670,19 +670,19 @@ export default {
     getdealingHours() {
       let item = {
         year: this.filterDate,
-        user_id: this.filters.user ? this.filters.user.id : null
+        user_id: this.filters.user ? this.filters.user.id : null,
       };
       this.$store
         .dispatch("dealingHoursManagement/getOvertimesByYear", item)
-        .then(data => {
+        .then((data) => {
           if (data && data.status === 200) {
           } else {
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;

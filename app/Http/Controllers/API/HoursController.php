@@ -40,20 +40,20 @@ class HoursController extends Controller
             $items->where('project_id', $request->project_id);
         }
 
-        if ($request->date) {
+        if ($request->start_at) {
             switch ($request->period_type) {
                 case 'week':
-                    $items->whereBetween('date', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
+                    $items->whereBetween('date', [Carbon::createFromFormat('d-m-Y', $request->start_at)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->start_at)->endOfWeek()]);
                     break;
                 case 'month':
-                    $items->whereMonth('date', Carbon::createFromFormat('d-m-Y', $request->date)->month);
+                    $items->whereMonth('date', Carbon::createFromFormat('d-m-Y', $request->start_at)->month);
                     break;
                 case 'year':
-                    $items->whereYear('date', Carbon::createFromFormat('d-m-Y', $request->date)->year);
+                    $items->whereYear('date', Carbon::createFromFormat('d-m-Y', $request->start_at)->year);
                     break;
 
                 default:
-                    $items->whereDate('date', Carbon::createFromFormat('d-m-Y', $request->date));
+                    $items->whereDate('date', Carbon::createFromFormat('d-m-Y', $request->start_at));
                     break;
             }
         }

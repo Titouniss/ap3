@@ -1,297 +1,341 @@
-<!-- =========================================================================================
-  File Name: DashboardAnalytics.vue
-  Description: Dashboard Analytics
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-========================================================================================== -->
-
 <template>
-  <div id="dashboard-analytics">
-    <div class="vx-row">
-
-      <!-- CARD 1: CONGRATS -->
-      <div class="vx-col w-full lg:w-1/2 mb-base">
-        <vx-card slot="no-body" class="text-center bg-primary-gradient greet-user">
-                    <img src="@assets/images/elements/decore-left.png" class="decore-left" alt="Decore Left" width="200" >
-                    <img src="@assets/images/elements/decore-right.png" class="decore-right" alt="Decore Right" width="175">
-          <feather-icon icon="AwardIcon" class="p-6 mb-8 bg-primary inline-flex rounded-full text-white shadow" svgClasses="h-8 w-8"></feather-icon>
-          <h1 class="mb-6 text-white">Congratulations {{ checkpointReward.userName }},</h1>
-          <p class="xl:w-3/4 lg:w-4/5 md:w-2/3 w-4/5 mx-auto text-white">You have done <strong>{{ checkpointReward.progress }}</strong> more sales today. Check your new badge in your profile.</p>
-        </vx-card>
-      </div>
-
-      <!-- CARD 2: SUBSCRIBERS GAINED -->
-      <div class="vx-col w-full sm:w-1/2 md:w-1/2 lg:w-1/4 xl:w-1/4 mb-base">
-        <statistics-card-line icon="UsersIcon" statistic="92.6k" statisticTitle="Subscribers Gained" :chartData="subscribersGained.series" type="area"></statistics-card-line>
-      </div>
-
-      <!-- CARD 3: ORDER RECIEVED -->
-      <div class="vx-col w-full sm:w-1/2 md:w-1/2 lg:w-1/4 xl:w-1/4 mb-base">
-        <statistics-card-line icon="ShoppingBagIcon" statistic="97.5K" statisticTitle="Orders Received" :chartData="ordersRecevied.series" color="warning" type="area"></statistics-card-line>
-      </div>
-    </div>
-
-    <div class="vx-row">
-
-      <!-- CARD 4: SESSION -->
-      <div class="vx-col w-full md:w-1/2 mb-base">
-        <vx-card>
-          <div class="vx-row flex-col-reverse md:flex-col-reverse sm:flex-row lg:flex-row">
-
-            <!-- LEFT COL -->
-            <div class="vx-col w-full md:w-full sm:w-1/2 lg:w-1/2 xl:w-1/2 flex flex-col justify-between" v-if="salesBarSession.analyticsData">
-              <div>
-                <h2 class="mb-1 font-bold">{{ salesBarSession.analyticsData.session | k_formatter }}</h2>
-                <span class="font-medium">Avg Sessions</span>
-
-                <!-- Previous Data Comparison -->
-                <p class="mt-2 text-xl font-medium">
-                  <span :class="salesBarSession.analyticsData.comparison.result >= 0 ? 'text-success' : 'text-danger'">
-                    <span v-if="salesBarSession.analyticsData.comparison.result > 0">+</span>
-                    <span>{{ salesBarSession.analyticsData.comparison.result }}</span>
-                  </span>
-                  <span> vs </span>
-                  <span>{{ salesBarSession.analyticsData.comparison.str }}</span>
-                </p>
-              </div>
-              <vs-button icon-pack="feather" icon="icon-chevrons-right" icon-after class="shadow-md w-full lg:mt-0 mt-4">View Details</vs-button>
-            </div>
-
-            <!-- RIGHT COL -->
-            <div class="vx-col w-full md:w-full sm:w-1/2 lg:w-1/2 xl:w-1/2 flex flex-col lg:mb-0 md:mb-base sm:mb-0 mb-base">
-              <change-time-duration-dropdown class="self-end" />
-              <vue-apex-charts type="bar" height="200" :options="analyticsData.salesBar.chartOptions" :series="salesBarSession.series" v-if="salesBarSession.series" />
-            </div>
-
-          </div>
-          <vs-divider class="my-6"></vs-divider>
-          <div class="vx-row">
-            <div class="vx-col w-1/2 mb-3">
-              <p>Goal: $100000</p>
-              <vs-progress class="block mt-1" :percent="50" color="primary"></vs-progress>
-            </div>
-            <div class="vx-col w-1/2 mb-3">
-              <p>Users: 100K</p>
-              <vs-progress class="block mt-1" :percent="60" color="warning"></vs-progress>
-            </div>
-            <div class="vx-col w-1/2 mb-3">
-              <p>Retention: 90%</p>
-              <vs-progress class="block mt-1" :percent="70" color="danger"></vs-progress>
-            </div>
-            <div class="vx-col w-1/2 mb-3">
-              <p>Duration: 1yr</p>
-              <vs-progress class="block mt-1" :percent="90" color="success"></vs-progress>
-            </div>
-          </div>
-        </vx-card>
-      </div>
-
-      <!-- CARD 5: SUPPORT TRACKER -->
-      <div class="vx-col w-full md:w-1/2 lg:w-1/2 xl:w-1/2 mb-base">
-          <vx-card title="Support Tracker">
-              <!-- CARD ACTION -->
-              <template slot="actions">
-                  <change-time-duration-dropdown />
-              </template>
-
-              <div slot="no-body" v-if="supportTracker.analyticsData">
-                  <div class="vx-row text-center">
-
-                      <!-- Open Tickets Heading -->
-                      <div class="vx-col w-full lg:w-1/5 md:w-full sm:w-1/5 flex flex-col justify-between mb-4 lg:order-first md:order-last sm:order-first order-last">
-                          <div class="lg:ml-6 lg:mt-6 md:mt-0 md:ml-0 sm:ml-6 sm:mt-6">
-                              <h1 class="font-bold text-5xl">{{ supportTracker.analyticsData.openTickets }}</h1>
-                              <small>Tickets</small>
-                          </div>
-                      </div>
-
-                      <!-- Chart -->
-                      <div class="vx-col w-full lg:w-4/5 md:w-full sm:w-4/5 justify-center mx-auto lg:mt-0 md:mt-6 sm:mt-0 mt-6">
-                          <vue-apex-charts type="radialBar" height="385" :options="analyticsData.supportTrackerRadialBar.chartOptions" :series="supportTracker.series" />
-                      </div>
-                  </div>
-
-                  <!-- Support Tracker Meta Data -->
-                  <div class="flex flex-row justify-between px-8 pb-4 mt-4">
-                      <p class="text-center" v-for="(val, key) in supportTracker.analyticsData.meta" :key="key">
-                        <span class="block">{{ key }}</span>
-                        <span class="text-2xl font-semibold">{{ val }}</span>
-                      </p>
-                  </div>
-              </div>
+  <div id="dashboard">
+    <vs-row vs-type="flex" vs-justify="center" vs-w="12">
+      <vs-col vs-w="6" vs-xs="12" class="px-3">
+        <vs-button
+          to="/projects"
+          color="rgba(var(--vs-primary),1)"
+          gradient-color-secondary="rgba(var(--vs-primary),.7)"
+          type="gradient"
+          class="flex w-full p-0"
+        >
+          <vx-card
+            style="background: transparent"
+            @mouseover="projectHover = true"
+            @mouseleave="projectHover = false"
+          >
+            <vs-row vs-type="flex" vs-justify="space-between" vs-align="center" vs-w="12">
+              <vs-col vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="10">
+                <feather-icon icon="ActivityIcon" svgClasses="h-6 w-6 text-white" class="mr-3" />
+                <h3 class="text-white">Projets en cours</h3>
+              </vs-col>
+              <vs-col vs-type="flex" vs-justify="flex-end" vs-align="center" vs-w="2">
+                <feather-icon
+                  icon="ExternalLinkIcon"
+                  :svgClasses="[{'text-dark': projectHover}, 'h-6', 'w-6', 'text-white']"
+                />
+              </vs-col>
+            </vs-row>
+            <vs-row style="min-height: 250px">
+              <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+                <div
+                  class="flex flex-col justify-center items-center rounded-full bg-white"
+                  style="width: 200px; height: 200px"
+                >
+                  <h1 class="main-data text-primary">{{activeProjects.length}}</h1>
+                  <div class="text-center text-dark">Dont {{ lateProjects.length }} en retard</div>
+                </div>
+              </vs-col>
+            </vs-row>
           </vx-card>
-      </div>
-    </div>
+        </vs-button>
+      </vs-col>
 
-        <div class="vx-row">
-            <!-- CARD 6: Product Orders -->
-            <div class="vx-col w-full lg:w-1/3 mb-base">
-                <vx-card title="Product Orders">
-                    <!-- CARD ACTION -->
-                    <template slot="actions">
-                        <change-time-duration-dropdown />
-                    </template>
+      <vs-col vs-w="6" vs-xs="12" class="px-3">
+        <vx-card>
+          <vs-row vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+            <vs-col vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+              <feather-icon icon="ClipboardIcon" svgClasses="h-6 w-6" class="mr-3" />
+              <h3 class="text-dark">Tâches</h3>
+            </vs-col>
+          </vs-row>
+          <vs-row vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <vue-apex-charts
+                type="radialBar"
+                height="200"
+                :options="chartOptions"
+                :series="[tasksTodayCompletion]"
+              />
+            </vs-col>
+          </vs-row>
 
-                    <!-- Chart -->
-                    <div slot="no-body">
-                        <vue-apex-charts type="radialBar" height="420" :options="analyticsData.productOrdersRadialBar.chartOptions" :series="productsOrder.series" />
-                    </div>
-
-                    <ul>
-                        <li v-for="orderData in productsOrder.analyticsData" :key="orderData.orderType" class="flex mb-3 justify-between">
-                            <span class="flex items-center">
-                                    <span class="inline-block h-4 w-4 rounded-full mr-2 bg-white border-3 border-solid" :class="`border-${orderData.color}`"></span>
-                                    <span class="font-semibold">{{ orderData.orderType }}</span>
-                            </span>
-                            <span>{{ orderData.counts }}</span>
-                        </li>
-                    </ul>
-                </vx-card>
+          <div class="flex justify-between text-center" slot="no-body-bottom">
+            <div
+              class="w-1/2 border border-solid d-theme-border-grey-light border-r-0 border-b-0 border-l-0"
+            >
+              <p class="mt-4">Tâches réalisées aujourd'hui</p>
+              <p class="text-3xl font-semibold text-success">{{ tasksTodayCompleted.length }}</p>
             </div>
-
-            <!-- CARD 7: Sales Stats -->
-            <div class="vx-col w-full lg:w-1/3 mb-base">
-              <vx-card title="Sales Stats" subtitle="Last 6 Months">
-                <template slot="actions">
-                  <feather-icon icon="MoreVerticalIcon" svgClasses="w-6 h-6 text-grey"></feather-icon>
-                </template>
-                <div class="flex">
-                  <span class="flex items-center"><div class="h-3 w-3 rounded-full mr-1 bg-primary"></div><span>Sales</span></span>
-                  <span class="flex items-center ml-4"><div class="h-3 w-3 rounded-full mr-1 bg-success"></div><span>Visits</span></span>
-                </div>
-                <div slot="no-body-bottom">
-                  <vue-apex-charts type="radar" height="385" :options="analyticsData.statisticsRadar.chartOptions" :series="salesRadar.series" />
-                </div>
-              </vx-card>
+            <div class="w-1/2 border border-solid d-theme-border-grey-light border-r-0 border-b-0">
+              <p class="mt-4">Tâches plannifiées aujourd'hui</p>
+              <p class="text-3xl font-semibold text-warning">{{ tasksToday.length }}</p>
             </div>
-
-            <!-- CARD 8: Activity Timeline -->
-            <div class="vx-col w-full lg:w-1/3 mb-base">
-                <vx-card title="Activity Timeline">
-                    <vx-timeline :data="timelineData" />
-                </vx-card>
-            </div>
-        </div>
-
-    <div class="vx-row">
-      <!-- CARD 9: DISPATCHED ORDERS -->
-      <div class="vx-col w-full">
-        <vx-card title="Dispatched Orders">
-          <div slot="no-body" class="mt-4">
-            <vs-table :data="dispatchedOrders" class="table-dark-inverted">
-              <template slot="thead">
-                <vs-th>ORDER NO.</vs-th>
-                <vs-th>STATUS</vs-th>
-                <vs-th>OPERATORS</vs-th>
-                <vs-th>LOCATION</vs-th>
-                <vs-th>DISTANCE</vs-th>
-                <vs-th>START DATE</vs-th>
-                <vs-th>EST DELIVERY DATE</vs-th>
-              </template>
-
-              <template slot-scope="{data}">
-                <vs-tr :key="indextr" v-for="(tr, indextr) in data">
-                  <vs-td :data="data[indextr].orderNo">
-                    <span>#{{data[indextr].orderNo}}</span>
-                  </vs-td>
-                  <vs-td :data="data[indextr].status">
-                    <span class="flex items-center px-2 py-1 rounded"><div class="h-3 w-3 rounded-full mr-2" :class="'bg-' + data[indextr].statusColor"></div>{{data[indextr].status}}</span>
-                  </vs-td>
-                  <vs-td :data="data[indextr].orderNo">
-                    <ul class="users-liked user-list">
-                        <li v-for="(user, userIndex) in data[indextr].usersLiked" :key="userIndex">
-                            <vx-tooltip :text="user.name" position="bottom">
-                                <vs-avatar :src="user.img" size="30px" class="border-2 border-white border-solid -m-1"></vs-avatar>
-                            </vx-tooltip>
-                        </li>
-                    </ul>
-                  </vs-td>
-                  <vs-td :data="data[indextr].orderNo">
-                    <span>{{data[indextr].location}}</span>
-                  </vs-td>
-                  <vs-td :data="data[indextr].orderNo">
-                    <span>{{data[indextr].distance}}</span>
-                    <vs-progress :percent="data[indextr].distPercent" :color="data[indextr].statusColor"></vs-progress>
-                  </vs-td>
-                  <vs-td :data="data[indextr].orderNo">
-                    <span>{{data[indextr].startDate}}</span>
-                  </vs-td>
-                  <vs-td :data="data[indextr].orderNo">
-                    <span>{{data[indextr].estDelDate}}</span>
-                  </vs-td>
-                </vs-tr>
-              </template>
-            </vs-table>
           </div>
-
         </vx-card>
-      </div>
-    </div>
+      </vs-col>
+    </vs-row>
 
+    <vs-row vs-type="flex" vs-justify="center" vs-w="12" class="mt-6">
+      <vs-col vs-w="4" vs-sm="12" class="px-3">
+        <vx-card>
+          <vs-row vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+            <vs-col vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+              <feather-icon icon="TruckIcon" svgClasses="h-6 w-6" class="mr-3" />
+              <h3 class="text-dark">Livraisons prévues</h3>
+            </vs-col>
+          </vs-row>
+          <vs-row>
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <ul class="w-full vx-timeline mt-6">
+                <transition-group name="slide-fade">
+                  <li
+                    v-for="project in (projectsToDeliver.length <= 4 || showAllDeliveries ? projectsToDeliver : projectsToDeliver.slice(0, 4))"
+                    :key="project.id"
+                    class="py-3"
+                  >
+                    <div
+                      class="timeline-icon"
+                      :class="[project.status === 'done' ? 'bg-success' : isDatePassed(project.date) ? 'bg-danger' : 'bg-warning']"
+                    >
+                      <vx-tooltip
+                        :text="project.status === 'done' ? 'Terminé' : isDatePassed(project.date) ? 'En retard' : 'À terminer'"
+                      >
+                        <feather-icon
+                          :icon="project.status === 'done' ? 'CheckIcon' : isDatePassed(project.date) ? 'AlertOctagonIcon' : 'AlertTriangleIcon'"
+                          svgClasses="text-white stroke-current w-5 h-5"
+                        />
+                      </vx-tooltip>
+                    </div>
+                    <vs-row class="timeline-info" vs-justify="center" vs-type="flex" vs-w="12">
+                      <vs-col vs-type="flex" vs-justify="flex-start" vs-w="6">
+                        <div>{{ project.name }}</div>
+                      </vs-col>
+                      <vs-col vs-type="flex" vs-justify="flex-end" vs-w="6">
+                        <small>{{ displayDateTime(project.date) }}</small>
+                      </vs-col>
+                    </vs-row>
+                  </li>
+                </transition-group>
+              </ul>
+            </vs-col>
+          </vs-row>
+          <vs-row
+            v-if="projectsToDeliver.length > 4"
+            vs-type="flex"
+            vs-justify="center"
+            vs-align="center"
+            vs-w="12"
+            class="mt-3"
+          >
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <vs-button
+                type="line"
+                line-position="top"
+                @click="showAllDeliveries = !showAllDeliveries"
+              >Voir {{showAllDeliveries ? 'moins' : 'plus'}}</vs-button>
+            </vs-col>
+          </vs-row>
+        </vx-card>
+      </vs-col>
+
+      <vs-col vs-w="4" vs-sm="12" class="px-3">
+        <vx-card>
+          <vs-row vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+            <vs-col vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+              <feather-icon icon="BarChart2Icon" svgClasses="h-6 w-6" class="mr-3" />
+              <h3 class="text-dark">Avancement</h3>
+            </vs-col>
+          </vs-row>
+          <vs-row>
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <div class="items-center w-full" :class="{'mb-6': activeProjects.length <= 3}">
+                <transition-group name="slide-fade">
+                  <vs-button
+                    v-for="project in (activeProjects.length <= 3 || showAllProjects ? activeProjects : activeProjects.slice(0, 3))"
+                    :key="project.id"
+                    :to="'/projects/project-view/' + project.id"
+                    type="flat"
+                    text-color="grey"
+                    class="w-full mt-4"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div class="flex flex-col items-start">
+                        <span class="mb-1">{{ project.name }}</span>
+                        <h4>{{ projectCompletion(project) }}%</h4>
+                      </div>
+                      <feather-icon icon="ExternalLinkIcon" svgClasses="h-6 w-6 text-dark" />
+                    </div>
+                    <vs-progress :height="10" :percent="projectCompletion(project)"></vs-progress>
+                  </vs-button>
+                </transition-group>
+              </div>
+            </vs-col>
+          </vs-row>
+          <vs-row
+            v-if="activeProjects.length > 3"
+            vs-type="flex"
+            vs-justify="center"
+            vs-align="center"
+            vs-w="12"
+            class="mt-3"
+          >
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <vs-button
+                type="line"
+                line-position="top"
+                @click="showAllProjects = !showAllProjects"
+              >Voir {{showAllProjects ? 'moins' : 'plus'}}</vs-button>
+            </vs-col>
+          </vs-row>
+        </vx-card>
+      </vs-col>
+
+      <vs-col vs-w="4" vs-sm="12" class="px-3">
+        <vx-card>
+          <vs-row vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+            <vs-col vs-type="flex" vs-justify="flex-start" vs-align="center" vs-w="12">
+              <feather-icon icon="UserIcon" svgClasses="h-6 w-6" class="mr-3" />
+              <h3 class="text-dark">Remontés d'opérateurs</h3>
+            </vs-col>
+          </vs-row>
+          <vs-row>
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <ul class="w-full vx-timeline mt-6">
+                <transition-group name="slide-fade">
+                  <li
+                    v-for="comment in (taskComments.length <= 3 || showAllComments ? taskComments : taskComments.slice(0, 3))"
+                    :key="comment.id"
+                    class="py-3"
+                  >
+                    <div class="timeline-icon bg-primary">
+                      <feather-icon icon="BellIcon" svgClasses="text-white stroke-current w-5 h-5" />
+                    </div>
+                    <div class="timeline-info">
+                      <vs-row vs-type="flex" vs-justify="space-between" vs-align="center" vs-w="12">
+                        <vs-col vs-type="flex" vs-justify="flex-start" vs-w="6">
+                          <div>{{ comment.creator.firstname + " " + comment.creator.lastname }}</div>
+                        </vs-col>
+                        <vs-col vs-type="flex" vs-justify="flex-end" vs-w="6">
+                          <small>{{ displayDateTime(comment.created_at) }}</small>
+                        </vs-col>
+                      </vs-row>
+                      <vs-row
+                        vs-type="flex"
+                        vs-justify="flex-start"
+                        vs-align="center"
+                        vs-w="12"
+                        class="mt-2"
+                      >
+                        <vs-col vs-type="flex" vs-justify="flex-start" vs-w="12">
+                          <h6>{{ comment.description }}</h6>
+                        </vs-col>
+                      </vs-row>
+                    </div>
+                  </li>
+                </transition-group>
+              </ul>
+            </vs-col>
+          </vs-row>
+          <vs-row
+            v-if="taskComments.length > 3"
+            vs-type="flex"
+            vs-justify="center"
+            vs-align="center"
+            vs-w="12"
+            class="mt-3"
+          >
+            <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="12">
+              <vs-button
+                type="line"
+                line-position="top"
+                @click="showAllComments = !showAllComments"
+              >Voir {{showAllComments ? 'moins' : 'plus'}}</vs-button>
+            </vs-col>
+          </vs-row>
+        </vx-card>
+      </vs-col>
+    </vs-row>
   </div>
 </template>
 
 <script>
-import VueApexCharts from 'vue-apexcharts'
-import StatisticsCardLine from '@/components/statistics-cards/StatisticsCardLine.vue'
-import analyticsData from './ui-elements/card/analyticsData.js'
-import ChangeTimeDurationDropdown from '@/components/ChangeTimeDurationDropdown.vue'
-import VxTimeline from '@/components/timeline/VxTimeline'
+import moment from "moment";
+
+import VueApexCharts from "vue-apexcharts";
+import StatisticsCardLine from "@/components/statistics-cards/StatisticsCardLine.vue";
+import analyticsData from "./ui-elements/card/analyticsData.js";
+import ChangeTimeDurationDropdown from "@/components/ChangeTimeDurationDropdown.vue";
+import VxTimeline from "@/components/timeline/VxTimeline";
+
+// Store Module
+import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
+
 export default {
-  data () {
+  data() {
     return {
-      checkpointReward: {},
-      subscribersGained: {},
-      ordersRecevied: {},
-      salesBarSession: {},
-      supportTracker: {},
-      productsOrder: {},
-      salesRadar: {},
+      projectHover: false,
+      showAllDeliveries: false,
+      showAllProjects: false,
+      showAllComments: false,
 
-      timelineData: [
-        {
-          color: 'primary',
-          icon: 'PlusIcon',
-          title: 'Client Meeting',
-          desc: 'Bonbon macaroon jelly beans gummi bears jelly lollipop apple',
-          time: '25 mins Ago'
+      chartOptions: {
+        plotOptions: {
+          radialBar: {
+            size: 110,
+            startAngle: -150,
+            endAngle: 150,
+            hollow: {
+              size: "80%"
+            },
+            track: {
+              background: "#bfc5cc",
+              strokeWidth: "50%"
+            },
+            dataLabels: {
+              name: {
+                show: false
+              },
+              value: {
+                offsetY: 18,
+                color: "#99a2ac",
+                fontSize: "50px"
+              }
+            }
+          }
         },
-        {
-          color: 'warning',
-          icon: 'MailIcon',
-          title: 'Email Newsletter',
-          desc: 'Cupcake gummi bears soufflé caramels candy',
-          time: '15 Days Ago'
+        colors: ["#00db89"],
+        fill: {
+          type: "gradient",
+          gradient: {
+            shade: "dark",
+            type: "horizontal",
+            shadeIntensity: 0.5,
+            gradientToColors: ["#00b5b5"],
+            inverseColors: true,
+            opacityFrom: 1,
+            opacityTo: 1,
+            stops: [0, 100]
+          }
         },
-        {
-          color: 'danger',
-          icon: 'UsersIcon',
-          title: 'Plan Webinar',
-          desc: 'Candy ice cream cake. Halvah gummi bears',
-          time: '20 days ago'
+        stroke: {
+          lineCap: "round"
         },
-        {
-          color: 'success',
-          icon: 'LayoutIcon',
-          title: 'Launch Website',
-          desc: 'Candy ice cream cake. Halvah gummi bears Cupcake gummi bears soufflé caramels candy.',
-          time: '25 days ago'
-        },
-        {
-          color: 'primary',
-          icon: 'TvIcon',
-          title: 'Marketing',
-          desc: 'Candy ice cream cake. Halvah gummi bears Cupcake gummi bears.',
-          time: '28 days ago'
+        chart: {
+          sparkline: {
+            enabled: true
+          },
+          dropShadow: {
+            enabled: true,
+            blur: 3,
+            left: 1,
+            top: 1,
+            opacity: 0.1
+          }
         }
-      ],
-
-
-      analyticsData,
-      dispatchedOrders: []
-    }
+      }
+    };
   },
   components: {
     VueApexCharts,
@@ -299,35 +343,124 @@ export default {
     ChangeTimeDurationDropdown,
     VxTimeline
   },
-  created () {
-    
+  computed: {
+    projects() {
+      return this.$store.state.projectManagement.projects.filter(
+        p => !p.deleted_at
+      );
+    },
+    activeProjects() {
+      return this.projects.filter(p => p.status !== "done");
+    },
+    lateProjects() {
+      return this.activeProjects.filter(p => this.isDatePassed(p.date));
+    },
+    projectsToDeliver() {
+      return this.projects
+        .filter(p =>
+          moment(p.date).isBetween(
+            moment().subtract(1, "month"),
+            moment().add(1, "month")
+          )
+        )
+        .sort((a, b) => moment(b.date).unix() - moment(a.date).unix());
+    },
+    tasks() {
+      return this.$store.state.taskManagement.tasks;
+    },
+    tasksToday() {
+      return this.tasks.filter(task =>
+        moment(task.date).isSame(moment(), "day")
+      );
+    },
+    tasksTodayCompleted() {
+      return this.tasksToday.filter(task => task.status === "done");
+    },
+    tasksTodayCompletion() {
+      return this.tasksToday && this.tasksToday.length
+        ? parseInt(
+            (this.tasksTodayCompleted.length / this.tasksToday.length) * 100
+          )
+        : 0;
+    },
+    taskComments() {
+      const comments = [];
+      this.tasks.forEach(task => comments.push(...task.comments));
+      return comments.sort(
+        (a, b) => moment(b.created_at).unix() - moment(a.created_at).unix()
+      );
+    }
+  },
+  methods: {
+    isDatePassed(date) {
+      return moment(date).isBefore();
+    },
+    displayDate(date) {
+      return moment(date).format("DD/MM/YYYY");
+    },
+    displayDateTime(date) {
+      return moment(date).format("HH:mm DD/MM/YYYY");
+    },
+    projectCompletion(project) {
+      return project.tasks && project.tasks.length
+        ? parseInt(
+            (project.tasks.filter(task => task.status === "done").length /
+              project.tasks.length) *
+              100
+          )
+        : 0;
+    }
+  },
+  created() {
+    if (!moduleProjectManagement.isRegistered) {
+      this.$store.registerModule("projectManagement", moduleProjectManagement);
+      moduleProjectManagement.isRegistered = true;
+    }
+    if (!moduleTaskManagement.isRegistered) {
+      this.$store.registerModule("taskManagement", moduleTaskManagement);
+      moduleTaskManagement.isRegistered = true;
+    }
+    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
+    this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
+  },
+  beforeDestroy() {
+    moduleProjectManagement.isRegistered = false;
+    this.$store.unregisterModule("projectManagement");
+    moduleTaskManagement.isRegistered = false;
+    this.$store.unregisterModule("taskManagement");
   }
-}
+};
 </script>
 
-<style lang="scss">
-/*! rtl:begin:ignore */
-#dashboard-analytics {
-  .greet-user{
-    position: relative;
-
-    .decore-left{
-      position: absolute;
-      left:0;
-      top: 0;
-    }
-    .decore-right{
-      position: absolute;
-      right:0;
-      top: 0;
-    }
-  }
-
-  @media(max-width: 576px) {
-    .decore-left, .decore-right{
-      width: 140px;
-    }
-  }
+<style>
+.main-data {
+  text-align: center;
+  font-size: 70px;
+  font-weight: bold;
 }
-/*! rtl:end:ignore */
+
+.vs-button-text {
+  width: 100%;
+}
+
+.con-content--item {
+  padding: 0px !important;
+}
+
+/* Animations */
+.slide-fade-enter-active {
+  transition: all 0.3s ease;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-fade-enter,
+.slide-fade-leave-to {
+  transform: translateX(10px);
+  opacity: 0;
+}
 </style>

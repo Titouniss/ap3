@@ -1,11 +1,11 @@
 <template>
   <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}" v-if="!disabled">
-    <feather-icon
+    <!-- <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
       v-if="authorizedToEdit"
       @click="editRecord"
-    />
+    />-->
     <feather-icon
       icon="Trash2Icon"
       svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
@@ -30,7 +30,7 @@ export default {
     },
     authorizedToDelete() {
       return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
-    }
+    },
   },
   methods: {
     editRecord() {
@@ -53,7 +53,7 @@ export default {
               } ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
@@ -62,7 +62,7 @@ export default {
         .then(() => {
           this.showDeleteSuccess();
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -70,9 +70,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: `${modelTitle} supprimées`
+        text: `${modelTitle} supprimées`,
       });
-    }
-  }
+    },
+  },
 };
 </script>
