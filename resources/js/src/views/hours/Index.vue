@@ -314,7 +314,6 @@ export default {
           headerName: "Date",
           field: "date",
           cellRenderer: (data) => {
-            console.log(["data", data]);
             moment.locale("fr");
             return moment(data.data.start_at).format("D MMMM YYYY");
           },

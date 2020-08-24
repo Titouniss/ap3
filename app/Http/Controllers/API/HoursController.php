@@ -40,20 +40,20 @@ class HoursController extends Controller
             $items->where('project_id', $request->project_id);
         }
 
-        if ($request->start_at) {
+        if ($request->date) {
             switch ($request->period_type) {
                 case 'week':
-                    $items->whereBetween('date', [Carbon::createFromFormat('d-m-Y', $request->start_at)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->start_at)->endOfWeek()]);
+                    $items->whereBetween('start_at', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
                     break;
                 case 'month':
-                    $items->whereMonth('date', Carbon::createFromFormat('d-m-Y', $request->start_at)->month);
+                    $items->whereMonth('start_at', Carbon::createFromFormat('d-m-Y', $request->date)->month);
                     break;
                 case 'year':
-                    $items->whereYear('date', Carbon::createFromFormat('d-m-Y', $request->start_at)->year);
+                    $items->whereYear('start_at', Carbon::createFromFormat('d-m-Y', $request->date)->year);
                     break;
 
                 default:
-                    $items->whereDate('date', Carbon::createFromFormat('d-m-Y', $request->start_at));
+                    $items->whereDate('start_at', Carbon::createFromFormat('d-m-Y', $request->date));
                     break;
             }
         }
@@ -77,7 +77,7 @@ class HoursController extends Controller
                     $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
                     return $morning->add($afternoon)->totalHours;
                 })->sum();
-                $workDayHours = HoursController::getTargetWorkHours($userId, $request->date);
+                $workDayHours = HoursController::getTargetWorkHours($userId, $request->start_at);
 
                 $defaultWorkHours = 0;
                 if ($request->date) {
