@@ -77,11 +77,10 @@ class UnavailabilityController extends Controller
                 } else if ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts))) {
                 // Verifier que ça ne mort pas par le ends_at
                     return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
-                } else {
-                    // Ajouter l'indisponibilité
-                    return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
                 }
             }
+            // Ajouter l'indisponibilité
+            return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
         } else {
             return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
         }
