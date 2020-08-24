@@ -107,8 +107,6 @@ class TaskController extends Controller
 
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
-            'date' => 'required',
-            'status' => 'required',
             'estimated_time' => 'required',
         ]);
         if ($validator->fails()) {
@@ -212,10 +210,7 @@ class TaskController extends Controller
 
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
-            'date' => 'required',
-            'status' => 'required',
             'estimated_time' => 'required',
-            'user_id' => 'required'
         ]);
 
         $update = Task::where('id', $id)

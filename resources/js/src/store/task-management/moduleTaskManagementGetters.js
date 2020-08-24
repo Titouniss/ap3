@@ -27,7 +27,7 @@ export default {
       });
     }
     item.previous_tasks = task_ids
-    item.date = moment(item.date).format('DD-MM-YYYY HH:mm')
+    item.date = item.date ? moment(item.date).format('DD-MM-YYYY HH:mm') : null
 
     return item
   },

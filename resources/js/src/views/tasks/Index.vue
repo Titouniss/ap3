@@ -89,7 +89,7 @@
               class="mr-2"
             />
             <feather-icon
-              v-if="item.comments.length > 0"
+              v-if="item.comments && item.comments.length > 0"
               icon="MessageSquareIcon"
               svgClasses="h-4 w-4"
             />
@@ -194,6 +194,7 @@
     <edit-form
       :itemId="itemIdToEdit"
       :companyId="project_data.company_id"
+      :project_data="this.project_data"
       v-if="itemIdToEdit"
       :tasks_list="tasksData"
     />
@@ -242,6 +243,7 @@ export default {
   },
   data() {
     return {
+      itemToDel: null,
       searchQuery: "",
       showEditDeleteByIndex: null,
       formatActive: "grid",
@@ -361,25 +363,28 @@ export default {
         });
     },
     confirmDeleteRecord(item) {
+      this.itemToDel = item
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
         text: `Voulez vous vraiment supprimer la tâche "${item.name}"`,
-        accept: this.deleteRecord(item),
+        accept: this.deleteRecord,
         acceptText: "Supprimer",
         cancelText: "Annuler",
       });
     },
-    deleteRecord(item) {
+    deleteRecord() {
       this.$store
-        .dispatch("taskManagement/removeItem", item)
+        .dispatch("taskManagement/removeItem", this.itemToDel.id)
         .then(() => {
           this.showDeleteSuccess();
         })
         .catch((err) => {
           console.error(err);
         });
+
+        this.itemToDel = null
     },
     showDeleteSuccess() {
       this.$vs.notify({
