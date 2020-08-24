@@ -39,18 +39,21 @@ export default {
         .catch(() => {});
     },
     confirmDeleteRecord() {
+      console.log(["param", this.params.data]);
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
         text:
           this.params.data.duration == "01:00:00"
-            ? `Voulez vous vraiment supprimer l'heure du ${this.params.data.date} pour le projet ${this.params.data.project} ?`
+            ? `Voulez vous vraiment supprimer l'heure du ${
+                this.params.data.start_at.split(" ")[0]
+              } pour le projet ${this.params.data.project} ?`
             : `Voulez vous vraiment supprimer les ${
                 this.params.data.duration.split(":")[0]
-              } heures du ${this.params.data.date} pour le projet ${
-                this.params.data.project.name
-              } ?`,
+              } heures du ${
+                this.params.data.start_at.split(" ")[0]
+              } pour le projet ${this.params.data.project.name} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
         cancelText: "Annuler",
