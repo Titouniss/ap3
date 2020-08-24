@@ -154,9 +154,12 @@ export default {
               color: "success"
             });
 
+            // this.$router.push({
+            //   path: `/schedules/schedules-read`,
+            //   query: { id: this.project_data.id, type: "projects" }
+            // })
             this.$router.push({
-              path: `/schedules/schedules-read`,
-              query: { id: this.project_data.id, type: "projects" }
+              path: `/schedules`
             })
             .catch(() => {});
           }
