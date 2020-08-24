@@ -60,9 +60,9 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  getOvertimesByYear({ commit }, item) {
+  getOvertimes({ commit }) {
     return new Promise((resolve, reject) => {
-      axios.get(`/api/dealing-hours-management/overtimesYear/${item.year}/${item.user_id}`, item)
+      axios.get(`/api/dealing-hours-management/overtimes`)
         .then((response) => {
           console.log(["response", response]);
           commit('EDIT_ITEM', response.data.success)

@@ -125,13 +125,22 @@ export default {
   },
   computed: {
     validateForm() {
-      return (
-        !this.errors.any() &&
-        this.itemLocal.starts_at &&
-        this.itemLocal.ends_at &&
-        this.itemLocal.reason !== "" &&
-        this.custom_reason !== ""
-      );
+      if (this.itemLocal.reason === "Autre...") {
+        return (
+          !this.errors.any() &&
+          this.itemLocal.starts_at &&
+          this.itemLocal.ends_at &&
+          this.itemLocal.reason !== "" &&
+          this.custom_reason !== ""
+        );
+      } else {
+        return (
+          !this.errors.any() &&
+          this.itemLocal.starts_at &&
+          this.itemLocal.ends_at &&
+          this.itemLocal.reason !== ""
+        );
+      }
     },
   },
   methods: {

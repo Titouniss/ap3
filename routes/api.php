@@ -285,7 +285,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:read dealingHours']], function () {
             Route::get('index', 'API\DealingHoursController@index');
             Route::get('show/{id}', 'API\DealingHoursController@show');
-            Route::get('overtimesYear/{year}/{id}', 'API\DealingHoursController@getOvertimesByYear');
+            Route::get('overtimes', 'API\DealingHoursController@getOvertimes');
         });
         Route::group(['middleware' => ['can:publish usedHours']], function () {
             Route::post('store', 'API\DealingHoursController@store');

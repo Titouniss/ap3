@@ -1,103 +1,124 @@
 <template>
   <div>
-    <add-form />
-    <div class="flex flex-wrap items-center">
-      <!-- ITEMS PER PAGE -->
-      <div class="flex-grow">
-        <vs-row type="flex">
-          <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
-
-          <!-- ACTION - DROPDOWN -->
-          <vs-dropdown vs-trigger-click class="cursor-pointer">
-            <div
-              class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-            >
-              <span class="mr-2 leading-none">Actions</span>
-              <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-            </div>
-
-            <vs-dropdown-menu>
-              <vs-dropdown-item @click="this.confirmDeleteRecord" v-if="authorizedToDelete">
-                <span class="flex items-center">
-                  <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
-                  <span>Supprimer</span>
-                </span>
-              </vs-dropdown-item>
-            </vs-dropdown-menu>
-          </vs-dropdown>
-
-          <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-          <vs-input
-            class="ml-5"
-            v-model="searchQuery"
-            @input="updateSearchQuery"
-            placeholder="Rechercher..."
-          />
-        </vs-row>
+    <div class="mb-base">
+      <h6 class="mb-4">Heures supplémentaires</h6>
+      <div class="flex items-center mb-4">
+        <span class="ml-4">Total :</span>
+        <span class="ml-4">{{overtimes}} {{overtimes > 1 ? "heures" : "heure"}}</span>
       </div>
-      <vs-dropdown vs-trigger-click class="cursor-pointer">
-        <div
-          class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
-        >
-          <span class="mr-2">
-            {{
-            currentPage * paginationPageSize -
-            (paginationPageSize - 1)
-            }}
-            -
-            {{
-            unavailabilitiesData.length -
-            currentPage * paginationPageSize >
-            0
-            ? currentPage * paginationPageSize
-            : unavailabilitiesData.length
-            }}
-            sur {{ unavailabilitiesData.length }}
-          </span>
-          <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-        </div>
-        <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
-        <vs-dropdown-menu>
-          <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
-            <span>10</span>
-          </vs-dropdown-item>
-          <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
-            <span>20</span>
-          </vs-dropdown-item>
-          <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
-            <span>25</span>
-          </vs-dropdown-item>
-          <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
-            <span>30</span>
-          </vs-dropdown-item>
-        </vs-dropdown-menu>
-      </vs-dropdown>
+      <div class="flex items-center mb-4">
+        <span class="ml-4">{{usedOvertimes > 1 ? "Utilisées :" : "Utilisée :"}}</span>
+        <span class="ml-4">{{usedOvertimes}} {{usedOvertimes > 1 ? "heures" : "heure"}}</span>
+      </div>
+      <div class="flex items-center mb-4">
+        <span class="ml-4">Reste à utiliser :</span>
+        <span
+          class="ml-4"
+        >{{overtimes - usedOvertimes}} {{(overtimes - usedOvertimes) > 1 ? "heures" : "heure"}}</span>
+      </div>
     </div>
 
-    <!-- AgGrid Table -->
-    <ag-grid-vue
-      ref="agGridTable"
-      :components="components"
-      :gridOptions="gridOptions"
-      class="ag-theme-material w-full my-4 ag-grid-table"
-      overlayLoadingTemplate="Chargement..."
-      :columnDefs="columnDefs"
-      :defaultColDef="defaultColDef"
-      :rowData="unavailabilitiesData"
-      rowSelection="multiple"
-      colResizeDefault="shift"
-      :animateRows="true"
-      :floatingFilter="false"
-      :pagination="true"
-      :paginationPageSize="paginationPageSize"
-      :suppressPaginationPanel="true"
-      :enableRtl="$vs.rtl"
-      @firstDataRendered="onResize"
-    ></ag-grid-vue>
+    <div class="mb-base">
+      <h6 class="mb-4">Indisponibilités</h6>
+      <add-form :getOvertimes="getOvertimes()" />
+      <div class="flex flex-wrap items-center">
+        <!-- ITEMS PER PAGE -->
+        <div class="flex-grow">
+          <vs-row type="flex">
+            <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-    <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
+            <!-- ACTION - DROPDOWN -->
+            <vs-dropdown vs-trigger-click class="cursor-pointer">
+              <div
+                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+              >
+                <span class="mr-2 leading-none">Actions</span>
+                <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+              </div>
 
-    <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
+              <vs-dropdown-menu>
+                <vs-dropdown-item @click="this.confirmDeleteRecord" v-if="authorizedToDelete">
+                  <span class="flex items-center">
+                    <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <span>Supprimer</span>
+                  </span>
+                </vs-dropdown-item>
+              </vs-dropdown-menu>
+            </vs-dropdown>
+
+            <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
+            <vs-input
+              class="ml-5"
+              v-model="searchQuery"
+              @input="updateSearchQuery"
+              placeholder="Rechercher..."
+            />
+          </vs-row>
+        </div>
+        <vs-dropdown vs-trigger-click class="cursor-pointer">
+          <div
+            class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
+          >
+            <span class="mr-2">
+              {{
+              currentPage * paginationPageSize -
+              (paginationPageSize - 1)
+              }}
+              -
+              {{
+              unavailabilitiesData.length -
+              currentPage * paginationPageSize >
+              0
+              ? currentPage * paginationPageSize
+              : unavailabilitiesData.length
+              }}
+              sur {{ unavailabilitiesData.length }}
+            </span>
+            <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+          </div>
+          <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
+          <vs-dropdown-menu>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(10)">
+              <span>10</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(20)">
+              <span>20</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(25)">
+              <span>25</span>
+            </vs-dropdown-item>
+            <vs-dropdown-item @click="gridApi.paginationSetPageSize(30)">
+              <span>30</span>
+            </vs-dropdown-item>
+          </vs-dropdown-menu>
+        </vs-dropdown>
+      </div>
+
+      <!-- AgGrid Table -->
+      <ag-grid-vue
+        ref="agGridTable"
+        :components="components"
+        :gridOptions="gridOptions"
+        class="ag-theme-material w-full my-4 ag-grid-table"
+        overlayLoadingTemplate="Chargement..."
+        :columnDefs="columnDefs"
+        :defaultColDef="defaultColDef"
+        :rowData="unavailabilitiesData"
+        rowSelection="multiple"
+        colResizeDefault="shift"
+        :animateRows="true"
+        :floatingFilter="false"
+        :pagination="true"
+        :paginationPageSize="paginationPageSize"
+        :suppressPaginationPanel="true"
+        :enableRtl="$vs.rtl"
+        @firstDataRendered="onResize"
+      ></ag-grid-vue>
+
+      <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
+
+      <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
+    </div>
   </div>
 </template>
 
@@ -112,6 +133,7 @@ import EditForm from "./EditForm.vue";
 
 // Store Module
 import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
+import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement.js";
 
 // Cell Renderer
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
@@ -133,6 +155,9 @@ export default {
   },
   data() {
     return {
+      overtimes: 0,
+      usedOvertimes: 0,
+
       searchQuery: "",
 
       // AgGrid
@@ -228,6 +253,26 @@ export default {
       hour = hour.split(":")[0] + ":" + hour.split(":")[1];
       return date + " à " + hour;
     },
+    getOvertimes() {
+      this.$store
+        .dispatch("dealingHoursManagement/getOvertimes")
+        .then((data) => {
+          if (data && data.status === 200) {
+            this.overtimes = data.data.success.overtimes;
+            this.usedOvertimes = data.data.success.usedOvertimes;
+          } else {
+            this.$vs.notify({
+              color: "error",
+              title: "Erreur",
+              text: `Impossible d'afficher les heures supplémentaires`,
+            });
+            this.overtimes = 0;
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    },
     confirmDeleteRecord() {
       let selectedRow = this.gridApi.getSelectedRows();
       let singleUnavailabilities = selectedRow[0];
@@ -279,6 +324,9 @@ export default {
     },
   },
   mounted() {
+    console.log(["here", this.overtimes]);
+    this.getOvertimes();
+
     this.gridApi = this.gridOptions.api;
 
     window.addEventListener("resize", this.onResize);
@@ -314,6 +362,13 @@ export default {
       );
       moduleUnavailabilityManagement.isRegistered = true;
     }
+    if (!moduleDealingHoursManagement.isRegistered) {
+      this.$store.registerModule(
+        "dealingHoursManagement",
+        moduleDealingHoursManagement
+      );
+      moduleDealingHoursManagement.isRegistered = true;
+    }
     this.$store.dispatch("unavailabilityManagement/fetchItems").catch((err) => {
       console.error(err);
     });
@@ -322,7 +377,9 @@ export default {
     window.removeEventListener("resize", this.onResize());
 
     moduleUnavailabilityManagement.isRegistered = false;
+    moduleDealingHoursManagement.isRegistered = false;
     this.$store.unregisterModule("unavailabilityManagement");
+    this.$store.unregisterModule("dealingHoursManagement");
   },
 };
 </script>

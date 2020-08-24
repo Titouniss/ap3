@@ -315,7 +315,7 @@ export default {
           field: "date",
           cellRenderer: (data) => {
             moment.locale("fr");
-            return moment(data.value).format("D MMMM YYYY");
+            return moment(data.data.start_at).format("D MMMM YYYY");
           },
         },
         {
@@ -588,10 +588,12 @@ export default {
           this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment supprimer ces heures ?`
             : singleHour.duration == "01:00:00"
-            ? `Voulez vous vraiment supprimer l'heure du ${singleHour.date} pour le projet ${singleHour.project} ?`
+            ? `Voulez vous vraiment supprimer l'heure du ${
+                singleHour.start_at.split(" ")[0]
+              } pour le projet ${singleHour.project} ?`
             : `Voulez vous vraiment supprimer les ${
                 singleHour.duration.split(":")[0]
-              } heures du ${singleHour.date} pour le projet ${
+              } heures du ${singleHour.start_at.split(" ")[0]} pour le projet ${
                 singleHour.project.name
               } ?`,
         accept: this.deleteRecord,
@@ -666,22 +668,6 @@ export default {
           return value;
         })
       );
-    },
-    getdealingHours() {
-      let item = {
-        year: this.filterDate,
-        user_id: this.filters.user ? this.filters.user.id : null,
-      };
-      this.$store
-        .dispatch("dealingHoursManagement/getOvertimesByYear", item)
-        .then((data) => {
-          if (data && data.status === 200) {
-          } else {
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
     },
   },
   mounted() {
