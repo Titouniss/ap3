@@ -667,22 +667,6 @@ export default {
         })
       );
     },
-    getdealingHours() {
-      let item = {
-        year: this.filterDate,
-        user_id: this.filters.user ? this.filters.user.id : null,
-      };
-      this.$store
-        .dispatch("dealingHoursManagement/getOvertimesByYear", item)
-        .then((data) => {
-          if (data && data.status === 200) {
-          } else {
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;

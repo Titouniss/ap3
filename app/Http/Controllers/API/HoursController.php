@@ -102,7 +102,7 @@ class HoursController extends Controller
                             break;
                     }
                 } else {
-                    $period = CarbonPeriod::create($items->min('date'), '1 week', $items->max('date'));
+                    $period = CarbonPeriod::create($items->min('start_at'), '1 week', $items->max('end_at'));
                     foreach ($period as $week) {
                         $defaultWorkHours += $workWeekHours;
                     }
@@ -155,10 +155,10 @@ class HoursController extends Controller
         $start_at = Carbon::parse($arrayRequest['start_at']);
         $end_at = Carbon::parse($arrayRequest['end_at']);
 
-        $parseDuration = $start_at->floatDiffInHours($end_at);     
+        $parseDuration = $start_at->floatDiffInHours($end_at);
 
         if($parseDuration === 0) {
-            return response()->json(['error' => "Veuillez inserer une durée"], $this->successStatus); 
+            return response()->json(['error' => "Veuillez inserer une durée"], $this->successStatus);
         }
 
         // How many hour user worked this day
@@ -180,29 +180,29 @@ class HoursController extends Controller
         }
         
 
-        // Compare to user_workhours to define overtimes or not
-        if ($nb_worked_hours > $target_work_hours) {
-            // Check if value in dealing_hours for this date
-            $findDealingHour = DealingHours::where('date', $arrayRequest['date'])->first();
+        
+        // Check if value in dealing_hours for this date
+        $findDealingHour = DealingHours::where('date', $arrayRequest['date'])->first();
 
-            if(empty($findDealingHour) === false) {
-                // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-                $item = Hours::create($arrayRequest);
-                DealingHours::where('date', $arrayRequest['date'])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-            }
-            // Else add new tuple in dealing_hours for this date 
-            else {
-                //Create new tuple in dealing_hours with user_id, date and overtimes
-                $item = Hours::create($arrayRequest);
-                $deallingHourItem = DealingHours::create(
-                    ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]                
-                );
-            }
-        } else { 
-            $arrayRequest['start_at'] = $start_at->ToDateTimeString();
-            $arrayRequest['end_at'] = $end_at->ToDateTimeString();
+        if(empty($findDealingHour) === false) {
+            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
             $item = Hours::create($arrayRequest);
+            DealingHours::where('date', $arrayRequest['date'])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
         }
+        // Else add new tuple in dealing_hours for this date 
+        else {
+            //Create new tuple in dealing_hours with user_id, date and overtimes
+            $item = Hours::create($arrayRequest);
+            $deallingHourItem = DealingHours::create(
+                ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]                
+            );
+        }
+        
+        // else { 
+        //     $arrayRequest['start_at'] = $start_at->ToDateTimeString();
+        //     $arrayRequest['end_at'] = $end_at->ToDateTimeString();
+        //     $item = Hours::create($arrayRequest);
+        // }
 
         $item = Hours::where('id', $item->id)->with('project', 'user')->first();
 
@@ -441,7 +441,7 @@ class HoursController extends Controller
         $date = Carbon::parse($item->start_at);
         $item->delete();
 
-        //reset overtimes compteur for this user and date
+        // update overtimes compteur for this user and date
         // How many hour worked this day
         $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $date->format('Y-m-d'));
 
@@ -449,20 +449,15 @@ class HoursController extends Controller
         $target_work_hours = HoursController::getTargetWorkHours($item->user_id, $item->date);
 
         // Check if value in dealing_hours for old date
-        $findDealingHour = DealingHours::where([['date', $item->date], ['user_id', $item->user_id]])->first();
+        $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->first();
 
-        if ($nb_worked_hours > $target_work_hours) {
-            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            DealingHours::where('date', $item->date)->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+        if (empty($findDealingHour) === false && ($nb_worked_hours - $target_work_hours) === 0) {
+            // Delete dealing_hours
+            $dealing_hour = DealingHours::findOrFail($findDealingHour['id']);
+            $dealing_hour->delete();  
         } else {
-            // Not empty and no used_hour ? Delete dealing_hour tuple
-            if ($findDealingHour['used_hours'] === 0 ) {
-                $dealing_hour = DealingHours::findOrFail($findDealingHour['id']);
-                $dealing_hour->delete();
-            }
-            else {
-                DealingHours::where([['date', $item->date], ['user_id', $item->user_id]])->update(['overtimes' => 0]);
-            }
+            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
+            DealingHours::where('date', $date->format('Y-m-d'))->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
         }
 
         return '';

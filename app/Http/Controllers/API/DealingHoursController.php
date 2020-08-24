@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use App\Models\DealingHours;
+use App\Models\Unavailability;
+use Carbon\Carbon;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -41,56 +43,42 @@ class DealingHoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getOvertimesByYear( $year, $user_id ) {
+    public function getOvertimes() {
         $user = Auth::user();
-        $items = DealingHours::where(['user_id', $user->id], ['date', $year]);
-        if ($user->hasRole('superAdmin')) {
-            $items = DealingHours::whereYear('date', $year)->get();
-            if ($user_id !== null) {
-                $items = DealingHours::where('user_id', $user_id)
-                                    ->whereYear('date', $year)
-                                    ->get();
+
+        // Check if overtimes
+        $items = DealingHours::where('user_id', $user->id)->get();
+
+        $totalOvertimes = 0;
+        $nbUsedOvertimes = 0;
+
+        if (!$items->isEmpty()) {
+            // Get total overtimes
+            $totalOvertimes = DealingHours::where('user_id', $user->id)->sum('overtimes');
+            // Get nb used overtimes
+            $usedOrvertimes = Unavailability::where([['user_id', $user->id], ['reason', 'Utilisation heures suplémentaires']])->get();
+            if(!$usedOrvertimes->isEmpty()) {
+                foreach ($usedOrvertimes as $key => $used) {
+                    $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
+                    $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
+
+                    $nbUsedOvertimes += ( floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]) );
+                }
             }
+            $result = Array (
+                "overtimes" => $totalOvertimes,
+                "usedOvertimes" => $nbUsedOvertimes
+            );
+
+        }
+        else {
+            $result = Array (
+                "overtimes" => $totalOvertimes,
+                "usedOvertimes" => $nbUsedOvertimes
+            );
         }
 
-        // calcul overtime missHours usedHours by year
-        $overtimes = 0;
-        $missHours = 0;
-        $usedHours = 0;
-        $result = [];
-        if($items !== []) {
-            // foreach days in selected year
-            foreach ($items as $key => $day) {
-                // if day have overtime
-                if ($day->overtimes >= 0) {
-                    $overtimes += $day->overtimes;
-                } else {
-                    // day is before current day ? 
-                    if ($day->date <= date('Y-m-d')) {
-                        $missHours += ($day->overtimes * -1);
-                    }
-                }
-                // if day have used_hour
-                if ($day->used_hours > 0) {
-                    $usedHours += $day->used_hours;
-                }
-            }
-            // Overtimes compensation with missHours and usedHours
-            if (($overtimes - $usedHours) >= $missHours) {
-                $overtimes -= $missHours;
-                $missHours = 0;
-            }
-            else { 
-                $missHours = $missHours - ($overtimes - $usedHours);
-                $overtimes = ($overtimes - $usedHours) - $missHours;
-            }
-        }   
-        $result = Array (
-            "missHours" => $missHours,
-            "overtimes" => $overtimes,
-            "usedHours" => $usedHours
-        );
-        return response()->json(['success' => $result], $this->successStatus);  
+        return response()->json(['success' => $result], $this->successStatus);
     }
 
     /**
@@ -134,7 +122,7 @@ class DealingHoursController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function storeOrUpdateUsed(Request $request)
-    {   
+    {
         $arrayRequest = $request->all();        
 
         $validator = Validator::make($arrayRequest, [

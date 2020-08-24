@@ -63,23 +63,27 @@ class UnavailabilityController extends Controller
         $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at']);
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
 
-        foreach ($unavailabilities as $unavailability) {
-            $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
-            $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
+        if (!$unavailabilities->isEmpty()) {
+            foreach ($unavailabilities as $unavailability) {
+                $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
+                $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
-            // Vérifier qu'elle n'est pas englobé, dedans ou déjà présente
-            if(($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i'))) {
-                return response()->json(['error' => "Une indisponibilité existe déjà sur cette période"], 401);
-            } else if ($arrayRequest_ends->gt($unavailability_ends->format('Y-m-d H:i')) && ($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_starts->ne($unavailability_ends))) {
-            // Vérifier que ça ne mort pas par le starts_at
-                 return response()->json(['error' => "Le début de l'indisponibilité dépasse sur une autre"], 401);
-            } else if ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts))) {
-            // Verifier que ça ne mort pas par le ends_at
-                return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
-            } else {
-                // Ajouter l'indisponibilité
-                return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
+                // Vérifier qu'elle n'est pas englobé, dedans ou déjà présente
+                if(($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i'))) {
+                    return response()->json(['error' => "Une indisponibilité existe déjà sur cette période"], 401);
+                } else if ($arrayRequest_ends->gt($unavailability_ends->format('Y-m-d H:i')) && ($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_starts->ne($unavailability_ends))) {
+                // Vérifier que ça ne mort pas par le starts_at
+                    return response()->json(['error' => "Le début de l'indisponibilité dépasse sur une autre"], 401);
+                } else if ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts))) {
+                // Verifier que ça ne mort pas par le ends_at
+                    return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
+                } else {
+                    // Ajouter l'indisponibilité
+                    return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
+                }
             }
+        } else {
+            return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
         }
     }
 
