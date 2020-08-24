@@ -171,12 +171,12 @@ export default {
               "projectManagement/addItem",
               Object.assign({}, this.itemLocal)
             )
-            .then(() => {
+            .then((response) => {
               this.clearFields();
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Ajout d'un projet",
-                text: `"${this.itemLocal.name}" ajouté avec succès`,
+                text: `"${response.data.success.name}" ajouté avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
                 color: "success"

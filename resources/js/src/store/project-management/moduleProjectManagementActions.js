@@ -14,7 +14,8 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post("/api/project-management/store", item)
         .then((response) => {
-          commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id, company: response.data.success.company }))
+          response.data.success.status = 'todo'
+          commit('ADD_ITEM', Object.assign(item, response.data.success))
           resolve(response)
         })
         .catch((error) => { reject(error) })
