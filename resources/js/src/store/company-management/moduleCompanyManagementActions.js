@@ -15,11 +15,17 @@ export default {
             axios
                 .post("/api/company-management/store", item)
                 .then(response => {
-                    commit(
-                        "ADD_ITEM",
-                        Object.assign(item, { id: response.data.success.id })
-                    );
-                    resolve(response);
+                    if (response.data.success) {
+                        commit(
+                            "ADD_ITEM",
+                            Object.assign(item, {
+                                id: response.data.success.id
+                            })
+                        );
+                        resolve(response);
+                    } else {
+                        reject(response);
+                    }
                 })
                 .catch(error => {
                     reject(error);
@@ -39,7 +45,7 @@ export default {
                         commit("UPDATE_ITEM", Object.assign({}, item));
                         resolve(response);
                     } else {
-                        reject(error);
+                        reject(response);
                     }
                 })
                 .catch(error => {
