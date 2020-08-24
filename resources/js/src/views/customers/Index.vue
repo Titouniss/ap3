@@ -133,10 +133,13 @@ import AddForm from "./AddForm.vue";
 
 // Store Module
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 // Cell Renderer
 import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
 import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
+import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
+
 
 var model = "customer";
 var modelPlurial = "customers";
@@ -152,6 +155,7 @@ export default {
     // Cell Renderer
     CellRendererActions,
     CellRendererBoolean,
+    CellRendererRelations
   },
   data() {
     return {
@@ -199,6 +203,12 @@ export default {
           sortable: true,
           cellRendererFramework: "CellRendererBoolean",
         },
+        (this.activeUserRole() == 'superAdmin') ? {
+          headerName: "Société",
+          field: "company",
+          filter: true,
+          cellRendererFramework: "CellRendererRelations",
+        } : '',
         {
           headerName: "Actions",
           field: "transactions",
@@ -361,6 +371,13 @@ export default {
         this.gridApi.sizeColumnsToFit();
       }
     },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if ( user.roles && user.roles.length > 0 ) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -398,16 +415,28 @@ export default {
       );
       moduleCustomerManagement.isRegistered = true;
     }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
 
     if (this.authorizedTo("read", "customers")) {
       this.$store.dispatch("customerManagement/fetchItems");
     }
+
+    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
+
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
 
     moduleCustomerManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
+
     this.$store.unregisterModule("customerManagement");
+    this.$store.unregisterModule("companyManagement");
   },
 };
 </script>

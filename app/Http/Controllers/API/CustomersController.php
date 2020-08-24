@@ -28,9 +28,9 @@ class CustomersController extends Controller
         $user = Auth::user();
         $customers = [];
         if ($user->hasRole('superAdmin')) {
-            $customers = Customers::withTrashed()->get();
+            $customers = Customers::withTrashed()->get()->load('company');
         } else {
-            $customers = Customers::all();
+            $customers = Customers::all()->load('company');
             // Add link to specific company ?
         }
         return response()->json(['success' => $customers], $this->successStatus);
@@ -63,13 +63,15 @@ class CustomersController extends Controller
             'name' => 'nullable',
             'lastname' => 'nullable',
             'siret' => 'nullable',
-            'professional' => 'required'
+            'professional' => 'required',
+            'company' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
         if ($user != null) {
-            $item = Customers::create($arrayRequest);
+            $arrayRequest['company_id'] = $arrayRequest['company']['id'];
+            $item = Customers::create($arrayRequest)->load('company');
             return response()->json(['success' => $item], $this->successStatus);
         }
         return response()->json(['success' => 'notAuthentified'], 500);
@@ -88,7 +90,8 @@ class CustomersController extends Controller
             'name' => 'required',
             'lastname' => 'required',
             'siret' => 'required',
-            'professional' => 'required'
+            'professional' => 'required',
+            'company' => 'required'
         ]);
         $customer = Customers::where('id', $id)->first();
         if ($customer != null) {
@@ -96,6 +99,7 @@ class CustomersController extends Controller
             $customer->lastname = $arrayRequest['lastname'];
             $customer->siret = $arrayRequest['siret'];
             $customer->professional = $arrayRequest['professional'];
+            $customer->company_id = $arrayRequest['company']['id'];
             $customer->save();
         }
         return response()->json(['success' => true, 'item' => $customer], $this->successStatus);
