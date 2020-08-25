@@ -140,7 +140,6 @@ import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
 import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
-
 var model = "customer";
 var modelPlurial = "customers";
 var modelTitle = "Clients";
@@ -155,7 +154,7 @@ export default {
     // Cell Renderer
     CellRendererActions,
     CellRendererBoolean,
-    CellRendererRelations
+    CellRendererRelations,
   },
   data() {
     return {
@@ -203,12 +202,12 @@ export default {
           sortable: true,
           cellRendererFramework: "CellRendererBoolean",
         },
-        (this.activeUserRole() == 'superAdmin') ? {
+        {
           headerName: "Société",
           field: "company",
           filter: true,
           cellRendererFramework: "CellRendererRelations",
-        } : '',
+        },
         {
           headerName: "Actions",
           field: "transactions",
@@ -228,7 +227,11 @@ export default {
       return this.$store.state.customerManagement.customer.id || 0;
     },
     customersData() {
-      return this.$store.state.customerManagement.customers;
+      return this.activeUserRole() == "superAdmin"
+        ? this.$store.state.customerManagement.customers
+        : this.$store.state.customerManagement.customers.filter(
+            (c) => c.company.id === this.$store.state.AppActiveUser.company_id
+          );
     },
     authorizedToPublish() {
       return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
@@ -373,7 +376,7 @@ export default {
     },
     activeUserRole() {
       const user = this.$store.state.AppActiveUser;
-      if ( user.roles && user.roles.length > 0 ) {
+      if (user.roles && user.roles.length > 0) {
         return user.roles[0].name;
       }
       return false;
@@ -381,6 +384,12 @@ export default {
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
+
+    // Hide company column ?
+    this.gridOptions.columnApi.setColumnVisible(
+      "company",
+      this.activeUserRole() == "superAdmin" ? true : false
+    );
 
     window.addEventListener("resize", this.onResize);
     if (this.gridApi) {
@@ -427,7 +436,6 @@ export default {
     this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
