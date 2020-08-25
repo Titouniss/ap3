@@ -24,52 +24,66 @@
       <form>
         <div class="vx-row">
           <div class="vx-col w-full">
-            <vs-input
-              v-validate="'max:50|required'"
-              name="lastname"
-              class="w-full mb-4 mt-5"
-              label="Nom du client"
-              placeholder="Nom du client"
-              v-model="itemLocal.lastname"
-              :color="!errors.has('lastname') ? 'success' : 'danger'"
-            />
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('lastname')"
-            >{{ errors.first('lastname') }}</span>
-            <div>
-              <small class="ml-1" for>Professionnel</small>
-              <vs-switch v-model="itemLocal.professional" />
-            </div>
-            <vs-input
-              v-if="itemLocal.professional"
-              v-validate="itemLocal.professional ? 'required|max:50' : ''"
-              name="name"
-              class="w-full mb-4 mt-5"
-              label="Nom de la société"
-              placeholder="Nom de la société"
-              v-model="itemLocal.name"
-              :color="!errors.has('name') ? 'success' : 'danger'"
-            />
-            <span
-              v-if="itemLocal.professional"
-              class="text-danger text-sm"
-              v-show="errors.has('name')"
-            >{{ errors.first('name') }}</span>
-            <vs-input
-              v-if="itemLocal.professional"
-              v-validate="itemLocal.professional ? 'required|numeric|min:14|max:14' : ''"
-              name="siret"
-              class="w-full mb-4 mt-5"
-              label="Numéro de siret"
-              placeholder="Siret"
-              v-model="itemLocal.siret"
-            />
-            <span
-              v-if="itemLocal.professional"
-              class="text-danger text-sm"
-              v-show="errors.has('siret')"
-            >{{ errors.first('siret') }}</span>
+             <v-select
+                v-if="(this.activeUserRole() == 'superAdmin')"
+                label="name"
+                v-validate="'required'"
+                v-model="itemLocal.company"
+                :options="companiesData"
+                class="w-full mb-4 mt-5"
+              >
+                <template #header>
+                  <div class="vs-select--label">Société</div>
+                </template>
+              </v-select>
+
+              <div>
+                <small class="ml-1" for>Professionnel</small>
+                <vs-switch v-model="itemLocal.professional" />
+              </div>
+              <vs-input
+                v-if="itemLocal.professional"
+                v-validate="itemLocal.professional ? 'required|max:50' : ''"
+                name="name"
+                class="w-full mb-4 mt-5"
+                label="Nom de la société"
+                placeholder="société..."
+                v-model="itemLocal.name"
+                :color="!errors.has('name') ? 'success' : 'danger'"
+              />
+              <span
+                v-if="itemLocal.professional"
+                class="text-danger text-sm"
+                v-show="errors.has('name')"
+              >{{ errors.first('name') }}</span>
+              <vs-input
+                v-if="itemLocal.professional"
+                v-validate="itemLocal.professional ? 'required|numeric|min:14|max:14' : ''"
+                name="siret"
+                class="w-full mb-4 mt-5"
+                label="Numéro de siret"
+                placeholder="n° siret..."
+                v-model="itemLocal.siret"
+              />
+              <span
+                v-if="itemLocal.professional"
+                class="text-danger text-sm"
+                v-show="errors.has('siret')"
+              >{{ errors.first('siret') }}</span>
+
+              <vs-input
+                v-validate="'required|max:50'"
+                name="lastname"
+                class="w-full mb-4 mt-5"
+                label="Nom du client"
+                placeholder="nom..."
+                v-model="itemLocal.lastname"
+                :color="!errors.has('lastname') ? 'success' : 'danger'"
+              />
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('lastname')"
+              >{{ errors.first('lastname') }}</span>
           </div>
         </div>
       </form>
@@ -80,11 +94,16 @@
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import vSelect from "vue-select";
+
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
+  components: {
+    vSelect
+  },
   props: {
     itemId: {
       type: Number,
@@ -116,16 +135,20 @@ export default {
     permissions() {
       return this.$store.state.roleManagement.permissions;
     },
+    companiesData() {
+      return this.$store.state.companyManagement.companies;
+    },
     validateForm() {
       if (this.itemLocal.professional || this.itemLocal.professional === 1) {
         return (
           !this.errors.any() &&
           this.itemLocal.name !== "" &&
           this.itemLocal.lastname !== "" &&
+          this.itemLocal.company !== "" &&
           this.itemLocal.siret !== null
         );
       } else {
-        return !this.errors.any() && this.itemLocal.lastname !== "";
+        return !this.errors.any() && this.itemLocal.lastname !== "" && this.itemLocal.company;
       }
     }
   },
@@ -154,7 +177,7 @@ export default {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Modification d'un client",
-            text: `"${this.itemLocal.name}" modifié avec succès`,
+            text: `"${this.itemLocal.name ? this.itemLocal.name : this.itemLocal.lastname}" modifié avec succès`,
             iconPack: "feather",
             icon: "icon-alert-circle",
             color: "success"
@@ -170,7 +193,14 @@ export default {
             color: "danger"
           });
         });
-    }
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if ( user.roles && user.roles.length > 0 ) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
   }
 };
 </script>

@@ -16,19 +16,19 @@
         <form>
           <div class="vx-row">
             <div class="vx-col w-full">
-              <vs-input
-                v-validate="'required|max:50'"
-                name="lastname"
+              <v-select
+                v-if="(this.activeUserRole() == 'superAdmin')"
+                label="name"
+                v-validate="'required'"
+                v-model="itemLocal.company"
+                :options="companiesData"
                 class="w-full mb-4 mt-5"
-                label="Nom du client"
-                placeholder="nom..."
-                v-model="itemLocal.lastname"
-                :color="!errors.has('lastname') ? 'success' : 'danger'"
-              />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('lastname')"
-              >{{ errors.first('lastname') }}</span>
+              >
+                <template #header>
+                  <div class="vs-select--label">Société</div>
+                </template>
+              </v-select>
+
               <div>
                 <small class="ml-1" for>Professionnel</small>
                 <vs-switch v-model="itemLocal.professional" />
@@ -62,6 +62,21 @@
                 class="text-danger text-sm"
                 v-show="errors.has('siret')"
               >{{ errors.first('siret') }}</span>
+
+              <vs-input
+                v-validate="'required|max:50'"
+                name="lastname"
+                class="w-full mb-4 mt-5"
+                label="Nom du client"
+                placeholder="nom..."
+                v-model="itemLocal.lastname"
+                :color="!errors.has('lastname') ? 'success' : 'danger'"
+              />
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('lastname')"
+              >{{ errors.first('lastname') }}</span>
+              
             </div>
           </div>
         </form>
@@ -73,11 +88,16 @@
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import vSelect from "vue-select";
+
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
+  components: {
+    vSelect
+  },
   data() {
     return {
       activePrompt: false,
@@ -85,6 +105,7 @@ export default {
       itemLocal: {
         name: null,
         lastname: null,
+        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null, 
         siret: null,
         professional: 0
       }
@@ -100,15 +121,19 @@ export default {
           this.itemLocal.siret !== null
         );
       } else {
-        return !this.errors.any() && this.itemLocal.lastname !== null;
+        return !this.errors.any() && this.itemLocal.lastname !== null && this.itemLocal.company !== null;
       }
-    }
+    },
+    companiesData() {
+      return this.$store.state.companyManagement.companies;
+    },
   },
   methods: {
     clearFields() {
       Object.assign(this.itemLocal, {
         name: null,
         lastname: null,
+        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null,
         siret: null,
         professional: 0
       });
@@ -136,7 +161,7 @@ export default {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Ajout d'un client",
-                text: `"${itemLocal.name}" ajoutée avec succès`,
+                text: `"${itemLocal.name ? itemLocal.name : itemLocal.lastname}" ajoutée avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
                 color: "success"
@@ -155,7 +180,14 @@ export default {
           this.clearFields();
         }
       });
-    }
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if ( user.roles && user.roles.length > 0 ) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
   }
 };
 </script>
