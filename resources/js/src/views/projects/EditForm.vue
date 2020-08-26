@@ -57,6 +57,10 @@
             />
             <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
             <div class="my-4">
+              <small class="date-label">Couleur</small>
+              <v-swatches v-model="itemLocal.color" :swatches="colors" swatch-size="40"></v-swatches>
+            </div>
+            <div class="my-4">
               <small class="date-label">Date de livraison prévue</small>
               <datepicker
                 class="pickadate"
@@ -98,6 +102,11 @@ import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import vSelect from "vue-select";
 
+import VSwatches from "vue-swatches";
+import "vue-swatches/dist/vue-swatches.css";
+
+import { project_colors } from "../../../themeConfig";
+
 // register custom messages
 Validator.localize("fr", errorMessage);
 
@@ -105,6 +114,7 @@ export default {
   components: {
     vSelect,
     Datepicker,
+    VSwatches,
   },
   props: {
     itemId: {
@@ -118,6 +128,7 @@ export default {
         {},
         this.$store.getters["projectManagement/getItem"](this.itemId)
       ),
+      colors: project_colors,
       langFr: fr,
     };
   },
@@ -240,6 +251,17 @@ export default {
         return (c.name = c.professional === 1 ? c.name : c.lastname);
       });
     },
+  },
+  mounted() {
+    // Parse unselected color
+    if (this.itemLocal.color === null) {
+      this.itemLocal.color = "";
+    }
+
+    // Parse customer label
+    if (this.itemLocal.customer.professional === 0) {
+      this.itemLocal.customer.name = this.itemLocal.customer.lastname;
+    }
   },
 };
 </script>

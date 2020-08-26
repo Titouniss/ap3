@@ -12,7 +12,7 @@ class Project extends Model
     use SoftDeletes;
 
 
-    protected $fillable = ['name', 'date', 'status', 'company_id', 'customer_id'];
+    protected $fillable = ['name', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
     protected $appends = ['tasks'];
 

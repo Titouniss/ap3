@@ -14,8 +14,23 @@ export const colors = {
   danger: '#CE645D',
   warning: '#E8B92E',
   dark: '#424242',
-  light: '#E3E3E3'
+  light: '#E3E3E3',
 }
+
+// PROJECT COLORS
+export const project_colors = [
+  '#51E898',
+  '#61BD4F',
+  '#F2D600',
+  '#FF9F1A',
+  '#EB5A46',
+  '#FF78CB',
+  '#C377E0',
+  '#00C2E0',
+  '#0079BF',
+  '#344563',
+  ''
+];
 
 // CONFIGS
 const themeConfig = {

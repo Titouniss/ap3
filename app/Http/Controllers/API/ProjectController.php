@@ -174,7 +174,8 @@ class ProjectController extends Controller
                 'name' => $arrayRequest['name'],
                 'date' => $arrayRequest['date'],
                 'company_id' => $arrayRequest['company_id'],
-                'customer_id' => $arrayRequest['customer_id']
+                'customer_id' => $arrayRequest['customer_id'],
+                'color' => $arrayRequest['color']
             ]);
 
         if ($update) {
