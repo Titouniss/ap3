@@ -12,8 +12,9 @@ export default {
                             Object.assign(item, { id: response.data.success })
                         );
                         resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
                     }
-                    reject({ message: response.data.error });
                 })
                 .catch(error => {
                     reject(error);
@@ -57,8 +58,9 @@ export default {
                     if (response.data.success) {
                         commit("UPDATE_ITEM", response.data.success);
                         resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
                     }
-                    reject({ message: response.data.error });
                 })
                 .catch(error => {
                     reject(error);
@@ -131,8 +133,12 @@ export default {
             axios
                 .put(`/api/user-management/restore/${id}`)
                 .then(response => {
-                    commit("UPDATE_ITEM", response.data.success);
-                    resolve(response);
+                    if (response.data.success) {
+                        commit("UPDATE_ITEM", response.data.success);
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
                 })
                 .catch(error => {
                     reject(error);
@@ -144,8 +150,12 @@ export default {
             axios
                 .delete(`/api/user-management/destroy/${id}`)
                 .then(response => {
-                    commit("UPDATE_ITEM", response.data.success);
-                    resolve(response);
+                    if (response.data.success) {
+                        commit("UPDATE_ITEM", response.data.success);
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
                 })
                 .catch(error => {
                     reject(error);
@@ -157,8 +167,12 @@ export default {
             axios
                 .delete(`/api/user-management/forceDelete/${id}`)
                 .then(response => {
-                    commit("REMOVE_RECORD", id);
-                    resolve(response);
+                    if (response.data.success) {
+                        commit("REMOVE_RECORD", id);
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
                 })
                 .catch(error => {
                     reject(error);

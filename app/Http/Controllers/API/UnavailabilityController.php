@@ -58,7 +58,7 @@ class UnavailabilityController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
         $unavailabilities = Unavailability::where('user_id', Auth::user()->id)->orderby('starts_at', 'asc')->get();
-        
+
         $arrayRequest['user_id'] = Auth::user()->id;
         $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at']);
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
@@ -69,13 +69,13 @@ class UnavailabilityController extends Controller
                 $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
                 // Vérifier qu'elle n'est pas englobé, dedans ou déjà présente
-                if(($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i'))) {
+                if (($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i'))) {
                     return response()->json(['error' => "Une indisponibilité existe déjà sur cette période"], 401);
                 } else if ($arrayRequest_ends->gt($unavailability_ends->format('Y-m-d H:i')) && ($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_starts->ne($unavailability_ends))) {
-                // Vérifier que ça ne mort pas par le starts_at
+                    // Vérifier que ça ne mort pas par le starts_at
                     return response()->json(['error' => "Le début de l'indisponibilité dépasse sur une autre"], 401);
                 } else if ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts))) {
-                // Verifier que ça ne mort pas par le ends_at
+                    // Verifier que ça ne mort pas par le ends_at
                     return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
                 } else {
                     // Ajouter l'indisponibilité
@@ -117,7 +117,7 @@ class UnavailabilityController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        $arrayRequest['user_id'] = Auth::user()->id;        
+        $arrayRequest['user_id'] = Auth::user()->id;
         $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at']);
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
 
@@ -128,13 +128,13 @@ class UnavailabilityController extends Controller
             $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
             // Vérifier qu'elle n'est pas englobé, dedans ou déjà présente
-            if(($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i'))) {
+            if (($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i'))) {
                 return response()->json(['error' => "Une indisponibilité existe déjà sur cette période"], 401);
             } else if ($arrayRequest_ends->gt($unavailability_ends->format('Y-m-d H:i')) && ($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_starts->ne($unavailability_ends))) {
-            // Vérifier que ça ne mort pas par le starts_at
+                // Vérifier que ça ne mort pas par le starts_at
                 return response()->json(['error' => "Le début de l'indisponibilité dépasse sur une autre"], 401);
             } else if ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts))) {
-            // Verifier que ça ne mort pas par le ends_at
+                // Verifier que ça ne mort pas par le ends_at
                 return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
             } else {
                 // Ajouter l'indisponibilité
@@ -154,6 +154,6 @@ class UnavailabilityController extends Controller
     {
         $item = Unavailability::findOrFail($id);
         $item->delete();
-        return response()->json([], $this->successStatus);
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

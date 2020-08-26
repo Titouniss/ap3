@@ -251,7 +251,7 @@ class TaskController extends Controller
     {
         $item = Task::findOrFail($id);
         $item->delete();
-        return '';
+        return response()->json(['success' => true], $this->successStatus);
     }
 
 

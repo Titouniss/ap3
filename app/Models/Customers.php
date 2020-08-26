@@ -13,7 +13,12 @@ class Customers extends Model
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id');
+        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
+    }
+
+    public function projects()
+    {
+        return $this->hasMany('App\Models\Project', 'customer_id');
     }
 
     public function restoreCascade()

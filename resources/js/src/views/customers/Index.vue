@@ -136,10 +136,9 @@ import moduleCustomerManagement from "@/store/customer-management/moduleCustomer
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 // Cell Renderer
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
-
 
 var model = "customer";
 var modelPlurial = "customers";
@@ -164,11 +163,11 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun client à afficher" },
+        localeText: { noRowsToShow: "Aucun client à afficher" }
       },
       defaultColDef: {
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -176,51 +175,60 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
           headerCheckboxSelection: true,
-          width: 40,
+          width: 40
         },
         {
           headerName: "Société",
           field: "name",
           filter: true,
-          sortable: true,
+          sortable: true
         },
         {
           headerName: "Nom",
           field: "lastname",
           filter: true,
-          sortable: true,
+          sortable: true
         },
         {
           headerName: "Siret",
           field: "siret",
           filter: true,
-          sortable: true,
+          sortable: true
         },
         {
           headerName: "Type",
           field: "professional",
           filter: true,
           sortable: true,
-          cellRendererFramework: "CellRendererBoolean",
+          cellRendererFramework: "CellRendererBoolean"
         },
-        (this.activeUserRole() == 'superAdmin') ? {
-          headerName: "Société",
-          field: "company",
-          filter: true,
-          cellRendererFramework: "CellRendererRelations",
-        } : '',
+        this.activeUserRole() == "superAdmin"
+          ? {
+              headerName: "Société",
+              field: "company",
+              filter: true,
+              cellRendererFramework: "CellRendererRelations"
+            }
+          : "",
         {
           headerName: "Actions",
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "customer",
+            modelPlurial: "customers",
+            withPrompt: true,
+            name: data => `le client ${data.lastname}`,
+            linkedTables: ["projets", "tâches"]
+          }
+        }
       ],
       // Cell Renderer Components
       components: {
         CellRendererActions,
-        CellRendererBoolean,
-      },
+        CellRendererBoolean
+      }
     };
   },
   computed: {
@@ -254,8 +262,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     authorizedTo(action, model = "customers") {
@@ -280,7 +288,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all",
+        value: "all"
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -308,21 +316,21 @@ export default {
             : `Voulez vous vraiment archiver le client ${singleCustomer.lastname} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("customerManagement/forceRemoveItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -332,15 +340,15 @@ export default {
     },
     archiveRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("customerManagement/removeItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -359,7 +367,7 @@ export default {
             ? `Client supprimé`
             : selectedRowLength > 1
             ? `Clients archivés`
-            : `Client archivé`,
+            : `Client archivé`
       });
     },
     onResize(event) {
@@ -373,11 +381,11 @@ export default {
     },
     activeUserRole() {
       const user = this.$store.state.AppActiveUser;
-      if ( user.roles && user.roles.length > 0 ) {
+      if (user.roles && user.roles.length > 0) {
         return user.roles[0].name;
       }
       return false;
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -424,10 +432,9 @@ export default {
       this.$store.dispatch("customerManagement/fetchItems");
     }
 
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
       console.error(err);
     });
-
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
@@ -437,7 +444,7 @@ export default {
 
     this.$store.unregisterModule("customerManagement");
     this.$store.unregisterModule("companyManagement");
-  },
+  }
 };
 </script>
 

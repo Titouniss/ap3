@@ -55,9 +55,9 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::post('updateAccount/{user}', 'API\UserController@updateAccount');
             Route::post('updatePassword/{user}', 'API\UserController@updatePassword');
             Route::post('updateWorkHours/{user}', 'API\UserController@updateWorkHours');
-            Route::put('restore/{id}', 'API\UserController@restore');
         });
         Route::group(['middleware' => ['can:delete users']], function () {
+            Route::put('restore/{id}', 'API\UserController@restore');
             Route::delete('destroy/{id}', 'API\UserController@destroy');
             Route::delete('forceDelete/{id}', 'API\UserController@forceDelete');
         });
@@ -139,6 +139,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::post('update/{id}', 'API\SkillController@update');
         });
         Route::group(['middleware' => ['can:delete skills']], function () {
+            Route::put('restore/{id}', 'API\SkillController@restore');
             Route::delete('destroy/{id}', 'API\SkillController@destroy');
             Route::delete('forceDelete/{id}', 'API\SkillController@forceDelete');
         });

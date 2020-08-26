@@ -220,14 +220,14 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
 
 export default {
   props: {
     project_data: {
-      required: true,
-    },
+      required: true
+    }
   },
   components: {
     AgGridVue,
@@ -239,7 +239,7 @@ export default {
     CellRendererLink,
     CellRendererActions,
     CellRendererRelations,
-    CellRendererStatus,
+    CellRendererStatus
   },
   data() {
     return {
@@ -251,48 +251,48 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune tâche à afficher" },
+        localeText: { noRowsToShow: "Aucune tâche à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
           headerName: "Nom",
           field: "name",
-          filter: true,
+          filter: true
         },
         {
           headerName: "Plannifié le",
           field: "date",
           filter: true,
-          cellRenderer: (data) => {
+          cellRenderer: data => {
             moment.locale("fr");
 
             return moment(data.value).format("DD MMMM YYYY, HH:mm");
-          },
+          }
         },
         {
           headerName: "Estimation",
           field: "estimated_time",
           filter: true,
-          cellRenderer: (data) => {
+          cellRenderer: data => {
             return data.value + "h";
-          },
+          }
         },
         {
           headerName: "Ilôt",
           field: "workarea",
           filter: true,
-          cellRendererFramework: "CellRendererRelations",
+          cellRendererFramework: "CellRendererRelations"
         },
         {
           headerName: "Avancement",
           field: "status",
           filter: true,
-          cellRendererFramework: "CellRendererStatus",
+          cellRendererFramework: "CellRendererStatus"
         },
         {
           sortable: false,
@@ -300,15 +300,22 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "task",
+            modelPlurial: "tasks",
+            name: data => `la tâche ${data.name}`,
+            usesSoftDelete: false,
+            withPrompt: true
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations,
-      },
+        CellRendererRelations
+      }
     };
   },
   computed: {
@@ -333,8 +340,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     updateSearchQuery(val) {
@@ -358,12 +365,12 @@ export default {
       this.$store
         .dispatch("taskManagement/editItem", item)
         .then(() => {})
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     confirmDeleteRecord(item) {
-      this.itemToDel = item
+      this.itemToDel = item;
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
@@ -371,7 +378,7 @@ export default {
         text: `Voulez vous vraiment supprimer la tâche "${item.name}"`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
@@ -380,19 +387,19 @@ export default {
         .then(() => {
           this.showDeleteSuccess();
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
 
-        this.itemToDel = null
+      this.itemToDel = null;
     },
     showDeleteSuccess() {
       this.$vs.notify({
         color: "success",
         title: "Tâche",
-        text: `${modelTitle} supprimé`,
+        text: `${modelTitle} supprimé`
       });
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -436,11 +443,11 @@ export default {
         "taskManagement/fetchItemsByBundle",
         this.project_data.tasks_bundles[0].id
       )
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
       });
 
-    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("userManagement/fetchItems").catch(err => {
       this.manageErrors(err);
     });
   },
@@ -452,7 +459,7 @@ export default {
 
     moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("userManagement");
-  },
+  }
 };
 </script>
 

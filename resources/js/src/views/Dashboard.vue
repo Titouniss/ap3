@@ -202,6 +202,7 @@
                                                         ? 'En retard'
                                                         : 'À terminer'
                                                 "
+                                                delay=".5s"
                                             >
                                                 <feather-icon
                                                     :icon="
@@ -236,9 +237,13 @@
                                                 vs-justify="flex-end"
                                                 vs-w="6"
                                             >
-                                                <small>{{
-                                                    displayDate(project.date)
-                                                }}</small>
+                                                <small>
+                                                    {{
+                                                        displayDate(
+                                                            project.date
+                                                        )
+                                                    }}
+                                                </small>
                                             </vs-col>
                                         </vs-row>
                                     </li>
@@ -264,11 +269,10 @@
                                 type="line"
                                 line-position="top"
                                 @click="showAllDeliveries = !showAllDeliveries"
-                                >Voir
-                                {{
-                                    showAllDeliveries ? "moins" : "plus"
-                                }}</vs-button
                             >
+                                Voir
+                                {{ showAllDeliveries ? "moins" : "plus" }}
+                            </vs-button>
                         </vs-col>
                     </vs-row>
                 </vx-card>
@@ -328,9 +332,9 @@
                                             <div
                                                 class="flex flex-col items-start"
                                             >
-                                                <span class="mb-1">{{
-                                                    project.name
-                                                }}</span>
+                                                <span class="mb-1">
+                                                    {{ project.name }}
+                                                </span>
                                                 <h4>
                                                     {{
                                                         projectCompletion(
@@ -373,11 +377,10 @@
                                 type="line"
                                 line-position="top"
                                 @click="showAllProjects = !showAllProjects"
-                                >Voir
-                                {{
-                                    showAllProjects ? "moins" : "plus"
-                                }}</vs-button
                             >
+                                Voir
+                                {{ showAllProjects ? "moins" : "plus" }}
+                            </vs-button>
                         </vs-col>
                     </vs-row>
                 </vx-card>
@@ -455,11 +458,13 @@
                                                     vs-justify="flex-end"
                                                     vs-w="6"
                                                 >
-                                                    <small>{{
-                                                        displayDateTime(
-                                                            comment.created_at
-                                                        )
-                                                    }}</small>
+                                                    <small>
+                                                        {{
+                                                            displayDateTime(
+                                                                comment.created_at
+                                                            )
+                                                        }}
+                                                    </small>
                                                 </vs-col>
                                             </vs-row>
                                             <vs-row
@@ -505,11 +510,10 @@
                                 type="line"
                                 line-position="top"
                                 @click="showAllComments = !showAllComments"
-                                >Voir
-                                {{
-                                    showAllComments ? "moins" : "plus"
-                                }}</vs-button
                             >
+                                Voir
+                                {{ showAllComments ? "moins" : "plus" }}
+                            </vs-button>
                         </vs-col>
                     </vs-row>
                 </vx-card>
@@ -625,7 +629,9 @@ export default {
                 .sort((a, b) => moment(b.date).unix() - moment(a.date).unix());
         },
         tasks() {
-            return this.$store.state.taskManagement.tasks;
+            return this.$store.state.taskManagement.tasks.filter(
+                task => task.user_id === this.$store.state.AppActiveUser.id
+            );
         },
         tasksToday() {
             return this.tasks.filter(task =>

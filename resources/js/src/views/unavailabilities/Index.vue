@@ -136,7 +136,7 @@ import moduleUnavailabilityManagement from "@/store/unavailability-management/mo
 import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement.js";
 
 // Cell Renderer
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import moment from "moment";
 
 var model = "unavailabilitie";
@@ -151,7 +151,7 @@ export default {
     EditForm,
 
     // Cell Renderer
-    CellRendererActions,
+    CellRendererActions
   },
   data() {
     return {
@@ -164,13 +164,13 @@ export default {
       gridApi: null,
       gridOptions: {
         localeText: {
-          noRowsToShow: "Aucune indisponibilité à afficher",
-        },
+          noRowsToShow: "Aucune indisponibilité à afficher"
+        }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -178,24 +178,24 @@ export default {
           maxWidth: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true,
+          headerCheckboxSelection: true
         },
         {
           headerName: "Début",
           field: "starts_at",
           filter: true,
-          valueFormatter: (param) => this.formatDateTime(param.value),
+          valueFormatter: param => this.formatDateTime(param.value)
         },
         {
           headerName: "Fin",
           field: "ends_at",
           filter: true,
-          valueFormatter: (param) => this.formatDateTime(param.value),
+          valueFormatter: param => this.formatDateTime(param.value)
         },
         {
           headerName: "Motif",
           field: "reason",
-          filter: true,
+          filter: true
         },
         {
           sortable: false,
@@ -203,13 +203,23 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "unavailability",
+            modelPlurial: "unavailabilities",
+            withPrompt: true,
+            name: data =>
+              `l'indisponibilité du ${moment(data.starts_at).format(
+                "DD/MM/YYYY [à] HH:mm"
+              )} au ${moment(data.ends_at).format("DD/MM/YYYY [à] HH:mm")}`,
+            usesSoftDelete: false
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererActions,
-      },
+        CellRendererActions
+      }
     };
   },
   computed: {
@@ -237,8 +247,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     formatDateTime(value) {
@@ -256,7 +266,7 @@ export default {
     getOvertimes() {
       this.$store
         .dispatch("dealingHoursManagement/getOvertimes")
-        .then((data) => {
+        .then(data => {
           if (data && data.status === 200) {
             this.overtimes = data.data.success.overtimes;
             this.usedOvertimes = data.data.success.usedOvertimes;
@@ -264,12 +274,12 @@ export default {
             this.$vs.notify({
               color: "error",
               title: "Erreur",
-              text: `Impossible d'afficher les heures supplémentaires`,
+              text: `Impossible d'afficher les heures supplémentaires`
             });
             this.overtimes = 0;
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
@@ -291,17 +301,17 @@ export default {
               )} au ${this.parseDateTime(singleUnavailabilities.ends_at)} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("unavailabilityManagement/removeItem", selectRow.id)
           .then(() => {
             this.showDeleteSuccess();
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -310,7 +320,7 @@ export default {
       this.$vs.notify({
         color: "success",
         title: modelTitle,
-        text: `${modelTitle} supprimée`,
+        text: `${modelTitle} supprimée`
       });
     },
     onResize(event) {
@@ -321,7 +331,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    },
+    }
   },
   mounted() {
     console.log(["here", this.overtimes]);
@@ -369,7 +379,7 @@ export default {
       );
       moduleDealingHoursManagement.isRegistered = true;
     }
-    this.$store.dispatch("unavailabilityManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("unavailabilityManagement/fetchItems").catch(err => {
       console.error(err);
     });
   },
@@ -380,6 +390,6 @@ export default {
     moduleDealingHoursManagement.isRegistered = false;
     this.$store.unregisterModule("unavailabilityManagement");
     this.$store.unregisterModule("dealingHoursManagement");
-  },
+  }
 };
 </script>

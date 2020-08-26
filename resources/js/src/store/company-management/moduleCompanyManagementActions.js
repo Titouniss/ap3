@@ -59,12 +59,15 @@ export default {
             axios
                 .put(`/api/company-management/restore/${id}`)
                 .then(response => {
-                    console.log(["response.data.success", response]);
-                    commit(
-                        "UPDATE_ITEM",
-                        Object.assign({}, response.data.success)
-                    );
-                    resolve(response);
+                    if (response.data.success) {
+                        commit(
+                            "UPDATE_ITEM",
+                            Object.assign({}, response.data.success)
+                        );
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
                 })
                 .catch(error => {
                     reject(error);
@@ -89,12 +92,15 @@ export default {
             axios
                 .delete(`/api/company-management/destroy/${id}`)
                 .then(response => {
-                    console.log(["remove response", response]);
-                    commit(
-                        "UPDATE_ITEM",
-                        Object.assign({}, response.data.success)
-                    );
-                    resolve(response);
+                    if (response.data.success) {
+                        commit(
+                            "UPDATE_ITEM",
+                            Object.assign({}, response.data.success)
+                        );
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
                 })
                 .catch(error => {
                     reject(error);
@@ -106,8 +112,13 @@ export default {
             axios
                 .delete(`/api/company-management/forceDelete/${id}`)
                 .then(response => {
-                    commit("REMOVE_ITEM", id);
-                    resolve(response);
+                    console.log(response);
+                    if (response.data.success) {
+                        commit("REMOVE_ITEM", id);
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
                 })
                 .catch(error => {
                     reject(error);
