@@ -161,6 +161,7 @@ export default {
                 .format("YYYY-MM-DD HH:mm:ss"),
               user_id: t.user_id,
               project_id: parseInt(this.$route.query.id, 10),
+              color: t.project.color,
             });
           });
         }
@@ -196,6 +197,7 @@ export default {
                   .format("YYYY-MM-DD HH:mm:ss"),
                 user_id: t.user_id,
                 project_id: project_id,
+                color: t.project.color,
               });
             }
           });
@@ -233,6 +235,7 @@ export default {
                   .format("YYYY-MM-DD HH:mm:ss"),
                 user_id: t.user_id,
                 project_id: project_id,
+                color: t.project.color,
               });
             }
           });
@@ -253,7 +256,12 @@ export default {
       );
     },
     tasksEvent() {
-      this.$store.state.taskManagement ? console.log(['this.$store.state.taskManagement.tasks', this.$store.state.taskManagement.tasks]) : console.log('nulll')
+      this.$store.state.taskManagement
+        ? console.log([
+            "this.$store.state.taskManagement.tasks",
+            this.$store.state.taskManagement.tasks,
+          ])
+        : console.log("nulll");
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
         : [];
@@ -489,9 +497,9 @@ export default {
     },
   },
   mounted() {
-    console.log('oui bonjour')
+    console.log("oui bonjour");
     if (this.$route.query.type === "projects") {
-      console.log('oui je passe dans projects')
+      console.log("oui je passe dans projects");
       let project = this.$store.state.projectManagement.projects.find(
         (p) => p.id === parseInt(this.$route.query.id, 10)
       );
