@@ -1,8 +1,11 @@
 <template>
   <div>
-    <router-link :to="'/hours'" class="btnBack flex cursor-pointer text-inherit hover:text-primary p-3 mb-3">
+    <router-link
+      :to="'/hours'"
+      class="btnBack flex cursor-pointer text-inherit hover:text-primary p-3 mb-3"
+    >
       <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
-      <span class="ml-2"> Retour aux heures </span>
+      <span class="ml-2">Retour aux heures</span>
     </router-link>
 
     <div class="vx-card p-6 mt-3 mb-5">
@@ -16,7 +19,7 @@
             label="name"
             v-model="filters.company"
             :options="companiesData"
-            v-bind:class="{ disabled: activeUserRole() != 'superAdmin' ? true : false}" 
+            v-bind:class="{ disabled: activeUserRole() != 'superAdmin' ? true : false}"
             @input="refreshDataUsers"
             class="w-full"
           >
@@ -30,11 +33,11 @@
             label="lastname"
             v-model="filters.user"
             :options="usersData"
-            v-bind:class="{ disabled: !filters.company || (activeUserRole() != 'superAdmin' && activeUserRole() != 'Administrateur') ? true : false}" 
+            v-bind:class="{ disabled: !filters.company || (activeUserRole() != 'superAdmin' && activeUserRole() != 'Administrateur') ? true : false}"
             @input="refreshDataCalendar"
             class="w-full"
           >
-          <!-- Finir le filtre -->
+            <!-- Finir le filtre -->
             <template #header>
               <div style="opacity: .8">Utilisateur</div>
             </template>
@@ -64,6 +67,7 @@
         ref="fullCalendar"
         defaultView="timeGridWeek"
         :editable="true"
+        :eventStartEditable="false"
         :droppable="false"
         :header="{
           left: 'prev today next',
@@ -91,7 +95,6 @@
       />
     </div>
   </div>
-  
 </template>
 
 <script>
@@ -124,18 +127,18 @@ var modelTitle = "Plannings";
 
 export default {
   components: {
-    FullCalendar, 
+    FullCalendar,
     vSelect,
     AddForm,
-    EditForm
+    EditForm,
   },
-  data: function() {
+  data: function () {
     return {
       calendarPlugins: [
         // plugins must be defined in the JS
         dayGridPlugin,
         timeGridPlugin,
-        interactionPlugin // needed for dateClick
+        interactionPlugin, // needed for dateClick
       ],
       activeAddPrompt: false,
       scheduleTitle: "",
@@ -145,15 +148,21 @@ export default {
       customButtons: {
         AddEventBtn: {
           text: "custom!",
-          click: function() {
+          click: function () {
             alert("clicked the custom button!");
-          }
-        }
+          },
+        },
       },
       // Filters
       filters: {
-        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null,
-        user: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser : null,
+        company:
+          this.activeUserRole() != "superAdmin"
+            ? this.$store.state.AppActiveUser.company
+            : null,
+        user:
+          this.activeUserRole() != "superAdmin"
+            ? this.$store.state.AppActiveUser
+            : null,
       },
     };
   },
@@ -162,13 +171,21 @@ export default {
       return this.$store.state.hoursManagement.hour.id || -1;
     },
     calendarEvents() {
-      return this.filters.user ? this.$store.state.hoursManagement.hoursCalendar.filter((item) => item.user_id === this.filters.user.id) : [];
+      return this.filters.user
+        ? this.$store.state.hoursManagement.hoursCalendar.filter(
+            (item) => item.user_id === this.filters.user.id
+          )
+        : [];
     },
     companiesData() {
       return this.$store.state.companyManagement.companies;
     },
     usersData() {
-      return this.filters.company ? this.$store.state.userManagement.users.filter((item) => item.company_id === this.filters.company.id) : [];
+      return this.filters.company
+        ? this.$store.state.userManagement.users.filter(
+            (item) => item.company_id === this.filters.company.id
+          )
+        : [];
     },
     authorizedToEdit() {
       return (
@@ -176,12 +193,13 @@ export default {
       );
     },
     hoursData() {
-      return this.$store.state.hoursManagement ? this.$store.state.hoursManagement.hours : null;
+      return this.$store.state.hoursManagement
+        ? this.$store.state.hoursManagement.hours
+        : null;
     },
   },
   methods: {
-    refresh() {
-    },
+    refresh() {},
     toggleWeekends() {
       this.calendarWeekends = !this.calendarWeekends; // update a property
     },
@@ -194,26 +212,25 @@ export default {
       this.dateData = arg;
     },
     handleEventClick(arg) {
-      
       var targetEvent = this.calendarEvents.find(
-        event => event.id.toString() === arg.event.id
+        (event) => event.id.toString() === arg.event.id
       );
 
       this.$store
         .dispatch("hoursManagement/editItem", targetEvent)
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
     handleClose() {
-      this.calendarEvents = []
+      this.calendarEvents = [];
       let test = this.calendarEvents;
 
       //this.refresh();
       (this.activeAddPrompt = false), (this.dateData = {});
     },
     refreshDataUsers() {
-      this.filters.user = null
+      this.filters.user = null;
     },
     refreshDataCalendar() {
       const filter = {};
@@ -226,17 +243,14 @@ export default {
     },
     activeUserRole() {
       const user = this.$store.state.AppActiveUser;
-      if ( user.roles && user.roles.length > 0 ) {
+      if (user.roles && user.roles.length > 0) {
         return user.roles[0].name;
       }
       return false;
     },
   },
-  mounted() {
-
-  },
+  mounted() {},
   created() {
-
     if (!moduleHourManagement.isRegistered) {
       this.$store.registerModule("hoursManagement", moduleHourManagement);
       moduleHourManagement.isRegistered = true;
@@ -255,7 +269,7 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    this.$store.dispatch("hoursManagement/fetchItems").catch(err => {
+    this.$store.dispatch("hoursManagement/fetchItems").catch((err) => {
       this.manageErrors(err);
     });
 
@@ -267,8 +281,7 @@ export default {
       console.error(err);
     });
 
-    this.$store.dispatch("projectManagement/fetchItems");   
-    
+    this.$store.dispatch("projectManagement/fetchItems");
   },
   beforeDestroy() {
     moduleHourManagement.isRegistered = false;
@@ -326,10 +339,10 @@ export default {
 }
 
 .disabled {
-  pointer-events:none;
+  pointer-events: none;
   cursor: not-allowed;
   color: #bfcbd9;
-  border-color: #d1dbe5;   
+  border-color: #d1dbe5;
   opacity: 0.7;
 }
 .disabled:hover {

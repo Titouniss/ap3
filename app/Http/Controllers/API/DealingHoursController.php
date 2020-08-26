@@ -19,7 +19,7 @@ class DealingHoursController extends Controller
 {
     use SoftDeletes;
     
-    public $successStatus = 200;
+    public static $successStatus = 200;
     /**
      * Display a listing of the resource.
      *
@@ -43,7 +43,7 @@ class DealingHoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getOvertimes() {
+    public static function getOvertimes($check = false) {
         $user = Auth::user();
 
         // Check if overtimes
@@ -77,8 +77,11 @@ class DealingHoursController extends Controller
                 "usedOvertimes" => $nbUsedOvertimes
             );
         }
-
-        return response()->json(['success' => $result], $this->successStatus);
+        if($check === true) {
+            return $result;
+        } else {
+            return response()->json(['success' => $result], self::$successStatus);
+        }
     }
 
     /**

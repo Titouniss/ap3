@@ -264,6 +264,7 @@ export default {
       return date + " à " + hour;
     },
     getOvertimes() {
+      this.$vs.loading();
       this.$store
         .dispatch("dealingHoursManagement/getOvertimes")
         .then(data => {
@@ -281,7 +282,8 @@ export default {
         })
         .catch(err => {
           console.error(err);
-        });
+        })
+        .finally(() => this.$vs.loading.close());
     },
     confirmDeleteRecord() {
       let selectedRow = this.gridApi.getSelectedRows();
@@ -334,7 +336,6 @@ export default {
     }
   },
   mounted() {
-    console.log(["here", this.overtimes]);
     this.getOvertimes();
 
     this.gridApi = this.gridOptions.api;

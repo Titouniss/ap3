@@ -454,6 +454,7 @@ export default {
       return this.$store.state.userManagement.users;
     },
     hoursData() {
+      console.log(["hours", this.$store.state.hoursManagement.hours]);
       return this.$store.state.hoursManagement.hours;
     },
     paginationPageSize() {
@@ -525,10 +526,10 @@ export default {
       this.refreshData();
     },
     onFilterDateChange(selectedDates, dateStr, instance) {
-      this.filters.date = selectedDates[0];
-      this.refreshData();
+      //this.filters.date = selectedDates[0];
+      this.refreshData(selectedDates[0]);
     },
-    refreshData() {
+    refreshData(targetDate = this.filters.date) {
       const filter = {};
       if (this.filters.project) {
         filter.project_id = this.filters.project.id;
@@ -536,12 +537,13 @@ export default {
       if (this.isAdmin() && this.filters.user) {
         filter.user_id = this.filters.user.id;
       }
-      if (this.filters.date) {
-        filter.date = moment(this.filters.date).format("DD-MM-YYYY");
+      if (targetDate) {
+        filter.date = moment(targetDate).format("DD-MM-YYYY");
         if (this.isPeriodFilter()) {
           filter.period_type = this.filters.period_type;
         }
       }
+      console.log(["this.filters", this.filters]);
       this.clearRefreshDataTimeout();
       this.refreshDataTimeout = setTimeout(() => {
         this.$vs.loading();
