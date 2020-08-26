@@ -11,11 +11,10 @@ class Skill extends Model
 
     public $timestamps = false;
 
-    protected $fillable = [ 'name', 'company_id'];
+    protected $fillable = ['name', 'company_id'];
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id');
+        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
     }
-
 }

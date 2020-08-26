@@ -204,7 +204,7 @@ class ProjectController extends Controller
                 throw new Exception('Impossible de restaurer le projet');
             }
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -226,7 +226,7 @@ class ProjectController extends Controller
 
             return response()->json(['success' => $item->load('company')], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -248,7 +248,7 @@ class ProjectController extends Controller
 
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 

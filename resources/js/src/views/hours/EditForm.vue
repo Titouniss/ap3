@@ -116,7 +116,6 @@
               name="description"
               v-validate="'max:1500'"
             />
-
           </div>
         </div>
       </form>
@@ -140,7 +139,6 @@ Validator.localize("fr", errorMessage);
 var model = "tâche";
 var modelPlurial = "tâches";
 
-
 import moment from "moment";
 import vSelect from "vue-select";
 
@@ -158,7 +156,7 @@ export default {
     itemId: {
       type: Number,
       required: true
-    },
+    }
   },
   data() {
     return {
@@ -180,7 +178,7 @@ export default {
         disableMobile: "true",
         enableTime: true,
         locale: FrenchLocale,
-         noCalendar: true,
+        noCalendar: true,
         dateFormat: "H:i",
         altFormat: "H:i",
         altInput: true
@@ -190,7 +188,6 @@ export default {
   computed: {
     activePrompt: {
       get() {
-
         if (this.itemId && this.itemId > -1) {
           this.itemLocal = Object.assign(
             {},
@@ -226,7 +223,7 @@ export default {
     },
     usersData() {
       return this.$store.state.userManagement.users;
-    },
+    }
   },
   methods: {
     init() {
@@ -236,7 +233,6 @@ export default {
       );
     },
     submitHour() {
-
       var itemToSave = {};
 
       //Parse new item to update task
@@ -247,34 +243,34 @@ export default {
         user_id: this.itemLocal.user_id,
         project_id: this.itemLocal.project_id,
         start_at: this.itemLocal.date + " " + this.itemLocal.startHour,
-        end_at: this.itemLocal.date + " " + this.itemLocal.endHour,
+        end_at: this.itemLocal.date + " " + this.itemLocal.endHour
       };
 
-      this.$store.dispatch("hoursManagement/updateItem", itemToSave)
-      .then((response) => {
-        if(response.data.success){
-          this.$vs.loading.close();
+      this.$store
+        .dispatch("hoursManagement/updateItem", itemToSave)
+        .then(response => {
+          if (response.data.success) {
+            this.$vs.loading.close();
             this.$vs.notify({
-            title: "Modification d'un horaire",
-            text: `Horaire modifié avec succès`,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "success"
-          });
-        }
-        else{
+              title: "Modification d'un horaire",
+              text: `Horaire modifié avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success"
+            });
+          } else {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Une erreur est survenue",
+              text: response.data.error,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger"
+            });
+          }
+        })
+        .catch(err => {
           this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Une erreur est survenue",
-            text: response.data.error,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "danger"
-          });
-        }
-      })
-      .catch(err => {
-        this.$vs.loading.close();
           this.$vs.notify({
             title: "Une erreur est survenue",
             text: err.message,
@@ -282,18 +278,21 @@ export default {
             icon: "icon-alert-circle",
             color: "danger"
           });
-      });
+        });
 
       this.$store.dispatch("hoursManagement/editItem", {});
     },
     confirmDeleteHour(idHour) {
-
       this.deleteWarning = true;
       this.$vs.dialog({
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
-        text: `Vous allez supprimer la saisie horaire "${this.itemLocal.date + ' ' + this.itemLocal.startHour + ' -> ' + this.itemLocal.endHour  }"`,
+        text: `Vous allez supprimer la saisie horaire "${this.itemLocal.date +
+          " " +
+          this.itemLocal.startHour +
+          " -> " +
+          this.itemLocal.endHour}"`,
         accept: this.deleteHour,
         cancel: this.keepHour,
         acceptText: "Supprimer",
@@ -306,32 +305,32 @@ export default {
     deleteHour() {
       this.deleteWarning = false;
       this.$store
-        .dispatch("hoursManagement/removeRecord", this.itemLocal.id)
+        .dispatch("hoursManagement/removeItem", this.itemLocal.id)
         .then(() => {
           this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Suppression d'un horaire",
-                text: `Horaire supprimé avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
-              });
+          this.$vs.notify({
+            title: "Suppression d'un horaire",
+            text: `Horaire supprimé avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success"
+          });
         })
         .catch(err => {
           this.$vs.loading.close();
-            this.$vs.notify({
-              title: "Une erreur est survenue",
-              text: err.message,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger"
-            });
+          this.$vs.notify({
+            title: "Une erreur est survenue",
+            text: err.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger"
+          });
         });
 
       this.init();
       this.$store.dispatch("hoursManagement/editItem", {});
     }
   },
-  mounted() {},
+  mounted() {}
 };
 </script>

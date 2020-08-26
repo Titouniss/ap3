@@ -197,9 +197,9 @@ class UserController extends Controller
         if ($user == null) {
             return response()->json(['error' => $validator->errors()], 401);
         }
-        $role = Role::where('name', 'Utilisateur');
+        $role = Role::where('name', 'Administrateur');
         if ($role != null) {
-            $user->assignRole('Utilisateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create(['name' => $input['company_name'], 'is_trial' => true, 'expires_at' => (new Carbon())->addWeeks(4)]);
         $user->company()->associate($company);
@@ -267,7 +267,7 @@ class UserController extends Controller
         if ($user->hasRole('superAdmin')) {
             $usersList = User::withTrashed()->get()->load('roles', 'company:id,name', 'skills');
         } else if ($user->company_id != null) {
-            $usersList = User::where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');
+            $usersList = User::withTrashed()->where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');
         }
         return response()->json(['success' => $usersList], $this->successStatus);
     }

@@ -269,7 +269,7 @@ import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // Cell Renderer
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
 import moment from "moment";
@@ -287,7 +287,7 @@ export default {
     flatPickr,
     // Cell Renderer
     CellRendererActions,
-    CellRendererRelations,
+    CellRendererRelations
   },
   data() {
     return {
@@ -295,12 +295,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune heure à afficher" },
+        localeText: { noRowsToShow: "Aucune heure à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -308,28 +308,28 @@ export default {
           width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
-          headerCheckboxSelection: true,
+          headerCheckboxSelection: true
         },
         {
           headerName: "Date",
           field: "date",
-          cellRenderer: (data) => {
+          cellRenderer: data => {
             moment.locale("fr");
             return moment(data.data.start_at).format("D MMMM YYYY");
-          },
+          }
         },
         {
           headerName: "Durée",
-          field: "duration",
+          field: "duration"
         },
         {
           headerName: "Description",
-          field: "description",
+          field: "description"
         },
         {
           headerName: "Projet",
           field: "project",
-          cellRendererFramework: "CellRendererRelations",
+          cellRendererFramework: "CellRendererRelations"
         },
         {
           sortable: false,
@@ -337,13 +337,27 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "hours",
+            modelPlurial: "hours",
+            usesSoftDelete: false,
+            canEdit: () => false,
+            name: data =>
+              data.duration == "01:00:00"
+                ? `l'heure du ${data.start_at.split(" ")[0]} pour le projet ${
+                    data.project
+                  }`
+                : `les ${data.duration.split(":")[0]} heures du ${
+                    data.start_at.split(" ")[0]
+                  } pour le projet ${data.project.name}`
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererActions,
-        CellRendererRelations,
+        CellRendererRelations
       },
 
       // Excel
@@ -353,7 +367,7 @@ export default {
         "Projet",
         "Date",
         "Durée",
-        "Description",
+        "Description"
       ],
       headerVal: ["id", "user", "project", "date", "duration", "description"],
 
@@ -362,40 +376,40 @@ export default {
         project: null,
         user: null,
         date: moment(),
-        period_type: "month",
+        period_type: "month"
       },
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
         date: {
           name: "Date",
           symbol: "d",
-          format: "D MMMM YYYY",
+          format: "D MMMM YYYY"
         },
         day: {
           name: "Jour",
           symbol: "d",
-          format: "D MMMM YYYY",
+          format: "D MMMM YYYY"
         },
         week: {
           name: "Semaine",
           symbol: "w",
-          format: "[Semaine] w, YYYY",
+          format: "[Semaine] w, YYYY"
         },
         month: {
           name: "Mois",
           symbol: "M",
-          format: "MMMM YYYY",
+          format: "MMMM YYYY"
         },
         year: {
           name: "Année",
           symbol: "y",
-          format: "YYYY",
+          format: "YYYY"
         },
         full: {
           name: "Total",
           symbol: null,
-          format: null,
-        },
+          format: null
+        }
       },
       currentWeek: "",
       configDatePicker: () => ({
@@ -403,12 +417,12 @@ export default {
         enableTime: false,
         locale: FrenchLocale,
         altFormat: "j F Y",
-        altInput: true,
+        altInput: true
       }),
       refreshDataTimeout: null,
 
       // Stats
-      stats: { total: 0 },
+      stats: { total: 0 }
     };
   },
   computed: {
@@ -458,8 +472,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     authorizedTo(action, model = "hours") {
@@ -493,7 +507,7 @@ export default {
         user.roles &&
         user.roles.length > 0 &&
         user.roles.find(
-          (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+          r => r.name === "superAdmin" || r.name === "littleAdmin"
         )
       ) {
         return true;
@@ -536,16 +550,16 @@ export default {
         // refresh Hours
         this.$store
           .dispatch("hoursManagement/fetchItems", filter)
-          .then((response) => {
+          .then(response => {
             this.stats = response.data.stats;
           })
-          .catch((error) => {
+          .catch(error => {
             this.$vs.notify({
               title: "Erreur",
               text: error.message,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger",
+              color: "danger"
             });
           })
           .finally(() => this.$vs.loading.close());
@@ -570,7 +584,7 @@ export default {
       // Reset Filter Options
       this.hoursFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all",
+        value: "all"
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -600,17 +614,17 @@ export default {
               } ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
-          .dispatch("hoursManagement/removeRecord", selectRow.id)
-          .then((data) => {
+          .dispatch("hoursManagement/removeItem", selectRow.id)
+          .then(data => {
             this.showDeleteSuccess();
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -622,7 +636,7 @@ export default {
         text:
           this.gridApi.getSelectedRows().length > 1
             ? `Heures supprimés`
-            : `Heure supprimé`,
+            : `Heure supprimé`
       });
     },
     onResize(event) {
@@ -641,20 +655,20 @@ export default {
       this.$router.push(`/${modelPlurial}/${model}-view/`).catch(() => {});
     },
     onExport() {
-      import("@/vendor/Export2Excel").then((excel) => {
+      import("@/vendor/Export2Excel").then(excel => {
         const data = this.formatJson(this.headerVal, this.hoursData);
         excel.export_json_to_excel({
           header: this.headerTitle,
           data,
           filename: moment().format("YYYY-MM-DD HH:mm") + "_Heures_effectuées",
           autoWidth: true,
-          bookType: "xlsx",
+          bookType: "xlsx"
         });
       });
     },
     formatJson(filterVal, jsonData) {
-      return jsonData.map((v) =>
-        filterVal.map((j) => {
+      return jsonData.map(v =>
+        filterVal.map(j => {
           let value;
           switch (j) {
             case "user":
@@ -670,7 +684,7 @@ export default {
           return value;
         })
       );
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -711,9 +725,9 @@ export default {
     this.$store
       .dispatch("hoursManagement/fetchItems", {
         date: moment().format("DD-MM-YYYY"),
-        period_type: "month",
+        period_type: "month"
       })
-      .then((response) => (this.stats = response.data.stats));
+      .then(response => (this.stats = response.data.stats));
     this.$store.dispatch("projectManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
       this.$store.dispatch("userManagement/fetchItems");
@@ -729,6 +743,6 @@ export default {
     this.$store.unregisterModule("hoursManagement");
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("userManagement");
-  },
+  }
 };
 </script>
