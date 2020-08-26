@@ -13,6 +13,7 @@ export default {
             description: item.description,
             user_id: item.user_id,
             project_id: item.project_id,
+            color: item.project.color,
         };
         state.hoursCalendar.unshift(itemForCalendar)
     },
@@ -33,6 +34,7 @@ export default {
                     description: t.description,
                     user_id: t.user_id,
                     project_id: t.project_id,
+                    color: t.project.color,
                 });
             });
         }
@@ -52,6 +54,7 @@ export default {
             description: item.description,
             user_id: item.user_id,
             project_id: item.project_id,
+            color: item.project.color,
         }
 
         Object.assign(state.hoursCalendar[index2], itemCalendar)
