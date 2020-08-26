@@ -63,8 +63,8 @@
               </div>
               <div class="my-4" v-if="itemLocal.company != null">
                 <v-select
-                  label="lastname"
                   v-model="itemLocal.customer"
+                  label="name"
                   :options="customersDataFiltered"
                   :multiple="false"
                   class="w-full"
@@ -226,6 +226,11 @@ export default {
       this.customersDataFiltered = this.filterItemsAdmin(
         this.$store.state.customerManagement.customers
       );
+
+      // Parse label
+      this.customersDataFiltered.map(function (c) {
+        return (c.name = c.professional === 1 ? c.name : c.lastname);
+      });
     },
   },
   mounted() {},

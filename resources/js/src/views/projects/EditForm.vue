@@ -31,18 +31,18 @@
                   <span class="font-medium text-lg leading-none">Admin</span>
                 </div>
                 <vs-divider />
-                  <v-select
-                    label="name"
-                    @input="updateCustomersList"
-                    v-validate="'required'"
-                    v-model="itemLocal.company"
-                    :options="companiesData"
-                    class="w-full"
-                  >
-                    <template #header>
-                      <div class="vs-select--label">Société</div>
-                    </template>
-                  </v-select>
+                <v-select
+                  label="name"
+                  @input="updateCustomersList"
+                  v-validate="'required'"
+                  v-model="itemLocal.company"
+                  :options="companiesData"
+                  class="w-full"
+                >
+                  <template #header>
+                    <div class="vs-select--label">Société</div>
+                  </template>
+                </v-select>
                 <vs-divider />
               </div>
             </div>
@@ -78,6 +78,9 @@
                 <template #header>
                   <div class="vs-select--label">Client</div>
                 </template>
+                <template #option="customer">
+                  <span>{{ customer.professional === 1 ? customer.name : customer.lastname}}</span>
+                </template>
               </v-select>
             </div>
           </div>
@@ -95,20 +98,19 @@ import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import vSelect from "vue-select";
 
-
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
   components: {
     vSelect,
-    Datepicker
+    Datepicker,
   },
   props: {
     itemId: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
@@ -126,7 +128,7 @@ export default {
         user.roles &&
         user.roles.length > 0 &&
         user.roles.find(
-          r => r.name === "superAdmin" || r.name === "littleAdmin"
+          (r) => r.name === "superAdmin" || r.name === "littleAdmin"
         )
       ) {
         return true;
@@ -141,10 +143,10 @@ export default {
         this.$store
           .dispatch("projectManagement/editItem", {})
           .then(() => {})
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
-      }
+      },
     },
     companiesData() {
       return this.$store.state.companyManagement.companies;
@@ -153,9 +155,16 @@ export default {
       return this.$store.state.roleManagement.permissions;
     },
     customersData() {
-      let customers = this.filterItemsAdmin(this.$store.state.customerManagement.customers);
-      this.customersDataFiltered = customers
-      return customers
+      let customers = this.filterItemsAdmin(
+        this.$store.state.customerManagement.customers
+      );
+      this.customersDataFiltered = customers;
+      // Parse Label
+      this.customersDataFiltered.map(function (c) {
+        return (c.name = c.professional === 1 ? c.name : c.lastname);
+      });
+      console.log(["customers", customers]);
+      return customers;
     },
     validateForm() {
       return (
@@ -163,7 +172,7 @@ export default {
         this.itemLocal.name != "" &&
         this.itemLocal.company != null
       );
-    }
+    },
   },
   methods: {
     init() {
@@ -173,11 +182,10 @@ export default {
       );
     },
     submitItem() {
-      this.$validator.validateAll().then(result => {
-
+      this.$validator.validateAll().then((result) => {
         this.itemLocal.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
-        this.itemLocal.company_id = this.itemLocal.company.id
-        this.itemLocal.customer_id = this.itemLocal.customer.id
+        this.itemLocal.company_id = this.itemLocal.company.id;
+        this.itemLocal.customer_id = this.itemLocal.customer.id;
 
         this.$store
           .dispatch("projectManagement/updateItem", this.itemLocal)
@@ -188,20 +196,20 @@ export default {
               text: `"${this.itemLocal.name}" modifiée avec succès`,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "success"
+              color: "success",
             });
           })
-          .catch(error => {
+          .catch((error) => {
             this.$vs.loading.close();
             this.$vs.notify({
               title: "Error",
               text: error.message,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger"
+              color: "danger",
             });
           });
-      })
+      });
     },
     filterItemsAdmin(items) {
       let filteredItems = [];
@@ -209,11 +217,11 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           filteredItems = items.filter(
-            item => item.company_id === this.itemLocal.company.id
+            (item) => item.company_id === this.itemLocal.company.id
           );
         } else {
           filteredItems = items;
@@ -222,8 +230,15 @@ export default {
       return filteredItems;
     },
     updateCustomersList() {
-      this.itemLocal.customer = null 
-      this.customersDataFiltered = this.filterItemsAdmin(this.$store.state.customerManagement.customers)
+      this.itemLocal.customer = null;
+      this.customersDataFiltered = this.filterItemsAdmin(
+        this.$store.state.customerManagement.customers
+      );
+
+      // Parse label
+      this.customersDataFiltered.map(function (c) {
+        return (c.name = c.professional === 1 ? c.name : c.lastname);
+      });
     },
   },
 };
