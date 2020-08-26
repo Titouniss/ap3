@@ -1,5 +1,5 @@
 export default {
-    ADD_ITEM(state, item) {    
+    ADD_ITEM(state, item) {
 
         state.hours.unshift(item)
 
@@ -23,11 +23,11 @@ export default {
         state.hours = hours
 
         let hoursForCalendar = []
-        if(hours) {
+        if (hours) {
             hours.forEach(t => {
                 hoursForCalendar.push({
                     id: t.id,
-                    title: t.project.name.toUpperCase() + ' - ' + t.description,
+                    title: t.description !== null ? t.project.name.toUpperCase() + ' - ' + t.description : t.project.name.toUpperCase(),
                     start: t.start_at,
                     end: t.end_at,
                     description: t.description,
@@ -46,7 +46,7 @@ export default {
         const index2 = state.hoursCalendar.findIndex((r) => r.id === item.id)
         let itemCalendar = {
             id: item.id,
-            title: item.project.name.toUpperCase() + ' - ' + item.description,
+            title: item.description !== null ? item.project.name.toUpperCase() + ' - ' + item.description : item.project.name.toUpperCase(),
             start: item.start_at,
             end: item.end_at,
             description: item.description,
