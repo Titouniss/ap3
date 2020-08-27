@@ -131,8 +131,14 @@ export default {
         name: "",
         date: new Date(),
         customer: null,
-        company_id: null,
-        company: null,
+        company:
+          this.activeUserRole() != "superAdmin"
+            ? this.$store.state.AppActiveUser.company.id
+            : null,
+        company:
+          this.activeUserRole() != "superAdmin"
+            ? this.$store.state.AppActiveUser.company
+            : null,
         color: "",
       },
       colors: project_colors,
@@ -255,6 +261,13 @@ export default {
       this.customersDataFiltered.map(function (c) {
         return (c.name = c.professional === 1 ? c.name : c.lastname);
       });
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles[0].name;
+      }
+      return false;
     },
   },
   mounted() {},
