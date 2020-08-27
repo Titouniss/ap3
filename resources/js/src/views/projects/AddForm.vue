@@ -40,8 +40,9 @@
               </div>
               <vs-input
                 v-validate="'required|max:255'"
+                label="Nom du projet"
                 name="name"
-                class="w-full mb-4 mt-5"
+                class="w-full mb-4"
                 placeholder="Nom"
                 v-model="itemLocal.name"
                 :color="!errors.has('name') ? 'success' : 'danger'"
@@ -50,10 +51,20 @@
                 class="text-danger text-sm"
                 v-show="errors.has('name')"
               >{{ errors.first('name') }}</span>
-              <div class="my-4">
-                <small class="date-label">Couleur</small>
-                <v-swatches v-model="itemLocal.color" :swatches="colors" swatch-size="40"></v-swatches>
-              </div>
+              <vs-col>
+                <vs-row>
+                  <small class="vs-row date-label">Couleur</small>
+                </vs-row>
+
+                <vs-row class="pb-2 pl-2">
+                  <v-swatches
+                    clas="vs-row"
+                    v-model="itemLocal.color"
+                    :swatches="colors"
+                    swatch-size="40"
+                  ></v-swatches>
+                </vs-row>
+              </vs-col>
               <div class="my-4">
                 <small class="date-label">Date de livraison prévue</small>
                 <datepicker
