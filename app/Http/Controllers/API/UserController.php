@@ -54,6 +54,7 @@ class UserController extends Controller
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
             }
             $token =  $user->createToken('ProjetX');
+            $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
             $user->load(['roles' => function ($query) {
@@ -190,8 +191,6 @@ class UserController extends Controller
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
-
-
         $input['password'] = bcrypt($input['password']);
         $user = User::create($input);
         if ($user == null) {
@@ -206,6 +205,7 @@ class UserController extends Controller
         $user->save();
         $user->sendEmailVerificationNotification();
         $token =  $user->createToken('ProjetX');
+        $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
         return response()->json(['success' => $success, 'userData' => $user, 'company' => $company], $this->successStatus);
@@ -249,6 +249,7 @@ class UserController extends Controller
 
         // generate access token
         $token =  $user->createToken('ProjetX');
+        $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
 
