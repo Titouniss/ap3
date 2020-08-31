@@ -16,8 +16,7 @@ class CreateBaseModulesTable extends Migration
         Schema::create('base_modules', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
-            $table->unsignedBigInteger('modulable_id');
-            $table->enum('modulable_type', ['api', 'sql']);
+            $table->morphs('modulable');
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies');
             $table->timestamp('last_synced_at');

@@ -13,8 +13,8 @@ class DataType extends Model
         return app($value);
     }
 
-    public function DataRows()
+    public function dataRows()
     {
-        return $this->hasMany('App\Models\DataRow');
+        return $this->hasMany(DataRow::class);
     }
 }

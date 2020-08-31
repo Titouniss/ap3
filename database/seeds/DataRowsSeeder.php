@@ -72,7 +72,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
 
@@ -135,7 +135,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
 
@@ -185,7 +185,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
 
@@ -224,7 +224,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
 
@@ -263,7 +263,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
 
@@ -333,7 +333,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
 
@@ -388,7 +388,7 @@ class DataRowsSeeder extends Seeder
             $row->fill([
                 'type'         => 'datetime',
                 'display_name' => 'Dernière modification',
-                'required'     => 1,
+                'required'     => 0,
             ])->save();
         }
     }

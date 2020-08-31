@@ -8,6 +8,6 @@ class ApiModule extends BaseModule
 
     public function module()
     {
-        return $this->morphOne('BaseModule', 'modulable');
+        return $this->morphOne(BaseModule::class, 'modulable');
     }
 }

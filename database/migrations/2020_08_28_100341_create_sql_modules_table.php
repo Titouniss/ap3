@@ -17,6 +17,7 @@ class CreateSqlModulesTable extends Migration
             $table->bigIncrements('id');
             $table->enum('sql_type', ['mysql', 'sqlite', 'pgsql', 'sqlsrv']);
             $table->string('host');
+            $table->string('port');
             $table->string('database');
             $table->string('user');
             $table->string('password');
