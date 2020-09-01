@@ -15,7 +15,7 @@ class CreateApiModulesTable extends Migration
     {
         Schema::create('api_modules', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('url');
+            $table->string('url')->nullable();
             $table->string('auth_headers')->nullable();
         });
     }

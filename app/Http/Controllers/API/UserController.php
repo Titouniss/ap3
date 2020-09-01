@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Notifications\UserRegistration;
 use App\Rules\StrongPassword;
 
 use Illuminate\Http\Request;
@@ -17,7 +16,6 @@ use Illuminate\Support\Str;
 
 
 use Validator;
-use Mail;
 
 use App\User;
 use App\Models\Company;
@@ -25,9 +23,6 @@ use App\Models\WorkHours;
 use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 
 class UserController extends Controller
 {

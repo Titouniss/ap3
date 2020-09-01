@@ -15,12 +15,12 @@ class CreateSqlModulesTable extends Migration
     {
         Schema::create('sql_modules', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->enum('sql_type', ['mysql', 'sqlite', 'pgsql', 'sqlsrv']);
-            $table->string('host');
-            $table->string('port');
-            $table->string('database');
-            $table->string('user');
-            $table->string('password');
+            $table->enum('sql_type', ['mysql', 'sqlite', 'pgsql', 'sqlsrv'])->nullable();
+            $table->string('host')->nullable();
+            $table->string('port')->nullable();
+            $table->string('database')->nullable();
+            $table->string('username')->nullable();
+            $table->string('password')->nullable();
         });
     }
 

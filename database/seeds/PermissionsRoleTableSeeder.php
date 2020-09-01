@@ -34,7 +34,8 @@ class PermissionsRoleTableSeeder extends Seeder
             ['unavailabilities', 'indiponibilités', true],
             ['schedules', 'planning', true],
             ['dealingHours', 'gestion des heures', true],
-            ['customers', 'clients', true]
+            ['customers', 'clients', true],
+            ['modules', 'modules', false],
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
@@ -67,7 +68,7 @@ class PermissionsRoleTableSeeder extends Seeder
 
         $role = Role::where(['name' => 'Administrateur'])->first();
         $role->givePermissionTo(Permission::all()->filter(function ($perm) {
-            return $perm->name_fr != 'permissions' && $perm->name_fr != 'companies';
+            return $perm->name_fr != 'permissions' && $perm->name_fr != 'companies' && $perm->name_fr != 'modules';
         }));
         $role->givePermissionTo('read permissions');
 

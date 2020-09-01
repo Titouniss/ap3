@@ -19,7 +19,7 @@ class CreateBaseModulesTable extends Migration
             $table->morphs('modulable');
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies');
-            $table->timestamp('last_synced_at');
+            $table->dateTime('last_synced_at')->nullable();
             $table->timestamps();
         });
     }
