@@ -77,6 +77,6 @@ export default [
         url: "/modules",
         name: "Modules",
         slug: "modules",
-        icon: "HardDriveIcon"
+        icon: "PackageIcon"
     }
 ];

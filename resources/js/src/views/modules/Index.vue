@@ -347,7 +347,7 @@ export default {
 
         moduleModuleManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
-        this.$store.unregisterModule("projectManagement");
+        this.$store.unregisterModule("moduleManagement");
         this.$store.unregisterModule("companyManagement");
     }
 };

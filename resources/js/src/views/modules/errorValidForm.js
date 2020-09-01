@@ -1,10 +1,10 @@
-const errorMessage = {
-    custom: {
-        name: {
-            required: "Le nom du module est requis",
-            max: "Le nom du module ne doit pas dépasser 255 caractère"
-        }
-    }
+import fr from "vee-validate/dist/locale/fr";
+fr.attributes = {
+    ...fr.attributes,
+    host: "hôte",
+    database: "base de données",
+    username: "utilisateur",
+    authHeaders: "entêtes d'authentification"
 };
 
-export default errorMessage;
+export default fr;
