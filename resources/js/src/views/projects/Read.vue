@@ -38,7 +38,7 @@
                 <td class="font-semibold">Date de livraison prévu :</td>
                 <td>{{ project_data.date }}</td>
               </tr>
-              <tr v-if="authorizedTo('read', 'ranges')">
+              <tr v-if="authorizedTo('read', 'ranges') && project_data.status == 'todo'">
                 <td
                   class="font-semibold"
                   style="padding-bottom: 0; vertical-align: inherit;"
@@ -144,7 +144,7 @@ export default {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
         .then(data => {
-          console.log(data.data)
+
           if(data.data.success){
             this.$vs.notify({
               title: "Planification",

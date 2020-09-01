@@ -5,11 +5,15 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\Hour;
 use App\Models\TasksBundle;
 use App\Models\Project;
 use App\Models\TaskComment;
 use App\Models\PreviousTask;
 use App\Models\TasksSkill;
+use Carbon\Carbon;
+use Carbon\CarbonInterval;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
@@ -129,6 +133,32 @@ class TaskController extends Controller
         $user = Auth::user();
         $arrayRequest['created_by'] = $user->id;
         $arrayRequest['tasks_bundle_id'] = $taskBundle->id;
+
+        $project = Project::find($arrayRequest['project_id']);
+
+        if($project->status == 'doing'){
+
+            $date = Carbon::parse($arrayRequest['date']);
+            $start_at = $date->format('Y-m-d H:i:s');
+            $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
+
+            $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at);
+            $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at);
+
+            if(!$userAvailable && !$workareaAvailable){
+                return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);
+            }
+            elseif(!$userAvailable){
+                return response()->json(['error' => 'L\'utilisateur n\'est pas disponible durant cette période.'], $this->successStatus);
+            }
+            elseif(!$workareaAvailable){
+                return response()->json(['error' => 'L\'ilôt n\'est pas disponible durant cette période.'], $this->successStatus);
+            }
+        }
+        else if($project->status == 'done'){
+            return response()->json(['error' => 'Vous ne pouvez ajouter une tâche à un projet terminé.'], $this->successStatus);
+        }
+
         $item = Task::create($arrayRequest);
         $this->storeComment($item->id, $arrayRequest['comment']);
         $this->storeSkills($item->id, $arrayRequest['skills']);
@@ -151,6 +181,56 @@ class TaskController extends Controller
         $item = Task::find($id)->load('comments');
 
         return response()->json(['success' => $item], $this->successStatus);
+    }
+
+    private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null){
+
+        $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
+
+        $userTasks = $task_id ? Task::where('user_id', $user_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get() 
+                                : Task::where('user_id', $user_id)->where('status', '!=', 'done')->get() ;
+
+        if(count($userTasks) > 0){
+
+            foreach($userTasks as $task){
+                $date = Carbon::parse($task->date);
+                $task->start_at = $date->format('Y-m-d H:i:s');
+                $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
+
+                $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
+
+                if($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)){
+                    return false;
+                }
+                else {return true;}
+            }
+        }
+        else{return true;}
+    }
+
+    private function checkIfWorkareaAvailable($workarea_id, $start_at, $end_at, $task_id = null){
+
+        $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
+
+        $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=',$task_id)->get() 
+                                  : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
+
+        if(count($workareaTasks) > 0){
+
+            foreach($workareaTasks as $task){
+                $date = Carbon::parse($task->date);
+                $task->start_at = $date->format('Y-m-d H:i:s');
+                $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
+                
+                $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
+
+                if($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)){
+                    return false;
+                }
+                else {return true;}
+            }
+        }
+        else{return true;}
     }
 
     /**
@@ -213,6 +293,33 @@ class TaskController extends Controller
             'estimated_time' => 'required',
         ]);
 
+        // Pour un projet en cours, on regarde si la date et l'ilot sont dispo 
+        $project = Project::find($arrayRequest['project_id']);
+
+        if($project->status == 'doing'){
+
+            $date = Carbon::parse($arrayRequest['date']);
+            $start_at = $date->format('Y-m-d H:i:s');
+            $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
+
+            $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $id);
+            $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $id);
+
+            if(!$userAvailable && !$workareaAvailable){
+                return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);
+            }
+            elseif(!$userAvailable){
+                return response()->json(['error' => 'L\'utilisateur n\'est pas disponible durant cette période.'], $this->successStatus);
+            }
+            elseif(!$workareaAvailable){
+                return response()->json(['error' => 'L\'ilôt n\'est pas disponible durant cette période.'], $this->successStatus);
+            }
+        }
+        else if($project->status == 'done'){
+            return response()->json(['error' => 'Vous ne pouvez ajouter une tâche à un projet terminé.'], $this->successStatus);
+        }
+
+
         $update = Task::where('id', $id)
             ->update([
                 'name' => $arrayRequest['name'],
@@ -234,7 +341,7 @@ class TaskController extends Controller
 
         if ($update) {
             $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
-            return response()->json(['item' => $item], $this->successStatus);
+            return response()->json(['success' => $item], $this->successStatus);
         } else {
             $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
             return response()->json(['error' => 'error'], $this->errorStatus);

@@ -14,7 +14,9 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post("/api/task-management/store", item)
         .then((response) => {
-          commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id }))
+          if(response.data.success){
+            commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id }))
+          }
           resolve(response)
         })
         .catch((error) => { reject(error) })
@@ -46,15 +48,15 @@ export default {
     return
   },
   updateItem({ commit }, item) {
-    console.log(["item 1", item]);
-
     return new Promise((resolve, reject) => {
       axios.post(`/api/task-management/update/${item.id}`, item)
-        .then((response) => {
-          commit('UPDATE_ITEM', response.data.item)
-          resolve(response)
-        })
-        .catch((error) => { reject(error) })
+      .then((response) => {
+        if(response.data.success){
+          commit('UPDATE_ITEM', response.data.success)
+        }
+        resolve(response)
+      })
+      .catch((error) => { reject(error) })
     })
   },
   fetchItems({ commit }) {
