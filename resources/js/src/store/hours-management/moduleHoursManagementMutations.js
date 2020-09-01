@@ -1,5 +1,5 @@
 export default {
-    ADD_ITEM(state, item) {    
+    ADD_ITEM(state, item) {
 
         state.hours.unshift(item)
 
@@ -13,6 +13,7 @@ export default {
             description: item.description,
             user_id: item.user_id,
             project_id: item.project_id,
+            color: item.project.color,
         };
         state.hoursCalendar.unshift(itemForCalendar)
     },
@@ -23,16 +24,17 @@ export default {
         state.hours = hours
 
         let hoursForCalendar = []
-        if(hours) {
+        if (hours) {
             hours.forEach(t => {
                 hoursForCalendar.push({
                     id: t.id,
-                    title: t.project.name.toUpperCase() + ' - ' + t.description,
+                    title: t.description !== null ? t.project.name.toUpperCase() + ' - ' + t.description : t.project.name.toUpperCase(),
                     start: t.start_at,
                     end: t.end_at,
                     description: t.description,
                     user_id: t.user_id,
                     project_id: t.project_id,
+                    color: t.project.color,
                 });
             });
         }
@@ -46,12 +48,13 @@ export default {
         const index2 = state.hoursCalendar.findIndex((r) => r.id === item.id)
         let itemCalendar = {
             id: item.id,
-            title: item.project.name.toUpperCase() + ' - ' + item.description,
+            title: item.description !== null ? item.project.name.toUpperCase() + ' - ' + item.description : item.project.name.toUpperCase(),
             start: item.start_at,
             end: item.end_at,
             description: item.description,
             user_id: item.user_id,
             project_id: item.project_id,
+            color: item.project.color,
         }
 
         Object.assign(state.hoursCalendar[index2], itemCalendar)

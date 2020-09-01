@@ -7,7 +7,7 @@
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
-import axios from '@/axios.js'
+import axios from "@/axios.js";
 
 export default {
   addItem({ commit }, item) {

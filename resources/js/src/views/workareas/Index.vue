@@ -141,7 +141,7 @@ import EditForm from "./EditForm.vue";
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkills.vue";
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 var modelTitle = "Ilot";
 
@@ -157,7 +157,7 @@ export default {
     CellRendererLink,
     CellRendererActions,
     CellRendererRelations,
-    CellRendererRelationSkills,
+    CellRendererRelationSkills
   },
   data() {
     return {
@@ -166,12 +166,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun îlot à afficher" },
+        localeText: { noRowsToShow: "Aucun îlot à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -180,23 +180,23 @@ export default {
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
           headerCheckboxSelection: true,
-          resizable: true,
+          resizable: true
         },
         {
           headerName: "Nom",
           field: "name",
-          filter: true,
+          filter: true
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          cellRendererFramework: "CellRendererRelations",
+          cellRendererFramework: "CellRendererRelations"
         },
         {
           headerName: "Compétences",
           field: "skills",
-          cellRendererFramework: "CellRendererRelationSkills",
+          cellRendererFramework: "CellRendererRelationSkills"
         },
         {
           sortable: false,
@@ -204,7 +204,13 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "workarea",
+            modelPlurial: "workareas",
+            withPrompt: true,
+            name: data => `l'îlot ${data.name}`
+          }
+        }
       ],
 
       // Cell Renderer Components
@@ -212,8 +218,8 @@ export default {
         CellRendererLink,
         CellRendererActions,
         CellRendererRelations,
-        CellRendererRelationSkills,
-      },
+        CellRendererRelationSkills
+      }
     };
   },
   watch: {},
@@ -239,8 +245,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     updateSearchQuery(val) {
@@ -268,22 +274,22 @@ export default {
             : `Voulez vous vraiment archiver l'îlot ${singleWorkarea.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
       console.log("DELETE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("workareaManagement/forceRemoveItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -294,15 +300,15 @@ export default {
     archiveRecord() {
       console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("workareaManagement/removeItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -324,7 +330,7 @@ export default {
             ? `Îlot supprimé`
             : selectedRowLength > 1
             ? `Îlots archivés`
-            : `Îlot archivé`,
+            : `Îlot archivé`
       });
     },
     onResize(event) {
@@ -335,7 +341,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -381,13 +387,13 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
       console.error(err);
     });
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
       console.error(err);
     });
-    this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
       console.error(err);
     });
   },
@@ -400,7 +406,7 @@ export default {
     this.$store.unregisterModule("workareaManagement");
     this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("companyManagement");
-  },
+  }
 };
 </script>
 

@@ -136,7 +136,7 @@ import moduleCustomerManagement from "@/store/customer-management/moduleCustomer
 
 // Cell Renderer
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 
 var modelTitle = "Projet";
@@ -151,7 +151,7 @@ export default {
     // Cell Renderer
     CellRendererActions,
     CellRendererLink,
-    CellRendererRelations,
+    CellRendererRelations
   },
   data() {
     return {
@@ -160,45 +160,45 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun projet à afficher" },
+        localeText: { noRowsToShow: "Aucun projet à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
           width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: true,
-          headerCheckboxSelection: true,
+          headerCheckboxSelection: true
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          cellRendererFramework: "CellRendererLink",
+          cellRendererFramework: "CellRendererLink"
         },
         {
           headerName: "Date de création",
           field: "created_at",
           filter: true,
-          cellRenderer: (data) => {
+          cellRenderer: data => {
             moment.locale("fr");
             return moment(data.value).format("DD MMMM YYYY");
-          },
+          }
         },
         {
           headerName: "Avancement",
           field: "status",
-          filter: true,
+          filter: true
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          cellRendererFramework: "CellRendererRelations",
+          cellRendererFramework: "CellRendererRelations"
         },
         {
           sortable: false,
@@ -206,15 +206,22 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "project",
+            modelPlurial: "projects",
+            name: data => `le projet ${data.name}`,
+            withPrompt: true,
+            linkedTables: ["tâches"]
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations,
-      },
+        CellRendererRelations
+      }
     };
   },
   computed: {
@@ -239,8 +246,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     updateSearchQuery(val) {
@@ -265,21 +272,21 @@ export default {
             : `Voulez vous vraiment archiver le projet ${singleProject.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("projectManagement/forceRemoveItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -289,15 +296,15 @@ export default {
     },
     archiveRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("projectManagement/removeItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -316,7 +323,7 @@ export default {
             ? `Projet supprimé`
             : selectedRowLength > 1
             ? `Projets archivés`
-            : `Projet archivé`,
+            : `Projet archivé`
       });
     },
     onResize(event) {
@@ -330,13 +337,13 @@ export default {
     },
     sortProjects(projects) {
       let todoProjects = projects
-        .filter((project) => project.status == "todo")
+        .filter(project => project.status == "todo")
         .reverse();
       let doingProjects = projects
-        .filter((project) => project.status == "doing")
+        .filter(project => project.status == "doing")
         .reverse();
       let doneProjects = projects
-        .filter((project) => project.status == "done")
+        .filter(project => project.status == "done")
         .reverse();
 
       let response = [];
@@ -345,7 +352,7 @@ export default {
       response = response.concat(doneProjects);
 
       return response;
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -395,19 +402,19 @@ export default {
       );
       moduleCustomerManagement.isRegistered = true;
     }
-    this.$store.dispatch("projectManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("projectManagement/fetchItems").catch(err => {
       console.error(err);
     });
-    this.$store.dispatch("customerManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("customerManagement/fetchItems").catch(err => {
       console.error(err);
     });
     if (this.$store.getters.userHasPermissionTo(`read companies`)) {
-      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
         console.error(err);
       });
     }
     if (this.$store.getters.userHasPermissionTo(`read ranges`)) {
-      this.$store.dispatch("rangeManagement/fetchItems").catch((err) => {
+      this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
         console.error(err);
       });
     }
@@ -423,7 +430,7 @@ export default {
     this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("rangeManagement");
     this.$store.unregisterModule("customerManagement");
-  },
+  }
 };
 </script>
 

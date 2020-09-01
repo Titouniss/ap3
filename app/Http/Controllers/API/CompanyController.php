@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use App\Models\WorkareasSkill;
 use Carbon\Carbon;
 use Exception;
 use Validator;
@@ -132,10 +133,10 @@ class CompanyController extends Controller
             if ($success) {
                 return response()->json(['success' => $item], $this->successStatus);
             } else {
-                throw new Exception('Impossible de restaurer le projet');
+                throw new Exception('Impossible de restaurer la société');
             }
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -152,12 +153,12 @@ class CompanyController extends Controller
             $success = $item->deleteCascade();
 
             if (!$success) {
-                throw new Exception('Impossible d\'archiver le projet');
+                throw new Exception('Impossible d\'archiver la société');
             }
 
             return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -169,15 +170,21 @@ class CompanyController extends Controller
      */
     public function forceDelete($id)
     {
-        $item = Company::findOrFail($id);
-        $item->delete();
-
         $controllerLog = new Logger('company');
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('company', ['forceDelete']);
 
-        $item = Company::withTrashed()->findOrFail($id);
-        $item->forceDelete();
-        return '';
+        try {
+            $item = Company::withTrashed()->findOrFail($id);
+            $success = $item->forceDelete();
+
+            if (!$success) {
+                throw new Exception('Impossible de supprimer la société');
+            }
+
+            return response()->json(['success' => true], $this->successStatus);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        }
     }
 }

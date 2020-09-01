@@ -16,7 +16,7 @@ use Monolog\Handler\StreamHandler;
 class WorkareaController extends Controller
 {
     use SoftDeletes;
-    
+
     public $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -30,9 +30,9 @@ class WorkareaController extends Controller
         if ($user->hasRole('superAdmin')) {
             $items = Workarea::withTrashed()->get()->load('company', 'skills');
         } else if ($user->company_id != null) {
-            $items = Workarea::where('company_id',$user->company_id)->get()->load('company')->load('skills');
+            $items = Workarea::where('company_id', $user->company_id)->get()->load('company')->load('skills');
         }
-        return response()->json(['success' => $items], $this->successStatus);  
+        return response()->json(['success' => $items], $this->successStatus);
     }
 
     /**
@@ -43,8 +43,8 @@ class WorkareaController extends Controller
      */
     public function show($id)
     {
-        $item = Workarea::where('id',$id)->first()->load('skills', 'company');
-        return response()->json(['success' => $item], $this->successStatus); 
+        $item = Workarea::where('id', $id)->first()->load('skills', 'company');
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -56,21 +56,21 @@ class WorkareaController extends Controller
     public function store(Request $request)
     {
         $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [ 
+        $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'company_id' => 'required'
         ]);
-        if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Workarea::create($arrayRequest)->load('company');
-        if(!empty($arrayRequest['skills'])){
-            foreach($arrayRequest['skills'] as $skill_id){
+        if (!empty($arrayRequest['skills'])) {
+            foreach ($arrayRequest['skills'] as $skill_id) {
                 WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
             }
         }
-        
-        return response()->json(['success' => $item], $this->successStatus); 
+
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -94,26 +94,26 @@ class WorkareaController extends Controller
     public function update(Request $request, $id)
     {
         $arrayRequest = $request->all();
-        
-        $validator = Validator::make($arrayRequest, [ 
+
+        $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'company_id' => 'required'
         ]);
         $item = Workarea::find($id);
-        if($item != null){
+        if ($item != null) {
             $item->name = $arrayRequest['name'];
             $item->company_id = $arrayRequest['company_id'];
 
             WorkareasSkill::where('workarea_id', $item->id)->delete();
-            if(!empty($arrayRequest['skills'])){
-                foreach($arrayRequest['skills'] as $skill_id){
+            if (!empty($arrayRequest['skills'])) {
+                foreach ($arrayRequest['skills'] as $skill_id) {
                     WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
                 }
             }
             $item->save();
         }
-        $item = Workarea::find($id)->load('skills', 'company'); 
-        return response()->json(['success' => $item], $this->successStatus); 
+        $item = Workarea::find($id)->load('skills', 'company');
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**
@@ -121,12 +121,12 @@ class WorkareaController extends Controller
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
-    */
+     */
     public function restore($id)
     {
         $item = Workarea::withTrashed()->findOrFail($id)->restore();
-        if($item) {
-            $item = Workarea::where('id',$id)->first()->load('skills', 'company');
+        if ($item) {
+            $item = Workarea::where('id', $id)->first()->load('skills', 'company');
             return response()->json(['success' => $item], $this->successStatus);
         }
     }
@@ -154,11 +154,8 @@ class WorkareaController extends Controller
      */
     public function forceDelete($id)
     {
-        $item = Workarea::findOrFail($id);
-        $item->delete();
-
         $item = Workarea::withTrashed()->findOrFail($id);
         $item->forceDelete();
-        return '';
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

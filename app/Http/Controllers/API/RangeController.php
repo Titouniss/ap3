@@ -127,7 +127,7 @@ class RangeController extends Controller
 
             return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -149,7 +149,7 @@ class RangeController extends Controller
 
             return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -171,7 +171,7 @@ class RangeController extends Controller
 
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 

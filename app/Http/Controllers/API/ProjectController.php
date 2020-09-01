@@ -174,7 +174,8 @@ class ProjectController extends Controller
                 'name' => $arrayRequest['name'],
                 'date' => $arrayRequest['date'],
                 'company_id' => $arrayRequest['company_id'],
-                'customer_id' => $arrayRequest['customer_id']
+                'customer_id' => $arrayRequest['customer_id'],
+                'color' => $arrayRequest['color']
             ]);
 
         if ($update) {
@@ -203,7 +204,7 @@ class ProjectController extends Controller
                 throw new Exception('Impossible de restaurer le projet');
             }
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -225,7 +226,7 @@ class ProjectController extends Controller
 
             return response()->json(['success' => $item->load('company')], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -247,7 +248,7 @@ class ProjectController extends Controller
 
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 404);
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
     }
 

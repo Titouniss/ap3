@@ -35,13 +35,14 @@
                       <div class="vs-select--label">Société</div>
                     </template>
                   </v-select>
-                   <vs-divider />
+                  <vs-divider />
                 </div>
               </div>
               <vs-input
                 v-validate="'required|max:255'"
+                label="Nom du projet"
                 name="name"
-                class="w-full mb-4 mt-5"
+                class="w-full mb-4"
                 placeholder="Nom"
                 v-model="itemLocal.name"
                 :color="!errors.has('name') ? 'success' : 'danger'"
@@ -50,6 +51,20 @@
                 class="text-danger text-sm"
                 v-show="errors.has('name')"
               >{{ errors.first('name') }}</span>
+              <vs-col>
+                <vs-row>
+                  <small class="vs-row date-label">Couleur</small>
+                </vs-row>
+
+                <vs-row class="pb-2 pl-2">
+                  <v-swatches
+                    clas="vs-row"
+                    v-model="itemLocal.color"
+                    :swatches="colors"
+                    swatch-size="40"
+                  ></v-swatches>
+                </vs-row>
+              </vs-col>
               <div class="my-4">
                 <small class="date-label">Date de livraison prévue</small>
                 <datepicker
@@ -63,13 +78,17 @@
               </div>
               <div class="my-4" v-if="itemLocal.company != null">
                 <v-select
-                  label="name"
                   v-model="itemLocal.customer"
+                  label="name"
                   :options="customersDataFiltered"
+                  :multiple="false"
                   class="w-full"
                 >
                   <template #header>
                     <div class="vs-select--label">Client</div>
+                  </template>
+                  <template #option="customer">
+                    <span>{{ customer.professional === 1 ? customer.name : customer.lastname}}</span>
                   </template>
                 </v-select>
               </div>
@@ -89,6 +108,10 @@ import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import vSelect from "vue-select";
 
+import VSwatches from "vue-swatches";
+import "vue-swatches/dist/vue-swatches.css";
+
+import { project_colors } from "../../../themeConfig";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -96,7 +119,8 @@ Validator.localize("fr", errorMessage);
 export default {
   components: {
     vSelect,
-    Datepicker
+    Datepicker,
+    VSwatches,
   },
   data() {
     return {
@@ -107,11 +131,19 @@ export default {
         name: "",
         date: new Date(),
         customer: null,
-        company_id: null,
-        company: null
+        company:
+          this.activeUserRole() != "superAdmin"
+            ? this.$store.state.AppActiveUser.company.id
+            : null,
+        company:
+          this.activeUserRole() != "superAdmin"
+            ? this.$store.state.AppActiveUser.company
+            : null,
+        color: "",
       },
+      colors: project_colors,
 
-      customersDataFiltered: null
+      customersDataFiltered: null,
     };
   },
   computed: {
@@ -126,16 +158,18 @@ export default {
       return this.$store.state.companyManagement.companies;
     },
     customersData() {
-      let customers = this.filterItemsAdmin(this.$store.state.customerManagement.customers);
-      this.customersDataFiltered = customers
-      return customers
+      let customers = this.filterItemsAdmin(
+        this.$store.state.customerManagement.customers
+      );
+      this.customersDataFiltered = customers;
+      return customers;
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           return false;
@@ -144,7 +178,7 @@ export default {
           return true;
         }
       } else return true;
-    }
+    },
   },
   methods: {
     clearFields() {
@@ -153,19 +187,23 @@ export default {
         date: new Date(),
         customer: null,
         company_id: null,
-        company: null
+        company: null,
+        color: "",
       };
 
-      this.customersDataFiltered = null
+      this.customersDataFiltered = null;
     },
     addProject() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         this.itemLocal.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
-        this.itemLocal.company ? this.itemLocal.company_id = this.itemLocal.company.id : null
-        this.itemLocal.customer ? this.itemLocal.customer_id = this.itemLocal.customer.id : null
-        
-        if (result) {
+        this.itemLocal.company
+          ? (this.itemLocal.company_id = this.itemLocal.company.id)
+          : null;
+        this.itemLocal.customer
+          ? (this.itemLocal.customer_id = this.itemLocal.customer.id)
+          : null;
 
+        if (result) {
           this.$store
             .dispatch(
               "projectManagement/addItem",
@@ -179,34 +217,33 @@ export default {
                 text: `"${response.data.success.name}" ajouté avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "success"
+                color: "success",
               });
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
               });
             });
         }
       });
     },
     filterItemsAdmin(items) {
-      
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           filteredItems = items.filter(
-            item => item.company_id === this.itemLocal.company.id
+            (item) => item.company_id === this.itemLocal.company.id
           );
         } else {
           filteredItems = items;
@@ -215,9 +252,24 @@ export default {
       return filteredItems;
     },
     updateCustomersList() {
-      this.itemLocal.customer = null 
-      this.customersDataFiltered = this.filterItemsAdmin(this.$store.state.customerManagement.customers)
+      this.itemLocal.customer = null;
+      this.customersDataFiltered = this.filterItemsAdmin(
+        this.$store.state.customerManagement.customers
+      );
+
+      // Parse label
+      this.customersDataFiltered.map(function (c) {
+        return (c.name = c.professional === 1 ? c.name : c.lastname);
+      });
     },
-  }
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
+  },
+  mounted() {},
 };
 </script>

@@ -93,6 +93,7 @@
         "js-cookie": "^2.2.1",
         "moment": "^2.24.0",
         "vue-flatpickr-component": "^8.1.5",
+        "vue-swatches": "^2.1.0",
         "vuex-persistedstate": "^2.7.1"
     }
 }

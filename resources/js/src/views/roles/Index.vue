@@ -95,6 +95,7 @@
         :paginationPageSize="paginationPageSize"
         :suppressPaginationPanel="true"
         :enableRtl="$vs.rtl"
+        :isRowSelectable="row => !isRowDisabled(row.data)"
       ></ag-grid-vue>
 
       <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -108,10 +109,11 @@ import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
 
 // Store Module
-import moduleManagement from "@/store/role-management/moduleRoleManagement.js";
+import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 
 // Cell Renderer
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 var model = "role";
 var modelPlurial = "roles";
@@ -122,7 +124,7 @@ export default {
     AgGridVue,
     vSelect,
     // Cell Renderer
-    CellRendererActions,
+    CellRendererActions
   },
   data() {
     return {
@@ -130,12 +132,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun rôle à afficher" },
+        localeText: { noRowsToShow: "Aucun rôle à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -145,15 +147,15 @@ export default {
           suppressSizeToFit: true,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
-          headerCheckboxSelection: true,
+          headerCheckboxSelection: true
         },
         {
           headerName: "Titre",
-          field: "name",
+          field: "name"
         },
         {
           headerName: "Description",
-          field: "description",
+          field: "description"
         },
         {
           sortable: false,
@@ -161,13 +163,23 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "role",
+            modelPlurial: "roles",
+            name: data => `le rôle ${data.name}`,
+            usesSoftDelete: false,
+            disabled: this.isRowDisabled,
+            blockDelete: data => this.blockRowDelete(data),
+            blockDeleteMessage: data =>
+              `Impossible de supprimer le rôle ${data.name}, il est utilisé par un ou plusieurs utilisateurs`
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererActions,
-      },
+        CellRendererActions
+      }
     };
   },
   computed: {
@@ -201,10 +213,29 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
+    blockRowDelete(data) {
+      return this.$store.state.userManagement.users.find(user =>
+        user.roles.find(r => r.id === data.id)
+      );
+    },
+    isRowDisabled(data) {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (user.roles.find(r => r.name === "superAdmin")) {
+          return (
+            ["superAdmin", "Administrateur", "Utilisateur"].includes(
+              data.name
+            ) || data.isPublic
+          );
+        } else {
+          return data.company_id === null && data.isPublic;
+        }
+      } else return true;
+    },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
       let modelObj = null;
@@ -224,7 +255,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all",
+        value: "all"
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -246,18 +277,18 @@ export default {
             : `Voulez vous vraiment supprimer le rôle ${singleRole.name} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
-          .dispatch("roleManagement/removeRecord", selectRow.id)
-          .then((data) => {
+          .dispatch("roleManagement/removeItem", selectRow.id)
+          .then(data => {
             console.log(["data_1", data]);
             this.showDeleteSuccess();
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -269,7 +300,7 @@ export default {
         text:
           this.gridApi.getSelectedRows().length > 1
             ? `Utilisateurs supprimés?`
-            : `Utilisateur supprimé`,
+            : `Utilisateur supprimé`
       });
     },
     onResize(event) {
@@ -283,7 +314,7 @@ export default {
     },
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -314,18 +345,27 @@ export default {
     }
   },
   created() {
-    if (!moduleManagement.isRegistered) {
-      this.$store.registerModule("roleManagement", moduleManagement);
-      moduleManagement.isRegistered = true;
+    if (!moduleRoleManagement.isRegistered) {
+      this.$store.registerModule("roleManagement", moduleRoleManagement);
+      moduleRoleManagement.isRegistered = true;
     }
-    this.$store.dispatch("roleManagement/fetchItems").catch((err) => {
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
+    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
+      console.error(err);
+    });
+    this.$store.dispatch("userManagement/fetchItems").catch(err => {
       console.error(err);
     });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
-    moduleManagement.isRegistered = false;
+    moduleRoleManagement.isRegistered = false;
+    moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("roleManagement");
-  },
+    this.$store.unregisterModule("userManagement");
+  }
 };
 </script>

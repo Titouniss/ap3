@@ -13,7 +13,7 @@ class Range extends Model
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id');
+        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
     }
 
     public function repetitive_tasks()

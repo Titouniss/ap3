@@ -262,6 +262,7 @@ export default {
           }
           item.skills = skill_ids;
           this.itemLocal = item;
+          this.itemLocal.roles = this.itemLocal.roles[0].id;
           console.log(this.itemLocal);
           if (item.company_id) {
             this.company_id_temps = item.company_id;
@@ -276,12 +277,11 @@ export default {
     },
     updateItem() {
       this.$vs.loading();
-      console.log(["itemLocal", this.itemLocal]);
 
       this.itemLocal.roles = [
         this.$store.getters["roleManagement/getItem"](this.itemLocal.roles),
       ];
-      console.log(["itemLocal", this.itemLocal]);
+
       this.$store
         .dispatch("userManagement/updateItem", this.itemLocal)
         .then(() => {

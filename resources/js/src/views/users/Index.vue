@@ -118,7 +118,7 @@ import moduleSkillManagement from "@/store/skill-management/moduleSkillManagemen
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 var model = "user";
 var modelPlurial = "users";
@@ -131,46 +131,54 @@ var columnDef = [
     checkboxSelection: true,
     headerCheckboxSelectionFilteredOnly: true,
     headerCheckboxSelection: true,
-    resizable: true,
+    resizable: true
   },
   {
     headerName: "Nom",
     field: "lastname",
     filter: true,
-    resizable: true,
+    resizable: true
   },
   {
     headerName: "Prénom",
     field: "firstname",
     filter: true,
-    resizable: true,
+    resizable: true
   },
   {
     headerName: "Email",
     field: "email",
     filter: true,
-    resizable: true,
+    resizable: true
   },
   {
     headerName: "Rôle",
     field: "roles",
     filter: true,
     cellRendererFramework: "CellRendererRelations",
-    resizable: true,
+    resizable: true
   },
   {
     headerName: "Société",
     field: "company",
     filter: true,
     cellRendererFramework: "CellRendererRelations",
-    resizable: true,
+    resizable: true
   },
   {
     headerName: "Actions",
     field: "transactions",
     type: "numericColumn",
     cellRendererFramework: "CellRendererActions",
-  },
+    cellRendererParams: {
+      model: "user",
+      modelPlurial: "users",
+      name: data => `l'utilisateur ${data.firstname} ${data.lastname}`,
+      disabled: data =>
+        data.roles && data.roles.find(r => r.name === "superAdmin"),
+      linkedTables: ["tâches"]
+    }
+  }
 ];
 
 export default {
@@ -180,7 +188,7 @@ export default {
     // Cell Renderer
     CellRendererLink,
     CellRendererRelations,
-    CellRendererActions,
+    CellRendererActions
   },
   data() {
     return {
@@ -189,12 +197,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun 'utilisateur à afficher" },
+        localeText: { noRowsToShow: "Aucun utilisateur à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: this.getColumnDef(),
 
@@ -202,8 +210,8 @@ export default {
       components: {
         CellRendererLink,
         CellRendererRelations,
-        CellRendererActions,
-      },
+        CellRendererActions
+      }
     };
   },
   watch: {
@@ -220,7 +228,7 @@ export default {
     },
     departmentFilter(obj) {
       this.setColumnFilter("department", obj.value);
-    },
+    }
   },
   computed: {
     itemIdToEdit() {
@@ -253,8 +261,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     authorizedTo(action, model = "users") {
@@ -263,7 +271,7 @@ export default {
     getColumnDef() {
       if (
         this.$store.state.AppActiveUser.roles.findIndex(
-          (r) => r.name === "superAdmin"
+          r => r.name === "superAdmin"
         ) > -1
       ) {
         return columnDef;
@@ -291,7 +299,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all",
+        value: "all"
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -314,17 +322,17 @@ export default {
               ${singleUser.firstname} ${singleUser.lastname} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("userManagement/forceRemoveItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             this.showDeleteSuccess();
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -336,7 +344,7 @@ export default {
         text:
           this.gridApi.getSelectedRows().length > 1
             ? `Utilisateurs supprimés?`
-            : `Utilisateur supprimé`,
+            : `Utilisateur supprimé`
       });
     },
     onResize(event) {
@@ -350,7 +358,7 @@ export default {
     },
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-    },
+    }
   },
   mounted() {
     const user = this.$store.state.AppActiveUser;
@@ -426,7 +434,7 @@ export default {
     this.$store.unregisterModule("userManagement");
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("companyManagement");
-  },
+  }
 };
 </script>
 

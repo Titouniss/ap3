@@ -130,7 +130,7 @@ import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.j
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 var modelTitle = "Compétence";
 
@@ -144,7 +144,7 @@ export default {
     // Cell Renderer
     CellRendererLink,
     CellRendererActions,
-    CellRendererRelations,
+    CellRendererRelations
   },
   data() {
     return {
@@ -153,12 +153,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune compétence à afficher" },
+        localeText: { noRowsToShow: "Aucune compétence à afficher" }
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -167,18 +167,18 @@ export default {
           width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
-          headerCheckboxSelection: true,
+          headerCheckboxSelection: true
         },
         {
           headerName: "Nom",
           field: "name",
-          filter: true,
+          filter: true
         },
         {
           headerName: "Société",
           field: "company",
           filter: true,
-          cellRendererFramework: "CellRendererRelations",
+          cellRendererFramework: "CellRendererRelations"
         },
         {
           sortable: false,
@@ -186,15 +186,22 @@ export default {
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "skill",
+            modelPlurial: "skills",
+            name: data => `la compétence ${data.name}`,
+            withPrompt: true,
+            linkedTables: ["tâches", "gammes"]
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations,
-      },
+        CellRendererRelations
+      }
     };
   },
   watch: {},
@@ -220,8 +227,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     authorizedTo(action, model = "skills") {
@@ -235,19 +242,19 @@ export default {
       let workareas = this.$store.state.workareaManagement.workareas;
 
       let selected_skills_id = [];
-      selectedRow.forEach((row) => {
+      selectedRow.forEach(row => {
         selected_skills_id.push(row.id);
       });
 
       // Check if the skills are in an workarea
       let haveSkill = [];
       if (workareas) {
-        workareas.forEach((w) => {
+        workareas.forEach(w => {
           if (w.skills) {
-            w.skills.forEach((ws) => {
+            w.skills.forEach(ws => {
               if (
-                selected_skills_id.find((ssi) => ssi === ws.id) &&
-                haveSkill.find((hs) => hs.id === w.id) === undefined
+                selected_skills_id.find(ssi => ssi === ws.id) &&
+                haveSkill.find(hs => hs.id === w.id) === undefined
               ) {
                 haveSkill.push({ id: w.id, name: w.name });
               }
@@ -259,7 +266,7 @@ export default {
       // Check if the skills are in an task
       this.$store
         .dispatch("taskManagement/fetchItemsBySkills", selected_skills_id)
-        .then((data) => {
+        .then(data => {
           if (data && data.data.success) {
             let tasks = data.data.success;
 
@@ -295,7 +302,7 @@ export default {
                 text: message,
                 accept: this.deleteRecord,
                 acceptText: "Supprimer",
-                cancelText: "Annuler",
+                cancelText: "Annuler"
               });
             } else {
               this.$vs.dialog({
@@ -308,27 +315,27 @@ export default {
                     : `Voulez vous vraiment supprimer la compétence ${selectedRow[0].name} ?`,
                 accept: this.deleteRecord,
                 acceptText: "Supprimer",
-                cancelText: "Annuler",
+                cancelText: "Annuler"
               });
             }
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
         });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("skillManagement/forceRemoveItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             console.log(["data", data]);
             if (selectedRowLength === 1) {
               this.showDeleteSuccess(selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -340,7 +347,7 @@ export default {
         text:
           selectedRowLength > 1
             ? `Compétences supprimées`
-            : `Compétence supprimée`,
+            : `Compétence supprimée`
       });
     },
     onResize(event) {
@@ -351,7 +358,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -402,18 +409,18 @@ export default {
       moduleTaskManagement.isRegistered = true;
     }
 
-    this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("skillManagement/fetchItems").catch(err => {
       console.error(err);
     });
     if (this.authorizedTo("read", "companies")) {
-      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+      this.$store.dispatch("companyManagement/fetchItems").catch(err => {
         console.error(err);
       });
     }
-    this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
       console.error(err);
     });
-    this.$store.dispatch("taskManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("taskManagement/fetchItems").catch(err => {
       console.error(err);
     });
   },
@@ -429,7 +436,7 @@ export default {
     this.$store.unregisterModule("companyManagement");
     this.$store.unregisterModule("workareaManagement");
     this.$store.unregisterModule("taskManagement");
-  },
+  }
 };
 </script>
 

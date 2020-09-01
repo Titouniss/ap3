@@ -132,7 +132,7 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
-import CellRendererActions from "./cell-renderer/CellRendererActions.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 var modelTitle = "Société";
 
@@ -145,7 +145,7 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
-    CellRendererActions,
+    CellRendererActions
   },
   data() {
     return {
@@ -154,11 +154,11 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune société à afficher" },
+        localeText: { noRowsToShow: "Aucune société à afficher" }
       },
       defaultColDef: {
         resizable: true,
-        suppressMenu: true,
+        suppressMenu: true
       },
       columnDefs: [
         {
@@ -166,33 +166,40 @@ export default {
           width: 40,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
-          headerCheckboxSelection: true,
+          headerCheckboxSelection: true
         },
         {
           headerName: "Nom",
           field: "name",
           filter: true,
-          sortable: true,
+          sortable: true
         },
         {
           headerName: "Siret",
           field: "siret",
           filter: true,
-          sortable: true,
+          sortable: true
         },
         {
           headerName: "Actions",
           field: "transactions",
           type: "numericColumn",
           cellRendererFramework: "CellRendererActions",
-        },
+          cellRendererParams: {
+            model: "company",
+            modelPlurial: "companies",
+            withPrompt: true,
+            name: data => `la société ${data.name}`,
+            linkedTables: ["utilisateurs", "projets", "tâches", "gammes"]
+          }
+        }
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
-        CellRendererActions,
-      },
+        CellRendererActions
+      }
     };
   },
   watch: {},
@@ -218,8 +225,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      },
-    },
+      }
+    }
   },
   methods: {
     updateSearchQuery(val) {
@@ -244,21 +251,21 @@ export default {
             : `Voulez vous vraiment archiver la société ${singleCompany.name} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",
-        cancelText: "Annuler",
+        cancelText: "Annuler"
       });
     },
     deleteRecord() {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
 
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("companyManagement/forceRemoveItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -269,15 +276,15 @@ export default {
     archiveRecord() {
       console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
-      this.gridApi.getSelectedRows().map((selectRow) => {
+      this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
           .dispatch("companyManagement/removeItem", selectRow.id)
-          .then((data) => {
+          .then(data => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
             }
           })
-          .catch((err) => {
+          .catch(err => {
             console.error(err);
           });
       });
@@ -299,7 +306,7 @@ export default {
             ? `Société supprimé`
             : selectedRowLength > 1
             ? `Sociétés archivés`
-            : `Société archivé`,
+            : `Société archivé`
       });
     },
     onResize(event) {
@@ -310,7 +317,7 @@ export default {
         // resize columns in the grid to fit the available space
         this.gridApi.sizeColumnsToFit();
       }
-    },
+    }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -345,7 +352,7 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("companyManagement/fetchItems").catch(err => {
       console.error(err);
     });
   },
@@ -354,7 +361,7 @@ export default {
 
     moduleCompanyManagement.isRegistered = false;
     this.$store.unregisterModule("companyManagement");
-  },
+  }
 };
 </script>
 
