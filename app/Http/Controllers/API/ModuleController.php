@@ -10,6 +10,9 @@ use App\Models\SqlModule;
 use Exception;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use PDO;
 
 class ModuleController extends Controller
 {
@@ -22,11 +25,6 @@ class ModuleController extends Controller
      */
     public function index()
     {
-        // $obx = SqlModule::find(1);
-        // Config::set('database.connections.' . $obx->module->name, $obx->connectionData());
-        // DB::purge($obx->module->name);
-        // return response()->json(['success' => DB::connection($obx->module->name)->table($obx->module->moduleDataTypes->find(1)->source)->get()], $this->successStatus);
-
         return response()->json(['success' => BaseModule::all()->load('company')], $this->successStatus);
     }
 
@@ -37,7 +35,40 @@ class ModuleController extends Controller
      */
     public function show(BaseModule $item)
     {
-        return response()->json(['success' => $item->load('company')], $this->successStatus);
+        if ($item) {
+            $modulable = $item->modulable;
+            $connection = [];
+            if (get_class($modulable) === SqlModule::class) {
+                $connection = [
+                    'id' => $modulable->id,
+                    'driver' => $modulable->driver ?? "",
+                    'host' => $modulable->host ?? "",
+                    'port' => $modulable->port ?? "",
+                    'database' => $modulable->database ?? "",
+                    'username' => $modulable->username ?? "",
+                    'has_password' => $modulable->password !== null,
+                ];
+            } else {
+                $connection = [
+                    'id' => $modulable->id,
+                    'url' => $modulable->url ?? "",
+                    'auth_headers' => $modulable->auth_headers ?? "",
+                ];
+            }
+            $module = [
+                'base' => [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'type' => $item->type,
+                    'company' => $item->company,
+                    'dataTypes' => $item->moduleDataTypes
+                ],
+                'connection' => $connection
+            ];
+            return response()->json(['success' => $module], $this->successStatus);
+        } else {
+            return response()->json(['error' => "Not found"], 404);
+        }
     }
 
     /** 
@@ -59,25 +90,25 @@ class ModuleController extends Controller
         if (!Company::where('id', $arrayRequest['company_id'])->exists()) {
             return response()->json(['error' => 'Société inconnue'], 400);
         }
-        $module = null;
+        $modulable = null;
         switch ($arrayRequest['type']) {
             case 'sql':
-                $module = SqlModule::create([]);
+                $modulable = SqlModule::create([]);
                 break;
             case 'api':
-                $module = ApiModule::create([]);
+                $modulable = ApiModule::create([]);
                 break;
 
             default:
                 return response()->json(['error' => "Type inconnu"], 400);
         }
-        $baseModule = BaseModule::create([
+        $module = BaseModule::create([
             'name' => $arrayRequest['name'],
             'company_id' => $arrayRequest['company_id'],
-            'modulable_id' => $module->id,
-            'modulable_type' => get_class($module),
+            'modulable_id' => $modulable->id,
+            'modulable_type' => get_class($modulable),
         ]);
-        return response()->json(['success' => $baseModule->load('company')], $this->successStatus);
+        return response()->json(['success' => $module->load('company')], $this->successStatus);
     }
 
     /** 
@@ -101,13 +132,13 @@ class ModuleController extends Controller
             return response()->json(['error' => 'Société inconnue'], 400);
         }
         if ($item->type !== $arrayRequest['type']) {
-            $module = null;
+            $modulable = null;
             switch ($arrayRequest['type']) {
                 case 'sql':
-                    $module = SqlModule::create([]);
+                    $modulable = SqlModule::create([]);
                     break;
                 case 'api':
-                    $module = ApiModule::create([]);
+                    $modulable = ApiModule::create([]);
                     break;
 
                 default:
@@ -115,8 +146,8 @@ class ModuleController extends Controller
             }
             $item->modulable->delete();
             $item->update([
-                'modulable_id' => $module->id,
-                'modulable_type' => get_class($module),
+                'modulable_id' => $modulable->id,
+                'modulable_type' => get_class($modulable),
             ]);
         }
         $item->update([
@@ -124,6 +155,70 @@ class ModuleController extends Controller
             'company_id' => $arrayRequest['company_id'],
         ]);
         return response()->json(['success' => $item->load('company')], $this->successStatus);
+    }
+
+    /** 
+     * update item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */
+    public function updateModule(Request $request, $id)
+    {
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'type' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+        $modulable = null;
+        switch ($arrayRequest['type']) {
+            case 'sql':
+                $validator = Validator::make($arrayRequest, [
+                    'driver' => 'required',
+                    'host' => 'required',
+                    'port' => 'nullable',
+                    'username' => 'required',
+                    'password' => 'nullable',
+                ]);
+                $modulable = SqlModule::find($id);
+                break;
+            case 'api':
+                $validator = Validator::make($arrayRequest, [
+                    'url' => 'required',
+                    'auth_headers' => 'nullable',
+                ]);
+                $modulable = ApiModule::find($id);
+                break;
+
+            default:
+                return response()->json(['error' => "Type inconnu"], 400);
+        }
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+        if (!$modulable) {
+            return response()->json(['error' => 'Module inconnu'], 404);
+        }
+        if ($arrayRequest['type'] === 'sql') {
+            $modulable->update([
+                'driver' => $arrayRequest['driver'],
+                'host' => $arrayRequest['host'],
+                'port' => $arrayRequest['port'],
+                'username' => $arrayRequest['username'],
+            ]);
+            if ($arrayRequest['password']) {
+                $modulable->update([
+                    'password' => $arrayRequest['password']
+                ]);
+            }
+        } else {
+            $modulable->update([
+                'url' => $arrayRequest['url'],
+                'auth_headers' => $arrayRequest['auth_headers'],
+            ]);
+        }
+        return response()->json(['success' => true], $this->successStatus);
     }
 
     /** 
@@ -140,6 +235,59 @@ class ModuleController extends Controller
                 throw new Exception('Impossible de supprimer le module');
             }
 
+            return response()->json(['success' => true], $this->successStatus);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        }
+    }
+
+    /** 
+     * test db connection api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */
+    public function testConnection(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'id' => 'required',
+            'driver' => 'required',
+            'host' => 'required',
+            'port' => 'nullable',
+            'database' => 'required',
+            'username' => 'required',
+            'password' => 'nullable',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        if ($arrayRequest['driver'] !== 'sqlite') {
+            $port = $arrayRequest['port'];
+            if (!$port) {
+                switch ($arrayRequest['driver']) {
+                    case 'pgsql':
+                        $port = '5432';
+                        break;
+                    case 'sqlsrv':
+                        $port = '1433';
+                        break;
+                    default: // MySQL
+                        $port = '3306';
+                        break;
+                }
+            }
+            $arrayRequest['port'] = $port;
+        }
+
+        try {
+            if (!$arrayRequest['password']) {
+                $arrayRequest['password'] = SqlModule::findOrFail($arrayRequest['id'])->password;
+            }
+
+            Config::set('database.connections.test', $arrayRequest);
+            DB::purge('test');
+            DB::connection('test')->getPdo();
             return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);

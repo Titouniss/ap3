@@ -5,7 +5,7 @@
             class="flex items-center cursor-pointer text-inherit hover:text-primary pt-3 mb-3"
         >
             <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
-            <span class="ml-2"> Retour à la liste des modules </span>
+            <span class="ml-2">Retour à la liste des modules</span>
         </router-link>
         <vs-row
             v-if="item"
@@ -24,7 +24,6 @@
                     <form-wizard
                         :title="null"
                         :subtitle="null"
-                        @on-validate="onValidateStep"
                         nextButtonText="Suivant"
                         backButtonText="Précédent"
                         finishButtonText="Valider"
@@ -34,10 +33,10 @@
                         <tab-content
                             title="Paramètres de connexion"
                             icon="feather icon-database"
-                            :before-change="validateStep1"
+                            :before-change="validateFirstStep"
                         >
                             <!-- Sql configuration -->
-                            <form v-if="sqlMode" data-vv-scope="step-1">
+                            <form v-if="item && sqlMode" data-vv-scope="step-1">
                                 <vs-row
                                     vs-type="flex"
                                     vs-justify="center"
@@ -56,15 +55,21 @@
                                             v-validate="'required|max:255'"
                                             name="host"
                                             label-placeholder="Hôte"
-                                            v-model="dbConnection.host"
+                                            v-model="connection.host"
+                                            @input="onDbConnectionInputChange"
                                             class="w-full"
                                             :success="
-                                                dbConnection.host.length > 0 &&
-                                                    !errors.has('step-1.host')
+                                                connection.host.length > 0 &&
+                                                    !errors.has(
+                                                        'host',
+                                                        'step-1'
+                                                    )
                                             "
-                                            :danger="errors.has('step-1.host')"
+                                            :danger="
+                                                errors.has('host', 'step-1')
+                                            "
                                             :danger-text="
-                                                errors.first('step-1.host')
+                                                errors.first('host', 'step-1')
                                             "
                                         />
                                     </vs-col>
@@ -79,15 +84,21 @@
                                             v-validate="'numeric|max:5'"
                                             name="port"
                                             label-placeholder="Port"
-                                            v-model="dbConnection.port"
+                                            v-model="connection.port"
+                                            @input="onDbConnectionInputChange"
                                             class="w-full"
                                             :success="
-                                                hasClickedNext &&
-                                                    !errors.has('step-1.port')
+                                                connection.port.length > 0 &&
+                                                    !errors.has(
+                                                        'port',
+                                                        'step-1'
+                                                    )
                                             "
-                                            :danger="errors.has('step-1.port')"
+                                            :danger="
+                                                errors.has('port', 'step-1')
+                                            "
                                             :danger-text="
-                                                errors.first('step-1.port')
+                                                errors.first('port', 'step-1')
                                             "
                                         />
                                     </vs-col>
@@ -102,20 +113,25 @@
                                             v-validate="'required|max:255'"
                                             name="database"
                                             label-placeholder="Base de données"
-                                            v-model="dbConnection.database"
+                                            v-model="connection.database"
+                                            @input="onDbConnectionInputChange"
                                             class="w-full"
                                             :success="
-                                                dbConnection.database.length >
+                                                connection.database.length >
                                                     0 &&
                                                     !errors.has(
-                                                        'step-1.database'
+                                                        'database',
+                                                        'step-1'
                                                     )
                                             "
                                             :danger="
-                                                errors.has('step-1.database')
+                                                errors.has('database', 'step-1')
                                             "
                                             :danger-text="
-                                                errors.first('step-1.database')
+                                                errors.first(
+                                                    'database',
+                                                    'step-1'
+                                                )
                                             "
                                         />
                                     </vs-col>
@@ -139,20 +155,25 @@
                                             v-validate="'required|max:255'"
                                             name="username"
                                             label-placeholder="Utilisateur"
-                                            v-model="dbConnection.username"
+                                            v-model="connection.username"
+                                            @input="onDbConnectionInputChange"
                                             class="w-full"
                                             :success="
-                                                dbConnection.username.length >
+                                                connection.username.length >
                                                     0 &&
                                                     !errors.has(
-                                                        'step-1.username'
+                                                        'username',
+                                                        'step-1'
                                                     )
                                             "
                                             :danger="
-                                                errors.has('step-1.username')
+                                                errors.has('username', 'step-1')
                                             "
                                             :danger-text="
-                                                errors.first('step-1.username')
+                                                errors.first(
+                                                    'username',
+                                                    'step-1'
+                                                )
                                             "
                                         />
                                     </vs-col>
@@ -166,23 +187,33 @@
                                         <vs-input
                                             ref="password"
                                             type="password"
-                                            v-validate="'required|min:8|max:50'"
+                                            v-validate="
+                                                'min:8|max:50' +
+                                                    (!connection.has_password
+                                                        ? '|required'
+                                                        : '')
+                                            "
                                             name="password"
                                             label-placeholder="Mot de passe"
-                                            v-model="dbConnection.password"
+                                            v-model="connection.password"
+                                            @input="onDbConnectionInputChange"
                                             class="w-full"
                                             :success="
-                                                dbConnection.password.length >
+                                                connection.password.length >
                                                     0 &&
                                                     !errors.has(
-                                                        'step-1.password'
+                                                        'password',
+                                                        'step-1'
                                                     )
                                             "
                                             :danger="
-                                                errors.has('step-1.password')
+                                                errors.has('password', 'step-1')
                                             "
                                             :danger-text="
-                                                errors.first('step-1.password')
+                                                errors.first(
+                                                    'password',
+                                                    'step-1'
+                                                )
                                             "
                                         />
                                     </vs-col>
@@ -196,34 +227,87 @@
                                         <vs-input
                                             type="password"
                                             v-validate="
-                                                'required|min:8|max:50|confirmed:password'
+                                                'min:8|max:50|confirmed:password' +
+                                                    (!connection.has_password
+                                                        ? '|required'
+                                                        : '')
                                             "
                                             name="confirm_password"
                                             label-placeholder="Confirmation mot de passe"
                                             v-model="
-                                                dbConnection.confirm_password
+                                                connection.confirm_password
                                             "
+                                            @input="onDbConnectionInputChange"
                                             class="w-full"
                                             :success="
-                                                dbConnection.confirm_password
+                                                connection.confirm_password
                                                     .length > 0 &&
                                                     !errors.has(
-                                                        'step-1.confirm_password'
+                                                        'confirm_password',
+                                                        'step-1'
                                                     )
                                             "
                                             :danger="
                                                 errors.has(
-                                                    'step-1.confirm_password'
+                                                    'confirm_password',
+                                                    'step-1'
                                                 )
                                             "
                                             :danger-text="
                                                 errors.first(
-                                                    'step-1.confirm_password'
+                                                    'confirm_password',
+                                                    'step-1'
                                                 )
                                             "
                                         />
                                     </vs-col>
                                 </vs-row>
+
+                                <vs-row
+                                    vs-type="flex"
+                                    vs-justify="center"
+                                    vs-align="center"
+                                    vs-w="12"
+                                    class="py-3"
+                                >
+                                    <vs-col
+                                        vs-type="flex"
+                                        vs-justify="center"
+                                        vs-align="center"
+                                        vs-w="12"
+                                    >
+                                        <vs-radio
+                                            class="mx-3"
+                                            v-model="connection.driver"
+                                            @change="onDbConnectionInputChange"
+                                            vs-value="mysql"
+                                            >MySQL</vs-radio
+                                        >
+                                        <vs-radio
+                                            class="mx-3"
+                                            v-model="connection.driver"
+                                            @change="onDbConnectionInputChange"
+                                            vs-value="sqlite"
+                                            >SQLite</vs-radio
+                                        >
+                                        <vs-radio
+                                            class="mx-3"
+                                            v-model="connection.driver"
+                                            @change="onDbConnectionInputChange"
+                                            vs-value="pgsql"
+                                            >PostgreSQL</vs-radio
+                                        >
+                                        <vs-radio
+                                            class="mx-3"
+                                            v-model="connection.driver"
+                                            @change="onDbConnectionInputChange"
+                                            vs-value="sqlsrv"
+                                            >SQL Server</vs-radio
+                                        >
+                                    </vs-col>
+                                </vs-row>
+
+                                <vs-divider />
 
                                 <vs-row
                                     vs-type="flex"
@@ -238,40 +322,143 @@
                                         vs-align="center"
                                         vs-w="12"
                                     >
-                                        <vs-radio
-                                            class="mx-3"
-                                            v-model="dbConnection.type"
-                                            vs-value="mysql"
+                                        <vs-button
+                                            v-if="!dbConnection.test_passed"
+                                            @click="openConnectionPrompt"
                                         >
-                                            MySQL
-                                        </vs-radio>
-                                        <vs-radio
-                                            class="mx-3"
-                                            v-model="dbConnection.type"
-                                            vs-value="sqlite"
+                                            Testez la connexion
+                                        </vs-button>
+                                        <div
+                                            v-if="dbConnection.test_passed"
+                                            class="flex flex-col items-center justify-center"
                                         >
-                                            SQLite
-                                        </vs-radio>
-                                        <vs-radio
-                                            class="mx-3"
-                                            v-model="dbConnection.type"
-                                            vs-value="pgsql"
+                                            <div
+                                                class="mb-3 p-8 h-8 w-8 flex items-center justify-center bg-success rounded-full"
+                                            >
+                                                <feather-icon
+                                                    :icon="
+                                                        `${
+                                                            dbConnection.test_passed
+                                                                ? 'Check'
+                                                                : 'X'
+                                                        }Icon`
+                                                    "
+                                                    svgClasses="h-8 w-8 text-white"
+                                                />
+                                            </div>
+                                            <span>
+                                                Test de connexion réussi
+                                            </span>
+                                        </div>
+                                        <vs-prompt
+                                            title="Test de connexion"
+                                            :color="connectionStatusColor"
+                                            :buttons-hidden="true"
+                                            :active.sync="
+                                                dbConnection.prompt_active
+                                            "
                                         >
-                                            PostgreSQL
-                                        </vs-radio>
-                                        <vs-radio
-                                            class="mx-3"
-                                            v-model="dbConnection.type"
-                                            vs-value="sqlsrv"
+                                            <div>
+                                                <div
+                                                    id="connection-div"
+                                                    class="vs-con-loading__container h-16"
+                                                    v-if="
+                                                        dbConnection.is_testing
+                                                    "
+                                                ></div>
+                                                <div
+                                                    v-if="
+                                                        !dbConnection.is_testing
+                                                    "
+                                                >
+                                                    <vs-row
+                                                        vs-type="flex"
+                                                        vs-justify="center"
+                                                        vs-align="center"
+                                                        vs-w="12"
+                                                    >
+                                                        <vs-col
+                                                            vs-type="flex"
+                                                            vs-justify="center"
+                                                            vs-align="center"
+                                                            vs-w="12"
+                                                        >
+                                                            <div
+                                                                :class="[
+                                                                    `mb-3 p-8 h-8 w-8 flex items-center justify-center bg-${connectionStatusColor} rounded-full`
+                                                                ]"
+                                                            >
+                                                                <feather-icon
+                                                                    :icon="
+                                                                        `${
+                                                                            dbConnection.test_passed
+                                                                                ? 'Check'
+                                                                                : 'X'
+                                                                        }Icon`
+                                                                    "
+                                                                    svgClasses="h-8 w-8 text-white"
+                                                                />
+                                                            </div>
+                                                        </vs-col>
+                                                    </vs-row>
+                                                    <vs-row
+                                                        vs-type="flex"
+                                                        vs-justify="center"
+                                                        vs-align="center"
+                                                        vs-w="12"
+                                                    >
+                                                        <vs-col
+                                                            vs-type="flex"
+                                                            vs-justify="center"
+                                                            vs-align="center"
+                                                            vs-w="12"
+                                                        >
+                                                            <span>
+                                                                {{
+                                                                    dbConnection.test_passed
+                                                                        ? "Connexion réussie !"
+                                                                        : "La connexion a échouée, vérifiez les données de connexion et réessayez"
+                                                                }}
+                                                            </span>
+                                                        </vs-col>
+                                                    </vs-row>
+                                                </div>
+                                            </div>
+                                        </vs-prompt>
+                                    </vs-col>
+                                </vs-row>
+                                <vs-row
+                                    vs-type="flex"
+                                    vs-justify="center"
+                                    vs-align="center"
+                                    vs-w="12"
+                                    class="pt-3"
+                                >
+                                    <vs-col
+                                        vs-type="flex"
+                                        vs-justify="center"
+                                        vs-align="center"
+                                        vs-w="12"
+                                    >
+                                        <span
+                                            v-if="
+                                                errors.has('dbTest', 'step-1')
+                                            "
+                                            class="text-danger"
                                         >
-                                            SQL Server
-                                        </vs-radio>
+                                            {{
+                                                errors.first("dbTest", "step-1")
+                                            }}
+                                        </span>
                                     </vs-col>
                                 </vs-row>
                             </form>
 
                             <!-- Api configuration -->
-                            <form v-if="!sqlMode" data-vv-scope="step-1">
+                            <form
+                                v-if="item && !sqlMode"
+                                data-vv-scope="step-1"
+                            >
                                 <vs-row
                                     vs-type="flex"
                                     vs-justify="center"
@@ -290,15 +477,17 @@
                                             v-validate="'required|max:255'"
                                             name="url"
                                             label-placeholder="Url"
-                                            v-model="apiConnection.url"
+                                            v-model="connection.url"
                                             class="w-full"
                                             :success="
-                                                apiConnection.url.length > 0 &&
-                                                    !errors.has('step-1.url')
+                                                connection.url.length > 0 &&
+                                                    !errors.has('url', 'step-1')
                                             "
-                                            :danger="errors.has('step-1.url')"
+                                            :danger="
+                                                errors.has('url', 'step-1')
+                                            "
                                             :danger-text="
-                                                errors.first('step-1.url')
+                                                errors.first('url', 'step-1')
                                             "
                                         />
                                     </vs-col>
@@ -311,22 +500,28 @@
                                     >
                                         <vs-input
                                             v-validate="'max:255'"
-                                            name="authHeaders"
+                                            name="auth_headers"
                                             label-placeholder="Entêtes d'authentification"
-                                            v-model="apiConnection.authHeaders"
+                                            v-model="connection.auth_headers"
                                             class="w-full"
                                             :success="
-                                                hasClickedNext &&
+                                                connection.auth_headers.length >
+                                                    0 &&
                                                     !errors.has(
-                                                        'step-1.authHeaders'
+                                                        'auth_headers',
+                                                        'step-1'
                                                     )
                                             "
                                             :danger="
-                                                errors.has('step-1.authHeaders')
+                                                errors.has(
+                                                    'auth_headers',
+                                                    'step-1'
+                                                )
                                             "
                                             :danger-text="
                                                 errors.first(
-                                                    'step-1.authHeaders'
+                                                    'auth_headers',
+                                                    'step-1'
                                                 )
                                             "
                                         />
@@ -367,20 +562,25 @@ export default {
     data() {
         return {
             item: null,
-            dbConnection: {
+            connection: {
+                id: "",
+                url: "",
+                auth_headers: "",
+                driver: "mysql",
                 host: "",
                 port: "",
                 database: "",
                 username: "",
                 password: "",
                 confirm_password: "",
-                type: "mysql"
+                has_password: false
             },
-            apiConnection: {
-                url: "",
-                authHeaders: ""
-            },
-            hasClickedNext: false
+            dbConnection: {
+                test_passed: false,
+                is_testing: false,
+                prompt_active: false,
+                has_changes: false
+            }
         };
     },
     computed: {
@@ -389,25 +589,114 @@ export default {
         },
         sqlMode() {
             return this.item && this.item.type === "sql";
+        },
+        connectionStatusColor() {
+            return this.dbConnection.is_testing
+                ? "primary"
+                : this.dbConnection.test_passed
+                ? "success"
+                : "danger";
         }
     },
     methods: {
-        async validateForm(scope = null) {
-            return this.$validator.validateAll(scope).then(result => result);
+        onDbConnectionInputChange() {
+            this.dbConnection.has_changes = true;
+            this.dbConnection.test_passed = false;
         },
-        validateStep1() {
-            return this.validateForm("step-1");
+        validateForm(scope = null) {
+            return this.errors.any(scope);
         },
-        onValidateStep(result) {
-            this.hasClickedNext = !result;
-        },
-        editItem() {
-            this.$store
-                .dispatch("moduleManagement/editItem", this.item)
-                .then(() => {})
-                .catch(err => {
-                    console.error(err);
+        validateFirstStep() {
+            return new Promise((resolve, reject) => {
+                this.$validator.validateAll("step-1").then(result => {
+                    if (result) {
+                        if (this.sqlMode && !this.dbConnection.test_passed) {
+                            this.errors.add({
+                                field: "dbTest",
+                                scope: "step-1",
+                                msg:
+                                    "Vous devez tester la connexion avant de poursuivre"
+                            });
+                            reject("Error");
+                        }
+                        this.updateModule().then(() => resolve(true));
+                    } else {
+                        reject("Error");
+                    }
                 });
+            });
+        },
+        openConnectionPrompt() {
+            this.dbConnection.test_passed = false;
+            this.dbConnection.is_testing = true;
+            this.dbConnection.prompt_active = true;
+            this.errors.remove("dbTest", "step-1");
+            setTimeout(() => {
+                this.$vs.loading({
+                    container: "#connection-div",
+                    type: "point"
+                });
+                const payload = {
+                    id: this.connection.id,
+                    driver: this.connection.driver,
+                    host: this.connection.host,
+                    port: this.connection.port,
+                    database: this.connection.database,
+                    username: this.connection.username,
+                    password: this.connection.password
+                };
+
+                this.$store
+                    .dispatch("moduleManagement/testConnection", payload)
+                    .then(response => {
+                        this.dbConnection.test_passed = true;
+                    })
+                    .finally(() => {
+                        this.dbConnection.is_testing = false;
+                        this.$vs.loading.close(
+                            "#connection-div > .con-vs-loading"
+                        );
+                    });
+            }, 1000);
+        },
+        updateModule() {
+            this.$vs.loading();
+            const payload = {
+                id: this.connection.id,
+                type: this.item.type
+            };
+            if (this.sqlMode) {
+                payload.driver = this.connection.driver;
+                payload.host = this.connection.host;
+                payload.port = this.connection.port;
+                payload.database = this.connection.database;
+                payload.username = this.connection.username;
+                payload.password = this.connection.password;
+            } else {
+                payload.url = this.connection.url;
+                payload.auth_headers = this.connection.auth_headers;
+            }
+            return this.$store
+                .dispatch("moduleManagement/updateModule", payload)
+                .then(response =>
+                    this.$vs.notify({
+                        title: "Succès",
+                        text: "Données de connexion misent à jour avec succès",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success"
+                    })
+                )
+                .catch(error =>
+                    this.$vs.notify({
+                        title: "Erreur",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    })
+                )
+                .finally(() => this.$vs.loading.close());
         }
     },
     created() {
@@ -423,7 +712,14 @@ export default {
         this.$store
             .dispatch("moduleManagement/fetchItem", moduleId)
             .then(res => {
-                this.item = res.data.success;
+                this.item = res.data.success.base;
+                this.connection = {
+                    ...this.connection,
+                    ...res.data.success.connection,
+                    driver: res.data.success.connection.driver || "mysql"
+                };
+                this.dbConnection.test_passed = this.connection.has_password;
+                this.dbConnection.has_changes = false;
             });
     },
     beforeDestroy() {

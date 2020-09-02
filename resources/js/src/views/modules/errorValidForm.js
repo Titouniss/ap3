@@ -4,7 +4,7 @@ fr.attributes = {
     host: "hôte",
     database: "base de données",
     username: "utilisateur",
-    authHeaders: "entêtes d'authentification"
+    auth_headers: "entêtes d'authentification"
 };
 
 export default fr;

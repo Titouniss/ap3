@@ -94,5 +94,40 @@ export default {
                     reject(error);
                 });
         });
+    },
+    testConnection({ commit }, payload) {
+        return new Promise((resolve, reject) => {
+            axios
+                .post("/api/module-management/test-connection", payload)
+                .then(response => {
+                    if (response.data.success) {
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
+    updateModule({ commit }, payload) {
+        return new Promise((resolve, reject) => {
+            axios
+                .post(
+                    `/api/module-management/module-update/${payload.id}`,
+                    payload
+                )
+                .then(response => {
+                    if (response.data.success) {
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
     }
 };

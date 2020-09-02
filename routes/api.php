@@ -329,12 +329,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:read modules']], function () {
             Route::get('index', 'API\ModuleController@index');
             Route::get('show/{item}', 'API\ModuleController@show');
+            Route::post('test-connection', 'API\ModuleController@testConnection');
         });
         Route::group(['middleware' => ['can:publish modules']], function () {
             Route::post('store', 'API\ModuleController@store');
         });
         Route::group(['middleware' => ['can:edit modules']], function () {
             Route::post('update/{item}', 'API\ModuleController@update');
+            Route::post('module-update/{id}', 'API\ModuleController@updateModule');
         });
         Route::group(['middleware' => ['can:delete modules']], function () {
             Route::delete('destroy/{item}', 'API\ModuleController@destroy');

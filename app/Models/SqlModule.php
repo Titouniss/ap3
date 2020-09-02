@@ -4,7 +4,7 @@ namespace App\Models;
 
 class SqlModule extends BaseModule
 {
-    protected $fillable = ['sql_type', 'host', 'port', 'database', 'username', 'password'];
+    protected $fillable = ['driver', 'host', 'port', 'database', 'username', 'password'];
 
     public $timestamps = false;
 
@@ -16,17 +16,17 @@ class SqlModule extends BaseModule
     public function connectionData()
     {
         $data = [
-            'driver' => $this->sql_type,
+            'driver' => $this->driver,
             'host' => $this->host,
             'database' => $this->database,
             'username' => $this->username,
             'password' => $this->password,
         ];
 
-        if ($this->sql_type !== 'sqlite') {
+        if ($this->driver !== 'sqlite') {
             $port = $this->port;
             if (!$port) {
-                switch ($this->sql_type) {
+                switch ($this->driver) {
                     case 'pgsql':
                         $port = '5432';
                         break;
