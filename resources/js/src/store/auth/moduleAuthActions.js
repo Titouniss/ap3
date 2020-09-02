@@ -47,7 +47,7 @@ export default {
     // JWT
     loginJWT({ commit }, payload) {
         return new Promise((resolve, reject) => {
-            jwt.login(payload.userDetails.email, payload.userDetails.password)
+            jwt.login(payload.userDetails.login, payload.userDetails.password)
                 .then(response => {
                     const data = response.data;
                     // If there's user data in response
@@ -68,7 +68,7 @@ export default {
                         localStorage.setItem(
                             "tokenExpires",
                             moment(data.success.tokenExpires).unix() ||
-                                moment().unix()
+                            moment().unix()
                         );
                         // Navigate User to homepage
                         router.push(router.currentRoute.query.to || "/");

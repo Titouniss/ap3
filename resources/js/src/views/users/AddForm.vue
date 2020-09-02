@@ -38,6 +38,27 @@
             v-show="errors.has('firstname')"
           >{{ errors.first('firstname') }}</span>
 
+          <small class="ml-1" for>Identifiant</small>
+          <vs-row class="flex">
+            <vs-col vs-type="flex" vs-align="center" justify="end" vs-w="5">
+              <span class="pl-2" text="end">{{ company_login }}</span>
+            </vs-col>
+            <vs-col vs-type="flex" vs-align="center" vs-w="7">
+              <vs-input
+                v-validate="{required: true, regex:/^((?![ÇçèéêëÈÉÊËàáâãäå@ÀÁÂÃÄÅìíîïÌÍÎÏðòóôõöÒÓÔÕÖùúûüÙÚÛÜýÿÝ]+).)*$/}"
+                name="login"
+                class="w-full pl-2"
+                v-model="itemLocal.login"
+              />
+            </vs-col>
+            <vs-col>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('login')"
+              >{{ errors.first('login') }}</span>
+            </vs-col>
+          </vs-row>
+
           <vs-input
             v-validate="'required|email'"
             name="email"
@@ -151,6 +172,7 @@
 </template>
 
 <script>
+import moment from "moment";
 import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
@@ -177,12 +199,15 @@ export default {
       itemLocal: {
         firstname: "",
         lastname: "",
+        login: "",
+        full_login: "",
         email: "",
         company_id: null,
         roles: [],
         skills: [],
       },
       companySkills: [],
+      company_login: "",
     };
   },
   computed: {
@@ -226,7 +251,7 @@ export default {
         !this.errors.any() &&
         this.itemLocal.lastname != "" &&
         this.itemLocal.firstname != "" &&
-        this.itemLocal.email != "" &&
+        this.itemLocal.login != "" &&
         this.itemLocal.company_id != null &&
         this.itemLocal.roles > 0
       );
@@ -247,6 +272,11 @@ export default {
     },
     addItem() {
       if (this.validateForm) {
+        this.itemLocal.full_login = "".concat(
+          this.company_login,
+          this.itemLocal.login
+        );
+
         this.$store
           .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
           .then((response) => {
@@ -276,6 +306,8 @@ export default {
       this.companySkills = this.companiesData.find(
         (company) => company.id === item
       ).skills;
+
+      this.getCompanyName();
     },
     filterItemsAdmin($items) {
       let $filteredItems = [];
@@ -305,11 +337,55 @@ export default {
       }
       return false;
     },
+    getCompanyName() {
+      if (this.activeUserRole() == "superAdmin") {
+        if (this.itemLocal.company_id != null) {
+          let company = this.$store.getters["companyManagement/getItem"](
+            this.itemLocal.company_id
+          );
+
+          console.log(["company", company]);
+
+          this.company_login = "".concat(
+            company.name.replace(/ /gi, "_").toLowerCase(),
+            "."
+          );
+          this.company_login = this.removeAccents(this.company_login);
+          console.log(["this.company_login", this.company_login]);
+        } else {
+          this.company_login = "selectionner_société.";
+        }
+      } else {
+        const user = this.$store.state.AppActiveUser;
+        this.company_login = "".concat(
+          user.company.name.replace(/ /gi, "_").toLowerCase(),
+          "."
+        );
+        this.company_login = this.removeAccents(this.company_login);
+        console.log(["this.company_login", this.company_login]);
+      }
+    },
+    removeAccents(str) {
+      let accents =
+        "ÀÁÂÃÄÅàáâãäåßÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž";
+      let accentsOut =
+        "AAAAAAaaaaaaBOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz";
+      str = str.split("");
+      str.forEach((letter, index) => {
+        let i = accents.indexOf(letter);
+        if (i != -1) {
+          str[index] = accentsOut[i];
+        }
+      });
+      return str.join("");
+    },
   },
   mounted() {
     if (this.activeUserRole() != "superAdmin") {
       this.selectCompanySkills(this.$store.state.AppActiveUser.company_id);
     }
+
+    this.getCompanyName();
   },
   created() {
     if (!moduleUserManagement.isRegistered) {

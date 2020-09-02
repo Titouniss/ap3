@@ -16,10 +16,10 @@ function addSubscriber(callback) {
 export default {
     init() {
         axios.interceptors.response.use(
-            function(response) {
+            function (response) {
                 return response;
             },
-            function(error) {
+            function (error) {
                 // const { config, response: { status } } = error
                 const { config, response } = error;
                 const originalRequest = config;
@@ -48,9 +48,9 @@ export default {
             }
         );
     },
-    login(email, pwd) {
+    login(login, pwd) {
         return axios.post("/api/auth/login", {
-            email,
+            login,
             password: pwd
         });
     },

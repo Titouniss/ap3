@@ -39,9 +39,10 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function login()
-    {
-        if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
+    {   
+        if (Auth::attempt(['login' => request('login'), 'password' => request('password')])) {
             $user = Auth::user();
+            
             if ($user->company_id) {
                 $company = Company::find($user->company_id);
                 if (!$company) {
@@ -50,9 +51,11 @@ class UserController extends Controller
                     return response()->json(['success' => false, 'error' => 'Trial ended']);
                 }
             }
+            
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
             }
+            
             $token =  $user->createToken('ProjetX');
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
@@ -190,9 +193,21 @@ class UserController extends Controller
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
+        // creation of a temporary identifier before testing if it already exists
+        $login_temp = mb_strtolower($input['company_name'], 'UTF-8') . "." . mb_strtolower($input['firstname'], 'UTF-8') . ucfirst(mb_strtolower($input['lastname'], 'UTF-8'));
+        $parsed_login = UserController::str_to_noaccent($login_temp);
 
+        $login = $parsed_login;
+
+        do {
+            $login = $parsed_login;
+            $login = $parsed_login . rand(0, 9999);
+        } while (User::where('login', $login)->withTrashed()->exists());
+        
+        $input['login'] = $login;
 
         $input['password'] = bcrypt($input['password']);
+
         $user = User::create($input);
         if ($user == null) {
             return response()->json(['error' => $validator->errors()], 401);
@@ -209,6 +224,32 @@ class UserController extends Controller
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
         return response()->json(['success' => $success, 'userData' => $user, 'company' => $company], $this->successStatus);
+    }
+
+    /**
+     * Replace special character
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function str_to_noaccent($str)
+    {
+        $parsed = $str;
+        $parsed = preg_replace('#Ç#', 'C', $parsed);
+        $parsed = preg_replace('#ç#', 'c', $parsed);
+        $parsed = preg_replace('#è|é|ê|ë#', 'e', $parsed);
+        $parsed = preg_replace('#È|É|Ê|Ë#', 'E', $parsed);
+        $parsed = preg_replace('#à|á|â|ã|ä|å#', 'a', $parsed);
+        $parsed = preg_replace('#@|À|Á|Â|Ã|Ä|Å#', 'A', $parsed);
+        $parsed = preg_replace('#ì|í|î|ï#', 'i', $parsed);
+        $parsed = preg_replace('#Ì|Í|Î|Ï#', 'I', $parsed);
+        $parsed = preg_replace('#ð|ò|ó|ô|õ|ö#', 'o', $parsed);
+        $parsed = preg_replace('#Ò|Ó|Ô|Õ|Ö#', 'O', $parsed);
+        $parsed = preg_replace('#ù|ú|û|ü#', 'u', $parsed);
+        $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
+        $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
+        $parsed = preg_replace('#Ý#', 'Y', $parsed);
+        
+        return ($parsed);
     }
 
     /**
@@ -244,7 +285,6 @@ class UserController extends Controller
         $user->lastname = $input['lastname'];
         $user->isTermsConditionAccepted = $input['isTermsConditionAccepted'];
         $user->register_token = null;
-        $user->markEmailAsVerified();
         $user->save();
 
         // generate access token
@@ -284,21 +324,27 @@ class UserController extends Controller
         $validator = Validator::make($arrayRequest, [
             'lastname' => 'required',
             'firstname' => 'required',
-            'email' => 'required',
             'company_id' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        if (User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
+        if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
+        }
+
+        if (User::where('login', $arrayRequest['full_login'])->withTrashed()->exists()) {
+            return response()->json(['error' => 'Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
         $arrayRequest['password'] = Hash::make(Str::random(12)); // on créer un password temporaire
         $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
         $arrayRequest['isTermsConditionAccepted'] = false;
-        $item = User::create($arrayRequest)->load('company');
+        $arrayRequest['login'] = $arrayRequest['full_login'];
+        $item = User::create($arrayRequest)->load('company');        
+        $item->markEmailAsVerified();
+
         if (isset($arrayRequest['roles'])) {
             $item->assignRole($arrayRequest['roles']); // on ajoute le role à l'utilisateur
         } else {
@@ -343,7 +389,6 @@ class UserController extends Controller
         $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
             'lastname' => 'required',
-            'email' => 'required',
             'company_id' => 'required'
         ]);
         if ($validator->fails()) {
@@ -353,6 +398,11 @@ class UserController extends Controller
         if ($user->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
+
+        if ($user->login != $arrayRequest['full_login'] && User::where('login', $arrayRequest['full_login'])->withTrashed()->exists()) {
+            return response()->json(['error' => 'Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
+        }
+
 
         if ($user != null) {
             if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null) {
@@ -365,6 +415,7 @@ class UserController extends Controller
 
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
+            $user->login = $arrayRequest['full_login'];
             $user->email = $arrayRequest['email'];
             $user->company_id = $arrayRequest['company_id'];
 

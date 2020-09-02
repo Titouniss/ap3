@@ -8,6 +8,11 @@ const errorMessage = {
       required: "Le prénom de l\'utilisteur est requis",
       max: "Le prénom de l\'utilisteur doit être composé de 255 caractères maximum",
     },
+    login: {
+      required: "L'identifiant' de l\'utilisteur est requis",
+      max: "L'identifiant de l\'utilisteur doit être composé de 50 caractères maximum",
+      regex: "L'identifiant ne doit pas contenir d'accents ou de caractères spéciaux"
+    },
     email: {
       required: "L\'email de l\'utilisteur est requis",
       email: "Le format de l'email est invalide"

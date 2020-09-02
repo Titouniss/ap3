@@ -40,9 +40,31 @@
             v-show="errors.has('firstname')"
           >{{ errors.first('firstname') }}</span>
 
+          <!-- Login -->
+          <small class="ml-1" for>Identifiant</small>
+          <vs-row class="flex">
+            <vs-col vs-type="flex" vs-align="center" justify="end" vs-w="5">
+              <span class="pl-2" text="end">{{ company_login }}</span>
+            </vs-col>
+            <vs-col vs-type="flex" vs-align="center" vs-w="7">
+              <vs-input
+                v-validate="{required: true, regex:/^((?![ÇçèéêëÈÉÊËàáâãäå@ÀÁÂÃÄÅìíîïÌÍÎÏðòóôõöÒÓÔÕÖùúûüÙÚÛÜýÿÝ]+).)*$/}"
+                name="login"
+                class="w-full pl-2"
+                v-model="itemLocal.login"
+              />
+            </vs-col>
+            <vs-col>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('login')"
+              >{{ errors.first('login') }}</span>
+            </vs-col>
+          </vs-row>
+
           <!-- Email -->
           <vs-input
-            v-validate="'required|email'"
+            v-validate="'email'"
             name="email"
             class="w-full mb-4 mt-5"
             label="E-mail"
@@ -161,6 +183,11 @@
 <script>
 import vSelect from "vue-select";
 import WorkHours from "./WorkHours";
+import { Validator } from "vee-validate";
+import errorMessage from "./errorValidForm";
+
+// register custom messages
+Validator.localize("fr", errorMessage);
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
@@ -181,6 +208,8 @@ export default {
       itemLocal: {
         firstname: "",
         lastname: "",
+        login: "",
+        full_login: "",
         email: "",
         company_id: null,
         roles: [],
@@ -189,6 +218,7 @@ export default {
       },
       company_id_temps: null,
       companySkills: [],
+      company_login: "",
       selected: [],
     };
   },
@@ -224,7 +254,7 @@ export default {
         !this.errors.any() &&
         this.itemLocal.name != "" &&
         this.itemLocal.firstname != "" &&
-        this.itemLocal.email != "" &&
+        this.itemLocal.login != "" &&
         this.itemLocal.company_id != null &&
         this.itemLocal.roles != null
       );
@@ -244,6 +274,8 @@ export default {
       this.companySkills = this.companiesData.find(
         (company) => company.id === item
       ).skills;
+
+      this.getCompanyName();
     },
     fetch_data(id) {
       this.$vs.loading();
@@ -268,6 +300,17 @@ export default {
             this.company_id_temps = item.company_id;
             this.selectCompanySkills(item.company_id);
           }
+
+          // Get login
+          if (this.itemLocal.login != null) {
+            this.itemLocal.login = this.itemLocal.login.split(".").slice(1);
+            //this.getCompanyName();
+          } else {
+            this.itemLocal.login = "";
+            //this.getCompanyName();
+          }
+          console.log(["this.itemLocal.login", this.itemLocal.login]);
+
           this.$vs.loading.close();
         })
         .catch((err) => {
@@ -281,6 +324,12 @@ export default {
       this.itemLocal.roles = [
         this.$store.getters["roleManagement/getItem"](this.itemLocal.roles),
       ];
+
+      // Parse login
+      this.itemLocal.full_login = "".concat(
+        this.company_login,
+        this.itemLocal.login
+      );
 
       this.$store
         .dispatch("userManagement/updateItem", this.itemLocal)
@@ -308,6 +357,54 @@ export default {
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
+    getCompanyName() {
+      if (this.activeUserRole() == "superAdmin") {
+        if (this.itemLocal.company_id != null) {
+          let company = this.$store.getters["companyManagement/getItem"](
+            this.itemLocal.company_id
+          );
+
+          console.log(["company", company]);
+
+          this.company_login = "".concat(
+            company.name.replace(/ /gi, "_").toLowerCase(),
+            "."
+          );
+          this.company_login = this.removeAccents(this.company_login);
+        } else {
+          this.company_login = "selectionner_société.";
+        }
+      } else {
+        console.log(["this.$store.state", this.$store.state]);
+        const user = this.$store.state.AppActiveUser;
+        this.company_login = "".concat(
+          user.company.name.replace(/ /gi, "_").toLowerCase(),
+          "."
+        );
+        this.company_login = this.removeAccents(this.company_login);
+      }
+    },
+    removeAccents(str) {
+      let accents =
+        "ÀÁÂÃÄÅàáâãäåßÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž";
+      let accentsOut =
+        "AAAAAAaaaaaaBOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz";
+      str = str.split("");
+      str.forEach((letter, index) => {
+        let i = accents.indexOf(letter);
+        if (i != -1) {
+          str[index] = accentsOut[i];
+        }
+      });
+      return str.join("");
     },
   },
   created() {

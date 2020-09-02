@@ -126,8 +126,8 @@ export default {
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
-        backgroundSize: "cover"
-      }
+        backgroundSize: "cover",
+      },
     };
   },
   computed: {
@@ -141,7 +141,7 @@ export default {
         this.confirm_password !== "" &&
         this.isTermsConditionAccepted === true
       );
-    }
+    },
   },
   methods: {
     checkLogin() {
@@ -155,7 +155,7 @@ export default {
           text: "Vous êtes déjà connecté!",
           iconPack: "feather",
           icon: "icon-alert-circle",
-          color: "warning"
+          color: "warning",
         });
 
         return false;
@@ -163,6 +163,7 @@ export default {
       return true;
     },
     registerUserJWt() {
+      this.$vs.loading();
       // If form is not validated or user is already login return
       if (!this.validateForm || !this.checkLogin()) return;
 
@@ -174,19 +175,30 @@ export default {
           password: this.password,
           confirmPassword: this.confirm_password,
           companyName: this.company,
-          isTermsConditionAccepted: this.isTermsConditionAccepted
+          isTermsConditionAccepted: this.isTermsConditionAccepted,
         },
-        notify: this.$vs.notify
+        notify: this.$vs.notify,
       };
       this.$store
         .dispatch("auth/registerUserJWT", payload)
-        .catch(error => {
+        .then(() => {
+          this.$vs.notify({
+            title: "Inscription réussi !",
+            text:
+              "Un email vous a été envoyé, consulter votre bôite mail pour valider votre email",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
+            time: 10000,
+          });
+        })
+        .catch((error) => {
           this.$vs.notify({
             title: "Error",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         })
         .finally(() => this.$vs.loading.close());
@@ -194,8 +206,8 @@ export default {
     goLogin() {
       if (!this.checkLogin()) return;
       this.$router.push("/pages/login/login").catch(() => {});
-    }
-  }
+    },
+  },
 };
 </script>
 

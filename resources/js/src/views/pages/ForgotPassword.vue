@@ -16,7 +16,7 @@
   >
     <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
       <vx-card>
-        <div class="vx-card__title mb-8">
+        <div class="vx-card__title mb-6">
           <h4 class="mb-4 text-center">Récupération de mot de passe</h4>
           <p
             class="text-center"
@@ -27,12 +27,17 @@
           type="email"
           placeholder="Email"
           v-model="value1"
-          class="w-full mb-8"
+          class="w-full mb-2"
           :danger-text="dangerText"
           :danger="danger"
           :success-text="successText"
           :success="success"
         />
+
+        <p
+          class="text-center mb-6 text-5"
+          style="font-size: .70rem"
+        >Si vous n'avez pas d'adresse email, veuillez contacter votre administrateur.</p>
 
         <vs-row vs-align="center" vs-type="flex" vs-justify="space-around">
           <router-link to="login" @click="goLogin" class="ml-2 mr-2">retour</router-link>
@@ -60,8 +65,8 @@ export default {
       cssProps: {
         backgroundImage: `url(${require("../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
-        backgroundSize: "cover"
-      }
+        backgroundSize: "cover",
+      },
     };
   },
   methods: {
@@ -76,7 +81,7 @@ export default {
           text: "Vous êtes déjà connecté!",
           iconPack: "feather",
           icon: "icon-alert-circle",
-          color: "warning"
+          color: "warning",
         });
 
         return false;
@@ -86,18 +91,18 @@ export default {
     forgotPassword() {
       if (!this.checkLogin()) return;
       const payload = {
-        email: this.value1
+        email: this.value1,
       };
       // Loading
       this.$vs.loading();
       this.$store
         .dispatch("auth/forgotPassword", payload)
-        .then(r => {
+        .then((r) => {
           this.danger = r.data.message === "Failed";
           this.success = r.data.message === "Success";
           this.$vs.loading.close();
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
 
           this.$vs.loading.close();
@@ -106,14 +111,14 @@ export default {
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
     },
     goLogin() {
       if (!this.checkLogin()) return;
       this.$router.push("/pages/login/login").catch(() => {});
-    }
-  }
+    },
+  },
 };
 </script>

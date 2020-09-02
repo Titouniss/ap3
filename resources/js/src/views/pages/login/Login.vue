@@ -25,12 +25,12 @@
 
           <div class="flex-column">
             <vs-input
-              name="email"
+              name="login"
               icon-no-border
               icon="icon icon-user"
               icon-pack="feather"
-              placeholder="Email"
-              v-model="email"
+              placeholder="Identifiant"
+              v-model="login"
               class="w-full"
             />
 
@@ -76,19 +76,20 @@ export default {
   data() {
     return {
       email: "admin@numidev.fr",
+      login: "numidev.adminNumidev",
       password: "password",
       checkbox_remember_me: false,
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
-        backgroundSize: "cover"
-      }
+        backgroundSize: "cover",
+      },
     };
   },
   computed: {
     validateForm() {
-      return !this.errors.any() && this.email !== "" && this.password !== "";
-    }
+      return !this.errors.any() && this.login !== "" && this.password !== "";
+    },
   },
   methods: {
     checkLogin() {
@@ -99,7 +100,7 @@ export default {
           text: "Vous êtes déjà connecté!",
           iconPack: "feather",
           icon: "icon-alert-circle",
-          color: "warning"
+          color: "warning",
         });
 
         return false;
@@ -115,14 +116,15 @@ export default {
       const payload = {
         checkbox_remember_me: this.checkbox_remember_me,
         userDetails: {
+          login: this.login,
           email: this.email,
-          password: this.password
-        }
+          password: this.password,
+        },
       };
 
       this.$store
         .dispatch("auth/loginJWT", payload)
-        .then(r => {
+        .then((r) => {
           this.$vs.loading.close();
           if (r.activeResend) {
             console.log("in");
@@ -132,19 +134,19 @@ export default {
               text: r.message,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger"
+              color: "danger",
             });
             this.$router.push("/pages/verify").catch(() => {});
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
           if (error.activeResend) {
             this.$router.push("/pages/verify").catch(() => {});
@@ -158,7 +160,7 @@ export default {
     forgotPassword() {
       if (!this.checkLogin()) return;
       this.$router.push("/pages/forgot-password").catch(() => {});
-    }
-  }
+    },
+  },
 };
 </script>
