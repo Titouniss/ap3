@@ -84,6 +84,7 @@
         :allDaySlot="false"
         :plugins="calendarPlugins"
         :weekends="calendarWeekends"
+        :firstDay="1"
         :events="calendarEvents"
         @dateClick="handleDateClick"
         @eventClick="handleEventClick"
