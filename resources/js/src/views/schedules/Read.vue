@@ -19,7 +19,7 @@
         :activeAddPrompt="this.activeAddPrompt"
         :handleClose="handleClose"
         :dateData="this.dateData"
-        :project_data="project_data"
+        :project_data="this.project_data"
         :tasks_list="this.tasksEvent"
         :customTask="false"
         :type="this.$route.query.type"
@@ -66,6 +66,8 @@
       <edit-form
         :reload="calendarEvents"
         :itemId="itemIdToEdit"
+        :companyId="project_data.company_id"
+        :tasks_list="tasksEvent"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
         v-if="itemIdToEdit && authorizedToEdit"
@@ -91,7 +93,7 @@ import moduleSkillManagement from "@/store/skill-management/moduleSkillManagemen
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 
 // Component
-import EditForm from "./EditForm.vue";
+import EditForm from "../tasks/EditForm.vue";
 import AddForm from "../tasks/AddForm.vue";
 
 // must manually include stylesheets for each plugin
@@ -256,12 +258,6 @@ export default {
       );
     },
     tasksEvent() {
-      this.$store.state.taskManagement
-        ? console.log([
-            "this.$store.state.taskManagement.tasks",
-            this.$store.state.taskManagement.tasks,
-          ])
-        : console.log("nulll");
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
         : [];
@@ -497,9 +493,7 @@ export default {
     },
   },
   mounted() {
-    console.log("oui bonjour");
     if (this.$route.query.type === "projects") {
-      console.log("oui je passe dans projects");
       let project = this.$store.state.projectManagement.projects.find(
         (p) => p.id === parseInt(this.$route.query.id, 10)
       );

@@ -435,9 +435,13 @@ router.beforeEach((to, from, next) => {
     // If auth required, check login. If login fails redirect to login page
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
+            localStorage.setItem('loggedIn',false)
             router.push({ path: '/pages/login', query: { to: to.path } })
+        } else {
+            // Update expireAt 
+            let newExpireAt = moment().add(2, 'hours').unix();
+            localStorage.setItem('tokenExpires', newExpireAt)
         }
-
     }
 
     return next()

@@ -14,14 +14,14 @@ export default {
     let skill_ids = []
     let task_ids = []
 
-    if(item.skills.length > 0){
+    if(item.skills && item.skills.length > 0){
       item.skills.forEach(element => {
         skill_ids.push(element.id)
       });
     }
     item.skills = skill_ids
     
-    if(item.previous_tasks.length > 0){
+    if(item.previous_tasks && item.previous_tasks.length > 0){
       item.previous_tasks.forEach(element => {
         task_ids.push(element.previous_task_id)
       });

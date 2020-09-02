@@ -169,7 +169,6 @@ export default {
   computed: {
     activePrompt: {
       get() {
-        console.log(["itemId", this.itemId]);
 
         if (this.itemId && this.itemId > -1) {
           this.itemLocal = Object.assign(
@@ -178,7 +177,6 @@ export default {
           );
         }
         this.getWorkareasData();
-        console.log(["itemLocal active prompt", this.itemLocal]);
         return this.itemId && this.itemId > -1 && this.deleteWarning === false
           ? true
           : false;

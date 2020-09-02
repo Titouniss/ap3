@@ -32,7 +32,6 @@
                 class="w-full mb-4 mt-1"
                 placeholder="Nom"
                 v-model="itemLocal.name"
-                :color="!errors.has('name') ? 'success' : 'danger'"
               />
               <span
                 class="text-danger text-sm"
@@ -55,7 +54,7 @@
                 <span>Tache dépendante de :</span>
                 <li :key="index" v-for="(item, index) in previousTasks">{{ item }}</li>
               </div>
-              <div class="my-3" style="font-size: 0.9em;" v-if="hideUserInput == false">
+              <div class="my-3" style="font-size: 0.9em;" v-if="project_data.status != 'todo'">
                 <small class="date-label mb-1" style="display: block;">Date</small>
                 <flat-pickr
                   :config="configdateTimePicker"
@@ -67,30 +66,7 @@
 
               <div class="my-3">
                 <vs-select
-                  v-if="this.type !== 'users' && usersData.length > 0 && hideUserInput == false"
-                  v-validate="'required'"
-                  name="userId"
-                  label="Attribuer"
-                  v-model="itemLocal.user_id"
-                  class="w-full"
-                  autocomplete
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.firstname + ' ' + item.lastname"
-                    v-for="(item,index) in usersData"
-                  />
-                </vs-select>
-                <span
-                  class="text-danger text-sm"
-                  v-show="errors.has('userId')"
-                >{{ errors.first('userId') }}</span>
-              </div>
-
-              <div class="my-3">
-                <vs-select
-                  v-if="this.type !== 'projects' && projectsData.length > 0 && hideUserInput == false"
+                  v-if="this.type !== 'projects' && projectsData.length > 0 && hideProjectInput == false"
                   v-validate="'required'"
                   name="projectId"
                   label="Projet"
@@ -114,7 +90,7 @@
               <div class="my-3">
                 <small class="date-label">Compétences</small>
                 <vs-select
-                  v-on:change="updateWorkareasList"
+                  v-on:change="updateUsersAndWorkareasList"
                   v-model="itemLocal.skills"
                   class="w-full"
                   multiple
@@ -135,11 +111,39 @@
               </div>
 
               <span
+                  v-if="itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
+                  class="text-danger text-sm"
+                >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
+
+              <div class="my-3">
+                <vs-select
+                  v-if="this.type !== 'users' && usersData.length > 0 && project_data.status != 'todo' && (itemLocal.skills.length > 0 && usersDataFiltered.length > 0)"
+                  v-validate="'required'"
+                  name="userId"
+                  label="Attribuer"
+                  v-model="itemLocal.user_id"
+                  class="w-full"
+                  autocomplete
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.firstname + ' ' + item.lastname"
+                    v-for="(item,index) in usersDataFiltered"
+                  />
+                </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('userId')"
+                >{{ errors.first('userId') }}</span>
+              </div>
+
+              <span
                   v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
                   class="text-danger text-sm"
                 >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
-              <!-- <div
+              <div
                 class="my-3"
                 v-if="this.type !== 'workarea' && ( itemLocal.skills.length > 0 && workareasDataFiltered.length > 0)"
               >
@@ -161,13 +165,14 @@
                   class="text-danger text-sm"
                   v-show="errors.has('workarea')"
                 >{{ errors.first('workarea') }}</span>
-              </div> -->
+              </div>
 
             </div>
             <!-- Right -->
             <div class="vx-col flex-5">
               <div class="mb-3" style="flex-direction: column; display: flex;">
                 <add-previous-task
+                  v-if="project_data.status == 'todo'"
                   :addPreviousTask="addPreviousTask"
                   :tasks_list="tasks_list"
                   :previousTasksIds="itemLocal.previousTasksIds"
@@ -258,8 +263,7 @@ export default {
     activeAddPrompt: { type: Boolean },
     handleClose: { type: Function },
     type: { type: String },
-    hideProjectInput: { type: Boolean },
-    hideUserInput: { type: Boolean }
+    hideProjectInput: { type: Boolean }
   },
   data() {
     return {
@@ -275,7 +279,7 @@ export default {
         name: "",
         order: "",
         description: "",
-        date: "",
+        date: this.project_data.status != "todo" ? new Date() : "",
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
@@ -289,6 +293,7 @@ export default {
       },
 
       workareasDataFiltered: [],
+      usersDataFiltered: [],
       comments: [],
       isSubmiting: false,
 
@@ -331,7 +336,8 @@ export default {
       }
     },
     usersData() {
-      return this.$store.state.userManagement.users;
+      let usersDate = this.$store.state.userManagement.users;
+      return this.filterItemsAdmin(usersDate); 
     },
     projectsData() {
       return this.$store.state.projectManagement.projects;
@@ -354,7 +360,7 @@ export default {
         name: "",
         order: "",
         description: "",
-        date: "",
+        date: this.project_data.status != "todo" ? new Date() : "",
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
@@ -362,10 +368,10 @@ export default {
         created_by: "",
         status: "todo",
         skills: [],
-        project_id: null,
+        project_id: this.project_data ? this.project_data.id : null,
         comment: "",
         previousTasksIds: [],
-        user_id: null
+        user_id: this.type === "users" ? this.idType : null
       });
       if (this.activeAddPrompt) {
         this.handleClose();
@@ -376,28 +382,25 @@ export default {
       this.descriptionDisplay = false;
       this.commentDisplay = false;
       this.have_setTimeSpent = false;
-      (this.previousTasks = []), Object.assign(this.workareasDataFiltered, []);
+      (this.previousTasks = []);
+      Object.assign(this.workareasDataFiltered, []);
+      Object.assign(this.usersDataFiltered, []);
     },
     addItem() {
       if (!this.isSubmiting) {
         this.isSubmiting = true;
 
         this.$validator.validateAll().then(result => {
+          let dateFormat = this.itemLocal.date
           this.itemLocal.date = this.itemLocal.date ? moment(
             this.itemLocal.date,
             "DD-MM-YYYY HH:mm"
           ).format("YYYY-MM-DD HH:mm") : null;
 
-          // this.itemLocal.workarea_id =
-          //   this.itemLocal.workarea_id == "null"
-          //     ? null
-          //     : this.itemLocal.workarea_id;
           this.itemLocal.project_id =
             this.type === "projects" ? this.idType : this.itemLocal.project_id;
           this.itemLocal.user_id =
             this.type === "users" ? this.idType : this.itemLocal.user_id;
-          // this.itemLocal.workarea_id =
-          //   this.type === "workarea" ? this.idType : this.itemLocal.workarea_id;
 
           if (result) {
             this.$store
@@ -405,18 +408,29 @@ export default {
                 "taskManagement/addItem",
                 Object.assign({}, this.itemLocal)
               )
-              .then(() => {
-                this.isSubmiting = false;
+              .then((response) => {
+                if(response.data.success){
+                  this.isSubmiting = false;
 
-                this.$vs.loading.close();
-                this.$vs.notify({
-                  title: "Ajout d'une tâche",
-                  text: `"${this.itemLocal.name}" ajouté avec succès`,
-                  iconPack: "feather",
-                  icon: "icon-alert-circle",
-                  color: "success"
-                });
-                this.clearFields();
+                  this.$vs.loading.close();
+                  this.$vs.notify({
+                    title: "Ajout d'une tâche",
+                    text: `"${this.itemLocal.name}" ajouté avec succès`,
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "success"
+                  });
+                  this.clearFields();
+                }
+                else{
+                  this.$vs.notify({
+                    title: "Indisponnible",
+                    text: response.data.error,
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "danger"
+                  });
+                }                
               })
               .catch(error => {
                 this.isSubmiting = false;
@@ -430,9 +444,14 @@ export default {
                   color: "danger"
                 });
               });
+              this.itemLocal.date = dateFormat
           }
         });
       }
+    },
+    updateUsersAndWorkareasList(ids){
+      this.updateWorkareasList(ids)
+      this.updateUsersList(ids)
     },
     updateWorkareasList(ids) {
       this.workareasDataFiltered = this.workareasData.filter(function(
@@ -440,6 +459,18 @@ export default {
       ) {
         for (let i = 0; i < ids.length; i++) {
           if (workarea.skills.filter(skill => skill.id == ids[i]).length == 0) {
+            return false;
+          }
+        }
+        return true;
+      });
+    },
+    updateUsersList(ids) {
+      this.usersDataFiltered = this.usersData.filter(function(
+        user
+      ) {
+        for (let i = 0; i < ids.length; i++) {
+          if (user.skills.filter(skill => skill.id == ids[i]).length == 0) {
             return false;
           }
         }

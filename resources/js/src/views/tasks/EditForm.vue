@@ -38,11 +38,34 @@
 
                     <div class="my-3">
                       <small class="date-label">Compétences</small>
-                      <vs-select v-on:change="updateWorkareasList" v-model="itemLocal.skills" class="w-full" multiple autocomplete
+                      <vs-select v-on:change="updateUsersAndWorkareasList" v-model="itemLocal.skills" class="w-full" multiple autocomplete
                         v-validate="'required'" name='skills'>
                         <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in skillsData" />
                       </vs-select>
                       <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
+                    </div>
+
+                    <span
+                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
+                      class="text-danger text-sm"
+                    >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
+
+                    <div class="my-3" v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
+                      <vs-select
+                        v-validate="'required'"
+                        name="userId"
+                        label="Attribuer"
+                        v-model="itemLocal.user_id"
+                        class="w-full"
+                        autocomplete
+                      >
+                        <vs-select-item
+                          :key="index"
+                          :value="item.id"
+                          :text="item.firstname + ' ' + item.lastname"
+                          v-for="(item,index) in usersDataFiltered"
+                        />
+                      </vs-select>
                     </div>
                     
                     <span
@@ -50,12 +73,12 @@
                       class="text-danger text-sm"
                     >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
-                    <!-- <div class="my-3" v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                    <div class="my-3" v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
                       <small class="date-label">Ilot</small>
                         <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
                             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
                         </vs-select>
-                    </div> -->
+                    </div>
                   </div>
                   <!-- Right -->
                   <div class="vx-col flex-5">
@@ -137,6 +160,14 @@
                 </div>
         </form>
       </div>
+      <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
+        <vs-button
+          @click="confirmDeleteTask(itemLocal.id)"
+          color="danger"
+          type="filled"
+          size="small"
+        >Supprimer la tâche</vs-button>
+      </vs-row>
     </vs-prompt>
   </div>
 </template>
@@ -185,9 +216,11 @@ export default {
         this.$store.getters["taskManagement/getItem"](this.itemId)
       ),
 
+      usersDataFiltered: [],
       workareasDataFiltered: [],
       comments: [],
 
+      deleteWarning: false,
       orderDisplay: false,
       descriptionDisplay: false,
       commentDisplay: false,
@@ -205,7 +238,7 @@ export default {
     },
     activePrompt: {
       get() {
-        this.addPreviousTask(this.itemLocal.previous_tasks);
+        this.itemLocal.previous_tasks ? this.addPreviousTask(this.itemLocal.previous_tasks) : null;
         return this.itemId && this.itemId > 0 ? true : false;
       },
       set(value) {
@@ -222,16 +255,21 @@ export default {
       let $filteredItems = this.filterItemsAdmin($workareasData);
       return $filteredItems;
     },
+    usersData() {
+      let usersDate = this.$store.state.userManagement.users;
+      return this.filterItemsAdmin(usersDate);
+    },
     skillsData() {
       let $skillsData = this.$store.state.skillManagement.skills;
       this.updateWorkareasList(this.itemLocal.skills);
+      this.updateUsersList(this.itemLocal.skills);
       return this.filterItemsAdmin($skillsData);
     }
   },
   methods: {
     clear() {
       this.itemLocal = {};
-      (this.workareasDataFiltered = []), (this.comments = []);
+      (this.workareasDataFiltered = []), (this.usersDataFiltered = []), (this.comments = []);
     },
     moment: function(date) {
       moment.locale("fr");
@@ -246,17 +284,12 @@ export default {
         this.addComment();
       }
 
-      console.log(['itemLocal.date', this.itemLocal.date])
-
       this.$validator.validateAll().then(result => {
+        this.itemLocal.project_id = this.project_data.id
         this.itemLocal.date = this.itemLocal.date ? moment(
           this.itemLocal.date,
           "DD-MM-YYYY HH:mm"
         ).format("YYYY-MM-DD HH:mm") : null;
-        // this.itemLocal.workarea_id =
-        //   this.itemLocal.workarea_id == "null"
-        //     ? null
-        //     : this.itemLocal.workarea_id;
 
         if (result) {
           this.$store
@@ -264,15 +297,29 @@ export default {
               "taskManagement/updateItem",
               Object.assign({}, this.itemLocal)
             )
-            .then(() => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Modification d'une tâche",
-                text: `"${this.itemLocal.name}" modifiée avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
-              });
+            .then((response) => {
+              if(response.data.success){
+                this.isSubmiting = false;
+
+                this.$vs.loading.close();
+                this.$vs.notify({
+                  title: "Modification d'une tâche",
+                  text: `"${this.itemLocal.name}" modifiée avec succès`,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "success"
+                });
+                this.clearFields();
+              }
+              else{
+                this.$vs.notify({
+                  title: "Indisponnible",
+                  text: response.data.error,
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "danger"
+                });
+              } 
             })
             .catch(error => {
               this.$vs.loading.close();
@@ -305,12 +352,28 @@ export default {
           this.itemLocal.comment = "";
         });
     },
+    updateUsersAndWorkareasList(ids){
+      this.updateWorkareasList(ids)
+      this.updateUsersList(ids)
+    },
     updateWorkareasList(ids) {
       this.workareasDataFiltered = this.workareasData.filter(function(
         workarea
       ) {
         for (let i = 0; i < ids.length; i++) {
           if (workarea.skills.filter(skill => skill.id == ids[i]).length == 0) {
+            return false;
+          }
+        }
+        return true;
+      });
+    },
+    updateUsersList(ids) {
+      this.usersDataFiltered = this.usersData.filter(function(
+        user
+      ) {
+        for (let i = 0; i < ids.length; i++) {
+          if (user.skills.filter(skill => skill.id == ids[i]).length == 0) {
             return false;
           }
         }
@@ -353,6 +416,40 @@ export default {
     },
     showDescription() {
       this.descriptionDisplay = true;
+    },
+    confirmDeleteTask(idEvent) {
+      this.deleteWarning = true;
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text: `Vous allez supprimer la tâche "${this.itemLocal.title}"`,
+        accept: this.deleteTask,
+        cancel: this.keepTask,
+        acceptText: "Supprimer !",
+        cancelText: "Annuler"
+      });
+    },
+    keepTask() {
+      this.deleteWarning = false;
+    },
+    deleteTask() {
+      this.deleteWarning = false;
+      this.$store
+        .dispatch("scheduleManagement/removeEvent", this.idEvent)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+
+      this.$store
+        .dispatch("taskManagement/removeItem", this.itemLocal.id)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+
+      this.init();
     }
   }
 };
