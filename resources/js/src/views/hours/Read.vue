@@ -85,6 +85,10 @@
         :plugins="calendarPlugins"
         :weekends="calendarWeekends"
         :firstDay="1"
+        :minTime="minTime"
+        :maxTime="maxTime"
+        contentHeight="auto"
+        :businessHours="businessHours"
         :events="calendarEvents"
         @dateClick="handleDateClick"
         @eventClick="handleEventClick"
@@ -154,6 +158,9 @@ export default {
           },
         },
       },
+      businessHours: false,
+      minTime: "00:00",
+      maxTime: "24:00",
       // Filters
       filters: {
         company:
@@ -241,6 +248,8 @@ export default {
       if (this.filters.company && this.filters.user) {
         filter.user_id = this.filters.user.id;
       }
+      // get user work hours
+      this.getBusinessHours();
     },
     activeUserRole() {
       const user = this.$store.state.AppActiveUser;
@@ -248,6 +257,106 @@ export default {
         return user.roles[0].name;
       }
       return false;
+    },
+    getBusinessHours() {
+      this.$store
+        .dispatch("userManagement/fetchItem", this.filters.user.id)
+        .then((res) => {
+          let item = res.data.success;
+          if (item.work_hours.length > 0) {
+            let businessHours = [];
+            item.work_hours.forEach((wH) => {
+              if (wH.is_active === 1) {
+                if (
+                  wH.morning_starts_at !== null &&
+                  wH.morning_ends_at !== null
+                ) {
+                  businessHours.push({
+                    daysOfWeek: this.getDayNumber(wH.day),
+                    startTime: this.parseWorkHour(wH.morning_starts_at),
+                    endTime: this.parseWorkHour(wH.morning_ends_at),
+                  });
+                }
+                if (
+                  wH.afternoon_starts_at !== null &&
+                  wH.afternoon_ends_at !== null
+                ) {
+                  businessHours.push({
+                    daysOfWeek: this.getDayNumber(wH.day),
+                    startTime: this.parseWorkHour(wH.afternoon_starts_at),
+                    endTime: this.parseWorkHour(wH.afternoon_ends_at),
+                  });
+                }
+              }
+            });
+            if (businessHours !== []) {
+              let minHour = null;
+              let maxHour = null;
+              businessHours.forEach((bH) => {
+                if (minHour === null || minHour > bH.startTime) {
+                  minHour = bH.startTime;
+                }
+                if (maxHour === null || maxHour < bH.endTime) {
+                  maxHour = bH.endTime;
+                }
+              });
+
+              // Add h hours before and after
+              this.minTime =
+                minHour >= "02:00"
+                  ? moment(minHour, "HH:mm").subtract(2, "hour").format("HH:mm")
+                  : "00:00";
+              this.maxTime =
+                maxHour <= "22:00"
+                  ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
+                  : "24:00";
+
+              this.businessHours = businessHours;
+            } else {
+              this.businessHours = false;
+            }
+          } else {
+            this.minTime = "00:00";
+            this.maxTime = "24:00";
+            this.businessHours = false;
+          }
+        });
+    },
+    parseWorkHour(hour) {
+      let splitHour = hour.split(":");
+      let parseHour = splitHour[0] + ":" + splitHour[1];
+      return parseHour;
+    },
+    getDayNumber(day) {
+      let dayNumber = [];
+      switch (day) {
+        case "lundi":
+          dayNumber.push(1);
+          break;
+        case "mardi":
+          dayNumber.push(2);
+          break;
+        case "mercredi":
+          dayNumber.push(3);
+          break;
+        case "jeudi":
+          dayNumber.push(4);
+          break;
+        case "vendredi":
+          dayNumber.push(5);
+          break;
+        case "samedi":
+          dayNumber.push(6);
+          break;
+        case "dimanche":
+          dayNumber.push(0);
+          break;
+
+        default:
+          dayNumber = [];
+          break;
+      }
+      return dayNumber;
     },
   },
   mounted() {},
