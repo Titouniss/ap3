@@ -46,11 +46,11 @@
                     </div>
 
                     <span
-                      v-if="itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
+                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
                       class="text-danger text-sm"
                     >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
 
-                    <div class="my-3" v-if="itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
+                    <div class="my-3" v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
                       <vs-select
                         v-validate="'required'"
                         name="userId"
@@ -73,7 +73,7 @@
                       class="text-danger text-sm"
                     >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
-                    <div class="my-3" v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                    <div class="my-3" v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
                       <small class="date-label">Ilot</small>
                         <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
                             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
@@ -160,6 +160,14 @@
                 </div>
         </form>
       </div>
+      <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
+        <vs-button
+          @click="confirmDeleteTask(itemLocal.id)"
+          color="danger"
+          type="filled"
+          size="small"
+        >Supprimer la tâche</vs-button>
+      </vs-row>
     </vs-prompt>
   </div>
 </template>
@@ -212,6 +220,7 @@ export default {
       workareasDataFiltered: [],
       comments: [],
 
+      deleteWarning: false,
       orderDisplay: false,
       descriptionDisplay: false,
       commentDisplay: false,
@@ -229,7 +238,7 @@ export default {
     },
     activePrompt: {
       get() {
-        this.addPreviousTask(this.itemLocal.previous_tasks);
+        this.itemLocal.previous_tasks ? this.addPreviousTask(this.itemLocal.previous_tasks) : null;
         return this.itemId && this.itemId > 0 ? true : false;
       },
       set(value) {
@@ -275,8 +284,6 @@ export default {
         this.addComment();
       }
 
-      console.log('test')
-
       this.$validator.validateAll().then(result => {
         this.itemLocal.project_id = this.project_data.id
         this.itemLocal.date = this.itemLocal.date ? moment(
@@ -285,14 +292,12 @@ export default {
         ).format("YYYY-MM-DD HH:mm") : null;
 
         if (result) {
-          console.log(['result', result])
           this.$store
             .dispatch(
               "taskManagement/updateItem",
               Object.assign({}, this.itemLocal)
             )
             .then((response) => {
-              console.log(['response', response])
               if(response.data.success){
                 this.isSubmiting = false;
 
@@ -411,6 +416,40 @@ export default {
     },
     showDescription() {
       this.descriptionDisplay = true;
+    },
+    confirmDeleteTask(idEvent) {
+      this.deleteWarning = true;
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text: `Vous allez supprimer la tâche "${this.itemLocal.title}"`,
+        accept: this.deleteTask,
+        cancel: this.keepTask,
+        acceptText: "Supprimer !",
+        cancelText: "Annuler"
+      });
+    },
+    keepTask() {
+      this.deleteWarning = false;
+    },
+    deleteTask() {
+      this.deleteWarning = false;
+      this.$store
+        .dispatch("scheduleManagement/removeEvent", this.idEvent)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+
+      this.$store
+        .dispatch("taskManagement/removeItem", this.itemLocal.id)
+        .then(() => {})
+        .catch(err => {
+          console.error(err);
+        });
+
+      this.init();
     }
   }
 };

@@ -42,7 +42,7 @@ class TaskController extends Controller
      */
     public function getByBundle(int $bundle_id)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks')->get();
+        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 

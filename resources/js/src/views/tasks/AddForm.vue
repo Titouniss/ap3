@@ -32,7 +32,6 @@
                 class="w-full mb-4 mt-1"
                 placeholder="Nom"
                 v-model="itemLocal.name"
-                :color="!errors.has('name') ? 'success' : 'danger'"
               />
               <span
                 class="text-danger text-sm"
