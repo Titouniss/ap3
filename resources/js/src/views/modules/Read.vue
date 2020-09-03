@@ -56,7 +56,7 @@
                                             name="host"
                                             label-placeholder="Hôte"
                                             v-model="connection.host"
-                                            @input="onDbConnectionInputChange"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.host.length > 0 &&
@@ -85,7 +85,7 @@
                                             name="port"
                                             label-placeholder="Port"
                                             v-model="connection.port"
-                                            @input="onDbConnectionInputChange"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.port.length > 0 &&
@@ -114,7 +114,7 @@
                                             name="database"
                                             label-placeholder="Base de données"
                                             v-model="connection.database"
-                                            @input="onDbConnectionInputChange"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.database.length >
@@ -156,7 +156,7 @@
                                             name="username"
                                             label-placeholder="Utilisateur"
                                             v-model="connection.username"
-                                            @input="onDbConnectionInputChange"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.username.length >
@@ -196,7 +196,7 @@
                                             name="password"
                                             label-placeholder="Mot de passe"
                                             v-model="connection.password"
-                                            @input="onDbConnectionInputChange"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.password.length >
@@ -237,7 +237,7 @@
                                             v-model="
                                                 connection.confirm_password
                                             "
-                                            @input="onDbConnectionInputChange"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.confirm_password
@@ -279,28 +279,28 @@
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
-                                            @change="onDbConnectionInputChange"
+                                            @change="onConnectionInputChange"
                                             vs-value="mysql"
                                             >MySQL</vs-radio
                                         >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
-                                            @change="onDbConnectionInputChange"
+                                            @change="onConnectionInputChange"
                                             vs-value="sqlite"
                                             >SQLite</vs-radio
                                         >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
-                                            @change="onDbConnectionInputChange"
+                                            @change="onConnectionInputChange"
                                             vs-value="pgsql"
                                             >PostgreSQL</vs-radio
                                         >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
-                                            @change="onDbConnectionInputChange"
+                                            @change="onConnectionInputChange"
                                             vs-value="sqlsrv"
                                             >SQL Server</vs-radio
                                         >
@@ -478,6 +478,7 @@
                                             name="url"
                                             label-placeholder="Url"
                                             v-model="connection.url"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.url.length > 0 &&
@@ -503,6 +504,7 @@
                                             name="auth_headers"
                                             label-placeholder="Entêtes d'authentification"
                                             v-model="connection.auth_headers"
+                                            @input="onConnectionInputChange"
                                             class="w-full"
                                             :success="
                                                 connection.auth_headers.length >
@@ -573,13 +575,13 @@ export default {
                 username: "",
                 password: "",
                 confirm_password: "",
-                has_password: false
+                has_password: false,
+                has_changes: false
             },
             dbConnection: {
                 test_passed: false,
                 is_testing: false,
-                prompt_active: false,
-                has_changes: false
+                prompt_active: false
             }
         };
     },
@@ -599,8 +601,8 @@ export default {
         }
     },
     methods: {
-        onDbConnectionInputChange() {
-            this.dbConnection.has_changes = true;
+        onConnectionInputChange() {
+            this.connection.has_changes = true;
             this.dbConnection.test_passed = false;
         },
         validateForm(scope = null) {
@@ -619,7 +621,11 @@ export default {
                             });
                             reject("Error");
                         }
-                        this.updateModule().then(() => resolve(true));
+                        if (this.connection.has_changes) {
+                            this.updateModule().then(() => resolve(true));
+                        } else {
+                            resolve(true);
+                        }
                     } else {
                         reject("Error");
                     }
@@ -716,10 +722,10 @@ export default {
                 this.connection = {
                     ...this.connection,
                     ...res.data.success.connection,
-                    driver: res.data.success.connection.driver || "mysql"
+                    driver: res.data.success.connection.driver || "mysql",
+                    has_changes: false
                 };
                 this.dbConnection.test_passed = this.connection.has_password;
-                this.dbConnection.has_changes = false;
             });
     },
     beforeDestroy() {
