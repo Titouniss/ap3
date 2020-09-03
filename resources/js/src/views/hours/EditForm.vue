@@ -80,7 +80,7 @@
                 <flat-pickr
                   v-validate="'required'"
                   name="startHour"
-                  :config="configHourPicker()"
+                  :config="configStartHourPicker"
                   class="w-full"
                   v-model="itemLocal.startHour"
                   :color="!errors.has('startHour') ? 'success' : 'danger'"
@@ -95,7 +95,7 @@
                 <flat-pickr
                   v-validate="'required'"
                   name="endHour"
-                  :config="configHourPicker()"
+                  :config="configEndHourPicker"
                   class="w-full"
                   v-model="itemLocal.endHour"
                   :color="!errors.has('endHour') ? 'success' : 'danger'"
@@ -150,13 +150,13 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 export default {
   components: {
     flatPickr,
-    vSelect
+    vSelect,
   },
   props: {
     itemId: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
@@ -172,20 +172,68 @@ export default {
         locale: FrenchLocale,
         dateFormat: "Y-m-d",
         altFormat: "j F Y",
-        altInput: true
+        altInput: true,
       }),
-      configHourPicker: () => ({
-        disableMobile: "true",
-        enableTime: true,
-        locale: FrenchLocale,
-        noCalendar: true,
-        dateFormat: "H:i",
-        altFormat: "H:i",
-        altInput: true
-      })
     };
   },
   computed: {
+    configStartHourPicker: {
+      get() {
+        console.log(["this.itemLocal.endHour", this.itemLocal.endHour]);
+        console.log([
+          "Lo",
+          moment(this.itemLocal.endHour, "HH:mm").subtract(5, "m"),
+        ]);
+        return {
+          disableMobile: "true",
+          enableTime: true,
+          locale: FrenchLocale,
+          noCalendar: true,
+          dateFormat: "H:i",
+          altFormat: "H:i",
+          altInput: true,
+          maxTime:
+            this.itemLocal.endHour.split(":")[1] === "00"
+              ? moment(this.itemLocal.endHour, "HH:mm")
+                  .subtract(1, "h")
+                  .set("m", 55)
+                  .format("HH:mm")
+              : moment(this.itemLocal.endHour, "HH:mm")
+                  .subtract(5, "m")
+                  .format("HH:mm"),
+        };
+      },
+      set(value) {
+        return value;
+      },
+    },
+    configEndHourPicker: {
+      get() {
+        return {
+          disableMobile: "true",
+          enableTime: true,
+          locale: FrenchLocale,
+          noCalendar: true,
+          dateFormat: "H:i",
+          altFormat: "H:i",
+          altInput: true,
+          minTime:
+            this.itemLocal.endHour &&
+            this.itemLocal.startHour.split(":")[1] === "55"
+              ? moment(this.itemLocal.startHour, "HH:mm")
+                  .set("m", 0)
+                  .add(1, "h")
+                  .format("HH:mm")
+              : moment(this.itemLocal.startHour, "HH:mm")
+                  .add(5, "m")
+                  .format("HH:mm"),
+          defaultHour: this.updateEndHour,
+        };
+      },
+      set(value) {
+        return value;
+      },
+    },
     activePrompt: {
       get() {
         if (this.itemId && this.itemId > -1) {
@@ -194,6 +242,7 @@ export default {
             this.$store.getters["hoursManagement/getItem"](this.itemId)
           );
         }
+        console.log(["this.itemLocal", this.itemLocal]);
 
         return this.itemId && this.itemId > -1 && this.deleteWarning === false
           ? true
@@ -203,10 +252,10 @@ export default {
         this.$store
           .dispatch("hoursManagement/editItem", {})
           .then(() => {})
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
-      }
+      },
     },
     validateForm() {
       return (
@@ -223,7 +272,7 @@ export default {
     },
     usersData() {
       return this.$store.state.userManagement.users;
-    }
+    },
   },
   methods: {
     init() {
@@ -231,6 +280,7 @@ export default {
         {},
         this.$store.getters["hoursManagement/getItem"](this.itemId)
       );
+      console.log(["this.itemLocal", this.itemLocal]);
     },
     submitHour() {
       var itemToSave = {};
@@ -243,12 +293,12 @@ export default {
         user_id: this.itemLocal.user_id,
         project_id: this.itemLocal.project_id,
         start_at: this.itemLocal.date + " " + this.itemLocal.startHour,
-        end_at: this.itemLocal.date + " " + this.itemLocal.endHour
+        end_at: this.itemLocal.date + " " + this.itemLocal.endHour,
       };
 
       this.$store
         .dispatch("hoursManagement/updateItem", itemToSave)
-        .then(response => {
+        .then((response) => {
           if (response.data.success) {
             this.$vs.loading.close();
             this.$vs.notify({
@@ -256,7 +306,7 @@ export default {
               text: `Horaire modifié avec succès`,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "success"
+              color: "success",
             });
           } else {
             this.$vs.loading.close();
@@ -265,18 +315,18 @@ export default {
               text: response.data.error,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger"
+              color: "danger",
             });
           }
         })
-        .catch(err => {
+        .catch((err) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Une erreur est survenue",
             text: err.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
 
@@ -288,15 +338,17 @@ export default {
         type: "confirm",
         color: "danger",
         title: "Confirmer suppression",
-        text: `Vous allez supprimer la saisie horaire "${this.itemLocal.date +
+        text: `Vous allez supprimer la saisie horaire "${
+          this.itemLocal.date +
           " " +
           this.itemLocal.startHour +
           " -> " +
-          this.itemLocal.endHour}"`,
+          this.itemLocal.endHour
+        }"`,
         accept: this.deleteHour,
         cancel: this.keepHour,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     keepHour() {
@@ -313,24 +365,24 @@ export default {
             text: `Horaire supprimé avec succès`,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success"
+            color: "success",
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Une erreur est survenue",
             text: err.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
 
       this.init();
       this.$store.dispatch("hoursManagement/editItem", {});
-    }
+    },
   },
-  mounted() {}
+  mounted() {},
 };
 </script>
