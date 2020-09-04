@@ -280,6 +280,8 @@ export default {
         this.$store
           .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
           .then((response) => {
+            console.log(["store", this.$store]);
+            console.log(["response", response]);
             this.back();
             this.$vs.notify({
               title: "Ajout d'un utilisateur",
@@ -287,6 +289,15 @@ export default {
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "success",
+            });
+            this.$vs.dialog({
+              color: "warning",
+              title: "Attention !",
+              text:
+                "le mot de passe du compte est " +
+                response.data.success[1] +
+                " notez le bien, il devraz être changé lors de la première connexion",
+              acceptText: "OK",
             });
           })
           .catch((error) => {

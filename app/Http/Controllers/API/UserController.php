@@ -208,6 +208,11 @@ class UserController extends Controller
         $input['login'] = $login;
 
         $input['password'] = bcrypt($input['password']);
+        $input['is_password_change'] = 1;
+
+        $controllerLog = new Logger('user');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('input', [$input]);
 
         $user = User::create($input);
         if ($user == null) {
@@ -340,8 +345,9 @@ class UserController extends Controller
         if (User::where('login', $arrayRequest['full_login'])->withTrashed()->exists()) {
             return response()->json(['error' => 'Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
-
-        $arrayRequest['password'] = Hash::make(Str::random(12)); // on créer un password temporaire
+        $password = Str::random(12);
+        $password_not_hash = $password;
+        $arrayRequest['password'] = Hash::make($password); // on créer un password temporaire
         $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
         $arrayRequest['isTermsConditionAccepted'] = false;
         $arrayRequest['login'] = $arrayRequest['full_login'];
@@ -362,7 +368,7 @@ class UserController extends Controller
 
         //$item->notify(new UserRegistration($item));
 
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => [$item, $password_not_hash]], $this->successStatus);
         //Il faut envoyer un email avec lien d'inscription
 
     }
@@ -477,7 +483,12 @@ class UserController extends Controller
                 if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
                     // Save password
                     $user->password = bcrypt($arrayRequest['new_password']);
+
+                    if ($user->is_password_change == 0) {
+                        $user->is_password_change = 1;
+                    }
                     $user->save();
+
                     return response()->json('success');
                 } else {
                     Log::debug('ICI 3 :');
