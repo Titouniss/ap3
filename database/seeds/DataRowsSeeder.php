@@ -55,18 +55,6 @@ class DataRowsSeeder extends Seeder
                 'required'     => 1,
             ])->save();
         }
-        $row = $this->dataRow($type, 'company_id');
-        if (!$row->exists) {
-            $row->fill([
-                'type'         => 'relationship',
-                'display_name' => 'Société',
-                'required'     => 1,
-                'details' => json_encode([
-                    'model' => 'App\Models\Company',
-                    'label' => 'name'
-                ])
-            ])->save();
-        }
         $row = $this->dataRow($type, 'updated_at');
         if (!$row->exists) {
             $row->fill([
@@ -118,18 +106,6 @@ class DataRowsSeeder extends Seeder
                 'required'     => 1,
             ])->save();
         }
-        $row = $this->dataRow($type, 'company_id');
-        if (!$row->exists) {
-            $row->fill([
-                'type'         => 'relationship',
-                'display_name' => 'Société',
-                'required'     => 1,
-                'details' => json_encode([
-                    'model' => 'App\Models\Company',
-                    'label' => 'name'
-                ])
-            ])->save();
-        }
         $row = $this->dataRow($type, 'updated_at');
         if (!$row->exists) {
             $row->fill([
@@ -168,18 +144,6 @@ class DataRowsSeeder extends Seeder
                 ])
             ])->save();
         }
-        $row = $this->dataRow($type, 'company_id');
-        if (!$row->exists) {
-            $row->fill([
-                'type'         => 'relationship',
-                'display_name' => 'Société',
-                'required'     => 1,
-                'details' => json_encode([
-                    'model' => 'App\Models\Company',
-                    'label' => 'name'
-                ])
-            ])->save();
-        }
         $row = $this->dataRow($type, 'updated_at');
         if (!$row->exists) {
             $row->fill([
@@ -207,18 +171,6 @@ class DataRowsSeeder extends Seeder
                 'required'     => 1,
             ])->save();
         }
-        $row = $this->dataRow($type, 'company_id');
-        if (!$row->exists) {
-            $row->fill([
-                'type'         => 'relationship',
-                'display_name' => 'Société',
-                'required'     => 1,
-                'details' => json_encode([
-                    'model' => 'App\Models\Company',
-                    'label' => 'name'
-                ])
-            ])->save();
-        }
         $row = $this->dataRow($type, 'updated_at');
         if (!$row->exists) {
             $row->fill([
@@ -244,18 +196,6 @@ class DataRowsSeeder extends Seeder
                 'type'         => 'string',
                 'display_name' => 'Nom',
                 'required'     => 1,
-            ])->save();
-        }
-        $row = $this->dataRow($type, 'company_id');
-        if (!$row->exists) {
-            $row->fill([
-                'type'         => 'relationship',
-                'display_name' => 'Société',
-                'required'     => 1,
-                'details' => json_encode([
-                    'model' => 'App\Models\Company',
-                    'label' => 'name'
-                ])
             ])->save();
         }
         $row = $this->dataRow($type, 'updated_at');
@@ -313,18 +253,6 @@ class DataRowsSeeder extends Seeder
                 'details' => json_encode([
                     'model' => 'App\Models\Customers',
                     'label' => 'lastname'
-                ])
-            ])->save();
-        }
-        $row = $this->dataRow($type, 'company_id');
-        if (!$row->exists) {
-            $row->fill([
-                'type'         => 'relationship',
-                'display_name' => 'Société',
-                'required'     => 1,
-                'details' => json_encode([
-                    'model' => 'App\Models\Company',
-                    'label' => 'name'
                 ])
             ])->save();
         }

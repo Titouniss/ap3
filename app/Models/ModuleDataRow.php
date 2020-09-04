@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ModuleDataRow extends Model
 {
-    protected $fillable = ['source', 'default_value'];
+    protected $fillable = ['source', 'default_value', 'details', 'data_row_id', 'module_data_type_id'];
 
     public function moduleDataType()
     {

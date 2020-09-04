@@ -24,12 +24,14 @@
                     <form-wizard
                         :title="null"
                         :subtitle="null"
+                        @on-complete="$router.push('/modules')"
                         nextButtonText="Suivant"
                         backButtonText="Précédent"
                         finishButtonText="Valider"
                         color="rgba(var(--vs-primary), 1)"
                         errorColor="rgba(var(--vs-danger), 1)"
                     >
+                        <!-- Connection configuration -->
                         <tab-content
                             title="Paramètres de connexion"
                             icon="feather icon-database"
@@ -536,8 +538,12 @@
                         <tab-content
                             title="Types de données"
                             icon="feather icon-hard-drive"
+                            :before-change="dataTypesBeforeChange"
                         >
-                            <form data-vv-scope="step-2"></form>
+                            <data-types
+                                ref="dataTypes"
+                                :module="item"
+                            ></data-types>
                         </tab-content>
                     </form-wizard>
                 </vx-card>
@@ -547,6 +553,8 @@
 </template>
 
 <script>
+import DataTypes from "./data-types/Index";
+
 import { Validator } from "vee-validate";
 import { FormWizard, TabContent } from "vue-form-wizard";
 import "vue-form-wizard/dist/vue-form-wizard.min.css";
@@ -558,6 +566,7 @@ import moduleModuleManagement from "@/store/module-management/moduleModuleManage
 
 export default {
     components: {
+        DataTypes,
         FormWizard,
         TabContent
     },
@@ -582,7 +591,8 @@ export default {
                 test_passed: false,
                 is_testing: false,
                 prompt_active: false
-            }
+            },
+            dataTypesBeforeChange: null
         };
     },
     computed: {
@@ -604,9 +614,6 @@ export default {
         onConnectionInputChange() {
             this.connection.has_changes = true;
             this.dbConnection.test_passed = false;
-        },
-        validateForm(scope = null) {
-            return this.errors.any(scope);
         },
         validateFirstStep() {
             return new Promise((resolve, reject) => {
@@ -684,15 +691,16 @@ export default {
             }
             return this.$store
                 .dispatch("moduleManagement/updateModule", payload)
-                .then(response =>
+                .then(response => {
                     this.$vs.notify({
                         title: "Succès",
                         text: "Données de connexion misent à jour avec succès",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success"
-                    })
-                )
+                    });
+                    this.connection.has_changes = false;
+                })
                 .catch(error =>
                     this.$vs.notify({
                         title: "Erreur",
@@ -727,6 +735,13 @@ export default {
                 };
                 this.dbConnection.test_passed = this.connection.has_password;
             });
+    },
+    mounted() {
+        setTimeout(() => {
+            if (this.$refs.dataTypes) {
+                this.dataTypesBeforeChange = this.$refs.dataTypes.beforeChange;
+            }
+        }, 1000);
     },
     beforeDestroy() {
         moduleModuleManagement.isRegistered = false;

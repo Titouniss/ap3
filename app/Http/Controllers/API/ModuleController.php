@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\ApiModule;
 use App\Models\BaseModule;
 use App\Models\Company;
+use App\Models\ModuleDataRow;
+use App\Models\ModuleDataType;
 use App\Models\SqlModule;
 use Exception;
 use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use PDO;
 
 class ModuleController extends Controller
 {
@@ -61,7 +62,7 @@ class ModuleController extends Controller
                     'name' => $item->name,
                     'type' => $item->type,
                     'company' => $item->company,
-                    'dataTypes' => $item->moduleDataTypes
+                    'module_data_types' => $item->moduleDataTypes->load('moduleDataRows')
                 ],
                 'connection' => $connection
             ];
@@ -158,7 +159,7 @@ class ModuleController extends Controller
     }
 
     /** 
-     * update item api 
+     * update module item api 
      * 
      * @return \Illuminate\Http\Response 
      */
@@ -219,6 +220,67 @@ class ModuleController extends Controller
             ]);
         }
         return response()->json(['success' => true], $this->successStatus);
+    }
+
+    /** 
+     * update item module data types api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */
+    public function updateModuleDataTypes(Request $request, BaseModule $item)
+    {
+        if (!$item) {
+            return response()->json(['error' => "Not found"], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'module_data_types' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        $module_data_types = $request->all()['module_data_types'];
+        foreach ($module_data_types as $mdt) {
+            $validator = Validator::make($mdt, [
+                'data_type_id' => 'required',
+                'source' => 'required',
+                'module_data_rows' => 'required',
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
+            foreach ($mdt['module_data_rows'] as $mdr) {
+                $validator = Validator::make($mdr, [
+                    'data_row_id' => 'required',
+                    'source' => 'required',
+                    'default_value' => 'nullable',
+                    'details' => 'nullable',
+                ]);
+                if ($validator->fails()) {
+                    return response()->json(['error' => $validator->errors()], 400);
+                }
+            }
+        }
+
+        ModuleDataType::where('module_id', $item->id)->delete();
+        foreach ($module_data_types as $mdt) {
+            $moduleDataType = ModuleDataType::create([
+                'module_id' => $item->id,
+                'data_type_id' => $mdt['data_type_id'],
+                'source' => $mdt['source']
+            ]);
+            foreach ($mdt['module_data_rows'] as $mdr) {
+                ModuleDataRow::create([
+                    'module_data_type_id' => $moduleDataType->id,
+                    'data_row_id' => $mdr['data_row_id'],
+                    'source' => $mdr['source'],
+                    'default_value' => $mdr['default_value'],
+                    'details' => $mdr['details'],
+                ]);
+            }
+        }
+        return response()->json(['success' => ['module_data_types' => ModuleDataType::where('module_id', $item->id)->with('moduleDataRows')->get()]], $this->successStatus);
     }
 
     /** 

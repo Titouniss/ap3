@@ -337,9 +337,19 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:edit modules']], function () {
             Route::post('update/{item}', 'API\ModuleController@update');
             Route::post('module-update/{id}', 'API\ModuleController@updateModule');
+            Route::post('module-data-types-update/{item}', 'API\ModuleController@updateModuleDataTypes');
         });
         Route::group(['middleware' => ['can:delete modules']], function () {
             Route::delete('destroy/{item}', 'API\ModuleController@destroy');
+        });
+    });
+
+    /***********************************************************************************/
+    /***********************************   DataTypes   *************************************/
+    /***********************************************************************************/
+    Route::prefix('data-type-management')->group(function () {
+        Route::group(['middleware' => ['can:read modules']], function () {
+            Route::get('index', 'API\DataTypeController@index');
         });
     });
 });

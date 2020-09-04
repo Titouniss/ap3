@@ -16,11 +16,12 @@ class CreateModuleDataRowsTable extends Migration
         Schema::create('module_data_rows', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('module_data_type_id');
-            $table->foreign('module_data_type_id')->references('id')->on('module_data_types');
+            $table->foreign('module_data_type_id')->references('id')->on('module_data_types')->onDelete('cascade');
             $table->unsignedBigInteger('data_row_id');
             $table->foreign('data_row_id')->references('id')->on('data_rows');
             $table->string('source');
             $table->string('default_value')->nullable();
+            $table->string('details')->nullable();
             $table->timestamps();
         });
     }

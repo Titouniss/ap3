@@ -20,7 +20,6 @@ class CreateDataTypesTable extends Migration
             $table->string('display_name_plurial');
             $table->string('model');
             $table->integer('order');
-            $table->timestamps();
         });
     }
 

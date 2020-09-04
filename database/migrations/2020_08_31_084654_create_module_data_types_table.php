@@ -16,7 +16,7 @@ class CreateModuleDataTypesTable extends Migration
         Schema::create('module_data_types', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('module_id');
-            $table->foreign('module_id')->references('id')->on('base_modules');
+            $table->foreign('module_id')->references('id')->on('base_modules')->onDelete('cascade');
             $table->unsignedBigInteger('data_type_id');
             $table->foreign('data_type_id')->references('id')->on('data_types');
             $table->string('source');

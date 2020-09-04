@@ -22,7 +22,6 @@ class CreateDataRowsTable extends Migration
             $table->boolean('required')->default(false);
             $table->enum('type', ['string', 'integer', 'boolean', 'datetime', 'enum', 'relationship']);
             $table->string('details')->nullable();
-            $table->timestamps();
         });
     }
 

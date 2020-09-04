@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ModuleDataType extends Model
 {
-    protected $fillable = ['source'];
+    protected $fillable = ['source', 'data_type_id', 'module_id'];
 
     public function module()
     {
