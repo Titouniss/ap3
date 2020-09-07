@@ -50,7 +50,8 @@
                                         vs-type="flex"
                                         vs-justify="center"
                                         vs-align="center"
-                                        vs-w="4"
+                                        vs-w="3"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -79,7 +80,8 @@
                                         vs-type="flex"
                                         vs-justify="center"
                                         vs-align="center"
-                                        vs-w="4"
+                                        vs-w="3"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -108,7 +110,41 @@
                                         vs-type="flex"
                                         vs-justify="center"
                                         vs-align="center"
-                                        vs-w="4"
+                                        vs-w="3"
+                                        vs-xs="12"
+                                        class="px-2"
+                                    >
+                                        <vs-input
+                                            v-validate="'required|max:255'"
+                                            name="charset"
+                                            label-placeholder="Codage des caractères"
+                                            v-model="connection.charset"
+                                            @input="onConnectionInputChange"
+                                            class="w-full"
+                                            :success="
+                                                connection.charset.length > 0 &&
+                                                    !errors.has(
+                                                        'charset',
+                                                        'step-1'
+                                                    )
+                                            "
+                                            :danger="
+                                                errors.has('charset', 'step-1')
+                                            "
+                                            :danger-text="
+                                                errors.first(
+                                                    'charset',
+                                                    'step-1'
+                                                )
+                                            "
+                                        />
+                                    </vs-col>
+                                    <vs-col
+                                        vs-type="flex"
+                                        vs-justify="center"
+                                        vs-align="center"
+                                        vs-w="3"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -151,6 +187,7 @@
                                         vs-justify="center"
                                         vs-align="center"
                                         vs-w="4"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -184,6 +221,7 @@
                                         vs-justify="center"
                                         vs-align="center"
                                         vs-w="4"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -224,6 +262,7 @@
                                         vs-justify="center"
                                         vs-align="center"
                                         vs-w="4"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -270,42 +309,74 @@
                                     vs-justify="center"
                                     vs-align="center"
                                     vs-w="12"
-                                    class="py-3"
                                 >
                                     <vs-col
                                         vs-type="flex"
                                         vs-justify="center"
                                         vs-align="center"
-                                        vs-w="12"
+                                        vs-w="2"
+                                        vs-xs="6"
+                                        class="py-3"
                                     >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
                                             @change="onConnectionInputChange"
                                             vs-value="mysql"
-                                            >MySQL</vs-radio
                                         >
+                                            MySQL
+                                        </vs-radio>
+                                    </vs-col>
+                                    <vs-col
+                                        vs-type="flex"
+                                        vs-justify="center"
+                                        vs-align="center"
+                                        vs-w="2"
+                                        vs-xs="6"
+                                        class="py-3"
+                                    >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
                                             @change="onConnectionInputChange"
                                             vs-value="sqlite"
-                                            >SQLite</vs-radio
                                         >
+                                            SQLite
+                                        </vs-radio>
+                                    </vs-col>
+                                    <vs-col
+                                        vs-type="flex"
+                                        vs-justify="center"
+                                        vs-align="center"
+                                        vs-w="2"
+                                        vs-xs="6"
+                                        class="py-3"
+                                    >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
                                             @change="onConnectionInputChange"
                                             vs-value="pgsql"
-                                            >PostgreSQL</vs-radio
                                         >
+                                            PostgreSQL
+                                        </vs-radio>
+                                    </vs-col>
+                                    <vs-col
+                                        vs-type="flex"
+                                        vs-justify="center"
+                                        vs-align="center"
+                                        vs-w="2"
+                                        vs-xs="6"
+                                        class="py-3"
+                                    >
                                         <vs-radio
                                             class="mx-3"
                                             v-model="connection.driver"
                                             @change="onConnectionInputChange"
                                             vs-value="sqlsrv"
-                                            >SQL Server</vs-radio
                                         >
+                                            SQL Server
+                                        </vs-radio>
                                     </vs-col>
                                 </vs-row>
 
@@ -473,6 +544,7 @@
                                         vs-justify="center"
                                         vs-align="center"
                                         vs-w="6"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -499,6 +571,7 @@
                                         vs-justify="center"
                                         vs-align="center"
                                         vs-w="6"
+                                        vs-xs="12"
                                         class="px-2"
                                     >
                                         <vs-input
@@ -580,6 +653,7 @@ export default {
                 driver: "mysql",
                 host: "",
                 port: "",
+                charset: "",
                 database: "",
                 username: "",
                 password: "",
@@ -654,6 +728,7 @@ export default {
                     driver: this.connection.driver,
                     host: this.connection.host,
                     port: this.connection.port,
+                    charset: this.connection.charset,
                     database: this.connection.database,
                     username: this.connection.username,
                     password: this.connection.password
@@ -682,6 +757,7 @@ export default {
                 payload.driver = this.connection.driver;
                 payload.host = this.connection.host;
                 payload.port = this.connection.port;
+                payload.charset = this.connection.charset;
                 payload.database = this.connection.database;
                 payload.username = this.connection.username;
                 payload.password = this.connection.password;

@@ -45,6 +45,7 @@ class ModuleController extends Controller
                     'driver' => $modulable->driver ?? "",
                     'host' => $modulable->host ?? "",
                     'port' => $modulable->port ?? "",
+                    'charset' => $modulable->charset ?? "",
                     'database' => $modulable->database ?? "",
                     'username' => $modulable->username ?? "",
                     'has_password' => $modulable->password !== null,
@@ -179,6 +180,7 @@ class ModuleController extends Controller
                     'driver' => 'required',
                     'host' => 'required',
                     'port' => 'nullable',
+                    'charset' => 'required',
                     'username' => 'required',
                     'password' => 'nullable',
                 ]);
@@ -206,6 +208,7 @@ class ModuleController extends Controller
                 'driver' => $arrayRequest['driver'],
                 'host' => $arrayRequest['host'],
                 'port' => $arrayRequest['port'],
+                'charset' => $arrayRequest['charset'],
                 'username' => $arrayRequest['username'],
             ]);
             if ($arrayRequest['password']) {
@@ -316,6 +319,7 @@ class ModuleController extends Controller
             'driver' => 'required',
             'host' => 'required',
             'port' => 'nullable',
+            'charset' => 'required',
             'database' => 'required',
             'username' => 'required',
             'password' => 'nullable',
