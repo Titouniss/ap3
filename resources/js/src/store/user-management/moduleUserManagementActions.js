@@ -106,9 +106,15 @@ export default {
                     payload
                 )
                 .then(response => {
-                    resolve(response);
+                    console.log(["response_Action", response]);
+                    if (response.data.success) {
+                        resolve(response);
+                    } else {
+                        reject(response);
+                    }
                 })
                 .catch(error => {
+                    console.log(["error_Action", error]);
                     reject(error);
                 });
         });

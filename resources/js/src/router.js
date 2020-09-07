@@ -352,6 +352,14 @@ const router = new Router({
                     }
                 },
                 {
+                    path: '/pages/change-password',
+                    name: 'page-change-password',
+                    component: () => import('@/views/pages/login/PasswordChange.vue'),
+                    meta: {
+                        rule: 'editor'
+                    }
+                },
+                {
                     path: '/pages/lock-screen',
                     name: 'page-lock-screen',
                     component: () => import('@/views/pages/LockScreen.vue'),
@@ -435,7 +443,7 @@ router.beforeEach((to, from, next) => {
     // If auth required, check login. If login fails redirect to login page
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
-            localStorage.setItem('loggedIn',false)
+            localStorage.setItem('loggedIn', false)
             router.push({ path: '/pages/login', query: { to: to.path } })
         } else {
             // Update expireAt 

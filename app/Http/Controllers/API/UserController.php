@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Notifications\UserRegistration;
+use App\Notifications\MailAddUserNotification;
 use App\Rules\StrongPassword;
 
 use Illuminate\Http\Request;
@@ -353,6 +354,9 @@ class UserController extends Controller
         $arrayRequest['login'] = $arrayRequest['full_login'];
         $item = User::create($arrayRequest)->load('company');        
         $item->markEmailAsVerified();
+        if ($item->email !== null) {
+            $item->sendEmailAdUserNotification($password);
+        }
 
         if (isset($arrayRequest['roles'])) {
             $item->assignRole($arrayRequest['roles']); // on ajoute le role à l'utilisateur
@@ -475,27 +479,49 @@ class UserController extends Controller
 
         $arrayRequest = $request->all();
 
+        $controllerLog = new Logger('user');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('arrayRequest', [$arrayRequest]);
+
         // Verify user exist
         if ($user != null) {
-            // Verify old same password
-            if (Hash::check($arrayRequest['old_password'], $user->password)) {
-                // Verify password format
+            if ($user->is_password_change === 0) {
+                $controllerLog = new Logger('user');
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('mot de passe non changé', ["mot de passe non changé"]);
+
                 if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
                     // Save password
-                    $user->password = bcrypt($arrayRequest['new_password']);
 
-                    if ($user->is_password_change == 0) {
-                        $user->is_password_change = 1;
-                    }
+                    $controllerLog = new Logger('user');
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('user', [$user]);
+
+                    $user->password = bcrypt($arrayRequest['new_password']);
+                    $user->is_password_change = 1;
                     $user->save();
 
-                    return response()->json('success');
+                    return response()->json(['success' => $user, $this->successStatus]);
                 } else {
-                    Log::debug('ICI 3 :');
                     return response()->json('error_format', 400);
                 }
             } else {
-                return response()->json('error_old_password', 400);
+                // Verify old same password
+                if (Hash::check($arrayRequest['old_password'], $user->password)) {
+                    // Verify password format
+                    if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
+                        // Save password
+                        $user->password = bcrypt($arrayRequest['new_password']);
+                        $user->save();
+
+                        return response()->json(['success', $user]);
+                    } else {
+                        Log::debug('ICI 3 :');
+                        return response()->json('error_format', 400);
+                    }
+                } else {
+                    return response()->json('error_old_password', 400);
+                }
             }
         }
     }

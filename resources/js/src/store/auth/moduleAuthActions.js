@@ -71,7 +71,11 @@ export default {
                             moment().unix()
                         );
                         // Navigate User to homepage
-                        router.push(router.currentRoute.query.to || "/");
+                        if (data.userData.is_password_change === 0) {
+                            router.push(router.currentRoute.query.to || "/pages/change-password");
+                        } else {
+                            router.push(router.currentRoute.query.to || "/");
+                        }
                         resolve(response);
                     } else if (data && data.verify === false) {
                         reject({
