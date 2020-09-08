@@ -48,7 +48,9 @@ class UserController extends Controller
                 } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
                     return response()->json(['success' => false, 'error' => 'Trial ended']);
                 }
-                $module = $company->module->load('moduleDataTypes', 'moduleDataTypes.dataType');
+                if ($company->module && $company->module->is_active) {
+                    $module = $company->module->load('moduleDataTypes', 'moduleDataTypes.dataType');
+                }
             }
 
             if (!$user->hasVerifiedEmail()) {

@@ -10,7 +10,7 @@ use Monolog\Logger;
 
 class BaseModule extends Model
 {
-    protected $fillable = ['name', 'modulable_id', 'modulable_type', 'last_synced_at', 'company_id'];
+    protected $fillable = ['name', 'modulable_id', 'modulable_type', 'last_synced_at', 'is_active', 'company_id'];
     protected $appends = ['type'];
 
     public function getTypeAttribute()

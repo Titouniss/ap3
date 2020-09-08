@@ -47,21 +47,35 @@
                             :danger="errors.has('name')"
                             :danger-text="errors.first('name')"
                         />
-                        <div class="w-full flex flex-row justify-center">
-                            <vs-radio
-                                class="mx-3"
-                                v-model="item.type"
-                                vs-value="sql"
+                        <div class="w-full flex flex-row justify-between">
+                            <div
+                                class="flex flex-row justify-center items-center"
                             >
-                                SQL
-                            </vs-radio>
-                            <vs-radio
-                                class="mx-3"
-                                v-model="item.type"
-                                vs-value="api"
-                            >
-                                API
-                            </vs-radio>
+                                <div>Activé</div>
+                                <vs-switch
+                                    v-model="item.is_active"
+                                    icon-pack="feather"
+                                    vs-icon-on="icon-check"
+                                    vs-icon-off="icon-x"
+                                    class="mx-3"
+                                />
+                            </div>
+                            <div class="flex flex-row justify-center">
+                                <vs-radio
+                                    class="mx-3"
+                                    v-model="item.type"
+                                    vs-value="sql"
+                                >
+                                    SQL
+                                </vs-radio>
+                                <vs-radio
+                                    class="mx-3"
+                                    v-model="item.type"
+                                    vs-value="api"
+                                >
+                                    API
+                                </vs-radio>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -127,7 +141,6 @@ export default {
                 {},
                 this.$store.getters["moduleManagement/getItem"](this.itemId)
             );
-            console.log(this.item);
         },
         submitItem() {
             this.$validator.validateAll().then(result => {
@@ -137,7 +150,8 @@ export default {
                         name: this.item.name,
                         company_id: this.item.company.id,
                         modulable_id: this.item.modulable_id,
-                        type: this.item.type
+                        type: this.item.type,
+                        is_active: this.item.is_active
                     };
                     this.$store
                         .dispatch("moduleManagement/updateItem", localItem)

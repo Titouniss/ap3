@@ -85,7 +85,8 @@ class ModuleController extends Controller
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'company_id' => 'required',
-            'type' => 'required'
+            'type' => 'required',
+            'is_active' => 'nullable'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
@@ -110,6 +111,7 @@ class ModuleController extends Controller
             'company_id' => $arrayRequest['company_id'],
             'modulable_id' => $modulable->id,
             'modulable_type' => get_class($modulable),
+            'is_active' => isset($arrayRequest['is_active']) ? $arrayRequest['is_active'] : true
         ]);
         return response()->json(['success' => $module->load('company')], $this->successStatus);
     }
@@ -126,7 +128,8 @@ class ModuleController extends Controller
             'name' => 'required',
             'company_id' => 'required',
             'modulable_id' => 'required',
-            'type' => 'required'
+            'type' => 'required',
+            'is_active' => 'nullable'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
@@ -156,6 +159,7 @@ class ModuleController extends Controller
         $item->update([
             'name' => $arrayRequest['name'],
             'company_id' => $arrayRequest['company_id'],
+            'is_active' => isset($arrayRequest['is_active']) ? $arrayRequest['is_active'] : true
         ]);
         return response()->json(['success' => $item->load('company')], $this->successStatus);
     }

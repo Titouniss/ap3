@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function () {
-            BaseModule::all()->each(function ($item) {
+            BaseModule::where('is_active', 1)->get()->each(function ($item) {
                 $item->sync();
             });
         })->dailyAt("00:00");
