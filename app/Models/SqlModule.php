@@ -58,7 +58,7 @@ class SqlModule extends BaseModule
             Config::set('database.connections.' . $this->module->name, $this->connectionData());
             DB::purge($this->module->name);
             foreach ($this->module->sortedModuleDataTypes() as $mdt) {
-                $query = DB::connection($this->module->name)->table($mdt->source);
+                $query = DB::connection($this->module->name)->table($mdt->source)->limit(10);
                 foreach ($mdt->moduleDataRows as $mdr) {
                     $query->selectRaw($mdr->source . ' AS ' . $mdr->dataRow->field);
                 }
