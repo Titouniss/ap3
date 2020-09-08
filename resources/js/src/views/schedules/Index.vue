@@ -153,8 +153,8 @@ export default {
     },
     projectsData() {
       return this.$store.state.projectManagement.projects
-        .reverse()
-        .filter((project) => project.status != "done");
+        .filter((project) => project.status != "done")
+        .reverse();
     },
     workareasData() {
       return this.$store.state.workareaManagement.workareas;

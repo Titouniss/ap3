@@ -418,16 +418,29 @@ export default {
             response = response.concat(doingProjects);
             response = response.concat(doneProjects);
 
-            return response;
-        }
+      return response;
     },
-    mounted() {
-        this.gridApi = this.gridOptions.api;
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+          return user.roles[0].name;
+      }
+      return false;
+    }
+  },
+  mounted() {
+    this.gridApi = this.gridOptions.api;
 
-        window.addEventListener("resize", this.onResize);
-        if (this.gridApi) {
-            // refresh the grid
-            this.gridApi.refreshView();
+    // Hide company column ?
+    this.gridOptions.columnApi.setColumnVisible(
+        "company",
+        this.activeUserRole() == "superAdmin" ? true : false
+    );
+
+    window.addEventListener("resize", this.onResize);
+    if (this.gridApi) {
+      // refresh the grid
+      this.gridApi.refreshView();
 
             // resize columns in the grid to fit the available space
             this.gridApi.sizeColumnsToFit();
