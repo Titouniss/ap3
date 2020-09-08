@@ -352,10 +352,23 @@ export default {
       response = response.concat(doneProjects);
 
       return response;
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+          return user.roles[0].name;
+      }
+      return false;
     }
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
+
+    // Hide company column ?
+    this.gridOptions.columnApi.setColumnVisible(
+        "company",
+        this.activeUserRole() == "superAdmin" ? true : false
+    );
 
     window.addEventListener("resize", this.onResize);
     if (this.gridApi) {
