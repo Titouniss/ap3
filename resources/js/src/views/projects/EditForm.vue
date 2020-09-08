@@ -174,6 +174,7 @@ export default {
       let customers = this.filterItemsAdmin(
         this.$store.state.customerManagement.customers
       );
+      console.log(["customers", customers]);
       this.customersDataFiltered = customers;
       // Parse Label
       this.customersDataFiltered.map(function (c) {
@@ -233,16 +234,17 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name == "superAdmin" || r.name === "littleAdmin"
           )
         ) {
+          filteredItems = items;
+        } else {
           filteredItems = items.filter(
             (item) => item.company_id === this.itemLocal.company.id
           );
-        } else {
-          filteredItems = items;
         }
       }
+      console.log(["filteredItems", filteredItems]);
       return filteredItems;
     },
     updateCustomersList() {
