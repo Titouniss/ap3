@@ -10,7 +10,31 @@
 <template>
     <div id="page-users-list">
         <div class="vx-card w-full p-6">
-            <add-form v-if="authorizedToPublish" />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form v-if="authorizedToPublish" />
+                </vs-col>
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-end"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <refresh-module />
+                </vs-col>
+            </vs-row>
 
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
@@ -168,6 +192,9 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
+// Components
+import RefreshModule from "@/components/buttons/RefreshModule.vue";
+
 var model = "customer";
 var modelPlurial = "customers";
 var modelTitle = "Clients";
@@ -182,7 +209,10 @@ export default {
         // Cell Renderer
         CellRendererActions,
         CellRendererBoolean,
-        CellRendererRelations
+        CellRendererRelations,
+
+        // Components
+        RefreshModule
     },
     data() {
         return {

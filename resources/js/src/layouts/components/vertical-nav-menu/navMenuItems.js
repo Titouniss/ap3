@@ -8,69 +8,75 @@
 ==========================================================================================*/
 export default [
     {
-        url: '/',
-        name: 'Tableau de bord',
-        slug: 'home',
-        icon: 'HomeIcon'
+        url: "/",
+        name: "Tableau de bord",
+        slug: "home",
+        icon: "HomeIcon"
     },
     {
-        url: '/users',
-        name: 'Utilisateurs',
-        slug: 'users',
-        icon: 'UsersIcon'
+        url: "/users",
+        name: "Utilisateurs",
+        slug: "users",
+        icon: "UsersIcon"
     },
     {
-        url: '/roles',
-        name: 'Rôles',
-        slug: 'roles',
-        icon: 'AwardIcon'
+        url: "/roles",
+        name: "Rôles",
+        slug: "roles",
+        icon: "AwardIcon"
     },
     {
-        url: '/companies',
-        name: 'Sociétés',
-        slug: 'companies',
-        icon: 'BriefcaseIcon'
+        url: "/companies",
+        name: "Sociétés",
+        slug: "companies",
+        icon: "BriefcaseIcon"
     },
     {
-        url: '/customers',
-        name: 'Clients',
-        slug: 'customers',
-        icon: 'UsersIcon'
+        url: "/customers",
+        name: "Clients",
+        slug: "customers",
+        icon: "UsersIcon"
     },
     {
-        url: '/skills',
-        name: 'Compétences',
-        slug: 'skills',
-        icon: 'BookOpenIcon'
+        url: "/skills",
+        name: "Compétences",
+        slug: "skills",
+        icon: "BookOpenIcon"
     },
     {
-        url: '/workareas',
-        name: 'Ilots',
-        slug: 'workareas',
-        icon: 'ArchiveIcon'
+        url: "/workareas",
+        name: "Ilots",
+        slug: "workareas",
+        icon: "ArchiveIcon"
     },
     {
-        url: '/projects',
-        name: 'Projets',
-        slug: 'projects',
-        icon: 'ActivityIcon'
+        url: "/projects",
+        name: "Projets",
+        slug: "projects",
+        icon: "ActivityIcon"
     },
     {
-        url: '/ranges',
-        name: 'Gammes',
-        slug: 'ranges',
-        icon: 'ClipboardIcon'
+        url: "/ranges",
+        name: "Gammes",
+        slug: "ranges",
+        icon: "ClipboardIcon"
     },
     {
-        url: '/schedules',
-        name: 'Plannings',
-        slug: 'schedules',
-        icon: 'CalendarIcon'
+        url: "/schedules",
+        name: "Plannings",
+        slug: "schedules",
+        icon: "CalendarIcon"
     },
     {
-        url: '/hours',
-        name: 'Heures',
-        slug: 'hours',
-        icon: 'ClockIcon'
+        url: "/hours",
+        name: "Heures",
+        slug: "hours",
+        icon: "ClockIcon"
+    },
+    {
+        url: "/modules",
+        name: "Modules",
+        slug: "modules",
+        icon: "PackageIcon"
     }
-]
+];

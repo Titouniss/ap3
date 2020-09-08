@@ -18,7 +18,6 @@ use Illuminate\Support\Str;
 
 
 use Validator;
-use Mail;
 
 use App\User;
 use App\Models\Company;
@@ -26,9 +25,6 @@ use App\Models\WorkHours;
 use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 
 class UserController extends Controller
 {
@@ -40,10 +36,11 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function login()
-    {   
+    {
         if (Auth::attempt(['login' => request('login'), 'password' => request('password')])) {
+            $module = [];
             $user = Auth::user();
-            
+
             if ($user->company_id) {
                 $company = Company::find($user->company_id);
                 if (!$company) {
@@ -51,12 +48,13 @@ class UserController extends Controller
                 } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
                     return response()->json(['success' => false, 'error' => 'Trial ended']);
                 }
+                $module = $company->module->load('moduleDataTypes', 'moduleDataTypes.dataType');
             }
-            
+
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
             }
-            
+
             $token =  $user->createToken('ProjetX');
             $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
             $success['token'] =  $token->accessToken;
@@ -66,7 +64,7 @@ class UserController extends Controller
                     $query->select(['id', 'name', 'name_fr', 'isPublic']);
                 }]);
             }])->load('company:id,name');
-            return response()->json(['success' => $success, 'userData' => $user], $this->successStatus);
+            return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module->count() > 0 ? $module : null)], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised']);
         }
@@ -205,7 +203,7 @@ class UserController extends Controller
             $login = $parsed_login;
             $login = $parsed_login . rand(0, 9999);
         } while (User::where('login', $login)->withTrashed()->exists());
-        
+
         $input['login'] = $login;
 
         $input['password'] = bcrypt($input['password']);
@@ -256,7 +254,7 @@ class UserController extends Controller
         $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
         $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
         $parsed = preg_replace('#Ý#', 'Y', $parsed);
-        
+
         return ($parsed);
     }
 
@@ -352,7 +350,7 @@ class UserController extends Controller
         $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
         $arrayRequest['isTermsConditionAccepted'] = false;
         $arrayRequest['login'] = $arrayRequest['full_login'];
-        $item = User::create($arrayRequest)->load('company');        
+        $item = User::create($arrayRequest)->load('company');
         $item->markEmailAsVerified();
         if ($item->email !== null) {
             $item->sendEmailAdUserNotification($password);
