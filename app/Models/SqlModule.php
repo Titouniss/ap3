@@ -110,9 +110,9 @@ class SqlModule extends BaseModule
         } catch (\Throwable $th) {
             $data = [];
             echo $th->getMessage();
-            $controllerLog = new Logger('ModuleData');
+            $controllerLog = new Logger('SQLModule');
             $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('ModuleData', [$th->getMessage()]);
+            $controllerLog->info('SQLModule', [$th->getMessage()]);
         }
         return $data;
     }

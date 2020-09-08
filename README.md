@@ -35,8 +35,6 @@ Installation des dépendances :
 composer install && npm install
 ```
 
-```
-
 Récupération d'une base de données existante ou création d'un base de données nommée `projetx` puis :
 ```
 php artisan migrate
@@ -45,6 +43,7 @@ php artisan migrate
 Création des autorisations :
 ```
 php artisan passport:install
+```
 
 Construction des fichiers js :
 ```
@@ -54,4 +53,53 @@ npm run dev
 Lancement de l'application (automatiser avec .env et wamp) :
 ```
 php artisan serve
+```
+
+#### Installation de PDO
+
+-   SQL Server
+```
+// Installer PEAR et ODBC microsoft
+apt install php-pear unixodbc-dev
+
+// Installer le PDO
+sudo pecl install sqlsrv
+sudo pecl install pdo_sqlsrv
+
+// Activer le PDO
+printf "; priority=20\nextension=sqlsrv.so\n" > /etc/php/7.3/mods-available/sqlsrv.ini
+printf "; priority=30\nextension=pdo_sqlsrv.so\n" > /etc/php/7.3/mods-available/pdo_sqlsrv.ini
+
+// Redémarrer Apache
+systemctl restart apache2
+```
+
+-   SQLite
+```
+// Installer le PDO
+apt install php7.3-sqlite 
+
+// Redémarrer Apache
+systemctl restart apache2
+```
+
+-   PostgreSQL
+```
+// Installer le PDO
+apt install php-pgsql
+
+// Redémarrer Apache
+systemctl restart apache2
+```
+
+### Déploiement
+
+Activer l'automatisation de tâches en tapant :
+```
+crontab -e
+```
+
+Puis en ajoutant cette ligne :
+```
+* * * * * cd /var/www/preprod && php artisan schedule:run >> /dev/null 2>&1
 ```

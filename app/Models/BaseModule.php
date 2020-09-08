@@ -5,6 +5,8 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class BaseModule extends Model
 {
@@ -65,6 +67,9 @@ class BaseModule extends Model
         } catch (\Throwable $th) {
             echo $th->getMessage();
             DB::rollBack();
+            $controllerLog = new Logger('BaseModule');
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('BaseModule', [$th->getMessage()]);
             return false;
         }
     }
