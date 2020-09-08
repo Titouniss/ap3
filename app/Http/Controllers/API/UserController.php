@@ -38,7 +38,7 @@ class UserController extends Controller
     public function login()
     {
         if (Auth::attempt(['login' => request('login'), 'password' => request('password')])) {
-            $module = [];
+            $module = null;
             $user = Auth::user();
 
             if ($user->company_id) {
@@ -64,7 +64,7 @@ class UserController extends Controller
                     $query->select(['id', 'name', 'name_fr', 'isPublic']);
                 }]);
             }])->load('company:id,name');
-            return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module->count() > 0 ? $module : null)], $this->successStatus);
+            return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module && $module->count() > 0 ? $module : null)], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised']);
         }
