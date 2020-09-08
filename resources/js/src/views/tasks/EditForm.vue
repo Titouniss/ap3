@@ -1,163 +1,239 @@
 <template>
-    <div class="p-3 mb-4 mr-4">
-      <vs-prompt
-          title="Mofidier une tâche"
-          accept-text= "Modifier"
-          cancel-text= "Annuler"
-          button-cancel = "border"
-          @cancel="clear"
-          @accept="submitItem"
-          @close="clear"
-          :is-valid="validateForm"
-          :active.sync="activePrompt"
-          class="task-compose">
-          <div>
-            <form class="edit-task-form">
-                <div class="vx-row">
-                  <!-- Left -->
-                  <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
-                    <vs-input v-validate="'required'" name="name" class="w-full mb-4 mt-1" placeholder="Nom" v-model="itemLocal.name" :color="!errors.has('name') ? 'success' : 'danger'" />
-                    <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
-                    
-                    <div class="my-3">
-                      <div v-if="descriptionDisplay || (itemLocal.description != null && itemLocal.description != '')">
-                        <small class="date-label">Description</small>
-                        <vs-textarea rows="2" label="Ajouter une description" name="description" class="w-full mb-1 mt-1" v-model="itemLocal.description" />  
-                      </div>
-                    </div>
-                    <div class="my-3" v-if="previousTasks && previousTasks.length > 0">
-                       <span> Tache dépendante de : </span> 
-                        <li :key="index" v-for="(item, index) in previousTasks">
-                          {{ item }}
-                        </li>
-                    </div>
-                    <div class="my-3" style="font-size: 0.9em;" v-if="project_data && project_data.status == 'doing'">
-                      <small class="date-label mb-1" style="display: block;">Date</small>
-                      <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
-                    </div>
+  <div class="p-3 mb-4 mr-4">
+    <vs-prompt
+      title="Mofidier une tâche"
+      accept-text="Modifier"
+      cancel-text="Annuler"
+      button-cancel="border"
+      @cancel="clear"
+      @accept="submitItem"
+      @close="clear"
+      :is-valid="validateForm"
+      :active.sync="activePrompt"
+      class="task-compose"
+    >
+      <div>
+        <form class="edit-task-form">
+          <div class="vx-row">
+            <!-- Left -->
+            <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6;">
+              <vs-input
+                v-validate="'required'"
+                name="name"
+                class="w-full mb-4 mt-1"
+                placeholder="Nom"
+                v-model="itemLocal.name"
+                :color="!errors.has('name') ? 'success' : 'danger'"
+              />
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('name')"
+              >{{ errors.first('name') }}</span>
 
-                    <div class="my-3">
-                      <small class="date-label">Compétences</small>
-                      <vs-select v-on:change="updateUsersAndWorkareasList" v-model="itemLocal.skills" class="w-full" multiple autocomplete
-                        v-validate="'required'" name='skills'>
-                        <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in skillsData" />
-                      </vs-select>
-                      <span class="text-danger text-sm" v-show="errors.has('skills')">{{ errors.first('skills') }}</span>
-                    </div>
-
-                    <span
-                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
-                      class="text-danger text-sm"
-                    >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
-
-                    <div class="my-3" v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
-                      <vs-select
-                        v-validate="'required'"
-                        name="userId"
-                        label="Attribuer"
-                        v-model="itemLocal.user_id"
-                        class="w-full"
-                        autocomplete
-                      >
-                        <vs-select-item
-                          :key="index"
-                          :value="item.id"
-                          :text="item.firstname + ' ' + item.lastname"
-                          v-for="(item,index) in usersDataFiltered"
-                        />
-                      </vs-select>
-                    </div>
-                    
-                    <span
-                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
-                      class="text-danger text-sm"
-                    >Attention, aucun îlot ne possède cette combinaison de compétences</span>
-
-                    <div class="my-3" v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
-                      <small class="date-label">Ilot</small>
-                        <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
-                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
-                        </vs-select>
-                    </div>
-                  </div>
-                  <!-- Right -->
-                  <div class="vx-col flex-5">
-                    <div class="mb-3" style="flex-direction: column; display: flex;">
-                      <add-previous-task :addPreviousTask="addPreviousTask" :tasks_list="tasks_list" :previousTasksIds="itemLocal.previousTasksIds" :current_task_id="this.itemId"/> 
-                      <span v-if="!descriptionDisplay && (itemLocal.description == null || itemLocal.description == '')" v-on:click="showDescription" class="linkTxt"> + Ajouter une description </span>
-                    </div>
-                    <div class="mb-4">
-                      <div v-if="orderDisplay">
-                        <small class="date-label">Ordre</small>
-                        <vs-input-number min="1" name="order" class="inputNumber" v-model="itemLocal.order" />
-                      </div>
-                    </div>
-                    <ul class="mt-3" v-if="project_data && project_data.status == 'doing'">
-                      <li class="mr-3">
-                        <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
-                      </li>
-                      <li class="mr-3">
-                        <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
-                      </li>
-                      <li v-on:click="setTimeSpent">
-                        <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
-                      </li>
-                    </ul>
-                    <div class="my-4 mt-3 mb-2">
-                      <small class="date-label">Temps estimé (en h)</small>
-                      <vs-input-number min="1" name="estimatedTime" class="inputNumber" v-model="itemLocal.estimated_time" />
-                    </div>
-                    <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
-                      <small class="date-label">Temps passé (en h)</small>
-                      <vs-input-number min="1" name="timeSpent" class="inputNumber" v-model="itemLocal.time_spent" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="my-3">
-                  <div>
-                    <small class="date-label">Commentaires</small>
-                  </div>
+              <div class="my-3">
+                <div
+                  v-if="descriptionDisplay || (itemLocal.description != null && itemLocal.description != '')"
+                >
+                  <small class="date-label">Description</small>
                   <vs-textarea
-                    rows="1"
-                    label="Ajouter un commentaire"
-                    name="comment"
+                    rows="2"
+                    label="Ajouter une description"
+                    name="description"
                     class="w-full mb-1 mt-1"
-                    v-model="itemLocal.comment"
-                    :color="validateForm ? 'success' : 'danger'"
+                    v-model="itemLocal.description"
                   />
-                  <div class="mt-2">
-                    <vs-button
-                      v-if="itemLocal.comment != null && itemLocal.comment != ''"
-                      color="success"
-                      type="filled"
-                      size="small"
-                      style="margin-left: 5px"
-                      v-on:click="addComment"
-                      id="button-with-loading"
-                      class="vs-con-loading__container"
-                    >Ajouter</vs-button>
-                  </div>
-                  <span
-                    class="no-comments"
-                    v-if="itemLocal.comments && itemLocal.comments.length == 0"
-                  >Aucun commentaire</span>
-                  <div v-for="(comment, index) in itemLocal.comments" :key="index">
-                    <div style="padding: 10px 0">
-                      <vs-avatar
-                        size="small"
-                        :text="comment.creator.firstname + ' ' + comment.creator.lastname"
-                      />
-                      <span
-                        class="comment-author"
-                      >{{comment.creator.firstname + ' ' + comment.creator.lastname}},</span>
-                      <span
-                        class="comment-created-at"
-                      >{{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}</span>
-                      <div class="comment-content">{{comment.description}}</div>
-                    </div>
-                  </div>
                 </div>
+              </div>
+              <div class="my-3" v-if="previousTasks && previousTasks.length > 0">
+                <span>Tache dépendante de :</span>
+                <li :key="index" v-for="(item, index) in previousTasks">{{ item }}</li>
+              </div>
+              <div
+                class="my-3"
+                style="font-size: 0.9em;"
+                v-if="project_data && project_data.status == 'doing'"
+              >
+                <small class="date-label mb-1" style="display: block;">Date</small>
+                <flat-pickr
+                  :config="configdateTimePicker"
+                  v-model="itemLocal.date"
+                  placeholder="Date"
+                  class="w-full"
+                />
+              </div>
+
+              <div class="my-3">
+                <small class="date-label">Compétences</small>
+                <vs-select
+                  v-on:change="updateUsersAndWorkareasList"
+                  v-model="itemLocal.skills"
+                  class="w-full"
+                  multiple
+                  autocomplete
+                  v-validate="'required'"
+                  name="skills"
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in skillsData"
+                  />
+                </vs-select>
+                <span
+                  class="text-danger text-sm"
+                  v-show="errors.has('skills')"
+                >{{ errors.first('skills') }}</span>
+              </div>
+
+              <span
+                v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
+                class="text-danger text-sm"
+              >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
+
+              <div
+                class="my-3"
+                v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length > 0"
+              >
+                <vs-select
+                  v-validate="'required'"
+                  name="userId"
+                  label="Attribuer"
+                  v-model="itemLocal.user_id"
+                  class="w-full"
+                  autocomplete
+                >
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.firstname + ' ' + item.lastname"
+                    v-for="(item,index) in usersDataFiltered"
+                  />
+                </vs-select>
+              </div>
+
+              <span
+                v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                class="text-danger text-sm"
+              >Attention, aucun îlot ne possède cette combinaison de compétences</span>
+
+              <div
+                class="my-3"
+                v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0"
+              >
+                <small class="date-label">Ilot</small>
+                <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
+                  <vs-select-item
+                    :key="index"
+                    :value="item.id"
+                    :text="item.name"
+                    v-for="(item,index) in workareasDataFiltered"
+                  />
+                </vs-select>
+              </div>
+            </div>
+            <!-- Right -->
+            <div class="vx-col flex-5">
+              <div class="mb-3" style="flex-direction: column; display: flex;">
+                <add-previous-task
+                  :addPreviousTask="addPreviousTask"
+                  :tasks_list="tasks_list"
+                  :previousTasksIds="itemLocal.previousTasksIds"
+                  :current_task_id="this.itemId"
+                />
+                <span
+                  v-if="!descriptionDisplay && (itemLocal.description == null || itemLocal.description == '')"
+                  v-on:click="showDescription"
+                  class="linkTxt"
+                >+ Ajouter une description</span>
+              </div>
+              <div class="mb-4">
+                <div v-if="orderDisplay">
+                  <small class="date-label">Ordre</small>
+                  <vs-input-number
+                    min="1"
+                    name="order"
+                    class="inputNumber"
+                    v-model="itemLocal.order"
+                  />
+                </div>
+              </div>
+              <ul class="mt-3" v-if="project_data && project_data.status == 'doing'">
+                <li class="mr-3">
+                  <vs-radio color="danger" v-model="itemLocal.status" vs-value="todo">A faire</vs-radio>
+                </li>
+                <li class="mr-3">
+                  <vs-radio color="warning" v-model="itemLocal.status" vs-value="doing">En cours</vs-radio>
+                </li>
+                <li v-on:click="setTimeSpent">
+                  <vs-radio color="success" v-model="itemLocal.status" vs-value="done">Terminé</vs-radio>
+                </li>
+              </ul>
+              <div class="my-4 mt-3 mb-2">
+                <small class="date-label">Temps estimé (en h)</small>
+                <vs-input-number
+                  min="1"
+                  name="estimatedTime"
+                  class="inputNumber"
+                  v-model="itemLocal.estimated_time"
+                />
+              </div>
+              <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
+                <small class="date-label">Temps passé (en h)</small>
+                <vs-input-number
+                  min="1"
+                  name="timeSpent"
+                  class="inputNumber"
+                  v-model="itemLocal.time_spent"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="my-3">
+            <div>
+              <small class="date-label">Commentaires</small>
+            </div>
+            <vs-textarea
+              rows="1"
+              label="Ajouter un commentaire"
+              name="comment"
+              class="w-full mb-1 mt-1"
+              v-model="itemLocal.comment"
+              :color="validateForm ? 'success' : 'danger'"
+            />
+            <div class="mt-2">
+              <vs-button
+                v-if="itemLocal.comment != null && itemLocal.comment != ''"
+                color="success"
+                type="filled"
+                size="small"
+                style="margin-left: 5px"
+                v-on:click="addComment"
+                id="button-with-loading"
+                class="vs-con-loading__container"
+              >Ajouter</vs-button>
+            </div>
+            <span
+              class="no-comments"
+              v-if="itemLocal.comments && itemLocal.comments.length == 0"
+            >Aucun commentaire</span>
+            <div v-for="(comment, index) in itemLocal.comments" :key="index">
+              <div style="padding: 10px 0">
+                <vs-avatar
+                  size="small"
+                  :text="comment.creator.firstname + ' ' + comment.creator.lastname"
+                />
+                <span
+                  class="comment-author"
+                >{{comment.creator.firstname + ' ' + comment.creator.lastname}},</span>
+                <span
+                  class="comment-created-at"
+                >{{moment(comment.created_at)}} à {{momentTime(comment.created_at)}}</span>
+                <div class="comment-content">{{comment.description}}</div>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
       <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
@@ -188,19 +264,18 @@ Validator.localize("fr", errorMessage);
 export default {
   components: {
     flatPickr,
-    AddPreviousTask
+    AddPreviousTask,
   },
   props: {
     itemId: {
       type: Number,
-      required: true
+      required: true,
     },
     companyId: {
-      type: Number,
-      required: true
+      required: true,
     },
     project_data: { type: Object },
-    tasks_list: { required: true }
+    tasks_list: { required: true },
   },
   data() {
     return {
@@ -208,7 +283,7 @@ export default {
         disableMobile: "true",
         enableTime: true,
         dateFormat: "d-m-Y H:i",
-        locale: FrenchLocale
+        locale: FrenchLocale,
       },
 
       itemLocal: Object.assign(
@@ -224,7 +299,7 @@ export default {
       orderDisplay: false,
       descriptionDisplay: false,
       commentDisplay: false,
-      have_setTimeSpent: false
+      have_setTimeSpent: false,
     };
   },
   computed: {
@@ -238,17 +313,19 @@ export default {
     },
     activePrompt: {
       get() {
-        this.itemLocal.previous_tasks ? this.addPreviousTask(this.itemLocal.previous_tasks) : null;
+        this.itemLocal.previous_tasks
+          ? this.addPreviousTask(this.itemLocal.previous_tasks)
+          : null;
         return this.itemId && this.itemId > 0 ? true : false;
       },
       set(value) {
         this.$store
           .dispatch("taskManagement/editItem", {})
           .then(() => {})
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
-      }
+      },
     },
     workareasData() {
       let $workareasData = this.$store.state.workareaManagement.workareas;
@@ -264,18 +341,20 @@ export default {
       this.updateWorkareasList(this.itemLocal.skills);
       this.updateUsersList(this.itemLocal.skills);
       return this.filterItemsAdmin($skillsData);
-    }
+    },
   },
   methods: {
     clear() {
       this.itemLocal = {};
-      (this.workareasDataFiltered = []), (this.usersDataFiltered = []), (this.comments = []);
+      (this.workareasDataFiltered = []),
+        (this.usersDataFiltered = []),
+        (this.comments = []);
     },
-    moment: function(date) {
+    moment: function (date) {
       moment.locale("fr");
       return moment(date, "YYYY-MM-DD HH:mm:ss").format("DD MMMM YYYY");
     },
-    momentTime: function(date) {
+    momentTime: function (date) {
       moment.locale("fr");
       return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
     },
@@ -284,12 +363,13 @@ export default {
         this.addComment();
       }
 
-      this.$validator.validateAll().then(result => {
-        this.itemLocal.project_id = this.project_data.id
-        this.itemLocal.date = this.itemLocal.date ? moment(
-          this.itemLocal.date,
-          "DD-MM-YYYY HH:mm"
-        ).format("YYYY-MM-DD HH:mm") : null;
+      this.$validator.validateAll().then((result) => {
+        this.itemLocal.project_id = this.project_data.id;
+        this.itemLocal.date = this.itemLocal.date
+          ? moment(this.itemLocal.date, "DD-MM-YYYY HH:mm").format(
+              "YYYY-MM-DD HH:mm"
+            )
+          : null;
 
         if (result) {
           this.$store
@@ -298,7 +378,7 @@ export default {
               Object.assign({}, this.itemLocal)
             )
             .then((response) => {
-              if(response.data.success){
+              if (response.data.success) {
                 this.isSubmiting = false;
 
                 this.$vs.loading.close();
@@ -307,28 +387,27 @@ export default {
                   text: `"${this.itemLocal.name}" modifiée avec succès`,
                   iconPack: "feather",
                   icon: "icon-alert-circle",
-                  color: "success"
+                  color: "success",
                 });
                 this.clearFields();
-              }
-              else{
+              } else {
                 this.$vs.notify({
                   title: "Indisponnible",
                   text: response.data.error,
                   iconPack: "feather",
                   icon: "icon-alert-circle",
-                  color: "danger"
+                  color: "danger",
                 });
-              } 
+              }
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
               });
             });
         }
@@ -339,46 +418,54 @@ export default {
         background: "success",
         color: "#fff",
         container: "#button-with-loading",
-        scale: 0.3
+        scale: 0.3,
       });
       this.$store
         .dispatch(
           "taskManagement/addComment",
           Object.assign({}, this.itemLocal)
         )
-        .then(response => {
+        .then((response) => {
           this.itemLocal.comments = response;
           this.$vs.loading.close("#button-with-loading > .con-vs-loading");
           this.itemLocal.comment = "";
         });
     },
-    updateUsersAndWorkareasList(ids){
-      this.updateWorkareasList(ids)
-      this.updateUsersList(ids)
+    updateUsersAndWorkareasList(ids) {
+      this.updateWorkareasList(ids);
+      this.updateUsersList(ids);
     },
     updateWorkareasList(ids) {
-      this.workareasDataFiltered = this.workareasData.filter(function(
-        workarea
-      ) {
-        for (let i = 0; i < ids.length; i++) {
-          if (workarea.skills.filter(skill => skill.id == ids[i]).length == 0) {
-            return false;
+      if (ids) {
+        this.workareasDataFiltered = this.workareasData.filter(function (
+          workarea
+        ) {
+          for (let i = 0; i < ids.length; i++) {
+            if (
+              workarea.skills.filter((skill) => skill.id == ids[i]).length == 0
+            ) {
+              return false;
+            }
           }
-        }
-        return true;
-      });
+          return true;
+        });
+      } else {
+        return false;
+      }
     },
     updateUsersList(ids) {
-      this.usersDataFiltered = this.usersData.filter(function(
-        user
-      ) {
-        for (let i = 0; i < ids.length; i++) {
-          if (user.skills.filter(skill => skill.id == ids[i]).length == 0) {
-            return false;
+      if (ids) {
+        this.usersDataFiltered = this.usersData.filter(function (user) {
+          for (let i = 0; i < ids.length; i++) {
+            if (user.skills.filter((skill) => skill.id == ids[i]).length == 0) {
+              return false;
+            }
           }
-        }
-        return true;
-      });
+          return true;
+        });
+      } else {
+        return false;
+      }
     },
     filterItemsAdmin($items) {
       let $filteredItems = [];
@@ -386,12 +473,14 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            r => r.name === "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
-          $filteredItems = $items.filter(
-            item => item.company_id === this.companyId
-          );
+          if (this.companyId !== null) {
+            $filteredItems = $items.filter(
+              (item) => item.company_id === this.companyId
+            );
+          }
         } else {
           $filteredItems = $items;
         }
@@ -402,8 +491,8 @@ export default {
       this.itemLocal.previousTasksIds = taskIds;
       let previousTasks_local = [];
 
-      taskIds.forEach(id => {
-        let task = this.tasks_list.filter(t => t.id == id);
+      taskIds.forEach((id) => {
+        let task = this.tasks_list.filter((t) => t.id == id);
         previousTasks_local.push(task[0].name);
       });
       this.previousTasks = previousTasks_local;
@@ -427,7 +516,7 @@ export default {
         accept: this.deleteTask,
         cancel: this.keepTask,
         acceptText: "Supprimer !",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     keepTask() {
@@ -438,20 +527,20 @@ export default {
       this.$store
         .dispatch("scheduleManagement/removeEvent", this.idEvent)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
 
       this.$store
         .dispatch("taskManagement/removeItem", this.itemLocal.id)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
 
       this.init();
-    }
-  }
+    },
+  },
 };
 </script>
 <style>

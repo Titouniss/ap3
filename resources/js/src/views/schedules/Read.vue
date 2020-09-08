@@ -66,7 +66,7 @@
       <edit-form
         :reload="calendarEvents"
         :itemId="itemIdToEdit"
-        :companyId="project_data.company_id"
+        :companyId="project_data !== null ? project_data.company_id : null"
         :tasks_list="tasksEvent"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
@@ -146,6 +146,7 @@ export default {
       // Get all task and parse to show
       var eventsParse = [];
       if (this.$route.query.type === "projects") {
+        console.log(["this.tasksEvent", this.tasksEvent]);
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
             eventsParse.push({
@@ -171,8 +172,9 @@ export default {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
             if (
-              t.user_id.toString() === this.$route.query.id ||
-              t.user_id === this.$route.query.id
+              t.user_id !== null &&
+              (t.user_id.toString() === this.$route.query.id ||
+                t.user_id === this.$route.query.id)
             ) {
               // Get project id
               let project_id = null;
@@ -258,6 +260,7 @@ export default {
       );
     },
     tasksEvent() {
+      console.log(["this.$store.state.taskManagement", this.$store.state.taskManagement]);
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
         : [];
@@ -265,7 +268,7 @@ export default {
     project_data() {
       if (this.$route.query.type === "projects") {
         var project_data = this.$store.state.projectManagement.projects.find(
-          (p) => (p.id = parseInt(this.$route.query.id, 10))
+          (p) => (p.id === parseInt(this.$route.query.id, 10))
         );
         if (project_data) {
           return project_data;
@@ -276,13 +279,13 @@ export default {
     },
     user_data() {
       var user_data = this.$store.state.userManagement.users.find(
-        (u) => (u.id = this.$route.query.id)
+        (u) => (u.id === this.$route.query.id)
       );
       return user_data;
     },
     workarea_data() {
       var workarea_data = this.$store.state.workareaManagement.workareas.find(
-        (w) => (w.id = this.$route.query.id)
+        (w) => (w.id === this.$route.query.id)
       );
       return workarea_data;
     },
@@ -398,7 +401,7 @@ export default {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     getBusinessHours() {
-      if (this.$route.query.type === "user") {
+      if (this.$route.query.type === "users") {
         this.$store
           .dispatch("userManagement/fetchItem", this.$route.query.id)
           .then((res) => {
@@ -440,8 +443,17 @@ export default {
                     maxHour = bH.endTime;
                   }
                 });
-                this.minTime = minHour;
-                this.maxTime = maxHour;
+
+                this.minTime =
+                  minHour >= "02:00"
+                    ? moment(minHour, "HH:mm")
+                        .subtract(2, "hour")
+                        .format("HH:mm")
+                    : "00:00";
+                this.maxTime =
+                  maxHour <= "22:00"
+                    ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
+                    : "24:00";
 
                 this.businessHours = businessHours;
               } else {
@@ -498,7 +510,7 @@ export default {
         (p) => p.id === parseInt(this.$route.query.id, 10)
       );
       this.scheduleTitle = "Planning du projet : " + project.name;
-    } else if (this.$route.query.type === "user") {
+    } else if (this.$route.query.type === "users") {
       let user = this.$store.state.userManagement.users.find(
         (u) => u.id === parseInt(this.$route.query.id, 10)
       );
@@ -512,7 +524,7 @@ export default {
     }
   },
   created() {
-    if (this.$route.query.type === "user") {
+    if (this.$route.query.type === "users") {
       this.getBusinessHours();
     }
 
@@ -542,6 +554,7 @@ export default {
     if (this.$route.query.type === "projects") {
       var id_bundle = null;
 
+      console.log(["projects", this.$store.state.projectManagement.projects]);
       this.$store.state.projectManagement.projects.forEach((p) => {
         p.tasks_bundles.forEach((t) => {
           if (t.project_id === parseInt(this.$route.query.id, 10)) {
@@ -549,6 +562,7 @@ export default {
           }
         });
       });
+      console.log(["id_bundle", id_bundle]);
       if (id_bundle != null) {
         this.$store
           .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
@@ -556,15 +570,12 @@ export default {
             this.manageErrors(err);
           });
       }
-    } else if (this.$route.query.type === "users") {
-      this.$store.dispatch("taskManagement/fetchItems").catch((err) => {
-        this.manageErrors(err);
-      });
-    } else if (this.$route.query.type === "workarea") {
+    } else {
       this.$store.dispatch("taskManagement/fetchItems").catch((err) => {
         this.manageErrors(err);
       });
     }
+
     this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
       this.manageErrors(err);
     });

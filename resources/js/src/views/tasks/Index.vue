@@ -225,8 +225,8 @@ import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
 export default {
   props: {
     project_data: {
-      required: true
-    }
+      required: true,
+    },
   },
   components: {
     AgGridVue,
@@ -238,7 +238,7 @@ export default {
     CellRendererLink,
     CellRendererActions,
     CellRendererRelations,
-    CellRendererStatus
+    CellRendererStatus,
   },
   data() {
     return {
@@ -250,48 +250,48 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucune tâche à afficher" }
+        localeText: { noRowsToShow: "Aucune tâche à afficher" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
           headerName: "Nom",
           field: "name",
-          filter: true
+          filter: true,
         },
         {
           headerName: "Plannifié le",
           field: "date",
           filter: true,
-          cellRenderer: data => {
+          cellRenderer: (data) => {
             moment.locale("fr");
 
             return moment(data.value).format("DD MMMM YYYY, HH:mm");
-          }
+          },
         },
         {
           headerName: "Estimation",
           field: "estimated_time",
           filter: true,
-          cellRenderer: data => {
+          cellRenderer: (data) => {
             return data.value + "h";
-          }
+          },
         },
         {
           headerName: "Ilôt",
           field: "workarea",
           filter: true,
-          cellRendererFramework: "CellRendererRelations"
+          cellRendererFramework: "CellRendererRelations",
         },
         {
           headerName: "Avancement",
           field: "status",
           filter: true,
-          cellRendererFramework: "CellRendererStatus"
+          cellRendererFramework: "CellRendererStatus",
         },
         {
           sortable: false,
@@ -302,19 +302,19 @@ export default {
           cellRendererParams: {
             model: "task",
             modelPlurial: "tasks",
-            name: data => `la tâche ${data.name}`,
+            name: (data) => `la tâche ${data.name}`,
             usesSoftDelete: false,
-            withPrompt: true
-          }
-        }
+            withPrompt: true,
+          },
+        },
       ],
 
       // Cell Renderer Components
       components: {
         CellRendererLink,
         CellRendererActions,
-        CellRendererRelations
-      }
+        CellRendererRelations,
+      },
     };
   },
   computed: {
@@ -339,8 +339,8 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     updateSearchQuery(val) {
@@ -364,7 +364,7 @@ export default {
       this.$store
         .dispatch("taskManagement/editItem", item)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     },
@@ -377,7 +377,7 @@ export default {
         text: `Voulez vous vraiment supprimer la tâche "${item.name}"`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
@@ -386,7 +386,7 @@ export default {
         .then(() => {
           this.showDeleteSuccess();
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
 
@@ -396,9 +396,9 @@ export default {
       this.$vs.notify({
         color: "success",
         title: "Tâche",
-        text: `${modelTitle} supprimé`
+        text: `${modelTitle} supprimé`,
       });
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -442,11 +442,11 @@ export default {
         "taskManagement/fetchItemsByBundle",
         this.project_data.tasks_bundles[0].id
       )
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
 
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
+    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
       this.manageErrors(err);
     });
   },
@@ -458,7 +458,7 @@ export default {
 
     moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("userManagement");
-  }
+  },
 };
 </script>
 
