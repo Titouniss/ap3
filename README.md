@@ -59,8 +59,8 @@ php artisan serve
 
 -   SQL Server
 ```
-// Installer PEAR et ODBC microsoft
-apt install php-pear unixodbc-dev
+// Installer PEAR
+apt install php-pear
 
 // Installer le PDO
 sudo pecl install sqlsrv
@@ -69,6 +69,12 @@ sudo pecl install pdo_sqlsrv
 // Activer le PDO
 printf "; priority=20\nextension=sqlsrv.so\n" > /etc/php/7.3/mods-available/sqlsrv.ini
 printf "; priority=30\nextension=pdo_sqlsrv.so\n" > /etc/php/7.3/mods-available/pdo_sqlsrv.ini
+
+// Installer ODBC Microsoft
+curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list
+apt update
+ACCEPT_EULA=Y apt-get install msodbcsql17 unixodbc-dev
 
 // Redémarrer Apache
 systemctl restart apache2

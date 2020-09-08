@@ -182,6 +182,7 @@ class ModuleController extends Controller
                     'host' => 'required',
                     'port' => 'nullable',
                     'charset' => 'required',
+                    'database' => 'required',
                     'username' => 'required',
                     'password' => 'nullable',
                 ]);
@@ -210,6 +211,7 @@ class ModuleController extends Controller
                 'host' => $arrayRequest['host'],
                 'port' => $arrayRequest['port'],
                 'charset' => $arrayRequest['charset'],
+                'database' => $arrayRequest['database'],
                 'username' => $arrayRequest['username'],
             ]);
             if ($arrayRequest['password']) {
