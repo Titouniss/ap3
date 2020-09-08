@@ -326,6 +326,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************   Modules   *************************************/
     /***********************************************************************************/
     Route::prefix('module-management')->group(function () {
+        Route::get('sync/{item}', 'API\ModuleController@sync');
         Route::group(['middleware' => ['can:read modules']], function () {
             Route::get('index', 'API\ModuleController@index');
             Route::get('show/{item}', 'API\ModuleController@show');

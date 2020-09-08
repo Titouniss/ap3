@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -58,6 +59,8 @@ class BaseModule extends Model
                 }
             }
             DB::commit();
+            $this->last_synced_at = Carbon::now();
+            $this->save();
             return true;
         } catch (\Throwable $th) {
             echo $th->getMessage();

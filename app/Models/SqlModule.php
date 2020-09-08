@@ -89,13 +89,13 @@ class SqlModule extends BaseModule
                                     }
                                     break;
                                 case 'relationship':
-                                    if ($details && $details['model']) {
-                                        $newValue = ModelHasOldId::where('model', $details['model'])->where('old_id', $result->id)->firstOrFail()->id;
+                                    if ($details && $details->model) {
+                                        $newValue = ModelHasOldId::where('model', $details->model)->where('old_id', $result->id)->firstOrFail()->id;
                                     }
                                     break;
                                 default: // String
-                                    if ($details && $details['max_length']) {
-                                        $newValue = substr($newValue, 0, intval($details['max_length']));
+                                    if ($details && $details->max_length) {
+                                        $newValue = substr($newValue, 0, intval($details->max_length));
                                     }
                                     break;
                             }

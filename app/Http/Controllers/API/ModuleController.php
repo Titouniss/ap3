@@ -12,6 +12,7 @@ use App\Models\SqlModule;
 use Exception;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
@@ -358,5 +359,23 @@ class ModuleController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
+    }
+
+    /** 
+     * sync item api 
+     * 
+     * @return \Illuminate\Http\Response 
+     */
+    public function sync(BaseModule $item)
+    {
+        if (!$item) {
+            return response()->json(['success' => false, 'error' => 'Not found'], 404);
+        }
+
+        if (!$item->sync()) {
+            return response()->json(['success' => false, 'error' => 'Synchronisation impossible'], 400);
+        }
+
+        return response()->json(['success' => $item->load('moduleDataTypes', 'moduleDataTypes.dataType')], $this->successStatus);
     }
 }

@@ -12,6 +12,11 @@ class Company extends Model
 
     protected $fillable = ['name', 'siret', 'is_trial', 'expires_at'];
 
+    public function module()
+    {
+        return $this->hasOne(BaseModule::class, 'company_id', 'id');
+    }
+
     public function skills()
     {
         return $this->hasMany('App\Models\Skill', 'company_id');

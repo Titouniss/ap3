@@ -148,5 +148,24 @@ export default {
                     reject(error);
                 });
         });
+    },
+    syncItem({ commit }, payload) {
+        return new Promise((resolve, reject) => {
+            axios
+                .get(`/api/module-management/sync/${payload.id}`)
+                .then(response => {
+                    if (response.data.success) {
+                        commit("SET_MODULE", response.data.success, {
+                            root: true
+                        });
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
     }
 };

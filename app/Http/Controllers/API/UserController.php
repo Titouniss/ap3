@@ -36,6 +36,7 @@ class UserController extends Controller
     public function login()
     {
         if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
+            $module = [];
             $user = Auth::user();
             if ($user->company_id) {
                 $company = Company::find($user->company_id);
@@ -44,6 +45,7 @@ class UserController extends Controller
                 } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
                     return response()->json(['success' => false, 'error' => 'Trial ended']);
                 }
+                $module = $company->module->load('moduleDataTypes', 'moduleDataTypes.dataType');
             }
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
@@ -56,7 +58,7 @@ class UserController extends Controller
                     $query->select(['id', 'name', 'name_fr', 'isPublic']);
                 }]);
             }])->load('company:id,name');
-            return response()->json(['success' => $success, 'userData' => $user], $this->successStatus);
+            return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module->count() > 0 ? $module : null)], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised']);
         }

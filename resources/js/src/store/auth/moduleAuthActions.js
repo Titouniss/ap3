@@ -59,6 +59,11 @@ export default {
                                 root: true
                             });
                         }
+                        if (data.module) {
+                            commit("SET_MODULE", data.module, {
+                                root: true
+                            });
+                        }
                         if (data.success.token) {
                             // Set bearer token in axios
                             commit("SET_BEARER", data.success.token);

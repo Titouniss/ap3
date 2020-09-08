@@ -9,5 +9,6 @@
 
 export default {
     modules: [],
-    module: {}
+    module: {},
+    slugs: []
 };
