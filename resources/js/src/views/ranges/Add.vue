@@ -204,13 +204,15 @@ export default {
             range_data: {
                 name: "",
                 description: "",
-                company_id: null
+                company_id: null,
+                company: null
             },
             selected: []
         };
     },
     computed: {
         companiesData() {
+            console.log(["ici", this.$store.state.companyManagement]);
             return this.$store.state.companyManagement.companies;
         },
         repetitiveTasksData() {
@@ -246,7 +248,7 @@ export default {
                 ) {
                     return false;
                 } else {
-                    this.range_data.company.id = user.company_id;
+                    this.range_data.company_id = user.company_id;
                     return true;
                 }
             } else return true;
@@ -254,6 +256,7 @@ export default {
         validateForm() {
             return (
                 !this.errors.any() &&
+                this.range_data.name != "" &&
                 this.$store.state.repetitiveTaskManagement.repetitivesTasks
                     .length > 0
             );
@@ -310,6 +313,18 @@ export default {
         capitalizeFirstLetter(word) {
             if (typeof word !== "string") return "";
             return word.charAt(0).toUpperCase() + word.slice(1);
+        },
+        activeUserRole() {
+            const user = this.$store.state.AppActiveUser;
+            if (user.roles && user.roles.length > 0) {
+                return user.roles[0].name;
+            }
+            return false;
+        },
+    },
+    mounted() {
+        if (this.activeUserRole() != "superAdmin") {
+            this.range_data.company = this.$store.state.AppActiveUser.company;
         }
     },
     created() {
