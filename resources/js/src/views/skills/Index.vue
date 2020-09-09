@@ -254,7 +254,6 @@ export default {
             }
         };
     },
-    watch: {},
     computed: {
         skillsData() {
             return this.$store.state.skillManagement.skills;
