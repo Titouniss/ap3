@@ -71,6 +71,7 @@ class ProjectController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Project::create($arrayRequest)->load('company');
+        ProjectController::checkIfTaskBundleExist($item->id);
         return response()->json(['success' => $item], $this->successStatus);
     }
 
