@@ -33,7 +33,7 @@ class RangeController extends Controller
         if ($user->hasRole('superAdmin')) {
             $listObject = Range::withTrashed()->get()->load('company');
         } else if ($user->company_id != null) {
-            $listObject = Range::where('company_id', $user->company_id)->get()->load('company');
+            $listObject = Range::withTrashed()->where('company_id', $user->company_id)->get()->load('company');
         }
         return response()->json(['success' => $listObject], $this->successStatus);
     }

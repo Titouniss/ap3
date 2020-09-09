@@ -18,9 +18,9 @@
                             icon="LockIcon"
                             class="mr-2"
                         />
-                        <span class="font-medium text-lg leading-none"
-                            >Admin</span
-                        >
+                        <span class="font-medium text-lg leading-none">
+                            Admin
+                        </span>
                     </div>
                     <vs-divider />
 
@@ -50,8 +50,9 @@
                     <span
                         class="text-danger text-sm"
                         v-show="errors.has('name')"
-                        >{{ errors.first("name") }}</span
                     >
+                        {{ errors.first("name") }}
+                    </span>
                 </div>
                 <div class="vx-row">
                     <vs-textarea
@@ -79,9 +80,9 @@
                                 icon="PackageIcon"
                                 class="mr-2"
                             />
-                            <span class="font-medium text-lg leading-none"
-                                >Liste des étapes de la gamme</span
-                            >
+                            <span class="font-medium text-lg leading-none">
+                                Liste des étapes de la gamme
+                            </span>
                             <add-form
                                 v-if="range_data.company != null"
                                 :company_id="range_data.company.id"
@@ -152,8 +153,9 @@
                             type="border"
                             color="warning"
                             @click="back"
-                            >Annuler</vs-button
                         >
+                            Annuler
+                        </vs-button>
                     </div>
                 </div>
             </div>
@@ -320,7 +322,7 @@ export default {
                 return user.roles[0].name;
             }
             return false;
-        },
+        }
     },
     mounted() {
         if (this.activeUserRole() != "superAdmin") {
