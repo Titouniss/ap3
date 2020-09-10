@@ -18,10 +18,7 @@ export default {
                     if (response.data.success) {
                         commit(
                             "ADD_ITEM",
-                            Object.assign(item, {
-                                id: response.data.success.id,
-                                company: response.data.success.company
-                            })
+                            Object.assign(item, response.data.success)
                         );
                         resolve(response);
                     } else {
