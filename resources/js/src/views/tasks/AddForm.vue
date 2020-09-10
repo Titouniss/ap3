@@ -54,11 +54,7 @@
                 <span>Tache dépendante de :</span>
                 <li :key="index" v-for="(item, index) in previousTasks">{{ item }}</li>
               </div>
-              <div
-                class="my-3"
-                style="font-size: 0.9em;"
-                v-if="this.project_data && project_data.status != 'todo'"
-              >
+              <div class="my-3" style="font-size: 0.9em;" v-if="checkProjectStatus">
                 <small class="date-label mb-1" style="display: block;">Date</small>
                 <flat-pickr
                   :config="configdateTimePicker"
@@ -115,13 +111,13 @@
               </div>
 
               <span
-                v-if="itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
-                class="text-danger text-sm"
-              >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
+                  v-if="itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
+                  class="text-danger text-sm"
+                >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
 
               <div class="my-3">
                 <vs-select
-                  v-if="this.type !== 'users' && usersData.length > 0 &&  (itemLocal.skills.length > 0 && usersDataFiltered.length > 0)"
+                  v-if="this.type !== 'users' && usersData.length > 0 && checkProjectStatus && (itemLocal.skills.length > 0 && usersDataFiltered.length > 0)"
                   v-validate="'required'"
                   name="userId"
                   label="Attribuer"
@@ -143,13 +139,13 @@
               </div>
 
               <span
-                v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
-                class="text-danger text-sm"
-              >Attention, aucun îlot ne possède cette combinaison de compétences</span>
+                  v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                  class="text-danger text-sm"
+                >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
               <div
                 class="my-3"
-                v-if="this.type !== 'workarea' && ( itemLocal.skills.length > 0 && workareasDataFiltered.length > 0)"
+                v-if="this.type !== 'workarea' && checkProjectStatus && (itemLocal.skills.length > 0 && workareasDataFiltered.length > 0)"
               >
                 <small class="date-label">Ilot</small>
                 <vs-select
@@ -170,12 +166,13 @@
                   v-show="errors.has('workarea')"
                 >{{ errors.first('workarea') }}</span>
               </div>
+
             </div>
             <!-- Right -->
             <div class="vx-col flex-5">
               <div class="mb-3" style="flex-direction: column; display: flex;">
                 <add-previous-task
-                  v-if="project_data && project_data.status == 'todo'"
+                  v-if="checkProjectStatus"
                   :addPreviousTask="addPreviousTask"
                   :tasks_list="tasks_list"
                   :previousTasksIds="itemLocal.previousTasksIds"
@@ -254,11 +251,10 @@ Validator.localize("fr", errorMessage);
 export default {
   components: {
     flatPickr,
-    AddPreviousTask,
+    AddPreviousTask
   },
   props: {
     project_data: {
-      required: true,
     },
     tasks_list: { required: true },
     customTask: { type: Boolean },
@@ -268,6 +264,7 @@ export default {
     type: { type: String },
     idType: { type: Number },
     hideProjectInput: { type: Boolean },
+    hideUserInput: { type: Boolean }
   },
   data() {
     return {
@@ -276,27 +273,25 @@ export default {
         disableMobile: "true",
         enableTime: true,
         dateFormat: "d-m-Y H:i",
-        locale: FrenchLocale,
+        locale: FrenchLocale
       },
 
       itemLocal: {
         name: "",
         order: "",
         description: "",
-        date:
-          this.project_data && this.project_data.status != "todo"
-            ? new Date()
-            : "",
+        date: this.project_data != null && this.project_data.status != "todo" ? new Date() : "",
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
         created_by: "",
         status: "todo",
-        project_id: this.project_data ? this.project_data.id : null,
+        project_id: this.project_data != null ? this.project_data.id : null,
         comment: "",
         skills: [],
         previousTasksIds: [],
-        user_id: this.type === "users" ? this.idType : null,
+        workarea_id: this.type === "workarea" ? this.idType : null,
+        user_id: this.type === "users" ? this.idType : null
       },
 
       workareasDataFiltered: [],
@@ -308,7 +303,7 @@ export default {
       descriptionDisplay: false,
       commentDisplay: false,
       have_setTimeSpent: false,
-      previousTasks: [],
+      previousTasks: []
     };
   },
   computed: {
@@ -325,13 +320,13 @@ export default {
     },
     skillsData() {
       if (this.type === "workarea") {
-        console.log(["this.idType", this.idType]);
+
         let workarea = this.$store.state.workareaManagement.workareas.find(
-          (w) => w.id === this.idType || w.id === this.idType.toString()
+          w => w.id === this.idType || w.id === this.idType.toString()
         );
         if (workarea.skills !== []) {
           let $skillsData = [];
-          workarea.skills.forEach((s) => {
+          workarea.skills.forEach(s => {
             $skillsData.push(s);
           });
 
@@ -343,13 +338,8 @@ export default {
       }
     },
     usersData() {
-      let usersData = this.$store.state.userManagement.users;
-      console.log([
-        "this.$store.state.userManagement",
-        this.$store.state.userManagement,
-      ]);
-      console.log(["usersData", usersData]);
-      return this.filterItemsAdmin(usersData);
+      let usersDate = this.$store.state.userManagement.users;
+      return this.filterItemsAdmin(usersDate); 
     },
     projectsData() {
       return this.$store.state.projectManagement.projects;
@@ -363,8 +353,26 @@ export default {
       },
       set(value) {
         return value;
-      },
+      }
     },
+    checkProjectStatus() {
+      if (this.project_data != null) {
+        // from index task
+        return this.project_data.status === 'todo' ? false : true;
+      } else if (this.type === "projects") {
+        // from projects type shedule read
+        let project = this.projectsData.find(p => p.id === this.idType);
+        return this.project.status === 'todo' ? false : true;
+      } else {
+        // from users/workareas type shedule read
+        if (this.itemLocal.project_id !== null) {
+          let project = this.projectsData.find(p => p.id === this.itemLocal.project_id);
+          return project.status === 'todo' ? false : true;
+        } else {
+          return false;
+        }
+      }
+    }
   },
   methods: {
     clearFields() {
@@ -372,21 +380,18 @@ export default {
         name: "",
         order: "",
         description: "",
-        date:
-          this.project_data && this.project_data.status != "todo"
-            ? new Date()
-            : "",
+        date: this.project_data != null && this.project_data.status != "todo" ? new Date() : "",
         estimated_time: 1,
         time_spent: "",
         task_bundle_id: null,
-        //workarea_id: "null",
+        workarea_id: this.type === "workarea" ? this.idType : null,
         created_by: "",
         status: "todo",
         skills: [],
-        project_id: this.project_data ? this.project_data.id : null,
+        project_id: this.project_data != null ? this.project_data.id : this.type === "project" ? this.idType : null,
         comment: "",
         previousTasksIds: [],
-        user_id: this.type === "users" ? this.idType : null,
+        user_id: this.type === "users" ? this.idType : null
       });
       if (this.activeAddPrompt) {
         this.handleClose();
@@ -397,7 +402,7 @@ export default {
       this.descriptionDisplay = false;
       this.commentDisplay = false;
       this.have_setTimeSpent = false;
-      this.previousTasks = [];
+      (this.previousTasks = []);
       Object.assign(this.workareasDataFiltered, []);
       Object.assign(this.usersDataFiltered, []);
     },
@@ -405,27 +410,35 @@ export default {
       if (!this.isSubmiting) {
         this.isSubmiting = true;
 
-        this.$validator.validateAll().then((result) => {
-          let dateFormat = this.itemLocal.date;
-          this.itemLocal.date = this.itemLocal.date
-            ? moment(this.itemLocal.date, "DD-MM-YYYY HH:mm").format(
-                "YYYY-MM-DD HH:mm"
-              )
-            : null;
+        this.$validator.validateAll().then(result => {
+          let item = Object.assign({}, this.itemLocal);
 
-          this.itemLocal.project_id =
-            this.type === "projects" ? this.idType : this.itemLocal.project_id;
-          this.itemLocal.user_id =
-            this.type === "users" ? this.idType : this.itemLocal.user_id;
+          console.log(["this.itemLocal", this.itemLocal]);
+          
+          if (this.project_data != null) {
+            this.itemLocal.project_id = this.project_data.id;
+          }
+          else if (this.type && this.type === "projects") {
+            this.itemLocal.project_id = this.idType
+          }
+          else if (this.type && this.type === "users") {
+          }
+          else {
+          }
+
+          let dateFormat = item.date
+          item.date = item.date ? moment(
+            item.date,
+            "DD-MM-YYYY HH:mm"
+          ).format("YYYY-MM-DD HH:mm") : null;
 
           if (result) {
             this.$store
               .dispatch(
-                "taskManagement/addItem",
-                Object.assign({}, this.itemLocal)
+                "taskManagement/addItem", item
               )
               .then((response) => {
-                if (response.data.success) {
+                if(response.data.success){
                   this.isSubmiting = false;
 
                   this.$vs.loading.close();
@@ -434,20 +447,21 @@ export default {
                     text: `"${this.itemLocal.name}" ajouté avec succès`,
                     iconPack: "feather",
                     icon: "icon-alert-circle",
-                    color: "success",
+                    color: "success"
                   });
                   this.clearFields();
-                } else {
+                }
+                else{
                   this.$vs.notify({
                     title: "Indisponnible",
                     text: response.data.error,
                     iconPack: "feather",
                     icon: "icon-alert-circle",
-                    color: "danger",
+                    color: "danger"
                   });
-                }
+                }                
               })
-              .catch((error) => {
+              .catch(error => {
                 this.isSubmiting = false;
 
                 this.$vs.loading.close();
@@ -456,26 +470,24 @@ export default {
                   text: error.message,
                   iconPack: "feather",
                   icon: "icon-alert-circle",
-                  color: "danger",
+                  color: "danger"
                 });
               });
-            this.itemLocal.date = dateFormat;
+              this.itemLocal.date = dateFormat
           }
         });
       }
     },
-    updateUsersAndWorkareasList(ids) {
-      this.updateWorkareasList(ids);
-      this.updateUsersList(ids);
+    updateUsersAndWorkareasList(ids){
+      this.updateWorkareasList(ids)
+      this.updateUsersList(ids)
     },
     updateWorkareasList(ids) {
-      this.workareasDataFiltered = this.workareasData.filter(function (
+      this.workareasDataFiltered = this.workareasData.filter(function(
         workarea
       ) {
         for (let i = 0; i < ids.length; i++) {
-          if (
-            workarea.skills.filter((skill) => skill.id == ids[i]).length == 0
-          ) {
+          if (workarea.skills.filter(skill => skill.id == ids[i]).length == 0) {
             return false;
           }
         }
@@ -483,9 +495,11 @@ export default {
       });
     },
     updateUsersList(ids) {
-      this.usersDataFiltered = this.usersData.filter(function (user) {
+      this.usersDataFiltered = this.usersData.filter(function(
+        user
+      ) {
         for (let i = 0; i < ids.length; i++) {
-          if (user.skills.filter((skill) => skill.id == ids[i]).length == 0) {
+          if (user.skills.filter(skill => skill.id == ids[i]).length == 0) {
             return false;
           }
         }
@@ -494,7 +508,7 @@ export default {
     },
     filterItemsAdmin($items) {
       let projectData = this.$store.state.projectManagement.projects.find(
-        (p) => p.id === this.itemLocal.project_id
+        p => p.id === this.itemLocal.project_id
       );
 
       let $filteredItems = [];
@@ -502,16 +516,16 @@ export default {
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+            r => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
           if (this.project_data !== undefined && this.project_data !== null) {
             $filteredItems = $items.filter(
-              (item) => item.company_id === this.project_data.company_id
+              item => item.company_id === this.project_data.company_id
             );
           } else if (projectData !== undefined && projectData !== null) {
             $filteredItems = $items.filter(
-              (item) => item.company_id === projectData.company_id
+              item => item.company_id === projectData.company_id
             );
           }
         } else {
@@ -527,8 +541,8 @@ export default {
       this.itemLocal.previousTasksIds = taskIds;
       let previousTasks_local = [];
 
-      taskIds.forEach((id) => {
-        let task = this.tasks_list.filter((t) => t.id == id);
+      taskIds.forEach(id => {
+        let task = this.tasks_list.filter(t => t.id == id);
         previousTasks_local.push(task[0].name);
       });
       this.previousTasks = previousTasks_local;
@@ -538,9 +552,8 @@ export default {
         this.itemLocal.time_spent = this.itemLocal.estimated_time;
         this.have_setTimeSpent = true;
       }
-    },
+    }
   },
-  created() {},
 };
 </script>
 <style>

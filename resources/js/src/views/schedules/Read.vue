@@ -24,6 +24,8 @@
         :customTask="false"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
+        :hideProjectInput="this.$route.query.type === 'projects' ? true : false"
+        :hideUserInput="this.$route.query.type === 'users' ? true : false"
       />
       <FullCalendar
         locale="fr"
@@ -64,9 +66,7 @@
         @eventResize="handleEventResize"
       />
       <edit-form
-        :reload="calendarEvents"
         :itemId="itemIdToEdit"
-        :companyId="project_data !== null ? project_data.company_id : null"
         :tasks_list="tasksEvent"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
@@ -140,7 +140,7 @@ export default {
   },
   computed: {
     itemIdToEdit() {
-      return this.$store.state.scheduleManagement.event.id || -1;
+      return this.$store.state.taskManagement.task.id || 0;
     },
     calendarEvents() {
       // Get all task and parse to show
@@ -223,7 +223,6 @@ export default {
                   }
                 });
               });
-
               eventsParse.push({
                 id: t.id,
                 title: t.name,
@@ -291,16 +290,6 @@ export default {
     },
   },
   methods: {
-    refresh() {
-      // if (this.$route.query.type === "projects") {
-      //   console.log("Planning d'un projet");
-      //   this.$store
-      //     .dispatch("taskManagement/fetchItemsByBundle", this.$route.query.id)
-      //     .catch(err => {
-      //       this.manageErrors(err);
-      //     });
-      // }
-    },
     toggleWeekends() {
       this.calendarWeekends = !this.calendarWeekends; // update a property
     },
@@ -318,10 +307,10 @@ export default {
       );
 
       this.$store
-        .dispatch("scheduleManagement/editEvent", targetEvent)
+        .dispatch("taskManagement/editItem", targetEvent)
         .catch((err) => {
           console.error(err);
-        });
+      });
     },
     handleEventDrop(arg) {
       var itemTemp = this.calendarEvents.find(

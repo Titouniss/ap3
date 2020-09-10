@@ -31,7 +31,7 @@ class TaskController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $items = Task::all()->load('project', 'comments');
+        $items = Task::all()->load('project', 'comments', 'skills');
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -163,6 +163,8 @@ class TaskController extends Controller
         $this->storeComment($item->id, $arrayRequest['comment']);
         $this->storeSkills($item->id, $arrayRequest['skills']);
         $this->storePreviousTask($item->id, $arrayRequest['previousTasksIds']);
+
+        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
 
         return response()->json(['success' => $item], $this->successStatus);
     }
@@ -340,10 +342,10 @@ class TaskController extends Controller
 
 
         if ($update) {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
             return response()->json(['success' => $item], $this->successStatus);
         } else {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
     }

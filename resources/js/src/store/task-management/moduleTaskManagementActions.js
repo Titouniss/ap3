@@ -15,7 +15,7 @@ export default {
       axios.post("/api/task-management/store", item)
         .then((response) => {
           if(response.data.success){
-            commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id }))
+            commit('ADD_ITEM', Object.assign( response.data.success, { id: response.data.success.id }))
           }
           resolve(response)
         })
