@@ -153,7 +153,7 @@ export default {
     },
     projectsData() {
       return this.$store.state.projectManagement.projects
-        .filter((project) => project.status != "done")
+        .filter((project) => project.status == "doing")
         .reverse();
     },
     workareasData() {
@@ -178,7 +178,7 @@ export default {
       return moment(date).format("DD MMMM YYYY") == "Invalid date"
         ? ""
         : moment(date).format("DD MMMM YYYY");
-    },
+    }
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
