@@ -383,7 +383,7 @@ export default {
         });
     },
     handleClose() {
-      this.refresh();
+      //this.refresh();
       (this.activeAddPrompt = false), (this.dateData = {});
     },
     authorizedTo(action, model = "users") {

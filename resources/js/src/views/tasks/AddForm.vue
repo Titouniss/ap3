@@ -342,7 +342,11 @@ export default {
       return this.filterItemsAdmin(usersDate); 
     },
     projectsData() {
-      return this.$store.state.projectManagement.projects;
+      if (this.project_data == null) {
+        return this.$store.state.projectManagement.projects.filter(p => p.status === "doing")
+      } else {
+        return this.$store.state.projectManagement.projects;
+      }
     },
     showPrompt: {
       get() {

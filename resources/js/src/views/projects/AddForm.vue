@@ -143,7 +143,7 @@ export default {
       },
       colors: project_colors,
 
-      customersDataFiltered: null,
+      customersDataFiltered: [],
     };
   },
   computed: {

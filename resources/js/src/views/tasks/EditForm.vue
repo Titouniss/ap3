@@ -31,12 +31,8 @@
                           {{ item }}
                         </li>
                     </div>
-                    <div class="my-3" style="font-size: 0.9em;" v-if="project_data && project_data.status == 'doing'">
-                      <small class="date-label mb-1" style="display: block;">Date</small>
-                      <flat-pickr :config="configdateTimePicker" v-model="itemLocal.date" placeholder="Date" class="w-full"/>
-                    </div>
 
-                    <div class="my-3" style="font-size: 0.9em;" v-if="!checkProjectStatus">
+                    <div class="my-3" style="font-size: 0.9em;" v-if="checkProjectStatus">
                       <small class="date-label mb-1" style="display: block;">Date</small>
                       <flat-pickr
                         :config="configdateTimePicker"
@@ -46,7 +42,7 @@
                       />
                     </div>
 
-                    <div class="my-3">
+                    <div class="my-3" v-if="(this.type != 'users' && this.type != 'workarea')">
                       <small class="date-label">Compétences</small>
                       <vs-select v-on:change="updateUsersAndWorkareasList" v-model="itemLocal.skills" class="w-full" multiple autocomplete
                         v-validate="'required'" name='skills'>
@@ -56,11 +52,11 @@
                     </div>
 
                     <span
-                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length == 0"
+                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length == 0 && checkProjectStatus && (this.type != 'users' && this.type != 'workarea')"
                       class="text-danger text-sm"
                     >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
 
-                    <div class="my-3" v-if="this.type !== 'users' && itemLocal.skills && !checkProjectStatus && itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
+                    <div class="my-3" v-if="(this.type != 'users' && this.type != 'workarea') && checkProjectStatus && itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
                       <vs-select
                         v-validate="'required'"
                         name="userId"
@@ -79,11 +75,11 @@
                     </div>
                     
                     <span
-                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"
+                      v-if="itemLocal.skills && itemLocal.skills.length > 0 && workareasDataFiltered.length == 0 && checkProjectStatus && (this.type != 'users' && this.type != 'workarea')"
                       class="text-danger text-sm"
                     >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
-                    <div class="my-3" v-if="this.type !== 'workarea' && itemLocal.skills && !checkProjectStatus && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
+                    <div class="my-3" v-if="this.type !== 'workarea' && itemLocal.skills && checkProjectStatus && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
                       <small class="date-label">Ilot</small>
                         <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
                             <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
@@ -277,7 +273,6 @@ export default {
       return this.filterItemsAdmin($skillsData);
     },
     projectsData() {
-      console.log(["this.$store.state", this.$store.state]);
       return this.$store.state.projectManagement.projects;
     },
     checkProjectStatus() {
@@ -287,18 +282,21 @@ export default {
       } else if (this.type === "projects") {
         // from projects type shedule read
         let project = this.projectsData.find(p => p.id === this.idType);
-        return this.project.status === 'todo' ? false : true;
+        return project.status === 'todo' ? false : true;
       } else {
         // from users/workareas type shedule read
-          let taskFind = undefined;
-          this.projectsData.forEach(project => {
-            taskFind = project.tasks.find(t => t.id === this.itemId)
-            if ( taskFind != undefined ) {
-              let projectTemp = this.projectsData.find(p => p.id === project.id);
-              return projectTemp.status === 'todo' ? false : true;
-            }
-          });
+        let projectFind = undefined;
+        this.projectsData.forEach(p => {
+          if (p.tasks.find(t => t.id === this.itemId) != undefined ) {
+            projectFind = p;
+          }
+        });
+        if ( projectFind != undefined ) {
+          console.log(["projectFind", projectFind]);
+          return projectFind.status === 'todo' ? false : true;
+        }else {
           return false
+        }
       }
     }
   },
