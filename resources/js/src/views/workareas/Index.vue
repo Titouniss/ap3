@@ -278,9 +278,9 @@ export default {
             }
         };
     },
-    watch: {},
     computed: {
         workareasData() {
+            console.log(this.$store.state.workareaManagement.workareas);
             return this.$store.state.workareaManagement.workareas;
         },
         paginationPageSize() {

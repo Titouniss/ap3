@@ -94,7 +94,7 @@ export default {
                 .delete(`/api/skill-management/destroy/${id}`)
                 .then(response => {
                     if (response.data.success) {
-                        commit("REMOVE_ITEM", id);
+                        commit("UPDATE_ITEM", response.data.success);
                         resolve(response);
                     } else {
                         reject({ message: response.data.error });

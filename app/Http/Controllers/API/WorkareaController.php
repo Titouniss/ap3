@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
 class WorkareaController extends Controller
 {
     use SoftDeletes;
@@ -30,7 +27,7 @@ class WorkareaController extends Controller
         if ($user->hasRole('superAdmin')) {
             $items = Workarea::withTrashed()->get()->load('company', 'skills');
         } else if ($user->company_id != null) {
-            $items = Workarea::where('company_id', $user->company_id)->get()->load('company')->load('skills');
+            $items = Workarea::withTrashed()->where('company_id', $user->company_id)->get()->load('company', 'skills');
         }
         return response()->json(['success' => $items], $this->successStatus);
     }
@@ -70,7 +67,7 @@ class WorkareaController extends Controller
             }
         }
 
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $item->load('skills')], $this->successStatus);
     }
 
     /**

@@ -30,7 +30,7 @@ class CustomersController extends Controller
         if ($user->hasRole('superAdmin')) {
             $customers = Customers::withTrashed()->get()->load('company');
         } else {
-            $customers = Customers::all()->load('company');
+            $customers = Customers::withTrashed()->get()->load('company');
             // Add link to specific company ?
         }
         return response()->json(['success' => $customers], $this->successStatus);
