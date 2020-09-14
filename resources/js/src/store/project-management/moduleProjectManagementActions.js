@@ -39,7 +39,6 @@ export default {
     return new Promise((resolve, reject) => {
       axios.put(`/api/project-management/restore/${id}`)
         .then((response) => {
-          console.log(['response', response]);
           commit('UPDATE_ITEM', Object.assign({}, response.data.success))
           resolve(response)
         })

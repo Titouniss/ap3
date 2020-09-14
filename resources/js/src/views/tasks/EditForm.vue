@@ -57,21 +57,24 @@
                     >Attention, aucun utilisateur ne possède cette combinaison de compétences</span>
 
                     <div class="my-3" v-if="(this.type != 'users' && this.type != 'workarea') && checkProjectStatus && itemLocal.skills && itemLocal.skills.length > 0 && usersDataFiltered.length > 0">
-                      <vs-select
+                      <v-select
                         v-validate="'required'"
-                        name="userId"
-                        label="Attribuer"
+                        name="user_id"
+                        label="lastname"
+                        :multiple="false"
                         v-model="itemLocal.user_id"
+                        :reduce="name => name.id"
                         class="w-full"
                         autocomplete
+                        :options="usersDataFiltered"
                       >
-                        <vs-select-item
-                          :key="index"
-                          :value="item.id"
-                          :text="item.firstname + ' ' + item.lastname"
-                          v-for="(item,index) in usersDataFiltered"
-                        />
-                      </vs-select>
+                        <template #header>
+                          <div class="vs-select--label">Attribuer</div>
+                        </template>
+                        <template #option="user">
+                            <span>{{  `${user.firstname} ${user.lastname}`  }}</span>
+                        </template>
+                      </v-select>
                     </div>
                     
                     <span
@@ -80,10 +83,19 @@
                     >Attention, aucun îlot ne possède cette combinaison de compétences</span>
 
                     <div class="my-3" v-if="this.type !== 'workarea' && itemLocal.skills && checkProjectStatus && itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
-                      <small class="date-label">Ilot</small>
-                        <vs-select name="workarea" v-model="itemLocal.workarea_id" class="w-full">
-                            <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
-                        </vs-select>
+                      <v-select
+                        label="name"
+                        name="workarea_id"
+                        v-validate="'required'"
+                        v-model="itemLocal.workarea_id"
+                        :reduce="name => name.id"
+                        :options="workareasDataFiltered"
+                        class="w-full"
+                      >
+                        <template #header>
+                          <div class="vs-select--label">Ilot</div>
+                        </template>
+                      </v-select>
                     </div>
                   </div>
                   <!-- Right -->
@@ -183,6 +195,7 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
+import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -193,6 +206,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
   components: {
+    vSelect,
     flatPickr,
     AddPreviousTask
   },
@@ -292,7 +306,6 @@ export default {
           }
         });
         if ( projectFind != undefined ) {
-          console.log(["projectFind", projectFind]);
           return projectFind.status === 'todo' ? false : true;
         }else {
           return false
@@ -372,8 +385,6 @@ export default {
                 color: "danger"
               });
             });
-        } else {
-          console.log("else");
         }
       });
     },
@@ -505,10 +516,6 @@ export default {
       this.init();
     }
   },
-  created() {
-    console.log(["this.itemId", this.itemId]);
-    console.log(["itemLocal 1", this.itemLocal]);
-  }
 };
 </script>
 <style>

@@ -2,7 +2,6 @@ import axios from "@/axios.js";
 
 export default {
     addItem({ commit }, item) {
-        console.log(item);
         return new Promise((resolve, reject) => {
             axios
                 .post("/api/unavailability-management/store", item)

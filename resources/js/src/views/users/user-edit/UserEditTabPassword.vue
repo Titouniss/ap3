@@ -105,10 +105,8 @@ export default {
         this.$store
           .dispatch("userManagement/updatePassword", itemLocal)
           .then(data => {
-            console.log(["1", data]);
 
             if (data.data === "success" && data.status === 200) {
-              console.log("2");
 
               this.$vs.loading.close();
               this.$vs.notify({
@@ -121,25 +119,21 @@ export default {
             }
           })
           .catch(error => {
-            console.log(["3", error.response]);
 
             // Wrong format message
             if (error.response.data === "error_format") {
-              console.log("4");
 
               this.message =
                 "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
             }
             // Wrong old password message
             else if (error.response.data === "error_old_password") {
-              console.log("5");
 
               this.message =
                 "Votre ancien mot de passe ne correspond pas. Veuillez réessayer.";
             }
             // Unknown error message
             else {
-              console.log("6");
 
               this.message =
                 "Une erreur est survenu, veuillez réessayer plus tard.";
@@ -154,7 +148,6 @@ export default {
             });
           });
       } else {
-        console.log("7");
 
         this.message =
           "Les champs du nouveau mot de passe no sont pas identiques.";

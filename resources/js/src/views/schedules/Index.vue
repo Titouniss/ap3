@@ -148,7 +148,6 @@ export default {
   },
   computed: {
     usersData() {
-      console.log(["state", this.$store.state]);
       return this.$store.state.userManagement.users;
     },
     projectsData() {
@@ -205,7 +204,6 @@ export default {
     this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
       this.manageErrors(err);
     });
-    console.log(["store", this.$store]);
   },
 };
 </script>

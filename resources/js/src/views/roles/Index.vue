@@ -285,7 +285,6 @@ export default {
         this.$store
           .dispatch("roleManagement/removeItem", selectRow.id)
           .then(data => {
-            console.log(["data_1", data]);
             this.showDeleteSuccess();
           })
           .catch(err => {

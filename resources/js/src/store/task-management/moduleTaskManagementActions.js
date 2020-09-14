@@ -36,7 +36,6 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post(`/api/project-management/store-range/${item.rangeId}`, item)
         .then((response) => {
-          console.log(response)
           commit('SET_ITEMS', response.data.success)
           resolve(response)
         })
@@ -90,11 +89,9 @@ export default {
     })
   },
   fetchItemsBySkills({ commit }, items) {
-    console.log(["1", items]);
     return new Promise((resolve, reject) => {
       axios.post(`/api/task-management/skills`, items)
         .then((response) => {
-          console.log(["2", response]);
           if (response.data && response.data.success) {
             resolve(response)
           }

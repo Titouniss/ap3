@@ -63,7 +63,6 @@ export default {
     },
     activeUserInfo() {
       const user = this.$store.state.AppActiveUser;
-      console.log(user);
 
       if (user && user.id !== null) {
         const lastname =
@@ -94,8 +93,6 @@ export default {
       this.$store
         .dispatch("auth/logoutJWT", localStorage.getItem("token"))
         .then(() => {
-          console.log("then");
-
           this.$vs.loading.close();
           this.$router.push("/pages/login").catch(() => {});
         })

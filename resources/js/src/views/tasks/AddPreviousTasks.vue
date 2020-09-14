@@ -73,9 +73,6 @@ export default {
       this.previousTasksIds_local = [];
     }
   },
-  mounted() {
-    console.log(["this.previousTasksIds", this.previousTasksIds]);
-  }
 };
 </script>
 <style>

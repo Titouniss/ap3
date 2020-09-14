@@ -24,31 +24,6 @@
             />
             <span class="text-danger text-sm" v-show="errors.has('name')">{{ errors.first('name') }}</span>
 
-            <div v-if="itemLocal.company_id && disabled">
-              <v-select
-                v-validate="'required'"
-                v-if="companySkills.length !== 0"
-                name="skill"
-                label="name"
-                :multiple="true"
-                v-model="itemLocal.skills"
-                :reduce="name => name.id"
-                class="w-full mt-5"
-                autocomplete
-                :options="skillsData"
-              >
-                <template #header>
-                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
-                </template>
-                <template #option="skill">
-                  <span>{{`${skill.name}`}}</span>
-                </template>
-              </v-select>
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('company_id')"
-              >{{ errors.first('company_id') }}</span>
-            </div>
             <div class="vx-row mt-4" v-if="!disabled">
               <div class="vx-col w-full">
                 <div class="flex items-end px-3">
@@ -59,7 +34,7 @@
                 <div>
                   <v-select
                     v-validate="'required'"
-                    @input="selectCompanySkills"
+                    @input="cleanSkillsInput"
                     name="company"
                     label="name"
                     :multiple="false"
@@ -81,31 +56,32 @@
                     v-show="errors.has('company_id')"
                   >{{ errors.first('company_id') }}</span>
                 </div>
-                <div v-if="itemLocal.company_id">
-                  <v-select
-                    v-validate="'required'"
-                    name="skill"
-                    label="name"
-                    :multiple="true"
-                    v-model="itemLocal.skills"
-                    :reduce="name => name.id"
-                    class="w-full mt-5"
-                    autocomplete
-                    :options="companySkills"
-                  >
-                    <template #header>
-                      <div style="opacity: .8 font-size: .85rem">Compétences</div>
-                    </template>
-                    <template #option="companyskill">
-                      <span>{{`${companyskill.name}`}}</span>
-                    </template>
-                  </v-select>
-                  <span
-                    class="text-danger text-sm"
-                    v-show="errors.has('company_id')"
-                  >{{ errors.first('company_id') }}</span>
-                </div>
               </div>
+            </div>
+
+            <div v-if="itemLocal.company_id">
+              <v-select
+                v-validate="'required'"
+                name="skill"
+                label="name"
+                :multiple="true"
+                v-model="itemLocal.skills"
+                :reduce="name => name.id"
+                class="w-full mt-5"
+                autocomplete
+                :options="skillsData"
+              >
+                <template #header>
+                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
+                </template>
+                <template #option="skill">
+                  <span>{{`${skill.name}`}}</span>
+                </template>
+              </v-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+              >{{ errors.first('company_id') }}</span>
             </div>
           </div>
         </div>
@@ -163,7 +139,7 @@ export default {
       return this.$store.state.companyManagement.companies;
     },
     skillsData() {
-      return this.$store.state.skillManagement.skills;
+      return this.filterItemsAdmin(this.$store.state.skillManagement.skills);
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -191,17 +167,6 @@ export default {
         this.$store.getters["skillManagement/getItem"](this.itemId)
       );
       this.companySkills = [];
-    },
-    selectCompanySkills(item) {
-      if (
-        this.company_id_temps &&
-        this.company_id_temps !== this.itemLocal.company_id
-      ) {
-        this.itemLocal.skills = [];
-      }
-      this.companySkills = this.companiesData.find(
-        (company) => company.id === item
-      ).skills;
     },
     submitItem() {
       this.$validator.validateAll().then((result) => {
@@ -233,6 +198,29 @@ export default {
             });
         }
       });
+    },
+    cleanSkillsInput(){
+      this.itemLocal.skills = []
+    },
+    filterItemsAdmin(items) {
+      let filteredItems = [];
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          filteredItems = items.filter(
+            (item) => item.company_id === this.itemLocal.company_id
+          );
+        } else {
+          filteredItems = items.filter(
+            (item) => item.company_id === user.company_id
+          );
+        }
+      }
+      return filteredItems;
     },
   },
 };

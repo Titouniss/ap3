@@ -25,7 +25,7 @@
                   <vs-divider />
                   <v-select
                     label="name"
-                    @input="updateCustomersList"
+                    @input="cleanCustomerInput"
                     v-validate="'required'"
                     v-model="itemLocal.company"
                     :options="companiesData"
@@ -80,7 +80,7 @@
                 <v-select
                   v-model="itemLocal.customer"
                   label="name"
-                  :options="customersDataFiltered"
+                  :options="customersData"
                   :multiple="false"
                   class="w-full"
                 >
@@ -143,7 +143,6 @@ export default {
       },
       colors: project_colors,
 
-      customersDataFiltered: [],
     };
   },
   computed: {
@@ -161,7 +160,12 @@ export default {
       let customers = this.filterItemsAdmin(
         this.$store.state.customerManagement.customers
       );
-      this.customersDataFiltered = customers;
+
+      // Parse label
+      customers.map(function (c) {
+        return (c.name = c.professional === 1 ? c.name : c.lastname);
+      });
+
       return customers;
     },
     disabled() {
@@ -190,8 +194,6 @@ export default {
         company: null,
         color: "",
       };
-
-      this.customersDataFiltered = null;
     },
     addProject() {
       this.$validator.validateAll().then((result) => {
@@ -233,6 +235,10 @@ export default {
         }
       });
     },
+    cleanCustomerInput(){
+      this.itemLocal.customer_id = null
+      this.itemLocal.customer = null
+    },
     filterItemsAdmin(items) {
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
@@ -246,21 +252,12 @@ export default {
             (item) => item.company_id === this.itemLocal.company.id
           );
         } else {
-          filteredItems = items;
+          filteredItems = items.filter(
+            (item) => item.company_id === user.company_id
+          );
         }
       }
       return filteredItems;
-    },
-    updateCustomersList() {
-      this.itemLocal.customer = null;
-      this.customersDataFiltered = this.filterItemsAdmin(
-        this.$store.state.customerManagement.customers
-      );
-
-      // Parse label
-      this.customersDataFiltered.map(function (c) {
-        return (c.name = c.professional === 1 ? c.name : c.lastname);
-      });
     },
     activeUserRole() {
       const user = this.$store.state.AppActiveUser;
