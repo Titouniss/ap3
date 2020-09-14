@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 use Validator;
 
 use App\User;
@@ -475,28 +478,15 @@ class UserController extends Controller
      */
     public function updatePassword(Request $request, User $user)
     {
-        $rule = ['password' => [new StrongPassword]];
-
         $arrayRequest = $request->all();
 
-        $controllerLog = new Logger('user');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('arrayRequest', [$arrayRequest]);
+        $rule = ['password' => [new StrongPassword]];
 
         // Verify user exist
         if ($user != null) {
             if ($user->is_password_change === 0) {
-                $controllerLog = new Logger('user');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('mot de passe non changé', ["mot de passe non changé"]);
-
                 if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
                     // Save password
-
-                    $controllerLog = new Logger('user');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                    $controllerLog->info('user', [$user]);
-
                     $user->password = bcrypt($arrayRequest['new_password']);
                     $user->is_password_change = 1;
                     $user->save();
