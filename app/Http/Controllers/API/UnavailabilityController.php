@@ -75,7 +75,7 @@ class UnavailabilityController extends Controller
 
         if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires') {
             if ( $OvertimesToUse < $duration ) {
-                return response()->json(['error' => "Vous ne disposer pas asser d'heures supplémentaires"], 401);
+                return response()->json(['error' => "Vous ne disposez pas assez d'heures supplémentaires"], 401);
             }
             // Expected hours for this day
             $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['starts_at']);
