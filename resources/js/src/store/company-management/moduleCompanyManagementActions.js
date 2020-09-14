@@ -55,7 +55,6 @@ export default {
     },
     restoreItem({ commit }, id) {
         return new Promise((resolve, reject) => {
-            console.log(["id", id]);
             axios
                 .put(`/api/company-management/restore/${id}`)
                 .then(response => {
@@ -112,7 +111,6 @@ export default {
             axios
                 .delete(`/api/company-management/forceDelete/${id}`)
                 .then(response => {
-                    console.log(response);
                     if (response.data.success) {
                         commit("REMOVE_ITEM", id);
                         resolve(response);

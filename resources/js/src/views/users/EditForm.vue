@@ -295,7 +295,6 @@ export default {
           item.skills = skill_ids;
           this.itemLocal = item;
           this.itemLocal.roles = this.itemLocal.roles[0].id;
-          console.log(this.itemLocal);
           if (item.company_id) {
             this.company_id_temps = item.company_id;
             this.selectCompanySkills(item.company_id);
@@ -309,7 +308,6 @@ export default {
             this.itemLocal.login = "";
             //this.getCompanyName();
           }
-          console.log(["this.itemLocal.login", this.itemLocal.login]);
 
           this.$vs.loading.close();
         })
@@ -372,7 +370,6 @@ export default {
             this.itemLocal.company_id
           );
 
-          console.log(["company", company]);
 
           this.company_login = "".concat(
             company.name.replace(/ /gi, "_").toLowerCase(),
@@ -383,7 +380,6 @@ export default {
           this.company_login = "selectionner_société.";
         }
       } else {
-        console.log(["this.$store.state", this.$store.state]);
         const user = this.$store.state.AppActiveUser;
         this.company_login = "".concat(
           user.company.name.replace(/ /gi, "_").toLowerCase(),

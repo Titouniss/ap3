@@ -295,7 +295,6 @@ export default {
                 } else {
                     return false;
                 }
-                //console.log(["Loh", this.itemLocal]);
             },
             set(value) {
                 return value;
@@ -375,12 +374,9 @@ export default {
             this.handleClose();
         },
         definedMinEndHour() {
-            //console.log("close");
             if (this.itemLocal !== null && this.itemLocal.startHour !== null) {
-                //console.log(["this.itemLocal", this.itemLocal]);
                 let result =
                     parseInt(this.itemLocal.startHour.split(":")[0]) + 1;
-                //console.log(["result", result]);
                 if (result !== NaN) {
                     this.configEndHourPicker = result;
                 }

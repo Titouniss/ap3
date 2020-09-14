@@ -280,8 +280,6 @@ export default {
         this.$store
           .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
           .then((response) => {
-            console.log(["store", this.$store]);
-            console.log(["response", response]);
             this.back();
             this.$vs.notify({
               title: "Ajout d'un utilisateur",
@@ -313,7 +311,6 @@ export default {
       }
     },
     selectCompanySkills(item) {
-      console.log(["item", item]);
       this.companySkills = this.companiesData.find(
         (company) => company.id === item
       ).skills;
@@ -355,14 +352,11 @@ export default {
             this.itemLocal.company_id
           );
 
-          console.log(["company", company]);
-
           this.company_login = "".concat(
             company.name.replace(/ /gi, "_").toLowerCase(),
             "."
           );
           this.company_login = this.removeAccents(this.company_login);
-          console.log(["this.company_login", this.company_login]);
         } else {
           this.company_login = "selectionner_société.";
         }
@@ -373,7 +367,6 @@ export default {
           "."
         );
         this.company_login = this.removeAccents(this.company_login);
-        console.log(["this.company_login", this.company_login]);
       }
     },
     removeAccents(str) {

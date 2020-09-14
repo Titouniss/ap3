@@ -416,8 +416,6 @@ export default {
 
         this.$validator.validateAll().then(result => {
           let item = Object.assign({}, this.itemLocal);
-
-          console.log(["this.itemLocal", this.itemLocal]);
           
           if (this.project_data != null) {
             this.itemLocal.project_id = this.project_data.id;

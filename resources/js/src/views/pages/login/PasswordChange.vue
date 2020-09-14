@@ -104,7 +104,6 @@ export default {
         this.$store
           .dispatch("userManagement/updatePassword", itemLocal)
           .then((response) => {
-            console.log(["response", response]);
             this.$vs.notify({
               title: "Modification du mot de passe",
               text: "Votre mot de passe a bien été changé.",
@@ -115,7 +114,6 @@ export default {
             this.goLoginPage();
           })
           .catch((error) => {
-            console.log(["error", error]);
             // Wrong format message
             if (error.data === "error_format") {
               this.message =
@@ -126,7 +124,6 @@ export default {
               this.message =
                 "Une erreur est survenu, veuillez réessayer plus tard.";
             }
-            console.log(["Message ?", this.message]);
             this.$vs.notify({
               title: "Modification du mot de passe",
               text: this.message,

@@ -174,13 +174,11 @@ export default {
       let customers = this.filterItemsAdmin(
         this.$store.state.customerManagement.customers
       );
-      console.log(["customers", customers]);
       this.customersDataFiltered = customers;
       // Parse Label
       this.customersDataFiltered.map(function (c) {
         return (c.name = c.professional === 1 ? c.name : c.lastname);
       });
-      console.log(["customers", customers]);
       return customers;
     },
     validateForm() {
@@ -244,7 +242,6 @@ export default {
           );
         }
       }
-      console.log(["filteredItems", filteredItems]);
       return filteredItems;
     },
     updateCustomersList() {

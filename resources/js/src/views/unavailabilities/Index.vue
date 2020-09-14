@@ -288,7 +288,6 @@ export default {
     confirmDeleteRecord() {
       let selectedRow = this.gridApi.getSelectedRows();
       let singleUnavailabilities = selectedRow[0];
-      console.log(["singleUnavailabilities", singleUnavailabilities]);
 
       this.$vs.dialog({
         type: "confirm",

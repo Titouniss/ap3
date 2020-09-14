@@ -142,7 +142,6 @@ export default {
                 .then(r => {
                     this.$vs.loading.close();
                     if (r.activeResend) {
-                        console.log("in");
 
                         this.$vs.notify({
                             title: "Echec",

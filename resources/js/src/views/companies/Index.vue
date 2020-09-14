@@ -274,7 +274,6 @@ export default {
       }
     },
     archiveRecord() {
-      console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
       this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
@@ -293,9 +292,6 @@ export default {
       }
     },
     showDeleteSuccess(type, selectedRowLength) {
-      console.log("SUCCESS");
-      console.log(["length show", selectedRowLength]);
-
       this.$vs.notify({
         color: "success",
         title: modelTitle,

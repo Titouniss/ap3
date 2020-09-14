@@ -39,7 +39,6 @@ export default {
         .catch(() => {});
     },
     confirmDeleteRecord() {
-      console.log(["param", this.params.data]);
       this.$vs.dialog({
         type: "confirm",
         color: "danger",

@@ -146,7 +146,6 @@ export default {
       // Get all task and parse to show
       var eventsParse = [];
       if (this.$route.query.type === "projects") {
-        console.log(["this.tasksEvent", this.tasksEvent]);
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
             eventsParse.push({
@@ -259,7 +258,6 @@ export default {
       );
     },
     tasksEvent() {
-      console.log(["this.$store.state.taskManagement", this.$store.state.taskManagement]);
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
         : [];
@@ -543,7 +541,6 @@ export default {
     if (this.$route.query.type === "projects") {
       var id_bundle = null;
 
-      console.log(["projects", this.$store.state.projectManagement.projects]);
       this.$store.state.projectManagement.projects.forEach((p) => {
         p.tasks_bundles.forEach((t) => {
           if (t.project_id === parseInt(this.$route.query.id, 10)) {
@@ -551,7 +548,6 @@ export default {
           }
         });
       });
-      console.log(["id_bundle", id_bundle]);
       if (id_bundle != null) {
         this.$store
           .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
@@ -576,7 +572,6 @@ export default {
   },
   updated() {
     // if (this.$route.query.type === "projects") {
-    //   console.log("je passe");
     //   var id_bundle = null;
     //   this.$store.state.projectManagement.projects.forEach(p => {
     //     p.tasks_bundles.forEach(t => {

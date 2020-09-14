@@ -292,7 +292,6 @@ export default {
           }
         });
         if ( projectFind != undefined ) {
-          console.log(["projectFind", projectFind]);
           return projectFind.status === 'todo' ? false : true;
         }else {
           return false
@@ -372,8 +371,6 @@ export default {
                 color: "danger"
               });
             });
-        } else {
-          console.log("else");
         }
       });
     },
@@ -505,10 +502,6 @@ export default {
       this.init();
     }
   },
-  created() {
-    console.log(["this.itemId", this.itemId]);
-    console.log(["itemLocal 1", this.itemLocal]);
-  }
 };
 </script>
 <style>
