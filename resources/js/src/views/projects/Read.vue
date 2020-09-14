@@ -143,9 +143,8 @@ export default {
     startProject() {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
-        .then(data => {
-
-          if(data.data.success){
+        .then(response => {
+          if(response.data.success){
             this.$vs.notify({
               title: "Planification",
               text: "Projet planifié avec succès",
