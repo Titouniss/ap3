@@ -163,6 +163,7 @@ export default {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
         .then(response => {
+          console.log(['test', response])
           if(response.data.success){
             this.$vs.notify({
               title: "Planification",
@@ -181,7 +182,7 @@ export default {
             })
             .catch(() => {});
           }
-          else{
+          else if(response.data.error_time){
             let message = 'Le nombre d\'heure de travail disponible est insuffisant'
 
             this.$vs.notify({
@@ -189,8 +190,21 @@ export default {
               text: message,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger"
+              color: "danger",
+              time: 4000
             });
+          }
+          else{
+            response.data.error_alerts.map( alert => {
+              this.$vs.notify({
+                title: "Planification",
+                text: alert,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "danger",
+                time: 8000
+              });
+            })
           }
         })
         .catch(err => {
