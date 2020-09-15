@@ -163,7 +163,6 @@ export default {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
         .then(response => {
-          console.log(['test', response])
           if(response.data.success){
             this.$vs.notify({
               title: "Planification",
