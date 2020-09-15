@@ -43,6 +43,7 @@ class PermissionsRoleTableSeeder extends Seeder
             Permission::firstOrCreate(['name' => 'edit ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
             Permission::firstOrCreate(['name' => 'delete ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
             Permission::firstOrCreate(['name' => 'publish ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'show ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
         }
 
         $Rolekeys = [
@@ -56,7 +57,7 @@ class PermissionsRoleTableSeeder extends Seeder
             $role = Role::firstOrCreate(['name' => $roleKey[0], 'isPublic' => $roleKey[1]]);
             foreach ($Permkeys as $PermkeyArray) {
                 $Permkey = $PermkeyArray[0];
-                $role->revokePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey]);
+                $role->revokePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey, 'show ' . $Permkey]);
             }
         }
 
@@ -73,8 +74,10 @@ class PermissionsRoleTableSeeder extends Seeder
         $role->givePermissionTo('read permissions');
 
         $role = Role::where(['name' => 'Utilisateur'])->first();
-        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'projets', 'tâches', 'indiponibilités'])->orWhereIn('name', ['read skills'])->get());
-        $role->givePermissionTo('read permissions');
+        // Give all permissions with name_fr
+        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'gestion des heures'])->get());
+        // Give specific permission by name
+        $role->givePermissionTo(Permission::whereIn('name', ['read compagnies', 'read customers', 'read projects', 'read permissions', 'read ranges', 'read skills', 'read users', 'read workareas'])->get());
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
         if ($admin == null) {
