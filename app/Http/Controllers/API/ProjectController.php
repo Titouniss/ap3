@@ -283,7 +283,7 @@ class ProjectController extends Controller
             $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
             //$response =  $tasksPlanified  //RAF : Gestion des erreurs ou non
         } else {
-            $response = $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
+            return $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
         }
 
         return response()->json(['success' => $response], $this->successStatus);
