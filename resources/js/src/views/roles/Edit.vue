@@ -411,8 +411,12 @@ export default {
                 case "show users":
                     if (this.selected[this.permissions.utilisateurs.show.id]) {
                         this.selected[this.permissions.utilisateurs.read.id] = true;
+                        this.selected[this.permissions.compétences.read.id] = true;
+                        this.selected[this.permissions.roles.read.id] = true;
                     } else {
                         this.selected[this.permissions.utilisateurs.read.id] = false;
+                        this.selected[this.permissions.compétences.read.id] = false;
+                        this.selected[this.permissions.roles.read.id] = false;
                     }
                     break;
                 case "show unavailabilities":
@@ -433,7 +437,7 @@ export default {
                     break;
                 case "show skills":
                     if (this.selected[this.permissions.compétences.show.id]) {
-                    this.selected[this.permissions.compétences.read.id] = true;
+                        this.selected[this.permissions.compétences.read.id] = true;
                         this.selected[this.permissions.îlots.read.id] = true;
                         this.selected[this.permissions.tâches.read.id] = true;
                     } else {
