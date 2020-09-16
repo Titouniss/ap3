@@ -66,7 +66,7 @@
               -->
               <th
                 class="font-semibold text-base text-left px-3 py-2"
-                v-for="heading in ['Module', 'Tout', 'Consulter', 'Créer', 'Editer', 'Supprimer']"
+                v-for="heading in ['Module', 'Tout', 'Consulter', 'Lecture', 'Créer', 'Editer', 'Supprimer']"
                 :key="heading"
               >{{ heading }}</th>
             </tr>
@@ -77,8 +77,8 @@
               </td>
               <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
                 <vs-checkbox
-                  :disabled="forceConsult(items, item)"
-                  v-on:change="checkConsult(items, item)"
+                  :disabled="forceLecture(items, item)"
+                  v-on:change="checkLecture(items, item)"
                   v-model="selected[item.id]"
                 />
               </td>
@@ -206,6 +206,11 @@ export default {
         });
     },
     checkOrNot(items) {
+      // check required perms
+      if (this.selected[this.permissions.tâches.read.id] != true) {
+        this.checkRequired();
+      }
+
       let items_id = [];
 
       // get items_id
@@ -258,9 +263,15 @@ export default {
           }
         });
       }
+
+      this.dependencyChecking("check", items.show);
+
+      // Required read perms
+      this.checkRequired()
+      
       this.selected = Object.assign({}, this.selected);
     },
-    checkConsult(items, item) {
+    checkLecture(items, item) {
       if (items.read.id !== item.id && !this.selected[items.read.id]) {
         if (
           !this.selected[items.read.id] === true ||
@@ -273,9 +284,15 @@ export default {
             this.selected[items.read.id] = true;
           }
       }
+
+      this.dependencyChecking("check", item);
+
+      // Required read perms
+      this.checkRequired()
+
       this.selected = Object.assign({}, this.selected);
     },
-    forceConsult(items, item) {
+    forceLecture(items, item) {
       if (
         items.read.id === item.id &&
         (this.selected[items.delete.id] === true ||
@@ -283,7 +300,10 @@ export default {
           this.selected[items.publish.id] === true)
       ) {
         return true;
+      } else if (item.name.split(' ')[0] === 'read') {
+          return true;
       }
+
       return false;
     },
     back() {
@@ -293,6 +313,137 @@ export default {
       if (typeof word !== "string") return "";
       return word.charAt(0).toUpperCase() + word.slice(1);
     },
+    checkRequired() {
+      // Required read perms
+      this.selected[this.permissions.tâches.read.id] = true;
+      this.selected[this.permissions.projets.read.id] = true;
+      this.selected[this.permissions.indiponibilités.read.id] = true;
+      this.selected[this.permissions.heures_supplémentaires.read.id] = true;
+    },
+    dependencyChecking(type, item) {
+      switch (item.name) {
+        case "show workareas":
+          if (this.selected[this.permissions.îlots.show.id]) {
+            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.compétences.read.id] = true;
+          } else {
+            this.selected[this.permissions.îlots.read.id] = false;
+            this.selected[this.permissions.compétences.read.id] = false;
+          }
+          break;
+        case "show users":
+          if (this.selected[this.permissions.utilisateurs.show.id]) {
+              this.selected[this.permissions.utilisateurs.read.id] = true;
+              this.selected[this.permissions.compétences.read.id] = true;
+              this.selected[this.permissions.roles.read.id] = true;
+          } else {
+              this.selected[this.permissions.utilisateurs.read.id] = false;
+              this.selected[this.permissions.compétences.read.id] = false;
+              this.selected[this.permissions.roles.read.id] = false;
+          }
+          break;
+        case "show unavailabilities":
+          if (this.selected[this.permissions.indiponibilités.show.id]) {
+            this.selected[this.permissions.indiponibilités.read.id] = true;
+          } else {
+            this.selected[this.permissions.indiponibilités.read.id] = false;
+          }
+          break;
+        case "show tasks":
+          if (this.selected[this.permissions.tâches.show.id]) {
+            this.selected[this.permissions.tâches.read.id] = true;
+            this.selected[this.permissions.utilisateurs.read.id] = true;
+          } else {
+            this.selected[this.permissions.tâches.read.id] = false;
+            this.selected[this.permissions.utilisateurs.read.id] = false;
+          }
+          break;
+        case "show skills":
+          if (this.selected[this.permissions.compétences.show.id]) {
+            this.selected[this.permissions.compétences.read.id] = true;
+            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.tâches.read.id] = true;
+          } else {
+            this.selected[this.permissions.compétences.read.id] = false;
+            this.selected[this.permissions.îlots.read.id] = false;
+            this.selected[this.permissions.tâches.read.id] = false;
+          }
+          break;
+        case "show schedules":
+          if (this.selected[this.permissions.planning.show.id]) {
+            this.selected[this.permissions.planning.read.id] = true;
+            this.selected[this.permissions.projets.read.id] = true;
+            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.tâches.read.id] = true;
+            this.selected[this.permissions.compétences.read.id] = true;
+            this.selected[this.permissions.utilisateurs.read.id] = true;
+          } else {
+            this.selected[this.permissions.planning.read.id] = false;
+            this.selected[this.permissions.projets.read.id] = false;
+            this.selected[this.permissions.îlots.read.id] = false;
+            this.selected[this.permissions.tâches.read.id] = false;
+            this.selected[this.permissions.compétences.read.id] = false;
+            this.selected[this.permissions.utilisateurs.read.id] = false;
+          }
+          
+          break;
+        case "show roles":
+          if (this.selected[this.permissions.roles.show.id]) {
+            this.selected[this.permissions.roles.read.id] = true;
+            this.selected[this.permissions.utilisateurs.read.id] = true;
+          } else {
+            this.selected[this.permissions.roles.read.id] = false;
+            this.selected[this.permissions.utilisateurs.read.id] = false;
+          }
+          break;
+        case "show projects":
+          if (this.selected[this.permissions.projets.show.id]) {
+            this.selected[this.permissions.projets.read.id] = true;
+            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.compétences.read.id] = true;
+            this.selected[this.permissions.clients.read.id] = true;
+            this.selected[this.permissions.gammes.read.id] = true;
+          } else {
+            this.selected[this.permissions.projets.read.id] = false;
+            this.selected[this.permissions.îlots.read.id] = false;
+            this.selected[this.permissions.compétences.read.id] = false;
+            this.selected[this.permissions.clients.read.id] = false;
+            this.selected[this.permissions.gammes.read.id] = false;
+          }
+          
+          break;
+        case "show hours":
+          if (this.selected[this.permissions.heures.show.id]) {
+            this.selected[this.permissions.heures.read.id] = true;
+            this.selected[this.permissions.projets.read.id] = true;
+            this.selected[this.permissions.utilisateurs.read.id] = true;
+            this.selected[this.permissions.planning.read.id] = true;
+          } else {
+            this.selected[this.permissions.heures.read.id] = false;
+            this.selected[this.permissions.projets.read.id] = false;
+            this.selected[this.permissions.utilisateurs.read.id] = false;
+            this.selected[this.permissions.planning.read.id] = false;
+          }
+          break;
+        case "show dealingHours":
+          if (this.selected[this.permissions.heures_supplémentaires.show.id]) {
+            this.selected[this.permissions.heures_supplémentaires.read.id] = true;
+          } else {
+            this.selected[this.permissions.heures_supplémentaires.read.id] = false;
+          }
+          break;
+        case "show customers":
+          if (this.selected[this.permissions.clients.show.id]) {
+            this.selected[this.permissions.clients.read.id] = true;
+          } else {
+            this.selected[this.permissions.clients.read.id] = false;
+          }
+          break;
+  
+        default:
+          break;
+      }
+    }
   },
   created() {
     // Register Module roleManagement Module
@@ -300,6 +451,10 @@ export default {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
     }
+    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
+        console.error(err);
+      });
+
     if (!modulePermissionManagement.isRegistered) {
       this.$store.registerModule(
         "permissionManagement",

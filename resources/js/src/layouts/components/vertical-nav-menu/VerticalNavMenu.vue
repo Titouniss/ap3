@@ -216,7 +216,7 @@ export default {
             item.show = true;
           } else if (userPermissions.length > 0) {
             item.show =
-              userPermissions.findIndex(p => p.name === `read ${item.slug}`) >
+              userPermissions.findIndex(p => p.name === `show ${item.slug}`) >
               -1;
           } else item.show = false;
         }

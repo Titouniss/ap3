@@ -129,7 +129,7 @@
                                 text-color="white"
                                 @click="registerUserJWt"
                                 :disabled="!validateForm"
-                                >S'enregistrer</vs-button
+                                >S'inscrire</vs-button
                             >
                         </vs-row>
                     </div>
