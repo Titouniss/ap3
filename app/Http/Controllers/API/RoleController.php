@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
+use App\Http\Controllers\Controller;
 use App\User;
+
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-use Illuminate\Support\Facades\Auth;
 use Validator;
 
 class RoleController extends Controller
@@ -63,6 +65,17 @@ class RoleController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
         $permissions = $arrayRequest['permissions'];
+
+        // add permissions index for companies and permissions
+        $require_permissions = Permission::select('id')->where('name', 'read permissions')->orWhere('name', 'read companies')->get();
+        foreach ($require_permissions as $key => $rp) {
+            $id_perm = strval($rp->id);
+            if (in_array($id_perm, $permissions) == false) {
+                array_push($permissions, $id_perm);
+            }
+        }
+        sort($permissions);
+        
         unset($arrayRequest['permissions']);
         if ($user != null) {
             $arrayRequest['company_id'] = $user->company_id;
