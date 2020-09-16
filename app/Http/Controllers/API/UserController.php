@@ -40,6 +40,11 @@ class UserController extends Controller
      */
     public function login()
     {
+        $controllerLog = new Logger('user');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('je rentre');
+
+
         if (Auth::attempt(['login' => request('login'), 'password' => request('password')])) {
             $module = null;
             $user = Auth::user();
