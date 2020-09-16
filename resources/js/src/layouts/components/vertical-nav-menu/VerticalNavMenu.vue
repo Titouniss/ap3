@@ -118,6 +118,11 @@
               <!-- /Nav-Group -->
             </template>
           </template>
+          <div class="mt-2 flex flex-wrap items-center justify-end">
+          <vs-row vs-type="flex" vs-justify="center" vs-align="flex-end">
+            <a style="text-decoration: none" class="text-white" href="/resources/assets/files/TabControlProdV2.apk" download>Télécharger l'application</a>
+          </vs-row>
+          </div>
         </component>
         <!-- /Menu Items -->
       </div>
