@@ -33,7 +33,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['hours', 'heures', true],
             ['unavailabilities', 'indiponibilités', true],
             ['schedules', 'planning', true],
-            ['dealingHours', 'gestion des heures', true],
+            ['dealingHours', 'heures_supplémentaires', true],
             ['customers', 'clients', true],
             ['modules', 'modules', false],
         ];
@@ -75,7 +75,7 @@ class PermissionsRoleTableSeeder extends Seeder
 
         $role = Role::where(['name' => 'Utilisateur'])->first();
         // Give all permissions with name_fr
-        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'gestion des heures'])->get());
+        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'heures_supplémentaires'])->get());
         // Give specific permission by name
         $role->givePermissionTo(Permission::whereIn('name', ['read compagnies', 'read customers', 'read projects', 'read permissions', 'read ranges', 'read skills', 'read users', 'read workareas'])->get());
 
