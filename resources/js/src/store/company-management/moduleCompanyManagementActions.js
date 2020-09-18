@@ -86,6 +86,18 @@ export default {
                 });
         });
     },
+    fetchItem(context, id) {
+        return new Promise((resolve, reject) => {
+            axios
+                .get(`/api/company-management/show/${id}`)
+                .then(response => {
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
     removeItem({ commit }, id) {
         return new Promise((resolve, reject) => {
             axios

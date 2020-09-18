@@ -47,7 +47,8 @@ class CompanyController extends Controller
      */
     public function show($id)
     {
-        //
+        $item = Company::where('id', $id)->first()->load('skills');
+        return response()->json(['success' => $item], $this->successStatus);
     }
 
     /**

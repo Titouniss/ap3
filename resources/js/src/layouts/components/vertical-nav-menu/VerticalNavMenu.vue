@@ -90,14 +90,14 @@
                 v-if="!item.submenu"
                 :key="`item-${index}`"
                 :index="index"
-                :to="item.slug !== 'external' ? item.url : null"
+                :to="item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/'+companyId: item.slug !== 'external' ? item.url : null"
                 :href="item.slug === 'external' ? item.url : null"
                 :icon="item.icon"
                 :target="item.target"
                 :isDisabled="item.isDisabled"
                 :slug="item.slug"
               >
-                <span v-show="!verticalNavMenuItemsMin" class="truncate">{{ item.name }}</span>
+                <span v-show="!verticalNavMenuItemsMin" class="truncate">{{ !isAdmin && item.name == "Sociétés" ? "Ma société" : item.name }}</span>
                 <vs-chip
                   class="ml-auto"
                   :color="item.tagColor"
@@ -177,6 +177,19 @@ export default {
     showShadowBottom: false
   }),
   computed: {
+    isAdmin() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles.find(
+          r => r.name === "superAdmin" || r.name === "littleAdmin"
+        );
+      }
+
+      return false;
+    },
+    companyId() {
+      return this.$store.state.AppActiveUser.company_id
+    },
     isGroupActive() {
       return item => {
         const path = this.$route.fullPath;
