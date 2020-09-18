@@ -216,6 +216,22 @@
                   v-model="itemLocal.time_spent"
                 />
               </div>
+
+              <div class="filesContainer">
+                <input type="file" name="files" id="files" ref="files" v-on:change="uploadFile" class="inputfile">
+                <label for="files" class="fileContainer">Importer un fichier</label>
+
+                <div v-for="item in uploadedFiles" v-bind:key="item.name" >
+                  <div class="fileContainerValid">
+                    <span>{{item.name}}</span>
+                    <feather-icon
+                      icon="TrashIcon"
+                      @click="deleteFile(item)"
+                      svgClasses="h-5 w-5"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -298,6 +314,9 @@ export default {
         workarea: this.type === "workarea" ? this.idType : null,
         user_id: this.type === "users" ? this.idType : null
       },
+
+      token: 'token_' + Math.random().toString(36).substring(2, 15),
+      uploadedFiles: [],
 
       workareasDataFiltered: [],
       usersDataFiltered: [],
@@ -384,7 +403,8 @@ export default {
     }
   },
   methods: {
-    clearFields() {
+    clearFields(deleteFiles = true) {
+      deleteFiles ? this.deleteFiles() : null
       Object.assign(this.itemLocal, {
         name: "",
         order: "",
@@ -407,11 +427,13 @@ export default {
       } else {
         this.activePrompt = false;
       }
+      this.token = 'token_' + Math.random().toString(36).substring(2, 15),
       this.orderDisplay = false;
       this.descriptionDisplay = false;
       this.commentDisplay = false;
       this.have_setTimeSpent = false;
       (this.previousTasks = []);
+      Object.assign(this.uploadedFiles, []);
       Object.assign(this.workareasDataFiltered, []);
       Object.assign(this.usersDataFiltered, []);
     },
@@ -439,6 +461,8 @@ export default {
             "DD-MM-YYYY HH:mm"
           ).format("YYYY-MM-DD HH:mm") : null;
 
+          this.uploadedFiles.length > 0 ? item.token = this.token : null
+
           if (result) {
             this.$store
               .dispatch(
@@ -456,7 +480,7 @@ export default {
                     icon: "icon-alert-circle",
                     color: "success"
                   });
-                  this.clearFields();
+                  this.clearFields(false);
                 }
                 else{
                   this.$vs.notify({
@@ -483,6 +507,52 @@ export default {
               this.itemLocal.date = dateFormat
           }
         });
+      }
+    },
+    uploadFile(e) {
+        e.preventDefault();
+        var files = this.$refs['files'].files;        
+        var data = new FormData();
+       
+        if(files.length > 0){
+          // for single file
+          data.append('files', files[0]);
+
+          var item = {}
+          item.taskIdOrToken = this.token
+          item.files = data
+
+          this.$store       
+            .dispatch(
+              "taskManagement/uploadFile", item
+            )
+            .then((response) => {
+              this.uploadedFiles.push(response.data.success)
+            })
+            .catch(error => {})
+        }
+    },
+    deleteFile(file){
+      this.$store       
+        .dispatch(
+          "taskManagement/deleteFile", file.id
+        )
+        .then((response) => {
+          this.uploadedFiles.pop(file)
+        })
+        .catch(error => {})
+    },
+    deleteFiles(){
+      var ids = this.uploadedFiles.map( item => { return item.id })
+      if(ids.length > 0){
+        this.$store       
+        .dispatch(
+          "taskManagement/deleteFiles", ids 
+        )
+        .then((response) => {
+          this.uploadedFiles = []
+        })
+        .catch(error => {})
       }
     },
     updateUsersAndWorkareasList(ids){
@@ -588,5 +658,35 @@ export default {
 .linkTxt:hover {
   cursor: pointer;
   background-color: #efefef;
+}
+.inputfile{
+  width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+.filesContainer{
+  flex-direction: column;
+  flex-wrap: wrap;
+  max-width: 200px;
+  margin: 10px 5px;
+}
+.fileContainer{
+  display: flex;
+  border: 1px dashed #d8d8d8;
+  border-radius: 5px;
+  padding: 8px;
+  margin: 5px;
+  font-size: 12px;
+}
+.fileContainerValid{
+  display: flex;
+  border: 1px dashed #2196F3;
+  border-radius: 5px;
+  padding: 8px;
+  margin: 5px;
+  font-size: 12px;
 }
 </style>

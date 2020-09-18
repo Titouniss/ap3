@@ -118,5 +118,32 @@ export default {
         })
         .catch((error) => { reject(error) })
     })
-  }
+  },
+  uploadFile({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/task-management/upload-file/${item.taskIdOrToken}`, item.files)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  deleteFile({ commit }, id) {
+    return new Promise((resolve, reject) => {
+      axios.delete(`/api/task-management/delete-file/${id}`)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  deleteFiles({ commit }, ids) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/task-management/delete-files`, ids)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
 }
