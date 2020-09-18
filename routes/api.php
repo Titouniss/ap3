@@ -226,6 +226,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:publish tasks']], function () {
             Route::post('store-comment/{id}', 'API\TaskController@addComment');
             Route::post('update-partial/{id}', 'API\TaskController@updatePartial');
+            Route::post('upload-file/{id}', 'API\TaskController@uploadFile');
+            Route::delete('delete-file/{id}', 'API\TaskController@deleteFile');
+            Route::post('delete-files', 'API\TaskController@deleteFiles');
             Route::post('update/{id}', 'API\TaskController@update');
         });
         Route::group(['middleware' => ['can:delete tasks']], function () {
