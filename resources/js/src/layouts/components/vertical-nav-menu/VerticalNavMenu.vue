@@ -118,6 +118,12 @@
               <!-- /Nav-Group -->
             </template>
           </template>
+          <div class="mt-2 flex flex-wrap items-center justify-end" style="bottom: 15px; position: absolute; padding-left: 15px;">
+          <vs-row vs-type="flex" vs-justify="center" vs-align="center">
+              <feather-icon icon="DownloadIcon" svgClasses="h-5 w-5" />
+              <a style="text-decoration: none" class="text-white" href="https://drive.google.com/file/d/1WccVYF5XYspiG9uYHfVhm2BBDoRbJ7it/view">Télécharger l'application</a>
+          </vs-row>
+          </div>
         </component>
         <!-- /Menu Items -->
       </div>
