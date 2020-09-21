@@ -255,6 +255,12 @@ export default {
                     cellRendererFramework: "CellRendererRelationSkills"
                 },
                 {
+                    headerName: "Maximum opérateurs",
+                    field: "max_users",
+                    filter: true,
+                    width: 110
+                },
+                {
                     sortable: false,
                     headerName: "Actions",
                     field: "transactions",
@@ -265,7 +271,8 @@ export default {
                         modelPlurial: "workareas",
                         withPrompt: true,
                         name: data => `l'îlot ${data.name}`
-                    }
+                    },
+                    width: 60,
                 }
             ],
 

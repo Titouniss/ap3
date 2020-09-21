@@ -55,7 +55,8 @@ class WorkareaController extends Controller
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
-            'company_id' => 'required'
+            'company_id' => 'required',
+            'max_users' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
@@ -100,6 +101,7 @@ class WorkareaController extends Controller
         if ($item != null) {
             $item->name = $arrayRequest['name'];
             $item->company_id = $arrayRequest['company_id'];
+            $item->max_users = $arrayRequest['max_users'];
 
             WorkareasSkill::where('workarea_id', $item->id)->delete();
             if (!empty($arrayRequest['skills'])) {
