@@ -43,11 +43,15 @@ class BaseModule extends Model
     public function sync()
     {
         try {
-            DB::beginTransaction();
-            foreach ($this->modulable->getData() as $tableName => $tableData) {
-                $dataType = DataType::where('slug', $tableName)->firstOrFail();
+            foreach ($this->sortedModuleDataTypes() as $mdt) {
+                DB::beginTransaction();
+
+                $dataType = $mdt->dataType;
                 $table = app($dataType->model);
-                foreach ($tableData as $rowData) {
+
+                echo "Starting " . $dataType->model . "\n\r";
+
+                foreach ($this->modulable->getModuleDataRows($mdt) as $rowData) {
                     $data = array_filter(get_object_vars($rowData), function ($key) {
                         return $key !== "id";
                     }, ARRAY_FILTER_USE_KEY);
@@ -59,17 +63,20 @@ class BaseModule extends Model
                         $oldId->save();
                     }
                 }
+
+                echo "Finished " . $dataType->model . "\n\r";
+                DB::commit();
             }
-            DB::commit();
+
             $this->last_synced_at = Carbon::now();
             $this->save();
             return true;
         } catch (\Throwable $th) {
-            echo $th->getMessage();
+            echo $th->getMessage() . "\n\r";
             DB::rollBack();
             $controllerLog = new Logger('BaseModule');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('BaseModule', [$th->getMessage()]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::ERROR);
+            $controllerLog->error('BaseModule', [$th->getMessage()]);
             return false;
         }
     }

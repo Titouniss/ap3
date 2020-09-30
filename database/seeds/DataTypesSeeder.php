@@ -1,6 +1,14 @@
 <?php
 
+use App\Models\Customers;
 use App\Models\DataType;
+use App\Models\Project;
+use App\Models\Range;
+use App\Models\Skill;
+use App\Models\Task;
+use App\Models\Unavailability;
+use App\Models\Workarea;
+use App\User;
 use Illuminate\Database\Seeder;
 
 class DataTypesSeeder extends Seeder
@@ -17,7 +25,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Utilisateur',
                 'display_name_plurial' => 'Utilisateurs',
-                'model' => 'App\User',
+                'model' => User::class,
                 'order' => 1
             ])->save();
         }
@@ -27,7 +35,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Client',
                 'display_name_plurial' => 'Clients',
-                'model' => 'App\Models\Customers',
+                'model' => Customers::class,
                 'order' => 1
             ])->save();
         }
@@ -37,7 +45,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Gamme',
                 'display_name_plurial' => 'Gammes',
-                'model' => 'App\Models\Range',
+                'model' => Range::class,
                 'order' => 1
             ])->save();
         }
@@ -47,7 +55,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Compétence',
                 'display_name_plurial' => 'Compétences',
-                'model' => 'App\Models\Skill',
+                'model' => Skill::class,
                 'order' => 1
             ])->save();
         }
@@ -57,7 +65,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Îlot',
                 'display_name_plurial' => 'Îlots',
-                'model' => 'App\Models\Workarea',
+                'model' => Workarea::class,
                 'order' => 1
             ])->save();
         }
@@ -67,7 +75,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Projet',
                 'display_name_plurial' => 'Projets',
-                'model' => 'App\Models\Project',
+                'model' => Project::class,
                 'order' => 2
             ])->save();
         }
@@ -77,8 +85,18 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Indisponibilité',
                 'display_name_plurial' => 'Indisponibilités',
-                'model' => 'App\Models\Unavailability',
+                'model' => Unavailability::class,
                 'order' => 2
+            ])->save();
+        }
+
+        $type = $this->dataType('tasks');
+        if (!$type->exists) {
+            $type->fill([
+                'display_name_singular' => 'Tâche',
+                'display_name_plurial' => 'Tâches',
+                'model' => Task::class,
+                'order' => 3
             ])->save();
         }
     }

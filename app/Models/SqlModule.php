@@ -32,88 +32,181 @@ class SqlModule extends BaseModule
         ];
 
         if ($this->driver !== 'sqlite') {
-            $port = $this->port;
-            if (!$port) {
-                switch ($this->driver) {
-                    case 'pgsql':
-                        $port = '5432';
-                        break;
-                    case 'sqlsrv':
-                        $port = '1433';
-                        break;
-                    default: // MySQL
-                        $port = '3306';
-                        break;
-                }
-            }
-            $data['port'] = $port;
+            $data['port'] = $this->port;
         }
+
         return $data;
     }
 
-    public function getData()
+    public function getModuleDataRows(ModuleDataType $mdt)
     {
-        $data = [];
+        $rows = [];
+        $lowestUniqueId = 0;
         try {
             Config::set('database.connections.' . $this->module->name, $this->connectionData());
             DB::purge($this->module->name);
-            foreach ($this->module->sortedModuleDataTypes() as $mdt) {
-                $query = DB::connection($this->module->name)->table($mdt->source)->limit(10);
-                foreach ($mdt->moduleDataRows as $mdr) {
+
+            $query = DB::connection($this->module->name)->table($mdt->source);
+            foreach ($mdt->moduleDataRows as $mdr) {
+                if ($mdr->source) {
                     $query->selectRaw($mdr->source . ' AS ' . $mdr->dataRow->field);
                 }
-                $results = $query->get()->map(function ($result) use ($mdt) {
-                    $object = new stdClass();
-                    if ($mdt->dataType->slug !== "unavailabilities") {
-                        $object->company_id = $this->module->company_id;
-                    }
-                    foreach (get_object_vars($result) as $key => $value) {
-                        $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
-                        $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
-                        $newValue = $value ?? $mdr->default_value;
-                        if ($newValue) {
-                            $details = null;
-                            if ($mdr->details) {
-                                $details = json_decode($mdr->details);
-                            }
-                            switch ($dataRow->type) {
-                                case 'integer':
-                                    $newValue = intval($newValue);
-                                    break;
-                                case 'datetime':
+            }
+
+            $rows = $query->get()->map(function ($result) use ($mdt, $lowestUniqueId) {
+                $row = new stdClass();
+                if (!in_array($mdt->dataType->slug, ["unavailabilities", "tasks"])) {
+                    $row->company_id = $this->module->company_id;
+                }
+                $usedMdrIds = [];
+                foreach (get_object_vars($result) as $key => $value) {
+                    $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
+                    $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
+                    array_push($usedMdrIds, $mdr->id);
+                    $newValue = $value ?? $mdr->default_value;
+                    if ($newValue) {
+                        $details = json_decode($mdr->details);
+                        $drDetails = json_decode($dataRow->details);
+                        switch ($dataRow->type) {
+                            case 'integer':
+                                $newValue = intval($newValue);
+                                break;
+                            case 'datetime':
+                                if ($details && $details->format) {
+                                    $newValue = Carbon::createFromFormat($details->format, $newValue);
+                                } else {
                                     $newValue = new Carbon($newValue);
-                                    break;
-                                case 'enum':
-                                    if ($details && $details->options) {
-                                        $newValue = $details->options->{$newValue} ?? $mdr->default_value;
+                                }
+                                break;
+                            case 'enum':
+                                if ($details && $details->options) {
+                                    $newValue = $details->options->{$newValue} ?? $mdr->default_value;
+                                }
+                                break;
+                            case 'relationship':
+                                if ($value && $drDetails && $drDetails->model) {
+                                    $newValue = ModelHasOldId::where('model', $drDetails->model)->where('old_id', $value)->firstOr(function () {
+                                        return new ModelHasOldId(); // Rendra new_id vide
+                                    })->new_id;
+                                }
+                                break;
+                            default: // String
+                                if ($details) {
+                                    if ($details->split) {
+                                        $valueArray = explode($details->split->delimiter, $newValue);
+                                        if ($details->split->keep == 'start') {
+                                            $newValue = implode($details->split->delimiter, array_splice($valueArray, ceil(count($valueArray) / 2)));
+                                        } else {
+                                            $newValue = implode($details->split->delimiter, array_slice($valueArray, ceil(count($valueArray) / 2)));
+                                        }
                                     }
-                                    break;
-                                case 'relationship':
-                                    if ($details && $details->model) {
-                                        $newValue = ModelHasOldId::where('model', $details->model)->where('old_id', $result->id)->firstOrFail()->id;
+
+                                    if ($details->format) {
+                                        $formattedValue = "";
+                                        switch ($details->format->prefix) {
+                                            case 'company':
+                                                $formattedValue .= $this->module->company->name . $details->format->glue;
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+
+                                        $valueArray = explode($details->format->delimiter, $newValue);
+                                        switch ($details->format->case) {
+                                            case 'lowerCamelCase':
+                                                $formattedValue .= implode("", array_map(function ($v, $k) {
+                                                    return $k ? ucfirst($v) : $v;
+                                                }, $valueArray, array_keys($valueArray)));
+                                                break;
+                                            case 'upperCamelCase':
+                                                $formattedValue .= implode("", array_map(function ($v) {
+                                                    return ucfirst($v);
+                                                }, $valueArray));
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+
+                                        switch ($details->format->suffix) {
+                                            case 'company':
+                                                $formattedValue .= $details->format->glue . $this->module->company->name;
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+
+                                        $newValue = $formattedValue;
                                     }
-                                    break;
-                                default: // String
-                                    if ($details && $details->max_length) {
+                                }
+
+                                if ($drDetails) {
+                                    if ($drDetails->max_length) {
                                         $newValue = substr($newValue, 0, intval($details->max_length));
                                     }
-                                    break;
-                            }
+                                    if ($drDetails->is_password) {
+                                        $newValue = bcrypt($newValue);
+                                    }
+                                    if ($drDetails->remove_special_chars) {
+                                        $newValue = SqlModule::str_to_noaccent($newValue);
+                                    }
+                                    if ($drDetails->is_unique) {
+                                        $uniqueValue = $newValue;
+                                        while (app($mdt->dataType->model)->where($key, $uniqueValue)->exists()) {
+                                            $uniqueValue = $newValue . ++$lowestUniqueId;
+                                        }
+                                        $newValue = $uniqueValue;
+                                    }
+                                }
+                                break;
                         }
-                        $object->{$key} = $newValue;
                     }
-                    return $object;
+                    $row->{$key} = $newValue;
+                }
+
+                ModuleDataRow::where('module_data_type_id', $mdt->id)->whereNotIn('id', $usedMdrIds)->get()->each(function ($mdr) use ($row) {
+                    $row->{$mdr->dataRow->field} = $mdr->default_value;
                 });
 
-                $data[$mdt->dataType->slug] = $results;
-            }
+                return $row;
+            });
         } catch (\Throwable $th) {
-            $data = [];
-            echo $th->getMessage();
+            $rows = [];
+            echo $th->getMessage() . "\n\r";
             $controllerLog = new Logger('SQLModule');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('SQLModule', [$th->getMessage()]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::ERROR);
+            $controllerLog->error('SQLModule', [$th->getMessage()]);
         }
-        return $data;
+
+        return $rows;
+    }
+
+
+    /**
+     * Replace special character
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public static function str_to_noaccent($str)
+    {
+        $parsed = $str;
+        $parsed = preg_replace('#Ç#', 'C', $parsed);
+        $parsed = preg_replace('#ç#', 'c', $parsed);
+        $parsed = preg_replace('#è|é|ê|ë#', 'e', $parsed);
+        $parsed = preg_replace('#È|É|Ê|Ë#', 'E', $parsed);
+        $parsed = preg_replace('#à|á|â|ã|ä|å#', 'a', $parsed);
+        $parsed = preg_replace('#@|À|Á|Â|Ã|Ä|Å#', 'A', $parsed);
+        $parsed = preg_replace('#ì|í|î|ï#', 'i', $parsed);
+        $parsed = preg_replace('#Ì|Í|Î|Ï#', 'I', $parsed);
+        $parsed = preg_replace('#ð|ò|ó|ô|õ|ö#', 'o', $parsed);
+        $parsed = preg_replace('#Ò|Ó|Ô|Õ|Ö#', 'O', $parsed);
+        $parsed = preg_replace('#ù|ú|û|ü#', 'u', $parsed);
+        $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
+        $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
+        $parsed = preg_replace('#Ý#', 'Y', $parsed);
+
+        return ($parsed);
     }
 }

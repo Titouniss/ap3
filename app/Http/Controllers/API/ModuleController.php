@@ -189,6 +189,7 @@ class ModuleController extends Controller
                     'database' => 'required',
                     'username' => 'required',
                     'password' => 'nullable',
+                    'c_password' => 'nullable|same:password',
                 ]);
                 $modulable = SqlModule::find($id);
                 break;
@@ -213,11 +214,29 @@ class ModuleController extends Controller
             $modulable->update([
                 'driver' => $arrayRequest['driver'],
                 'host' => $arrayRequest['host'],
-                'port' => $arrayRequest['port'],
                 'charset' => $arrayRequest['charset'],
                 'database' => $arrayRequest['database'],
                 'username' => $arrayRequest['username'],
             ]);
+            if ($arrayRequest['driver'] !== 'sqlite') {
+                $port = $arrayRequest['port'];
+                if (!$port) {
+                    switch ($arrayRequest['driver']) {
+                        case 'pgsql':
+                            $port = '5432';
+                            break;
+                        case 'sqlsrv':
+                            $port = '1433';
+                            break;
+                        default: // MySQL
+                            $port = '3306';
+                            break;
+                    }
+                }
+                $modulable->update([
+                    'port' => $port
+                ]);
+            }
             if ($arrayRequest['password']) {
                 $modulable->update([
                     'password' => $arrayRequest['password']
@@ -263,7 +282,7 @@ class ModuleController extends Controller
             foreach ($mdt['module_data_rows'] as $mdr) {
                 $validator = Validator::make($mdr, [
                     'data_row_id' => 'required',
-                    'source' => 'required',
+                    'source' => 'nullable',
                     'default_value' => 'nullable',
                     'details' => 'nullable',
                 ]);

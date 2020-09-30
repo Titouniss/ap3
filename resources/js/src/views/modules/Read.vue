@@ -761,6 +761,7 @@ export default {
                 payload.database = this.connection.database;
                 payload.username = this.connection.username;
                 payload.password = this.connection.password;
+                payload.c_password = this.connection.confirm_password;
             } else {
                 payload.url = this.connection.url;
                 payload.auth_headers = this.connection.auth_headers;

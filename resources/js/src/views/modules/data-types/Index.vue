@@ -50,7 +50,6 @@
                                 <vs-th>Source</vs-th>
                                 <vs-th>Valeur par défaut</vs-th>
                                 <vs-th>Détails</vs-th>
-                                <vs-th>Obligatoire ?</vs-th>
                             </template>
 
                             <template slot-scope="{ data }">
@@ -62,6 +61,9 @@
                                 >
                                     <vs-td :data="data[rowIndex].display_name">
                                         {{ data[rowIndex].display_name }}
+                                        <span v-if="data[rowIndex].required">
+                                            *
+                                        </span>
                                     </vs-td>
                                     <vs-td :data="data[rowIndex].type">
                                         {{
@@ -79,7 +81,9 @@
                                             "
                                             v-validate="
                                                 `max:255${
-                                                    data[rowIndex].required
+                                                    data[rowIndex].required &&
+                                                    !data[rowIndex]
+                                                        .default_value
                                                         ? '|required'
                                                         : ''
                                                 }`
@@ -100,10 +104,10 @@
                                                 )
                                             "
                                             :danger-text="
-                                                errors.first(
+                                                `${errors.first(
                                                     `${data[rowIndex].field}.source`,
                                                     item.slug
-                                                )
+                                                )} ou valeur par défaut`
                                             "
                                         />
                                     </vs-td>
@@ -112,7 +116,14 @@
                                             :name="
                                                 `${data[rowIndex].field}.default_value`
                                             "
-                                            v-validate="`max:255`"
+                                            v-validate="
+                                                `max:255${
+                                                    data[rowIndex].required &&
+                                                    !data[rowIndex].source
+                                                        ? '|required'
+                                                        : ''
+                                                }`
+                                            "
                                             v-model="
                                                 data[rowIndex].default_value
                                             "
@@ -131,10 +142,10 @@
                                                 )
                                             "
                                             :danger-text="
-                                                errors.first(
+                                                `${errors.first(
                                                     `${data[rowIndex].field}.default_value`,
                                                     item.slug
-                                                )
+                                                )} ou source`
                                             "
                                         />
                                     </vs-td>
@@ -167,25 +178,10 @@
                                             "
                                         />
                                     </vs-td>
-                                    <vs-td :data="data[rowIndex].required">
-                                        <div
-                                            class="flex justify-center items-center"
-                                        >
-                                            <feather-icon
-                                                :icon="
-                                                    `${
-                                                        data[rowIndex].required
-                                                            ? 'Check'
-                                                            : 'X'
-                                                    }Icon`
-                                                "
-                                                svgClasses="h-5 w-5"
-                                            />
-                                        </div>
-                                    </vs-td>
                                 </vs-tr>
                             </template>
                         </vs-table>
+                        <div class="mt-3 text-sm">Obligatoire*</div>
                     </form>
                 </vx-card>
             </vs-col>
@@ -326,7 +322,7 @@ export default {
                     data_type_id: mdt.data_type_id,
                     source: mdt.source,
                     module_data_rows: mdt.module_data_rows
-                        .filter(mdr => mdr.source)
+                        .filter(mdr => mdr.source || mdr.default_value)
                         .map(mdr => ({
                             data_row_id: mdr.data_row_id,
                             source: mdr.source,

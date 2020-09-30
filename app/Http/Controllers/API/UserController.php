@@ -25,6 +25,8 @@ use App\Models\WorkHours;
 use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class UserController extends Controller
 {
@@ -239,7 +241,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function str_to_noaccent($str)
+    public static function str_to_noaccent($str)
     {
         $parsed = $str;
         $parsed = preg_replace('#Ç#', 'C', $parsed);
