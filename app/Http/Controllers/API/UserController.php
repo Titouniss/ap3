@@ -28,8 +28,6 @@ use App\Models\WorkHours;
 use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
 
 class UserController extends Controller
 {

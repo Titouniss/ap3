@@ -105,7 +105,7 @@ class SqlModule extends BaseModule
                                         $formattedValue = "";
                                         switch ($details->format->prefix) {
                                             case 'company':
-                                                $formattedValue .= $this->module->company->name . $details->format->glue;
+                                                $formattedValue .= strtolower($this->module->company->name) . $details->format->glue;
                                                 break;
 
                                             default:
@@ -131,7 +131,7 @@ class SqlModule extends BaseModule
 
                                         switch ($details->format->suffix) {
                                             case 'company':
-                                                $formattedValue .= $details->format->glue . $this->module->company->name;
+                                                $formattedValue .= $details->format->glue . strtolower($this->module->company->name);
                                                 break;
 
                                             default:
