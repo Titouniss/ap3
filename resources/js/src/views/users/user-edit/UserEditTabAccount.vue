@@ -192,13 +192,11 @@ export default {
       return str.slice(0, 1).toUpperCase() + str.slice(1, str.length);
     },
     save_changes() {
-      console.log("save");
       /* eslint-disable */
       if (!this.validateForm) return;
 
       // Here will go your API call for updating data
       // You can get data in "this.data_local"
-      console.log(["data_local", this.data_local]);
 
       this.$store
         .dispatch("userManagement/updateAccountItem", this.data_local)
@@ -222,7 +220,6 @@ export default {
             color: "danger"
           });
         });
-      console.log(["Store", this.$store]);
 
       /* eslint-enable */
     },

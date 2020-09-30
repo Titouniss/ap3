@@ -214,7 +214,6 @@ export default {
     },
     computed: {
         companiesData() {
-            console.log(["ici", this.$store.state.companyManagement]);
             return this.$store.state.companyManagement.companies;
         },
         repetitiveTasksData() {

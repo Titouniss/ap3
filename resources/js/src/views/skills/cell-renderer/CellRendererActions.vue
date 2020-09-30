@@ -27,7 +27,6 @@ export default {
         });
     },
     async confirmDeleteRecord() {
-      console.log(["params", this.params]);
       let workareas = this.$store.state.workareaManagement.workareas;
 
       let haveSkill = [];
@@ -47,11 +46,8 @@ export default {
       this.$store
         .dispatch("taskManagement/fetchItemsBySkill", this.params.data.id)
         .then((data) => {
-          console.log(["data", data]);
           if (data && data.data.success) {
             tasks = data.data.success;
-            console.log(["tasks", tasks]);
-            console.log(["haveSkill", haveSkill]);
 
             let message = "";
             if (haveSkill.length > 0 && tasks.length > 0) {
@@ -69,8 +65,6 @@ export default {
                 "La compétence " +
                 this.params.data.name +
                 " est utilisée dans un îlot ou plus. Voulez vous vraiment la supprimer ?";
-            } else {
-              console.log("dans le else");
             }
 
             if (message !== "") {

@@ -95,6 +95,28 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: "/companies/company-add/",
+                    name: "companies-company-add",
+                    component: () => import("./views/companies/AddForm.vue"),
+                    meta: {
+                        parent: "companies",
+                        pageTitle: "Ajout d'une société",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/companies/company-edit/:companyId",
+                    name: "companies-company-edit",
+                    component: () => import("./views/companies/EditForm.vue"),
+                    meta: {
+                        parent: "companies",
+                        pageTitle: "Édition de société",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---SKILLS---/////
                 {
                     path: "/skills",
@@ -145,6 +167,7 @@ const router = new Router({
                     component: () => import("./views/workareas/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des îlots",
                         requiresAuth: true
                     }
                 },

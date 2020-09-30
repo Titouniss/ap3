@@ -201,11 +201,6 @@ export default {
     computed: {
         configStartHourPicker: {
             get() {
-                // console.log(["this.itemLocal.endHour", this.itemLocal.endHour]);
-                // console.log([
-                //     "Lo",
-                //     moment(this.itemLocal.endHour, "HH:mm").subtract(5, "m")
-                // ]);
                 return {
                     disableMobile: "true",
                     enableTime: true,
@@ -269,7 +264,6 @@ export default {
                         )
                     );
                 }
-                //console.log(["this.itemLocal", this.itemLocal]);
 
                 return this.itemId &&
                     this.itemId > -1 &&

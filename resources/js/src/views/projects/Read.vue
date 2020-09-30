@@ -36,7 +36,7 @@
               </tr>
               <tr>
                 <td class="font-semibold">Date de livraison prévu :</td>
-                <td>{{ project_data.date }}</td>
+                <td>{{ project_data.date_string }}</td>
               </tr>
               <tr v-if="authorizedTo('read', 'ranges') && project_data.status == 'todo'">
                 <td
@@ -56,16 +56,16 @@
           <div class="vx-col flex-1" id="account-info-col-2">
             <table>
               <tr>
-                <td class="font-semibold">Journées de retard :</td>
-                <td>RAF</td>
+                <td class="font-semibold">{{ lateDayData > 0 ? 'Journées de retard' : 'Journées restantes' }}  :</td>
+                <td>{{ lateDayData > 0 ? lateDayData : -lateDayData}} jours</td>
               </tr>
               <tr>
                 <td class="font-semibold">Temps estimé sur le projet :</td>
-                <td>RAF</td>
+                <td> {{ estimatedTimeData }} heures</td>
               </tr>
-              <tr>
+              <tr v-if="project_data.status != 'todo'">
                 <td class="font-semibold">Temps réalisé sur le projet :</td>
-                <td>RAF</td>
+                <td> {{ achievedTimeData }} heures</td>
               </tr>
             </table>
           </div>
@@ -134,6 +134,25 @@ export default {
   computed: {
     itemIdToEdit() {
       return this.$store.state.projectManagement.project.id || 0;
+    },
+    estimatedTimeData() {
+      let time = 0
+      this.project_data.tasks.map( task => {
+        time += task.estimated_time
+      })
+      return time
+    },
+    achievedTimeData(){
+      let time = 0
+      this.project_data.tasks.map( task => {
+        time += task.time_spent
+      })
+      return time
+    },
+    lateDayData(){
+      let project_date = moment(this.project_data.date)
+      let today_date = moment()
+      return today_date.diff(project_date, 'day')
     }
   },
   methods: {
@@ -143,9 +162,8 @@ export default {
     startProject() {
       this.$store
         .dispatch("projectManagement/start", this.project_data.id)
-        .then(data => {
-
-          if(data.data.success){
+        .then(response => {
+          if(response.data.success){
             this.$vs.notify({
               title: "Planification",
               text: "Projet planifié avec succès",
@@ -163,7 +181,7 @@ export default {
             })
             .catch(() => {});
           }
-          else{
+          else if(response.data.error_time){
             let message = 'Le nombre d\'heure de travail disponible est insuffisant'
 
             this.$vs.notify({
@@ -171,8 +189,21 @@ export default {
               text: message,
               iconPack: "feather",
               icon: "icon-alert-circle",
-              color: "danger"
+              color: "danger",
+              time: 4000
             });
+          }
+          else{
+            response.data.error_alerts.map( alert => {
+              this.$vs.notify({
+                title: "Planification",
+                text: alert,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "danger",
+                time: 8000
+              });
+            })
           }
         })
         .catch(err => {
@@ -262,7 +293,7 @@ export default {
       .dispatch("projectManagement/fetchItem", projectId)
       .then(res => {
         this.project_data = res.data.success;
-        this.project_data.date = moment(this.project_data.date).format(
+        this.project_data.date_string = moment(this.project_data.date).format(
           "DD MMMM YYYY"
         );
       })

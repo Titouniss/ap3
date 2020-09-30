@@ -15,7 +15,7 @@ export default {
       axios.post("/api/task-management/store", item)
         .then((response) => {
           if(response.data.success){
-            commit('ADD_ITEM', Object.assign(item, { id: response.data.success.id }))
+            commit('ADD_ITEM', Object.assign( response.data.success, { id: response.data.success.id }))
           }
           resolve(response)
         })
@@ -36,7 +36,6 @@ export default {
     return new Promise((resolve, reject) => {
       axios.post(`/api/project-management/store-range/${item.rangeId}`, item)
         .then((response) => {
-          console.log(response)
           commit('SET_ITEMS', response.data.success)
           resolve(response)
         })
@@ -90,11 +89,9 @@ export default {
     })
   },
   fetchItemsBySkills({ commit }, items) {
-    console.log(["1", items]);
     return new Promise((resolve, reject) => {
       axios.post(`/api/task-management/skills`, items)
         .then((response) => {
-          console.log(["2", response]);
           if (response.data && response.data.success) {
             resolve(response)
           }
@@ -121,5 +118,32 @@ export default {
         })
         .catch((error) => { reject(error) })
     })
-  }
+  },
+  uploadFile({ commit }, item) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/task-management/upload-file/${item.taskIdOrToken}`, item.files)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  deleteFile({ commit }, id) {
+    return new Promise((resolve, reject) => {
+      axios.delete(`/api/task-management/delete-file/${id}`)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
+  deleteFiles({ commit }, ids) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/api/task-management/delete-files`, ids)
+        .then((response) => {
+          resolve(response)
+        })
+        .catch((error) => { reject(error) })
+    })
+  },
 }

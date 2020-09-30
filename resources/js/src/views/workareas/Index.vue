@@ -255,6 +255,12 @@ export default {
                     cellRendererFramework: "CellRendererRelationSkills"
                 },
                 {
+                    headerName: "Maximum opérateurs",
+                    field: "max_users",
+                    filter: true,
+                    width: 110
+                },
+                {
                     sortable: false,
                     headerName: "Actions",
                     field: "transactions",
@@ -265,7 +271,8 @@ export default {
                         modelPlurial: "workareas",
                         withPrompt: true,
                         name: data => `l'îlot ${data.name}`
-                    }
+                    },
+                    width: 60,
                 }
             ],
 
@@ -280,7 +287,6 @@ export default {
     },
     computed: {
         workareasData() {
-            console.log(this.$store.state.workareaManagement.workareas);
             return this.$store.state.workareaManagement.workareas;
         },
         paginationPageSize() {
@@ -340,7 +346,6 @@ export default {
             });
         },
         deleteRecord() {
-            console.log("DELETE");
             const selectedRowLength = this.gridApi.getSelectedRows().length;
 
             this.gridApi.getSelectedRows().map(selectRow => {
@@ -363,7 +368,6 @@ export default {
             }
         },
         archiveRecord() {
-            console.log("ARCHIVE");
             const selectedRowLength = this.gridApi.getSelectedRows().length;
             this.gridApi.getSelectedRows().map(selectRow => {
                 this.$store
@@ -385,8 +389,6 @@ export default {
             }
         },
         showDeleteSuccess(type, selectedRowLength) {
-            console.log("SUCCESS");
-            console.log(["length show", selectedRowLength]);
 
             this.$vs.notify({
                 color: "success",

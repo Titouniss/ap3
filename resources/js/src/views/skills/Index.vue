@@ -386,7 +386,6 @@ export default {
                 this.$store
                     .dispatch("skillManagement/forceRemoveItem", selectRow.id)
                     .then(data => {
-                        console.log(["data", data]);
                         if (selectedRowLength === 1) {
                             this.showDeleteSuccess(selectedRowLength);
                         }

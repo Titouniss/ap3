@@ -148,12 +148,11 @@ export default {
   },
   computed: {
     usersData() {
-      console.log(["state", this.$store.state]);
       return this.$store.state.userManagement.users;
     },
     projectsData() {
       return this.$store.state.projectManagement.projects
-        .filter((project) => project.status != "done")
+        .filter((project) => project.status == "doing")
         .reverse();
     },
     workareasData() {
@@ -178,7 +177,7 @@ export default {
       return moment(date).format("DD MMMM YYYY") == "Invalid date"
         ? ""
         : moment(date).format("DD MMMM YYYY");
-    },
+    }
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
@@ -205,7 +204,6 @@ export default {
     this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
       this.manageErrors(err);
     });
-    console.log(["store", this.$store]);
   },
 };
 </script>

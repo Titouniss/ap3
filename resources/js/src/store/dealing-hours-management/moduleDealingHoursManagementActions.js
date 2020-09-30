@@ -64,7 +64,6 @@ export default {
     return new Promise((resolve, reject) => {
       axios.get(`/api/dealing-hours-management/overtimes`)
         .then((response) => {
-          console.log(["response", response]);
           commit('EDIT_ITEM', response.data.success)
           resolve(response)
         })

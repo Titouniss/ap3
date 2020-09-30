@@ -33,7 +33,7 @@
                 <vs-divider />
                 <v-select
                   label="name"
-                  @input="updateCustomersList"
+                  @input="cleanCustomerInput"
                   v-validate="'required'"
                   v-model="itemLocal.company"
                   :options="companiesData"
@@ -174,13 +174,12 @@ export default {
       let customers = this.filterItemsAdmin(
         this.$store.state.customerManagement.customers
       );
-      console.log(["customers", customers]);
-      this.customersDataFiltered = customers;
-      // Parse Label
-      this.customersDataFiltered.map(function (c) {
+
+      // Parse label
+      customers.map(function (c) {
         return (c.name = c.professional === 1 ? c.name : c.lastname);
       });
-      console.log(["customers", customers]);
+
       return customers;
     },
     validateForm() {
@@ -228,35 +227,29 @@ export default {
           });
       });
     },
+    cleanCustomerInput(){
+      this.itemLocal.customer_id = null
+      this.itemLocal.customer = null
+    },
     filterItemsAdmin(items) {
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
         if (
           user.roles.find(
-            (r) => r.name == "superAdmin" || r.name === "littleAdmin"
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
           )
         ) {
-          filteredItems = items;
-        } else {
           filteredItems = items.filter(
             (item) => item.company_id === this.itemLocal.company.id
           );
+        } else {
+          filteredItems = items.filter(
+            (item) => item.company_id === user.company_id
+          );
         }
       }
-      console.log(["filteredItems", filteredItems]);
       return filteredItems;
-    },
-    updateCustomersList() {
-      this.itemLocal.customer = null;
-      this.customersDataFiltered = this.filterItemsAdmin(
-        this.$store.state.customerManagement.customers
-      );
-
-      // Parse label
-      this.customersDataFiltered.map(function (c) {
-        return (c.name = c.professional === 1 ? c.name : c.lastname);
-      });
     },
   },
   mounted() {

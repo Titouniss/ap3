@@ -31,9 +31,18 @@
                 <div class="vs-select--label">Gamme</div>
               </template>
             </v-select>
-
           </vx-tooltip>
         </form>
+        <div v-if="rangesData.length === 0" class="mt-12 mb-2">
+          <span
+            label="Compétences"
+            class="msgTxt mt-10"
+          >Aucune gammes trouvées.</span>
+          <router-link
+            class="linkTxt"
+            :to="{ path: '/ranges' }"
+          >Ajouter une gamme</router-link>
+        </div>
       </div>
     </vs-prompt>
   </div>

@@ -31,6 +31,24 @@
                                 >{{ errors.first("name") }}</span
                             >
 
+                            <small class="ml-1 mb-2" for>Nombre d'opérateur maximum</small>
+                            <vs-row vs-w="12">
+                                <vs-col vs-w="6">
+                                    <vs-input-number
+                                        min="1"
+                                        max="25"
+                                        name="max_users"
+                                        class="inputNumber"
+                                        v-model="itemLocal.max_users"
+                                    />
+                                </vs-col>
+                            </vs-row>
+                            <span
+                                class="text-danger text-sm"
+                                v-show="errors.has('max_users')"
+                                >{{ errors.first("max_users") }}</span
+                            >
+
                             <div
                                 v-if="itemLocal.company_id && disabled"
                                 class="mt-5"
@@ -186,6 +204,7 @@ export default {
 
             itemLocal: {
                 name: "",
+                max_users: 1,
                 company_id: null,
                 skills: []
             },
@@ -222,6 +241,7 @@ export default {
         clearFields() {
             this.itemLocal = {
                 name: "",
+                max_users: 1,
                 company_id: null,
                 skills: []
             };

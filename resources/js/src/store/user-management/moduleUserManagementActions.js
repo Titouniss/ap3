@@ -87,7 +87,6 @@ export default {
             axios
                 .post(`/api/user-management/updateInformation/${item.id}`, item)
                 .then(response => {
-                    console.log(["response", response]);
                     commit("UPDATE_USER_INFO", response.data.success, {
                         root: true
                     });
@@ -106,7 +105,6 @@ export default {
                     payload
                 )
                 .then(response => {
-                    console.log(["response_Action", response]);
                     if (response.data.success) {
                         resolve(response);
                     } else {

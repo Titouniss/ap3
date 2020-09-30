@@ -10,10 +10,12 @@ use App\Models\TasksBundle;
 use App\Models\Project;
 use App\Models\TaskComment;
 use App\Models\PreviousTask;
+use App\Models\Document;
 use App\Models\TasksSkill;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 
@@ -31,7 +33,7 @@ class TaskController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $items = Task::all()->load('project', 'comments');
+        $items = Task::all()->load('project', 'comments', 'skills');
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -160,9 +162,12 @@ class TaskController extends Controller
         }
 
         $item = Task::create($arrayRequest);
+        $arrayRequest['token'] ? $this->storeDocuments($item->id, $arrayRequest['token']) : null;
         $this->storeComment($item->id, $arrayRequest['comment']);
         $this->storeSkills($item->id, $arrayRequest['skills']);
         $this->storePreviousTask($item->id, $arrayRequest['previousTasksIds']);
+
+        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
 
         return response()->json(['success' => $item], $this->successStatus);
     }
@@ -340,13 +345,55 @@ class TaskController extends Controller
 
 
         if ($update) {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
             return response()->json(['success' => $item], $this->successStatus);
         } else {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
     }
+
+    public function uploadFile(Request $request, $idOrToken){
+
+        $arrayRequest = $request->all();
+
+        if($arrayRequest['files']){
+
+            $addForm = strpos($idOrToken, 'token') === false ? false : true;
+
+            $originalName = $arrayRequest['files']->getClientOriginalName();
+            $path = $arrayRequest['files']->store('tasks_documents');
+            $response = Document::create(['name' => $originalName, 'path' => $path, 'task_id' => $addForm ? null : $idOrToken, 'token' => $addForm ? $idOrToken : null]);
+            
+            return response()->json(['success' => $response], $this->successStatus);
+        }
+    }
+
+    public function deleteFile($id)
+    {
+        $item = Document::findOrFail($id);
+        Storage::delete($item->path);
+        $item->delete();
+        return response()->json(['success' => true], $this->successStatus);
+    }
+
+    public function deleteFiles(Request $request)
+    {
+        $arrayRequest = $request->all();
+        if($arrayRequest){
+            $items = Document::whereIn('id', $arrayRequest)->get();
+
+            $items_path = [];
+            foreach($items as $item){ 
+                $items_path[] = $item->path; 
+                $item->delete();
+            };
+            Storage::delete($items_path);
+            
+            return response()->json(['success' => true], $this->successStatus);
+        }
+    }
+        
 
     /**
      * Remove the specified resource from storage.
@@ -373,6 +420,15 @@ class TaskController extends Controller
             }
         }
         return $exist;
+    }
+
+    private function storeDocuments(int $task_id, $token){
+
+        if($token && $task_id){
+            Document::where('token', $token)->update([
+                'task_id' => $task_id,
+            ]);
+        }
     }
 
     private function storeComment(int $task_id, $comment, $confirmed = true)

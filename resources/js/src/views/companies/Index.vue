@@ -10,7 +10,9 @@
 <template>
   <div id="page-companies-list">
     <div class="vx-card p-6">
-      <add-form />
+      <vs-button class="mt-1 mb-6" v-if="authorizedTo('publish', 'companies')" @click="addRecord">
+        Ajouter une société
+      </vs-button>
       <div class="flex flex-wrap items-center">
         <div class="flex-grow">
           <vs-row>
@@ -113,8 +115,6 @@
 
       <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
     </div>
-
-    <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
   </div>
 </template>
 
@@ -123,10 +123,6 @@ import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
 
-//CRUD
-import AddForm from "./AddForm.vue";
-import EditForm from "./EditForm.vue";
-
 // Store Module
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
@@ -134,14 +130,14 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
+var model = "company";
+var modelPlurial = "companies";
 var modelTitle = "Société";
 
 export default {
   components: {
     AgGridVue,
     vSelect,
-    AddForm,
-    EditForm,
 
     // Cell Renderer
     CellRendererLink,
@@ -188,7 +184,7 @@ export default {
           cellRendererParams: {
             model: "company",
             modelPlurial: "companies",
-            withPrompt: true,
+            withPrompt: false,
             name: data => `la société ${data.name}`,
             linkedTables: ["utilisateurs", "projets", "tâches", "gammes"]
           }
@@ -232,6 +228,14 @@ export default {
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);
     },
+    authorizedTo(action, model) {
+      return this.$store.getters.userHasPermissionTo(
+        `${action} ${model}`
+      );
+    },
+    addRecord() {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
+    },
     confirmDeleteRecord(type) {
       let selectedRow = this.gridApi.getSelectedRows();
       let singleCompany = selectedRow[0];
@@ -274,7 +278,6 @@ export default {
       }
     },
     archiveRecord() {
-      console.log("ARCHIVE");
       const selectedRowLength = this.gridApi.getSelectedRows().length;
       this.gridApi.getSelectedRows().map(selectRow => {
         this.$store
@@ -293,9 +296,6 @@ export default {
       }
     },
     showDeleteSuccess(type, selectedRowLength) {
-      console.log("SUCCESS");
-      console.log(["length show", selectedRowLength]);
-
       this.$vs.notify({
         color: "success",
         title: modelTitle,

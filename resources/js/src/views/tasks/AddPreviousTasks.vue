@@ -72,7 +72,7 @@ export default {
     clearFields() {
       this.previousTasksIds_local = [];
     }
-  }
+  },
 };
 </script>
 <style>

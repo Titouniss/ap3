@@ -9,7 +9,7 @@ class Workarea extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'company_id'];
+    protected $fillable = ['name', 'max_users', 'company_id'];
 
     public function company()
     {

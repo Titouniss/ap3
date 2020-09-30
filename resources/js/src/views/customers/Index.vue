@@ -370,7 +370,6 @@ export default {
         confirmDeleteRecord(type) {
             let selectedRow = this.gridApi.getSelectedRows();
             let singleCustomer = selectedRow[0];
-            console.log(["singleCustomer", singleCustomer]);
 
             this.$vs.dialog({
                 type: "confirm",

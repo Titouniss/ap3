@@ -201,7 +201,7 @@ class DealingHoursController extends Controller
                 return response()->json(['success' => [$item, "create"]], $this->successStatus);
             }
         } else {
-            return response()->json(['error' => "Vous ne disposer pas asser d'heures."]);
+            return response()->json(['error' => "Vous ne disposez pas assez d'heures."]);
         }
     }
 

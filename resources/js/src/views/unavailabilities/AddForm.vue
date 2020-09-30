@@ -187,7 +187,7 @@ export default {
                 this.$vs.loading.close();
                 this.$vs.notify({
                   title: "Ajout d'une indisponibilité",
-                  text: `"Indisponibilité ajoutée avec succès`,
+                  text: `Indisponibilité ajoutée avec succès`,
                   iconPack: "feather",
                   icon: "icon-alert-circle",
                   color: "success",

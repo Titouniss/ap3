@@ -437,14 +437,14 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    this.$store
+    this.project_data.tasks_bundles.length > 0 ? this.$store
       .dispatch(
         "taskManagement/fetchItemsByBundle",
         this.project_data.tasks_bundles[0].id
       )
       .catch((err) => {
         console.error(err);
-      });
+      }) : null;
 
     this.$store.dispatch("userManagement/fetchItems").catch((err) => {
       this.manageErrors(err);

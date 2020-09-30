@@ -237,9 +237,6 @@ export default {
                   workareas.push(aW);
                 }
               });
-              console.log(["workareas 1", workareas]);
-            } else {
-              console.log(["workareas 2", workareas]);
             }
           })
           .catch(err => {
@@ -247,13 +244,10 @@ export default {
           });
         this.workareasSkillsData = workareas;
       } else {
-        console.log("pas de itemLocal");
         this.workareasSkillsData = workareas;
       }
     },
     submitTodo() {
-      console.log(["itemLocal.id", this.itemLocal.id]);
-      console.log(["submitTodo itemLocal", this.itemLocal]);
 
       var itemToSave = {};
       //Parse new item to update task
@@ -277,11 +271,10 @@ export default {
         status: this.itemLocal.status,
         from: "schedule"
       };
-      console.log(["itemToSave", itemToSave]);
       this.$store
         .dispatch("taskManagement/updateItem", itemToSave)
         .then(data => {
-          console.log(["data", data]);
+          //console.log(["data", data]);
         })
         .catch(err => {
           //console.error(err);
@@ -289,7 +282,6 @@ export default {
 
       this.$store.dispatch("scheduleManagement/updateEvent", this.itemLocal);
       this.$store.dispatch("scheduleManagement/editEvent", {});
-      console.log(["state", this.$store.state]);
     },
     confirmDeleteTask(idEvent) {
       this.deleteWarning = true;
@@ -315,7 +307,6 @@ export default {
         .catch(err => {
           console.error(err);
         });
-      console.log(["idEvent", this.idEvent]);
 
       this.$store
         .dispatch("taskManagement/removeItem", this.itemLocal.id)
@@ -325,7 +316,6 @@ export default {
         });
 
       this.init();
-      console.log(["this.store", this.$store.state]);
     }
   },
   mounted() {},

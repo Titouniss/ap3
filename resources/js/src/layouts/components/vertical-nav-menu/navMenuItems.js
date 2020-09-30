@@ -14,42 +14,6 @@ export default [
         icon: "HomeIcon"
     },
     {
-        url: "/users",
-        name: "Utilisateurs",
-        slug: "users",
-        icon: "UsersIcon"
-    },
-    {
-        url: "/roles",
-        name: "Rôles",
-        slug: "roles",
-        icon: "AwardIcon"
-    },
-    {
-        url: "/companies",
-        name: "Sociétés",
-        slug: "companies",
-        icon: "BriefcaseIcon"
-    },
-    {
-        url: "/customers",
-        name: "Clients",
-        slug: "customers",
-        icon: "UsersIcon"
-    },
-    {
-        url: "/skills",
-        name: "Compétences",
-        slug: "skills",
-        icon: "BookOpenIcon"
-    },
-    {
-        url: "/workareas",
-        name: "Ilots",
-        slug: "workareas",
-        icon: "ArchiveIcon"
-    },
-    {
         url: "/projects",
         name: "Projets",
         slug: "projects",
@@ -62,10 +26,46 @@ export default [
         icon: "ClipboardIcon"
     },
     {
+        url: "/workareas",
+        name: "Ilots",
+        slug: "workareas",
+        icon: "ArchiveIcon"
+    },
+    {
         url: "/schedules",
         name: "Plannings",
         slug: "schedules",
         icon: "CalendarIcon"
+    },
+    {
+        url: "/users",
+        name: "Utilisateurs",
+        slug: "users",
+        icon: "UsersIcon"
+    },
+    {
+        url: "/roles",
+        name: "Rôles",
+        slug: "roles",
+        icon: "AwardIcon"
+    },
+    {
+        url: "/skills",
+        name: "Compétences",
+        slug: "skills",
+        icon: "BookOpenIcon"
+    },
+    {
+        url: "/companies",
+        name: "Sociétés",
+        slug: "companies",
+        icon: "BriefcaseIcon"
+    },
+    {
+        url: "/customers",
+        name: "Clients",
+        slug: "customers",
+        icon: "UsersIcon"
     },
     {
         url: "/hours",

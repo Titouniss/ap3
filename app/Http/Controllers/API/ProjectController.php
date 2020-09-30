@@ -71,6 +71,7 @@ class ProjectController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
         $item = Project::create($arrayRequest)->load('company');
+        ProjectController::checkIfTaskBundleExist($item->id);
         return response()->json(['success' => $item], $this->successStatus);
     }
 
@@ -259,33 +260,101 @@ class ProjectController extends Controller
         //  - Gestion des heures indispo de + de 3,5h 
         //  - Gestion des tâches de + de 3,5h 
         //  - Corriger la redirection vers les plannings
-        //  - 
-
 
         $project = Project::find($id);
-        $nbHoursRequired = 0;
-        $nbHoursAvailable = 0;
-        $nbHoursUnvailable = 0;
-
-        foreach ($project->tasks as $task) {
-            // Hours required
-            $nbHoursRequired += $task->estimated_time;
-        }
-
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
+        $workareas = Workarea::where('company_id', $project->company_id)->with('skills')->get();
 
-        // Hours Available & Hours Unavailable
-        $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
+        // Alertes pour l'utilisateur
+        $alerts = $this->checkIfStartIsPossible($project, $users, $workareas);
 
-        if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
+        if(!$alerts){
+           
+            $nbHoursRequired = 0;
+            $nbHoursAvailable = 0;
+            $nbHoursUnvailable = 0;
 
-            $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
-            //$response =  $tasksPlanified  //RAF : Gestion des erreurs ou non
-        } else {
-            $response = $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
+            foreach ($project->tasks as $task) {
+                // Hours required
+                $nbHoursRequired += $task->estimated_time;
+            }
+
+            // Hours Available & Hours Unavailable
+            $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
+
+            if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
+
+                $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
+                return response()->json(['success' => $response], $this->successStatus);
+
+            } else {
+
+                return $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error_time' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
+            }
+        }        
+        else{
+            return response()->json(['error_alerts' => $alerts], $this->successStatus);
+        }
+    }
+
+    private function checkIfStartIsPossible($project, $users, $workareas){
+
+        //check if workers have hours
+        $haveHours = false;
+        foreach($users as $user){
+            foreach($user->workHours as $workHour) { 
+                if($workHour->is_active == 1){
+                    $haveHours = true;
+                } 
+            }
+            if($haveHours){ break;}
         }
 
-        return response()->json(['success' => $response], $this->successStatus);
+        //check if workers/workareas have tasks skills
+        $nb_tasks = count($project->tasks);
+        $nb_tasks_skills_worker = 0;
+        $nb_tasks_skills_workarea = 0;
+
+        foreach($project->tasks as $task){
+
+            $project_skills_ids = [];
+            foreach($task->skills as $skill){ $project_skills_ids[] = $skill->id; }
+
+            //workers
+            foreach($users as $user){
+
+                $user_skills_ids = [];
+                foreach($user->skills as $skill){ $user_skills_ids[] = $skill->id; }
+
+                if(count(array_intersect($project_skills_ids, $user_skills_ids)) == count($project_skills_ids)){
+
+                    $nb_tasks_skills_worker += 1;
+                    break;
+                }
+            }
+
+            //workareas
+            foreach($workareas as $workarea){
+
+                $workarea_skills_ids = [];
+                foreach($workarea->skills as $skill){ $workarea_skills_ids[] = $skill->id; }
+
+                if(count(array_intersect($project_skills_ids, $workarea_skills_ids)) == count($project_skills_ids)){
+
+                    $nb_tasks_skills_workarea += 1;
+                    break;
+                }
+            }
+        }
+        $workersHaveSkills = $nb_tasks == $nb_tasks_skills_worker ? true : false;
+        $workareasHaveSkills = $nb_tasks == $nb_tasks_skills_workarea ? true : false;
+
+        $alerts = [];
+        $haveHours ? null : $alerts[] = "Aucun utilisateur ne possède d'heures de travail";
+        $workersHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un utilisateur";
+        $workareasHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un îlot";
+
+        return count($alerts) > 0 ? $alerts : null;
     }
 
     private function setDateToTasks($tasks, $TimeData, $users, $project)

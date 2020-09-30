@@ -90,14 +90,14 @@
                 v-if="!item.submenu"
                 :key="`item-${index}`"
                 :index="index"
-                :to="item.slug !== 'external' ? item.url : null"
+                :to="item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/'+companyId: item.slug !== 'external' ? item.url : null"
                 :href="item.slug === 'external' ? item.url : null"
                 :icon="item.icon"
                 :target="item.target"
                 :isDisabled="item.isDisabled"
                 :slug="item.slug"
               >
-                <span v-show="!verticalNavMenuItemsMin" class="truncate">{{ item.name }}</span>
+                <span v-show="!verticalNavMenuItemsMin" class="truncate">{{ !isAdmin && item.name == "Sociétés" ? "Ma société" : item.name }}</span>
                 <vs-chip
                   class="ml-auto"
                   :color="item.tagColor"
@@ -118,6 +118,12 @@
               <!-- /Nav-Group -->
             </template>
           </template>
+          <div class="mt-2 flex flex-wrap items-center justify-end" style="bottom: 15px; position: absolute; padding-left: 15px;">
+          <vs-row vs-type="flex" vs-justify="center" vs-align="center">
+              <feather-icon icon="DownloadIcon" svgClasses="h-5 w-5" />
+              <a style="text-decoration: none" class="text-white" href="https://drive.google.com/file/d/1WccVYF5XYspiG9uYHfVhm2BBDoRbJ7it/view">Télécharger l'application</a>
+          </vs-row>
+          </div>
         </component>
         <!-- /Menu Items -->
       </div>
@@ -171,6 +177,19 @@ export default {
     showShadowBottom: false
   }),
   computed: {
+    isAdmin() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles.find(
+          r => r.name === "superAdmin" || r.name === "littleAdmin"
+        );
+      }
+
+      return false;
+    },
+    companyId() {
+      return this.$store.state.AppActiveUser.company_id
+    },
     isGroupActive() {
       return item => {
         const path = this.$route.fullPath;
@@ -216,7 +235,7 @@ export default {
             item.show = true;
           } else if (userPermissions.length > 0) {
             item.show =
-              userPermissions.findIndex(p => p.name === `read ${item.slug}`) >
+              userPermissions.findIndex(p => p.name === `show ${item.slug}`) >
               -1;
           } else item.show = false;
         }
