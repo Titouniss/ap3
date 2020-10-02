@@ -40,6 +40,13 @@ class BaseModule extends Model
         });
     }
 
+    public function hasModuleDataTypeForSlug($slug)
+    {
+        return $this->sortedModuleDataTypes()->first(function ($mdt) use ($slug) {
+            return $mdt->dataType->slug === $slug;
+        });
+    }
+
     public function sync()
     {
         try {
@@ -49,13 +56,11 @@ class BaseModule extends Model
                 $dataType = $mdt->dataType;
                 $table = app($dataType->model);
 
-                echo "Starting " . $dataType->model . "\n\r";
-
-                foreach ($this->modulable->getModuleDataRows($mdt) as $rowData) {
-                    $data = array_filter(get_object_vars($rowData), function ($key) {
+                foreach ($this->modulable->getRows($mdt) as $row) {
+                    $data = array_filter(get_object_vars($row), function ($key) {
                         return $key !== "id";
                     }, ARRAY_FILTER_USE_KEY);
-                    $oldId = ModelHasOldId::firstOrNew(['old_id' => $rowData->id, 'model' => $dataType->model]);
+                    $oldId = ModelHasOldId::firstOrNew(['old_id' => $row->id, 'model' => $dataType->model]);
                     if ($oldId->new_id) {
                         $table->find($oldId->new_id)->update($data);
                     } else {
@@ -64,7 +69,6 @@ class BaseModule extends Model
                     }
                 }
 
-                echo "Finished " . $dataType->model . "\n\r";
                 DB::commit();
             }
 

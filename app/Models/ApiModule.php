@@ -13,7 +13,7 @@ class ApiModule extends BaseModule
         return $this->morphOne(BaseModule::class, 'modulable');
     }
 
-    public function getModuleDataRows(ModuleDataType $mdt)
+    public function getRows(ModuleDataType $mdt)
     {
         $rows = [];
         try {

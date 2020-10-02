@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\Models\BaseModule;
+use App\Models\ModelHasOldId;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,11 +12,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 
 use Spatie\Permission\Traits\HasRoles;
+use TomLingham\Searchy\Facades\Searchy;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-
-    use  HasRoles, HasApiTokens, Notifiable, SoftDeletes;
+    use HasRoles, HasApiTokens, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -33,6 +35,13 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password', 'remember_token', 'register_token'
     ];
+
+    /**
+     * The attibutes to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['related_users'];
 
     /**
      * The attributes that should be cast to native types.
@@ -61,6 +70,28 @@ class User extends Authenticatable implements MustVerifyEmail
     public function skills()
     {
         return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id');
+    }
+
+    public function getRelatedUsersAttribute()
+    {
+        if (
+            $this->company
+            && $this->company->module
+            && $this->company->module->hasModuleDataTypeForSlug('users')
+            && !ModelHasOldId::where('model', User::class)->where('new_id', $this->id)->exists()
+        ) {
+            $relatedUsers = User::whereIn('id', ModelHasOldId::where('model', User::class)
+                ->pluck('new_id')
+                ->filter(function ($id) {
+                    return $id !== $this->id;
+                }))->get(['id', 'firstname', 'lastname', 'login']);
+            return $relatedUsers->filter(function ($user) {
+                similar_text($this->firstname, $user->firstname, $firstnamePercentage);
+                similar_text($this->lastname, $user->lastname, $lastnamePercentage);
+                return $firstnamePercentage + $lastnamePercentage >= 100;
+            });
+        }
+        return [];
     }
 
     /**

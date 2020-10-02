@@ -701,11 +701,12 @@ export default {
                                     "Vous devez tester la connexion avant de poursuivre"
                             });
                             reject("Error");
-                        }
-                        if (this.connection.has_changes) {
-                            this.updateModule().then(() => resolve(true));
                         } else {
-                            resolve(true);
+                            if (this.connection.has_changes) {
+                                this.updateModule().then(() => resolve(true));
+                            } else {
+                                resolve(true);
+                            }
                         }
                     } else {
                         reject("Error");

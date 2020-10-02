@@ -24,6 +24,13 @@ use Validator;
 
 use App\User;
 use App\Models\Company;
+use App\Models\DealingHours;
+use App\Models\ModelHasOldId;
+use App\Models\Project;
+use App\Models\Range;
+use App\Models\Task;
+use App\Models\TaskComment;
+use App\Models\Unavailability;
 use App\Models\WorkHours;
 use App\Models\UsersSkill;
 use Spatie\Permission\Models\Role;
@@ -419,6 +426,16 @@ class UserController extends Controller
             return response()->json(['error' => 'Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
         }
 
+        $relatedUserOldId = null;
+        if (in_array('related_user_id', array_keys($arrayRequest))) {
+            if ($arrayRequest['related_user_id']) {
+                $relatedUserOldId = ModelHasOldId::where('model', User::class)->where('new_id', $arrayRequest['related_user_id'])->first();
+
+                if (!$relatedUserOldId) {
+                    return response()->json(['error' => 'L\'utilisateur à relier n\'existe pas'], 409);
+                }
+            }
+        }
 
         if ($user != null) {
             if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null) {
@@ -441,6 +458,22 @@ class UserController extends Controller
                     UsersSkill::create(['user_id' => $user->id, 'skill_id' => $skill_id]);
                 }
             }
+
+            if ($relatedUserOldId) {
+                $relatedUserId = $relatedUserOldId->new_id;
+                Unavailability::where('user_id', $relatedUserId)->update(['user_id' => $user->id]);
+                Project::where('created_by', $relatedUserId)->update(['created_by' => $user->id]);
+                Task::where('created_by', $relatedUserId)->update(['created_by' => $user->id]);
+                Task::where('user_id', $relatedUserId)->update(['user_id' => $user->id]);
+                TaskComment::where('created_by', $relatedUserId)->update(['created_by' => $user->id]);
+                Range::where('created_by', $relatedUserId)->update(['created_by' => $user->id]);
+                WorkHours::where('user_id', $relatedUserId)->delete();
+                DealingHours::where('user_id', $relatedUserId)->update(['user_id' => $user->id]);
+
+                ModelHasOldId::where('model', User::class)->where('new_id', $relatedUserOldId->new_id)->update(['new_id' => $user->id]);
+                User::find($relatedUserId)->forceDelete();
+            }
+
 
             $user->save();
         }
