@@ -218,25 +218,28 @@ class ModuleController extends Controller
                 'database' => $arrayRequest['database'],
                 'username' => $arrayRequest['username'],
             ]);
-            if ($arrayRequest['driver'] !== 'sqlite') {
-                $port = $arrayRequest['port'];
-                if (!$port) {
-                    switch ($arrayRequest['driver']) {
-                        case 'pgsql':
-                            $port = '5432';
-                            break;
-                        case 'sqlsrv':
-                            $port = '1433';
-                            break;
-                        default: // MySQL
-                            $port = '3306';
-                            break;
-                    }
+
+            $port = $arrayRequest['port'];
+            if (!$port) {
+                switch ($arrayRequest['driver']) {
+                    case 'pgsql':
+                        $port = '5432';
+                        break;
+                    case 'sqlsrv':
+                        $port = '1433';
+                        break;
+                    case 'mysql':
+                        $port = '3306';
+                        break;
+                    default: // SQLite
+                        $port = null;
+                        break;
                 }
-                $modulable->update([
-                    'port' => $port
-                ]);
             }
+            $modulable->update([
+                'port' => $port
+            ]);
+
             if ($arrayRequest['password']) {
                 $modulable->update([
                     'password' => $arrayRequest['password']

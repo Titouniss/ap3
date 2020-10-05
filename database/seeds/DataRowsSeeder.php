@@ -70,6 +70,13 @@ class DataRowsSeeder extends Seeder
             ])
         ])->save();
 
+        $row = $this->dataRow($type, 'isTermsConditionAccepted');
+        $row->fill([
+            'type'         => 'boolean',
+            'display_name' => 'Conditions acceptées',
+            'required'     => 1,
+        ])->save();
+
         $row = $this->dataRow($type, 'updated_at');
         $row->fill([
             'type'         => 'datetime',

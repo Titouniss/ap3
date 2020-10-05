@@ -66,22 +66,22 @@ class SqlModule extends BaseModule
                 foreach (get_object_vars($result) as $key => $value) {
                     $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
                     $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
-
-                    $table = app($this->moduleDataType->dataType->model);
-                    $details = json_decode($this->details);
-                    $drDetails = json_decode($this->dataRow->details);
+                    $details = json_decode($mdr->details);
 
                     $newValue = $value ?? $mdr->default_value;
-                    if (
-                        $details
-                        && $details->only_if_null
-                        && $currentModel = $table->find(
-                            ModelHasOldId::where('model', $drDetails->model)->where('old_id', $result->id)->firstOr(function () {
-                                return new ModelHasOldId(); // Rendra new_id vide
-                            })->new_id
-                        )
-                    ) {
-                        $newValue = $currentModel->{$this->dataRow->field};
+                    if ($details && isset($details->only_if_null)) {
+                        if (
+                            $details->only_if_null
+                            && $currentModel = app($mdr->moduleDataType->dataType->model)->find(
+                                ModelHasOldId::where('company_id', $this->module->company_id)->where('model', $mdr->moduleDataType->dataType->model)->where('old_id', $result->id)->firstOr(function () {
+                                    return new ModelHasOldId(); // Rendra new_id vide
+                                })->new_id
+                            )
+                        ) {
+                            $newValue = $currentModel->{$mdr->dataRow->field};
+                        } else {
+                            $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
+                        }
                     } else {
                         $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
                     }
@@ -89,7 +89,7 @@ class SqlModule extends BaseModule
                 }
 
                 foreach ($onlyDefaultValueRows as $mdr) {
-                    $row->{$mdr->dataRow->field} = $mdr->default_value;
+                    $row->{$mdr->dataRow->field} = $mdr->applyDetailsToValue($mdr->default_value, $lowestUniqueId);
                 }
 
                 array_push($rows, $row);

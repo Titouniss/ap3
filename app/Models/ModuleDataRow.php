@@ -32,70 +32,81 @@ class ModuleDataRow extends Model
                     $newValue = intval($newValue);
                     break;
                 case 'datetime':
-                    if ($details && $details->format) {
+                    if ($details && isset($details->format)) {
                         $newValue = Carbon::createFromFormat($details->format, $newValue);
                     } else {
                         $newValue = new Carbon($newValue);
                     }
                     break;
                 case 'enum':
-                    if ($details && $details->options) {
+                    if ($details && isset($details->options)) {
                         $newValue = $details->options->{$newValue} ?? $this->default_value;
                     }
                     break;
                 case 'relationship':
-                    if ($value && $drDetails && $drDetails->model) {
-                        $newValue = ModelHasOldId::where('model', $drDetails->model)->where('old_id', $value)->firstOr(function () {
+                    if ($value && $drDetails && isset($drDetails->model)) {
+                        $newValue = ModelHasOldId::where('company_id', $this->module->company_id)->where('model', $drDetails->model)->where('old_id', $value)->firstOr(function () {
                             return new ModelHasOldId(); // Rendra new_id vide
                         })->new_id;
                     }
                     break;
                 case 'string':
                     if ($details) {
-                        if ($details->split) {
+                        if (isset($details->split)) {
                             $valueArray = explode($details->split->delimiter, $newValue);
                             if ($details->split->keep == 'start') {
-                                $newValue = implode($details->split->delimiter, array_splice($valueArray, ceil(count($valueArray) / 2)));
+                                $newValue = implode($details->split->delimiter, array_slice($valueArray, 0, ceil(count($valueArray) / 2)));
                             } else {
-                                $newValue = implode($details->split->delimiter, array_slice($valueArray, ceil(count($valueArray) / 2)));
+                                $newValue = implode($details->split->delimiter, array_slice($valueArray, floor(count($valueArray) / 2)));
                             }
                         }
 
-                        if ($details->format) {
+                        if (isset($details->format)) {
                             $formattedValue = "";
-                            switch ($details->format->prefix) {
-                                case 'company':
-                                    $formattedValue .= strtolower($this->module->company->name) . $details->format->glue;
-                                    break;
+                            if (isset($details->format->prefix)) {
+                                switch ($details->format->prefix) {
+                                    case 'company':
+                                        $formattedValue .= strtolower($this->moduleDataType->module->company->name) . $details->format->glue;
+                                        break;
 
-                                default:
-                                    break;
+                                    default:
+                                        break;
+                                }
                             }
 
                             $valueArray = explode($details->format->delimiter, $newValue);
-                            switch ($details->format->case) {
-                                case 'lowerCamelCase':
-                                    $formattedValue .= implode("", array_map(function ($v, $k) {
-                                        return $k ? ucfirst($v) : $v;
-                                    }, $valueArray, array_keys($valueArray)));
-                                    break;
-                                case 'upperCamelCase':
-                                    $formattedValue .= implode("", array_map(function ($v) {
-                                        return ucfirst($v);
-                                    }, $valueArray));
-                                    break;
+                            if (isset($details->format->reverse)) {
+                                if ($details->format->reverse) {
+                                    $valueArray = array_reverse($valueArray);
+                                }
+                            }
+                            if (isset($details->format->case)) {
+                                switch ($details->format->case) {
+                                    case 'lowerCamelCase':
+                                        $formattedValue .= implode("", array_map(function ($v, $k) {
+                                            return $k ? ucfirst(strtolower($v)) : strtolower($v);
+                                        }, $valueArray, array_keys($valueArray)));
+                                        break;
+                                    case 'upperCamelCase':
+                                        $formattedValue .= implode("", array_map(function ($v) {
+                                            return ucfirst(strtolower($v));
+                                        }, $valueArray));
+                                        break;
 
-                                default:
-                                    break;
+                                    default:
+                                        break;
+                                }
                             }
 
-                            switch ($details->format->suffix) {
-                                case 'company':
-                                    $formattedValue .= $details->format->glue . strtolower($this->module->company->name);
-                                    break;
+                            if (isset($details->format->suffix)) {
+                                switch ($details->format->suffix) {
+                                    case 'company':
+                                        $formattedValue .= $details->format->glue . strtolower($this->moduleDataType->module->company->name);
+                                        break;
 
-                                default:
-                                    break;
+                                    default:
+                                        break;
+                                }
                             }
 
                             $newValue = $formattedValue;
@@ -103,21 +114,29 @@ class ModuleDataRow extends Model
                     }
 
                     if ($drDetails) {
-                        if ($drDetails->max_length) {
-                            $newValue = substr($newValue, 0, intval($details->max_length));
-                        }
-                        if ($drDetails->is_password) {
-                            $newValue = bcrypt($newValue);
-                        }
-                        if ($drDetails->remove_special_chars) {
-                            $newValue = $this->str_to_noaccent($newValue);
-                        }
-                        if ($drDetails->is_unique) {
-                            $uniqueValue = $newValue;
-                            while ($table->where($this->dataRow->field, $uniqueValue)->exists()) {
-                                $uniqueValue = $newValue . ++$lowestUniqueId;
+                        if (isset($drDetails->max_length)) {
+                            if ($drDetails->max_length) {
+                                $newValue = substr($newValue, 0, intval($details->max_length));
                             }
-                            $newValue = $uniqueValue;
+                        }
+                        if (isset($drDetails->is_password)) {
+                            if ($drDetails->is_password) {
+                                $newValue = bcrypt($newValue);
+                            }
+                        }
+                        if (isset($drDetails->remove_special_chars)) {
+                            if ($drDetails->remove_special_chars) {
+                                $newValue = $this->str_to_noaccent($newValue);
+                            }
+                        }
+                        if (isset($drDetails->is_unique)) {
+                            if ($drDetails->is_unique) {
+                                $uniqueValue = $newValue;
+                                while ($table->where($this->dataRow->field, $uniqueValue)->exists()) {
+                                    $uniqueValue = $newValue . ++$lowestUniqueId;
+                                }
+                                $newValue = $uniqueValue;
+                            }
                         }
                     }
                     break;
