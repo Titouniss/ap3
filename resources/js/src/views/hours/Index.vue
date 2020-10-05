@@ -186,7 +186,8 @@
                             icon="DownloadIcon"
                             svgClasses="h-5 w-5"
                             class="mr-2"
-                        />Exporter
+                        />
+                        Exporter
                     </div>
                 </vs-button>
             </div>
@@ -605,7 +606,7 @@ export default {
             if (this.filters.project) {
                 filter.project_id = this.filters.project.id;
             }
-            if (this.isAdmin() && this.filters.user) {
+            if (this.filters.user) {
                 filter.user_id = this.filters.user.id;
             }
             if (targetDate) {
@@ -614,6 +615,7 @@ export default {
                     filter.period_type = this.filters.period_type;
                 }
             }
+            console.log(filter);
             this.clearRefreshDataTimeout();
             this.refreshDataTimeout = setTimeout(() => {
                 this.$vs.loading();
