@@ -194,7 +194,7 @@ import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkil
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 
 var modelTitle = "Ilot";
 
@@ -272,7 +272,7 @@ export default {
                         withPrompt: true,
                         name: data => `l'îlot ${data.name}`
                     },
-                    width: 60,
+                    width: 60
                 }
             ],
 
@@ -389,7 +389,6 @@ export default {
             }
         },
         showDeleteSuccess(type, selectedRowLength) {
-
             this.$vs.notify({
                 color: "success",
                 title: modelTitle,

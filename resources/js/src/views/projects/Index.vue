@@ -190,7 +190,7 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 
 var modelTitle = "Projet";
 
@@ -418,29 +418,29 @@ export default {
             response = response.concat(doingProjects);
             response = response.concat(doneProjects);
 
-      return response;
+            return response;
+        },
+        activeUserRole() {
+            const user = this.$store.state.AppActiveUser;
+            if (user.roles && user.roles.length > 0) {
+                return user.roles[0].name;
+            }
+            return false;
+        }
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-          return user.roles[0].name;
-      }
-      return false;
-    }
-  },
-  mounted() {
-    this.gridApi = this.gridOptions.api;
+    mounted() {
+        this.gridApi = this.gridOptions.api;
 
-    // Hide company column ?
-    this.gridOptions.columnApi.setColumnVisible(
-        "company",
-        this.activeUserRole() == "superAdmin" ? true : false
-    );
+        // Hide company column ?
+        this.gridOptions.columnApi.setColumnVisible(
+            "company",
+            this.activeUserRole() == "superAdmin" ? true : false
+        );
 
-    window.addEventListener("resize", this.onResize);
-    if (this.gridApi) {
-      // refresh the grid
-      this.gridApi.refreshView();
+        window.addEventListener("resize", this.onResize);
+        if (this.gridApi) {
+            // refresh the grid
+            this.gridApi.refreshView();
 
             // resize columns in the grid to fit the available space
             this.gridApi.sizeColumnsToFit();

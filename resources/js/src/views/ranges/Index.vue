@@ -174,7 +174,7 @@ import moduleRangeManagement from "@/store/range-management/moduleRangeManagemen
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 
 var model = "range";
 var modelPlurial = "ranges";

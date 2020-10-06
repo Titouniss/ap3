@@ -193,7 +193,7 @@ import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 
 var model = "customer";
 var modelPlurial = "customers";

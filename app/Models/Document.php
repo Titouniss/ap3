@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
-    protected $fillable = ['name', 'path', 'task_id', 'token'];
+    protected $fillable = ['id', 'name', 'path', 'task_id', 'token'];
 }

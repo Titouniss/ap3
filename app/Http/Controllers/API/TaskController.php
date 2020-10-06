@@ -33,7 +33,7 @@ class TaskController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $items = Task::all()->load('project', 'comments', 'skills');
+        $items = Task::all()->load('project', 'comments', 'skills', 'documents');
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -44,7 +44,7 @@ class TaskController extends Controller
      */
     public function getByBundle(int $bundle_id)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project')->get();
+        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -138,7 +138,7 @@ class TaskController extends Controller
 
         $project = Project::find($arrayRequest['project_id']);
 
-        if($project->status == 'doing'){
+        if ($project->status == 'doing') {
 
             $date = Carbon::parse($arrayRequest['date']);
             $start_at = $date->format('Y-m-d H:i:s');
@@ -147,27 +147,26 @@ class TaskController extends Controller
             $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at);
             $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at);
 
-            if(!$userAvailable && !$workareaAvailable){
+            if (!$userAvailable && !$workareaAvailable) {
                 return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);
-            }
-            elseif(!$userAvailable){
+            } elseif (!$userAvailable) {
                 return response()->json(['error' => 'L\'utilisateur n\'est pas disponible durant cette période.'], $this->successStatus);
-            }
-            elseif(!$workareaAvailable){
+            } elseif (!$workareaAvailable) {
                 return response()->json(['error' => 'L\'ilôt n\'est pas disponible durant cette période.'], $this->successStatus);
             }
-        }
-        else if($project->status == 'done'){
+        } else if ($project->status == 'done') {
             return response()->json(['error' => 'Vous ne pouvez ajouter une tâche à un projet terminé.'], $this->successStatus);
         }
 
         $item = Task::create($arrayRequest);
-        $arrayRequest['token'] ? $this->storeDocuments($item->id, $arrayRequest['token']) : null;
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocuments($item->id, $arrayRequest['token']);
+        }
         $this->storeComment($item->id, $arrayRequest['comment']);
         $this->storeSkills($item->id, $arrayRequest['skills']);
         $this->storePreviousTask($item->id, $arrayRequest['previousTasksIds']);
 
-        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
+        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents');
 
         return response()->json(['success' => $item], $this->successStatus);
     }
@@ -188,54 +187,60 @@ class TaskController extends Controller
         return response()->json(['success' => $item], $this->successStatus);
     }
 
-    private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null){
+    private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null)
+    {
 
         $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
 
-        $userTasks = $task_id ? Task::where('user_id', $user_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get() 
-                                : Task::where('user_id', $user_id)->where('status', '!=', 'done')->get() ;
+        $userTasks = $task_id ? Task::where('user_id', $user_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
+            : Task::where('user_id', $user_id)->where('status', '!=', 'done')->get();
 
-        if(count($userTasks) > 0){
+        if (count($userTasks) > 0) {
 
-            foreach($userTasks as $task){
+            foreach ($userTasks as $task) {
                 $date = Carbon::parse($task->date);
                 $task->start_at = $date->format('Y-m-d H:i:s');
                 $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
 
                 $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
 
-                if($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)){
+                if ($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)) {
                     return false;
+                } else {
+                    return true;
                 }
-                else {return true;}
             }
+        } else {
+            return true;
         }
-        else{return true;}
     }
 
-    private function checkIfWorkareaAvailable($workarea_id, $start_at, $end_at, $task_id = null){
+    private function checkIfWorkareaAvailable($workarea_id, $start_at, $end_at, $task_id = null)
+    {
 
         $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
 
-        $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=',$task_id)->get() 
-                                  : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
+        $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
+            : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
 
-        if(count($workareaTasks) > 0){
+        if (count($workareaTasks) > 0) {
 
-            foreach($workareaTasks as $task){
+            foreach ($workareaTasks as $task) {
                 $date = Carbon::parse($task->date);
                 $task->start_at = $date->format('Y-m-d H:i:s');
                 $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
-                
+
                 $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
 
-                if($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)){
+                if ($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)) {
                     return false;
+                } else {
+                    return true;
                 }
-                else {return true;}
             }
+        } else {
+            return true;
         }
-        else{return true;}
     }
 
     /**
@@ -301,7 +306,7 @@ class TaskController extends Controller
         // Pour un projet en cours, on regarde si la date et l'ilot sont dispo 
         $project = Project::find($arrayRequest['project_id']);
 
-        if($project->status == 'doing'){
+        if ($project->status == 'doing') {
 
             $date = Carbon::parse($arrayRequest['date']);
             $start_at = $date->format('Y-m-d H:i:s');
@@ -310,17 +315,14 @@ class TaskController extends Controller
             $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $id);
             $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $id);
 
-            if(!$userAvailable && !$workareaAvailable){
+            if (!$userAvailable && !$workareaAvailable) {
                 return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);
-            }
-            elseif(!$userAvailable){
+            } elseif (!$userAvailable) {
                 return response()->json(['error' => 'L\'utilisateur n\'est pas disponible durant cette période.'], $this->successStatus);
-            }
-            elseif(!$workareaAvailable){
+            } elseif (!$workareaAvailable) {
                 return response()->json(['error' => 'L\'ilôt n\'est pas disponible durant cette période.'], $this->successStatus);
             }
-        }
-        else if($project->status == 'done'){
+        } else if ($project->status == 'done') {
             return response()->json(['error' => 'Vous ne pouvez ajouter une tâche à un projet terminé.'], $this->successStatus);
         }
 
@@ -343,9 +345,22 @@ class TaskController extends Controller
             $this->updatePreviousTasks($id, $arrayRequest['previousTasksIds']);
         }
 
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocuments($id, $arrayRequest['token']);
+        }
+
+        if (isset($arrayRequest['documents'])) {
+            $idsToDelete = Document::where('task_id', $id)->whereNotIn('id', array_map(function ($doc) {
+                return $doc['id'];
+            }, $arrayRequest['documents']))->pluck('id');
+
+            foreach ($idsToDelete as $idToDelete) {
+                $this->deleteFile($idToDelete);
+            }
+        }
 
         if ($update) {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
+            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents');
             return response()->json(['success' => $item], $this->successStatus);
         } else {
             $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
@@ -353,18 +368,15 @@ class TaskController extends Controller
         }
     }
 
-    public function uploadFile(Request $request, $idOrToken){
-
+    public function uploadFile(Request $request, $token)
+    {
         $arrayRequest = $request->all();
 
-        if($arrayRequest['files']){
-
-            $addForm = strpos($idOrToken, 'token') === false ? false : true;
-
+        if ($arrayRequest['files']) {
             $originalName = $arrayRequest['files']->getClientOriginalName();
             $path = $arrayRequest['files']->store('tasks_documents');
-            $response = Document::create(['name' => $originalName, 'path' => $path, 'task_id' => $addForm ? null : $idOrToken, 'token' => $addForm ? $idOrToken : null]);
-            
+            $response = Document::create(['name' => $originalName, 'path' => $path, 'token' => $token]);
+
             return response()->json(['success' => $response], $this->successStatus);
         }
     }
@@ -380,20 +392,20 @@ class TaskController extends Controller
     public function deleteFiles(Request $request)
     {
         $arrayRequest = $request->all();
-        if($arrayRequest){
+        if ($arrayRequest) {
             $items = Document::whereIn('id', $arrayRequest)->get();
 
             $items_path = [];
-            foreach($items as $item){ 
-                $items_path[] = $item->path; 
+            foreach ($items as $item) {
+                $items_path[] = $item->path;
                 $item->delete();
             };
             Storage::delete($items_path);
-            
+
             return response()->json(['success' => true], $this->successStatus);
         }
     }
-        
+
 
     /**
      * Remove the specified resource from storage.
@@ -422,11 +434,12 @@ class TaskController extends Controller
         return $exist;
     }
 
-    private function storeDocuments(int $task_id, $token){
-
-        if($token && $task_id){
+    private function storeDocuments(int $task_id, $token)
+    {
+        if ($token && $task_id) {
             Document::where('token', $token)->update([
                 'task_id' => $task_id,
+                'token' => null
             ]);
         }
     }

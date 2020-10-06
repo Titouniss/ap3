@@ -54,6 +54,6 @@ class Task extends Model
 
     public function documents()
     {
-        return $this->hasMany('App\Models\Document', 'id', 'task_id');
+        return $this->hasMany('App\Models\Document', 'task_id');
     }
 }
