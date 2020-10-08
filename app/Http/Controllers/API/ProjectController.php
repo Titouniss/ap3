@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Document;
+use App\Models\ModelHasDocuments;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\User;
@@ -106,9 +108,10 @@ class ProjectController extends Controller
             $key > 0 ? $this->attributePreviousTask($tasksArrayByOrder, $key, $task->id) : '';
 
             $this->storeSkills($task->id, $repetitive_task->skills);
+            $this->storeDocuments($task->id, $repetitive_task->documents);
         }
 
-        $items = Task::where('tasks_bundle_id', $taskBundle->id)->with('workarea', 'skills', 'comments', 'previousTasks')->get();
+        $items = Task::where('tasks_bundle_id', $taskBundle->id)->with('workarea', 'skills', 'comments', 'previousTasks', 'documents')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -117,6 +120,15 @@ class ProjectController extends Controller
         if (count($skills) > 0 && $task_id) {
             foreach ($skills as $skill) {
                 TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill->id]);
+            }
+        }
+    }
+
+    private function storeDocuments(int $task_id, $documents)
+    {
+        if ($documents && $task_id) {
+            foreach ($documents as $doc) {
+                ModelHasDocuments::firstOrCreate(['model' => Task::class, 'model_id' => $task_id, 'document_id' => $doc->id]);
             }
         }
     }
@@ -268,8 +280,8 @@ class ProjectController extends Controller
         // Alertes pour l'utilisateur
         $alerts = $this->checkIfStartIsPossible($project, $users, $workareas);
 
-        if(!$alerts){
-           
+        if (!$alerts) {
+
             $nbHoursRequired = 0;
             $nbHoursAvailable = 0;
             $nbHoursUnvailable = 0;
@@ -286,28 +298,29 @@ class ProjectController extends Controller
 
                 $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
                 return response()->json(['success' => $response], $this->successStatus);
-
             } else {
 
                 return $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error_time' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
             }
-        }        
-        else{
+        } else {
             return response()->json(['error_alerts' => $alerts], $this->successStatus);
         }
     }
 
-    private function checkIfStartIsPossible($project, $users, $workareas){
+    private function checkIfStartIsPossible($project, $users, $workareas)
+    {
 
         //check if workers have hours
         $haveHours = false;
-        foreach($users as $user){
-            foreach($user->workHours as $workHour) { 
-                if($workHour->is_active == 1){
+        foreach ($users as $user) {
+            foreach ($user->workHours as $workHour) {
+                if ($workHour->is_active == 1) {
                     $haveHours = true;
-                } 
+                }
             }
-            if($haveHours){ break;}
+            if ($haveHours) {
+                break;
+            }
         }
 
         //check if workers/workareas have tasks skills
@@ -315,18 +328,22 @@ class ProjectController extends Controller
         $nb_tasks_skills_worker = 0;
         $nb_tasks_skills_workarea = 0;
 
-        foreach($project->tasks as $task){
+        foreach ($project->tasks as $task) {
 
             $project_skills_ids = [];
-            foreach($task->skills as $skill){ $project_skills_ids[] = $skill->id; }
+            foreach ($task->skills as $skill) {
+                $project_skills_ids[] = $skill->id;
+            }
 
             //workers
-            foreach($users as $user){
+            foreach ($users as $user) {
 
                 $user_skills_ids = [];
-                foreach($user->skills as $skill){ $user_skills_ids[] = $skill->id; }
+                foreach ($user->skills as $skill) {
+                    $user_skills_ids[] = $skill->id;
+                }
 
-                if(count(array_intersect($project_skills_ids, $user_skills_ids)) == count($project_skills_ids)){
+                if (count(array_intersect($project_skills_ids, $user_skills_ids)) == count($project_skills_ids)) {
 
                     $nb_tasks_skills_worker += 1;
                     break;
@@ -334,12 +351,14 @@ class ProjectController extends Controller
             }
 
             //workareas
-            foreach($workareas as $workarea){
+            foreach ($workareas as $workarea) {
 
                 $workarea_skills_ids = [];
-                foreach($workarea->skills as $skill){ $workarea_skills_ids[] = $skill->id; }
+                foreach ($workarea->skills as $skill) {
+                    $workarea_skills_ids[] = $skill->id;
+                }
 
-                if(count(array_intersect($project_skills_ids, $workarea_skills_ids)) == count($project_skills_ids)){
+                if (count(array_intersect($project_skills_ids, $workarea_skills_ids)) == count($project_skills_ids)) {
 
                     $nb_tasks_skills_workarea += 1;
                     break;

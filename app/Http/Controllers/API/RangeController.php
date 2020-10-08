@@ -198,7 +198,7 @@ class RangeController extends Controller
 
             foreach ($documents as $doc) {
                 ModelHasDocuments::firstOrCreate(['model' => RepetitiveTask::class, 'model_id' => $task_id, 'document_id' => $doc->id]);
-                $doc->moveFile($company->name);
+                $doc->moveFile($company->name . '/ranges');
                 $doc->token = null;
                 $doc->save();
             }
