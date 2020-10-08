@@ -54,6 +54,6 @@ class Task extends Model
 
     public function documents()
     {
-        return $this->hasMany('App\Models\Document', 'task_id');
+        return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', Task::class);
     }
 }

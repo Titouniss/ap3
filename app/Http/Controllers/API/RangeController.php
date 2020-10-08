@@ -4,7 +4,8 @@ namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
+use App\Models\Document;
+use App\Models\ModelHasDocuments;
 use App\Models\Range;
 use App\Models\RepetitiveTask;
 use App\Models\RepetitiveTasksSkill;
@@ -14,6 +15,8 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class RangeController extends Controller
 {
@@ -71,7 +74,7 @@ class RangeController extends Controller
             if ($item != null) {
                 if (isset($repetitive_tasks)) {
                     foreach ($repetitive_tasks as $repetitive_task) {
-                        $this->storeRepetitiveTask($item->id, $repetitive_task);
+                        $this->storeRepetitiveTask($item, $repetitive_task);
                     }
                 }
             }
@@ -99,9 +102,13 @@ class RangeController extends Controller
             $item->description = $arrayRequest['description'];
             $item->save();
 
-            $repetitive_tasks = $arrayRequest['repetitive_tasks'];
-            if (isset($repetitive_tasks)) {
-                $this->updateRepetitiveTask($item->id, $repetitive_tasks);
+            if (isset($arrayRequest['repetitive_tasks'])) {
+                $ids = [];
+                foreach ($arrayRequest['repetitive_tasks'] as $repetitive_task) {
+                    $task = $this->updateRepetitiveTask($item, $repetitive_task);
+                    array_push($ids, $task->id);
+                }
+                RepetitiveTask::whereNotIn('id', $ids)->where('range_id', $id)->delete();
             } else {
                 RepetitiveTask::where('range_id', $item->id)->delete();
             }
@@ -178,19 +185,38 @@ class RangeController extends Controller
     public function getRepetitiveTasks($range_id)
     {
         if ($range_id) {
-            $items = RepetitiveTask::where('range_id', $range_id)->with('skills', 'workarea')->get();
+            $items = RepetitiveTask::where('range_id', $range_id)->with('skills', 'workarea', 'documents')->get();
             return response()->json(['success' => $items], $this->successStatus);
         }
         return response()->json(['error' => 'error'], 401);
     }
 
-    private function storeRepetitiveTask($range_id, $repetitive_task)
+    private function storeDocuments(int $task_id, $token, $company)
     {
-        $repetitive_task['range_id'] = $range_id;
+        if ($token && $task_id) {
+            $documents = Document::where('token', $token)->get();
+
+            foreach ($documents as $doc) {
+                ModelHasDocuments::firstOrCreate(['model' => RepetitiveTask::class, 'model_id' => $task_id, 'document_id' => $doc->id]);
+                $doc->moveFile($company->name);
+                $doc->token = null;
+                $doc->save();
+            }
+        }
+    }
+
+    private function storeRepetitiveTask($range, $repetitive_task)
+    {
+        $repetitive_task['range_id'] = $range->id;
         $item = RepetitiveTask::create($repetitive_task);
         foreach ($repetitive_task['skills'] as $skill_id) {
             $this->storeRepetitiveTasksSkill($item->id, $skill_id);
         }
+
+        if (isset($repetitive_task['token'])) {
+            $this->storeDocuments($item->id, $repetitive_task['token'], $range->company);
+        }
+
         return $item;
     }
 
@@ -199,28 +225,40 @@ class RangeController extends Controller
         RepetitiveTasksSkill::create(['repetitive_task_id' => $repetitive_task_id, 'skill_id' => $skill_id]);
     }
 
-    private function updateRepetitiveTask($range_id, $repetitive_tasks)
+    private function updateRepetitiveTask($range, $repetitive_task)
     {
-        $ids = [];
-        foreach ($repetitive_tasks as $repetitive_task) {
-            $item = RepetitiveTask::where('id', $repetitive_task['id'])->where('range_id', $range_id)->first();
-            if ($item) {
-                $item->name = $repetitive_task['name'];
-                $item->order = $repetitive_task['order'];
-                $item->description = $repetitive_task['description'];
-                $item->estimated_time = $repetitive_task['estimated_time'];
-                $item->workarea_id = $repetitive_task['workarea_id'];
-                $item->save();
+        $item = null;
+        if (isset($repetitive_task['id'])) {
+            $item = RepetitiveTask::findOrFail($repetitive_task['id']);
+            $item->name = $repetitive_task['name'];
+            $item->order = $repetitive_task['order'];
+            $item->description = $repetitive_task['description'];
+            $item->estimated_time = $repetitive_task['estimated_time'];
+            $item->workarea_id = $repetitive_task['workarea_id'];
+            $item->save();
 
-                RepetitiveTasksSkill::where('repetitive_task_id', $item->id)->delete();
-                foreach ($repetitive_task['skills'] as $skill_id) {
-                    $this->storeRepetitiveTasksSkill($item->id, $skill_id);
-                }
-            } else {
-                $item = $this->storeRepetitiveTask($range_id, $repetitive_task);
+            RepetitiveTasksSkill::where('repetitive_task_id', $item->id)->delete();
+            foreach ($repetitive_task['skills'] as $skill_id) {
+                $this->storeRepetitiveTasksSkill($item->id, $skill_id);
             }
-            array_push($ids, $item->id);
+
+            if (isset($repetitive_task['documents'])) {
+                $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
+                    return $doc['id'];
+                }, $repetitive_task['documents']))->get();
+
+                foreach ($documents as $doc) {
+                    $doc->deleteFile();
+                }
+            }
+
+            if (isset($repetitive_task['token'])) {
+                $this->storeDocuments($item->id, $repetitive_task['token'], $range->company);
+            }
+        } else {
+            $item = $this->storeRepetitiveTask($range, $repetitive_task);
         }
-        $itemtest = RepetitiveTask::whereNotIn('id', $ids)->where('range_id', $range_id)->delete();
+
+        return $item;
     }
 }

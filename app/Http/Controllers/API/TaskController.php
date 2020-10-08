@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\TaskComment;
 use App\Models\PreviousTask;
 use App\Models\Document;
+use App\Models\ModelHasDocuments;
 use App\Models\TasksSkill;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -160,7 +161,7 @@ class TaskController extends Controller
 
         $item = Task::create($arrayRequest);
         if (isset($arrayRequest['token'])) {
-            $this->storeDocuments($item->id, $arrayRequest['token']);
+            $this->storeDocuments($item->id, $arrayRequest['token'], $project->company);
         }
         $this->storeComment($item->id, $arrayRequest['comment']);
         $this->storeSkills($item->id, $arrayRequest['skills']);
@@ -346,66 +347,27 @@ class TaskController extends Controller
         }
 
         if (isset($arrayRequest['token'])) {
-            $this->storeDocuments($id, $arrayRequest['token']);
+            $this->storeDocuments($id, $arrayRequest['token'], $project->company);
         }
 
-        if (isset($arrayRequest['documents'])) {
-            $idsToDelete = Document::where('task_id', $id)->whereNotIn('id', array_map(function ($doc) {
-                return $doc['id'];
-            }, $arrayRequest['documents']))->pluck('id');
+        $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents');
 
-            foreach ($idsToDelete as $idToDelete) {
-                $this->deleteFile($idToDelete);
+        if (isset($arrayRequest['documents'])) {
+            $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
+                return $doc['id'];
+            }, $arrayRequest['documents']))->get();
+
+            foreach ($documents as $doc) {
+                $doc->deleteFile();
             }
         }
 
         if ($update) {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents');
             return response()->json(['success' => $item], $this->successStatus);
         } else {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
     }
-
-    public function uploadFile(Request $request, $token)
-    {
-        $arrayRequest = $request->all();
-
-        if ($arrayRequest['files']) {
-            $originalName = $arrayRequest['files']->getClientOriginalName();
-            $path = $arrayRequest['files']->store('tasks_documents');
-            $response = Document::create(['name' => $originalName, 'path' => $path, 'token' => $token]);
-
-            return response()->json(['success' => $response], $this->successStatus);
-        }
-    }
-
-    public function deleteFile($id)
-    {
-        $item = Document::findOrFail($id);
-        Storage::delete($item->path);
-        $item->delete();
-        return response()->json(['success' => true], $this->successStatus);
-    }
-
-    public function deleteFiles(Request $request)
-    {
-        $arrayRequest = $request->all();
-        if ($arrayRequest) {
-            $items = Document::whereIn('id', $arrayRequest)->get();
-
-            $items_path = [];
-            foreach ($items as $item) {
-                $items_path[] = $item->path;
-                $item->delete();
-            };
-            Storage::delete($items_path);
-
-            return response()->json(['success' => true], $this->successStatus);
-        }
-    }
-
 
     /**
      * Remove the specified resource from storage.
@@ -434,13 +396,17 @@ class TaskController extends Controller
         return $exist;
     }
 
-    private function storeDocuments(int $task_id, $token)
+    private function storeDocuments(int $task_id, $token, $company)
     {
         if ($token && $task_id) {
-            Document::where('token', $token)->update([
-                'task_id' => $task_id,
-                'token' => null
-            ]);
+            $documents = Document::where('token', $token)->get();
+
+            foreach ($documents as $doc) {
+                ModelHasDocuments::firstOrCreate(['model' => Task::class, 'model_id' => $task_id, 'document_id' => $doc->id]);
+                $doc->moveFile($company->name);
+                $doc->token = null;
+                $doc->save();
+            }
         }
     }
 

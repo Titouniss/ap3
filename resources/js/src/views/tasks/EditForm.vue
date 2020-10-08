@@ -625,7 +625,7 @@ export default {
                 item.files = data;
 
                 this.$store
-                    .dispatch("taskManagement/uploadFile", item)
+                    .dispatch("documentManagement/uploadFile", item)
                     .then(response => {
                         this.itemLocal.documents.push(response.data.success);
                     })
@@ -633,14 +633,9 @@ export default {
             }
         },
         deleteFile(file) {
-            if (file.task_id) {
-                const index = this.itemLocal.documents.indexOf(file);
-                if (index > -1) {
-                    this.itemLocal.documents.splice(index, 1);
-                }
-            } else {
+            if (file.token) {
                 this.$store
-                    .dispatch("taskManagement/deleteFile", file.id)
+                    .dispatch("documentManagement/deleteFile", file.id)
                     .then(response => {
                         const index = this.itemLocal.documents.indexOf(file);
                         if (index > -1) {
@@ -648,15 +643,20 @@ export default {
                         }
                     })
                     .catch(error => {});
+            } else {
+                const index = this.itemLocal.documents.indexOf(file);
+                if (index > -1) {
+                    this.itemLocal.documents.splice(index, 1);
+                }
             }
         },
         deleteFiles() {
             const ids = this.itemLocal.documents
-                .filter(item => !item.task_id)
+                .filter(item => item.token)
                 .map(item => item.id);
             if (ids.length > 0) {
                 this.$store
-                    .dispatch("taskManagement/deleteFiles", ids)
+                    .dispatch("documentManagement/deleteFiles", ids)
                     .then(response => {
                         this.uploadedFiles = [];
                     })

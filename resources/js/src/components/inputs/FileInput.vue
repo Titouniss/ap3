@@ -1,6 +1,7 @@
 <template>
     <div class="filesContainer">
         <label for="files" class="fileContainer my-2 py-2 px-3">
+            <feather-icon icon="UploadIcon" svgClasses="h-4 w-4 mr-2" />
             Importer un fichier
         </label>
         <input
@@ -11,7 +12,7 @@
             @click="reset"
             @change="onUpload"
             class="inputfile"
-            accept="pdf|html|images/*"
+            accept="application/pdf|text/html|images/*"
         />
 
         <div v-for="item in items" v-bind:key="item.id">

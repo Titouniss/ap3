@@ -109,6 +109,13 @@
                                     v-model="itemLocal.estimated_time"
                                 />
                             </div>
+                            <div class="my-4">
+                                <file-input
+                                    :items="itemLocal.documents"
+                                    :onUpload="uploadFile"
+                                    :onDelete="file => deleteFile(file)"
+                                />
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -121,13 +128,18 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import FileInput from "@/components/inputs/FileInput.vue";
+
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
+    components: {
+        FileInput
+    },
     props: {
         itemId: {
-            type: Number,
+            type: [Number, String],
             required: true
         },
         companyId: {
@@ -136,13 +148,21 @@ export default {
         }
     },
     data() {
-        return {
-            itemLocal: Object.assign(
-                {},
+        const item = JSON.parse(
+            JSON.stringify(
                 this.$store.getters["repetitiveTaskManagement/getItem"](
                     this.itemId
                 )
-            ),
+            )
+        );
+        return {
+            itemLocal: item,
+            token:
+                item.token ||
+                "token_" +
+                    Math.random()
+                        .toString(36)
+                        .substring(2, 15),
             workareasDataFiltered: []
         };
     },
@@ -158,7 +178,7 @@ export default {
         },
         activePrompt: {
             get() {
-                return this.itemId && this.itemId > 0 ? true : false;
+                return this.itemId ? true : false;
             },
             set(value) {
                 this.$store
@@ -182,19 +202,20 @@ export default {
     },
     methods: {
         clear() {
+            this.deleteFiles();
             this.itemLocal = {};
             this.workareasDataFiltered = [];
+            this.uploadedFiles = [];
         },
         submitItem() {
             this.$validator.validateAll().then(result => {
                 //this.itemLocal.workarea = this.workareasDataFiltered.find((workarea) => workarea.id === this.itemLocal.workarea_id)
 
                 if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    item.token = this.token;
                     this.$store
-                        .dispatch(
-                            "repetitiveTaskManagement/updateItem",
-                            Object.assign({}, this.itemLocal)
-                        )
+                        .dispatch("repetitiveTaskManagement/updateItem", item)
                         .then(() => {
                             this.$vs.loading.close();
                             this.$vs.notify({
@@ -217,6 +238,58 @@ export default {
                         });
                 }
             });
+        },
+        uploadFile(e) {
+            e.preventDefault();
+            var files = e.target.files;
+            var data = new FormData();
+
+            if (files.length > 0) {
+                // for single file
+                data.append("files", files[0]);
+
+                var item = {};
+                item.token = this.token;
+                item.files = data;
+
+                this.$store
+                    .dispatch("documentManagement/uploadFile", item)
+                    .then(response => {
+                        this.itemLocal.documents.push(response.data.success);
+                    })
+                    .catch(error => {});
+            }
+        },
+        deleteFile(file) {
+            if (file.token) {
+                this.$store
+                    .dispatch("documentManagement/deleteFile", file.id)
+                    .then(response => {
+                        const index = this.itemLocal.documents.indexOf(file);
+                        if (index > -1) {
+                            this.itemLocal.documents.splice(index, 1);
+                        }
+                    })
+                    .catch(error => {});
+            } else {
+                const index = this.itemLocal.documents.indexOf(file);
+                if (index > -1) {
+                    this.itemLocal.documents.splice(index, 1);
+                }
+            }
+        },
+        deleteFiles() {
+            const ids = this.itemLocal.documents
+                .filter(item => item.token)
+                .map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/deleteFiles", ids)
+                    .then(response => {
+                        this.uploadedFiles = [];
+                    })
+                    .catch(error => {});
+            }
         },
         updateWorkareasList(ids) {
             this.workareasDataFiltered = this.workareasData.filter(function(

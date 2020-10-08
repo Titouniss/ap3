@@ -19,4 +19,9 @@ class RepetitiveTask extends Model
     {
         return $this->belongsToMany('App\Models\Skill', 'repetitive_tasks_skills', 'repetitive_task_id');
     }
+
+    public function documents()
+    {
+        return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', RepetitiveTask::class);
+    }
 }

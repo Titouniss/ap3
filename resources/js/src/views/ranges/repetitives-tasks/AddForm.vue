@@ -89,8 +89,9 @@
                             <span
                                 class="text-danger text-sm"
                                 v-show="errors.has('skills')"
-                                >{{ errors.first("skills") }}</span
                             >
+                                {{ errors.first("skills") }}
+                            </span>
 
                             <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"> -->
                             <span
@@ -99,9 +100,10 @@
                                         workareasDataFiltered.length == 0
                                 "
                                 class="text-danger text-sm"
-                                >Attention, aucun îlot ne possède cette
-                                combinaison de compétences</span
                             >
+                                Attention, aucun îlot ne possède cette
+                                combinaison de compétences
+                            </span>
                             <!--
                 <vs-select
                   name="workarea"
@@ -118,15 +120,22 @@
                 </vs-select>
               </div> -->
                             <div class="my-4">
-                                <small class="date-label"
-                                    >Temps estimé (en h)</small
-                                >
+                                <small class="date-label">
+                                    Temps estimé (en h)
+                                </small>
                                 <vs-input-number
                                     min="1"
                                     max="200"
                                     name="estimatedTime"
                                     class="inputNumber"
                                     v-model="itemLocal.estimated_time"
+                                />
+                            </div>
+                            <div class="my-4">
+                                <file-input
+                                    :items="itemLocal.documents"
+                                    :onUpload="uploadFile"
+                                    :onDelete="file => deleteFile(file)"
                                 />
                             </div>
                         </div>
@@ -141,10 +150,15 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import FileInput from "@/components/inputs/FileInput.vue";
+
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
+    components: {
+        FileInput
+    },
     props: {
         company_id: {
             required: true
@@ -160,8 +174,15 @@ export default {
                 estimated_time: 1,
                 description: "",
                 // workarea_id: null,
-                skills: []
+                skills: [],
+                documents: []
             },
+
+            token:
+                "token_" +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 15),
 
             workareasDataFiltered: []
         };
@@ -188,13 +209,15 @@ export default {
     },
     methods: {
         clearFields() {
+            this.deleteFiles();
             Object.assign(this.itemLocal, {
                 name: "",
                 order: 1,
                 estimated_time: 1,
                 description: "",
                 //workarea_id: null,
-                skills: []
+                skills: [],
+                documents: []
             });
             Object.assign(this.workareasDataFiltered, []);
         },
@@ -205,11 +228,12 @@ export default {
                 // );
 
                 if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    if (this.itemLocal.documents.length > 0) {
+                        item.token = this.token;
+                    }
                     this.$store
-                        .dispatch(
-                            "repetitiveTaskManagement/addItem",
-                            Object.assign({}, this.itemLocal)
-                        )
+                        .dispatch("repetitiveTaskManagement/addItem", item)
                         .then(() => {
                             this.$vs.loading.close();
                             this.$vs.notify({
@@ -219,7 +243,6 @@ export default {
                                 icon: "icon-alert-circle",
                                 color: "success"
                             });
-                            this.clearFields();
                         })
                         .catch(error => {
                             this.$vs.loading.close();
@@ -233,6 +256,51 @@ export default {
                         });
                 }
             });
+        },
+        uploadFile(e) {
+            e.preventDefault();
+            var files = e.target.files;
+            var data = new FormData();
+
+            if (files.length > 0) {
+                // for single file
+                data.append("files", files[0]);
+
+                var item = {};
+                item.token = this.token;
+                item.files = data;
+
+                this.$store
+                    .dispatch("documentManagement/uploadFile", item)
+                    .then(response => {
+                        this.itemLocal.documents.push(response.data.success);
+                    })
+                    .catch(error => {});
+            }
+        },
+        deleteFile(file) {
+            this.$store
+                .dispatch("documentManagement/deleteFile", file.id)
+                .then(response => {
+                    const index = this.itemLocal.documents.indexOf(file);
+                    if (index > -1) {
+                        this.itemLocal.documents.splice(index, 1);
+                    }
+                })
+                .catch(error => {});
+        },
+        deleteFiles() {
+            var ids = this.itemLocal.documents.map(item => {
+                return item.id;
+            });
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/deleteFiles", ids)
+                    .then(response => {
+                        this.itemLocal.documents = [];
+                    })
+                    .catch(error => {});
+            }
         },
         updateWorkareasList(ids) {
             this.workareasDataFiltered = this.workareasData.filter(function(

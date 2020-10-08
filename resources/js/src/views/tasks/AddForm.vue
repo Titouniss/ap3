@@ -626,7 +626,7 @@ export default {
                 item.files = data;
 
                 this.$store
-                    .dispatch("taskManagement/uploadFile", item)
+                    .dispatch("documentManagement/uploadFile", item)
                     .then(response => {
                         this.uploadedFiles.push(response.data.success);
                     })
@@ -635,7 +635,7 @@ export default {
         },
         deleteFile(file) {
             this.$store
-                .dispatch("taskManagement/deleteFile", file.id)
+                .dispatch("documentManagement/deleteFile", file.id)
                 .then(response => {
                     const index = this.uploadedFiles.indexOf(file);
                     if (index > -1) {
@@ -650,7 +650,7 @@ export default {
             });
             if (ids.length > 0) {
                 this.$store
-                    .dispatch("taskManagement/deleteFiles", ids)
+                    .dispatch("documentManagement/deleteFiles", ids)
                     .then(response => {
                         this.uploadedFiles = [];
                     })

@@ -162,6 +162,7 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
+import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
 var model = "range";
 var modelPlurial = "ranges";
@@ -235,7 +236,12 @@ export default {
             this.$vs.loading();
 
             const payload = { ...this.range_data };
-            payload.repetitive_tasks = this.repetitiveTasksData;
+            payload.repetitive_tasks = this.repetitiveTasksData.map(task => {
+                if (task.id && String(task.id).startsWith("TEMPORARY_ID_")) {
+                    task.id = undefined;
+                }
+                return task;
+            });
             this.$store
                 .dispatch("rangeManagement/updateItem", payload)
                 .then(() => {
@@ -302,6 +308,13 @@ export default {
             );
             moduleRepetitiveTaskManagement.isRegistered = true;
         }
+        if (!moduleDocumentManagement.isRegistered) {
+            this.$store.registerModule(
+                "documentManagement",
+                moduleDocumentManagement
+            );
+            moduleDocumentManagement.isRegistered = true;
+        }
         this.fetch_data(this.$route.params.id);
         this.$store.dispatch("skillManagement/fetchItems").catch(err => {
             console.error(err);
@@ -328,10 +341,12 @@ export default {
         moduleSkillManagement.isRegistered = false;
         moduleWorkareaManagement.isRegistered = false;
         moduleRepetitiveTaskManagement.isRegistered = false;
+        moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("repetitiveTaskManagement");
+        this.$store.unregisterModule("documentManagement");
     }
 };
 </script>

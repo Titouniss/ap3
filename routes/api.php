@@ -226,9 +226,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::group(['middleware' => ['can:publish tasks']], function () {
             Route::post('store-comment/{id}', 'API\TaskController@addComment');
             Route::post('update-partial/{id}', 'API\TaskController@updatePartial');
-            Route::post('upload-file/{id}', 'API\TaskController@uploadFile');
-            Route::delete('delete-file/{id}', 'API\TaskController@deleteFile');
-            Route::post('delete-files', 'API\TaskController@deleteFiles');
             Route::post('update/{id}', 'API\TaskController@update');
         });
         Route::group(['middleware' => ['can:delete tasks']], function () {
@@ -354,6 +351,17 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('data-type-management')->group(function () {
         Route::group(['middleware' => ['can:read modules']], function () {
             Route::get('index', 'API\DataTypeController@index');
+        });
+    });
+
+    /***********************************************************************************/
+    /********************************** Documents **************************************/
+    /***********************************************************************************/
+    Route::prefix('document-management')->group(function () {
+        Route::group(['middleware' => ['can:publish tasks']], function () {
+            Route::post('upload-file/{id}', 'API\DocumentController@uploadFile');
+            Route::delete('delete-file/{id}', 'API\DocumentController@deleteFile');
+            Route::post('delete-files', 'API\DocumentController@deleteFiles');
         });
     });
 });
