@@ -225,7 +225,10 @@ var columnDef = [
             name: data => `l'utilisateur ${data.firstname} ${data.lastname}`,
             disabled: data =>
                 data.roles && data.roles.find(r => r.name === "superAdmin"),
-            linkedTables: ["tâches"]
+            footNotes: {
+                archive:
+                    "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
+            }
         }
     }
 ];

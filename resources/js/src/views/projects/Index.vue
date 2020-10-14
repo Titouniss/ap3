@@ -267,7 +267,14 @@ export default {
                         modelPlurial: "projects",
                         name: data => `le projet ${data.name}`,
                         withPrompt: true,
-                        linkedTables: ["tâches"]
+                        footNotes: {
+                            restore:
+                                "Si vous restaurez le projet ses tâches seront également restauré.",
+                            archive:
+                                "Si vous archivez le projet ses tâches seront également archivé.",
+                            delete:
+                                "Si vous supprimez le projet ses tâches seront également supprimé."
+                        }
                     }
                 }
             ],

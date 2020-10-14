@@ -61,9 +61,7 @@
         >
             <div>
                 <div>{{ dialogMessage }}</div>
-                <div v-if="dialogFootNote" class="mt-3">
-                    <small>{{ dialogFootNote }}</small>
-                </div>
+                <small v-if="footNote" class="mt-3">{{ footNote }}</small>
             </div>
         </vs-prompt>
     </div>
@@ -76,7 +74,6 @@ export default {
         return {
             dialogOpen: false,
             dialogMessage: "",
-            dialogFootNote: "",
             dialogType: "",
             dialogTypes: {
                 restore: "restore",
@@ -120,42 +117,15 @@ export default {
         withPrompt() {
             return this.params.withPrompt;
         },
+        footNote() {
+            return (
+                this.params.footNotes && this.params.footNotes[this.dialogType]
+            );
+        },
         usesSoftDelete() {
             return this.params.usesSoftDelete !== undefined
                 ? this.params.usesSoftDelete
                 : true;
-        },
-        linkedTables() {
-            let returnString = "";
-            if (this.params.linkedTables) {
-                let lastElement = "";
-                if (this.params.linkedTables.length > 1) {
-                    lastElement = this.params.linkedTables[
-                        this.params.linkedTables.length - 1
-                    ];
-                    if (this.params.linkedTables.length > 3) {
-                        returnString =
-                            this.params.linkedTables
-                                .filter((table, index) => index <= 3)
-                                .map(table => `ses ${table}`)
-                                .join(", ") + "...";
-                    } else {
-                        returnString =
-                            this.params.linkedTables
-                                .filter(
-                                    (table, index) =>
-                                        index !==
-                                        this.params.linkedTables.length - 1
-                                )
-                                .map(table => `ses ${table}`)
-                                .join(", ") +
-                            (lastElement ? ` et ses ${lastElement}` : "");
-                    }
-                } else {
-                    returnString = `ses ${this.params.linkedTables[0]}`;
-                }
-            }
-            return returnString;
         },
         canEdit() {
             return this.params.canEdit
@@ -224,9 +194,6 @@ export default {
                     default:
                         message = `Voulez vous vraiment restaurer ${this.name} ?`;
                         break;
-                }
-                if (this.linkedTables) {
-                    this.dialogFootNote = `De même sera fait pour ${this.linkedTables}`;
                 }
                 this.dialogType = this.dialogTypes[type];
                 this.dialogMessage = message;

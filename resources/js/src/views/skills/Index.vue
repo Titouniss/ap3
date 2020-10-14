@@ -240,8 +240,7 @@ export default {
                         model: "skill",
                         modelPlurial: "skills",
                         name: data => `la compétence ${data.name}`,
-                        withPrompt: true,
-                        linkedTables: ["tâches", "gammes"]
+                        withPrompt: true
                     }
                 }
             ],

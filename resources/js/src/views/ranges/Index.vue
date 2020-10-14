@@ -229,8 +229,7 @@ export default {
                     cellRendererParams: {
                         model: "range",
                         modelPlurial: "ranges",
-                        name: data => `la gamme ${data.name}`,
-                        linkedTables: ["tâches"]
+                        name: data => `la gamme ${data.name}`
                     }
                 }
             ],

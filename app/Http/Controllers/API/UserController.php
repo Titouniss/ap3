@@ -612,6 +612,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         $item = User::findOrFail($id);
+        Task::where('user_id', $id)->update(['user_id', null]);
         $item->delete();
         return response()->json(['success' => $item], $this->successStatus);
     }

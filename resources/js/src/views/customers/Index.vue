@@ -276,7 +276,14 @@ export default {
                         modelPlurial: "customers",
                         withPrompt: true,
                         name: data => `le client ${data.lastname}`,
-                        linkedTables: ["projets", "tâches"]
+                        footNotes: {
+                            restore:
+                                "Si vous restaurez le client ses projets seront également restauré.",
+                            archive:
+                                "Si vous archivez le client ses projets seront également archivé.",
+                            delete:
+                                "Si vous supprimez le client ses projets seront également supprimé."
+                        }
                     }
                 }
             ],
