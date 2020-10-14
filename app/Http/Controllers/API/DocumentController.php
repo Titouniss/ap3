@@ -6,10 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class DocumentController extends Controller
 {
     public $successStatus = 200;
+
+    public function getFile($path)
+    {
+        $item = Document::where('path', 'LIKE', '%' . $path)->first();
+        if (!$item) {
+            return response()->json(['error' => 'Fichier introuvable'], 404);
+        }
+
+        $controllerLog = new Logger('document');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('document item', [$item]);
+
+        return response()->file(Storage::path($item->path));
+    }
 
     public function uploadFile(Request $request, $token)
     {

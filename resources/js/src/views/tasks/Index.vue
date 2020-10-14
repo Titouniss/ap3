@@ -46,7 +46,7 @@
 
             <div
                 v-for="item in tasksData"
-                v-bind:key="item.name"
+                v-bind:key="item.id + item.name"
                 class="card-task p-2 m-3"
             >
                 <!-- <div>

@@ -13,6 +13,7 @@ use App\Models\PreviousTask;
 use App\Models\Document;
 use App\Models\ModelHasDocuments;
 use App\Models\TasksSkill;
+use App\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Carbon\CarbonPeriod;
@@ -82,6 +83,22 @@ class TaskController extends Controller
                 }
             }
         }
+
+        return response()->json(['success' => $items], $this->successStatus);
+    }
+
+    /**
+     * Display a listing of the resource by user.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getByUser(User $user)
+    {
+        if (!$user) {
+            return response()->json(['error' => "Utilisateur inconnu"], $this->successStatus);
+        }
+
+        $items = Task::where('user_id', $user->id)->with('project:name,status,color', 'skills:name', 'user', 'workarea', 'comments', 'documents')->get();
 
         return response()->json(['success' => $items], $this->successStatus);
     }

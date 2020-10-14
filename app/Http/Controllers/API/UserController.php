@@ -67,7 +67,7 @@ class UserController extends Controller
                 return response()->json(['success' => false, 'verify' => false], $this->successStatus);
             }
 
-            $token =  $user->createToken('ProjetX');
+            $token = $user->createToken('ProjetX');
             $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
@@ -75,7 +75,12 @@ class UserController extends Controller
                 $query->select(['id', 'name'])->with(['permissions' => function ($query) {
                     $query->select(['id', 'name', 'name_fr', 'isPublic']);
                 }]);
-            }])->load('company:id,name');
+            }]);
+            $user->load(['company:id,name']);
+            if ($user->hasRole('Administrateur')) {
+                $user->load(['company.users:id,firstname,lastname,company_id']);
+            }
+
             return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module && $module->count() > 0 ? $module : null)], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised']);

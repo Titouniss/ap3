@@ -418,10 +418,13 @@ export default {
     },
     computed: {
         validateForm() {
-            !this.errors.any() &&
+            return (
+                !this.errors.any() &&
                 this.itemLocal.name != "" &&
                 this.itemLocal.date != "" &&
-                this.itemLocal.estimated_time != "";
+                this.itemLocal.estimated_time != "" &&
+                this.itemLocal.skills.length > 0
+            );
         },
         workareasData() {
             let $workareasData = this.$store.state.workareaManagement.workareas;
@@ -544,73 +547,60 @@ export default {
             Object.assign(this.usersDataFiltered, []);
         },
         addItem() {
-            if (!this.isSubmiting) {
-                this.isSubmiting = true;
+            if (!this.validateForm || this.isSubmiting) return;
 
-                this.$validator.validateAll().then(result => {
-                    let item = Object.assign({}, this.itemLocal);
-
-                    if (this.project_data != null) {
-                        this.itemLocal.project_id = this.project_data.id;
-                    } else if (this.type && this.type === "projects") {
-                        this.itemLocal.project_id = this.idType;
-                    } else if (this.type && this.type === "users") {
-                    } else {
-                    }
-
-                    let dateFormat = item.date;
-                    item.date = item.date
-                        ? moment(item.date, "DD-MM-YYYY HH:mm").format(
-                              "YYYY-MM-DD HH:mm"
-                          )
-                        : null;
-
-                    this.uploadedFiles.length > 0
-                        ? (item.token = this.token)
-                        : null;
-
-                    if (result) {
-                        this.$store
-                            .dispatch("taskManagement/addItem", item)
-                            .then(response => {
-                                if (response.data.success) {
-                                    this.isSubmiting = false;
-
-                                    this.$vs.loading.close();
-                                    this.$vs.notify({
-                                        title: "Ajout d'une tâche",
-                                        text: `"${this.itemLocal.name}" ajouté avec succès`,
-                                        iconPack: "feather",
-                                        icon: "icon-alert-circle",
-                                        color: "success"
-                                    });
-                                    this.clearFields(false);
-                                } else {
-                                    this.$vs.notify({
-                                        title: "Indisponnible",
-                                        text: response.data.error,
-                                        iconPack: "feather",
-                                        icon: "icon-alert-circle",
-                                        color: "danger"
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                this.isSubmiting = false;
-
-                                this.$vs.loading.close();
-                                this.$vs.notify({
-                                    title: "Error",
-                                    text: error.message,
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "danger"
-                                });
-                            });
-                        this.itemLocal.date = dateFormat;
-                    }
-                });
+            this.isSubmiting = true;
+            const item = JSON.parse(JSON.stringify(this.itemLocal));
+            if (this.project_data != null) {
+                item.project_id = this.project_data.id;
+            } else if (this.type && this.type === "projects") {
+                item.project_id = this.idType;
+            } else if (this.type && this.type === "users") {
+            } else {
             }
+
+            let dateFormat = item.date;
+            item.date = item.date
+                ? moment(item.date).format("YYYY-MM-DD HH:mm")
+                : null;
+
+            this.uploadedFiles.length > 0 ? (item.token = this.token) : null;
+
+            this.$store
+                .dispatch("taskManagement/addItem", item)
+                .then(response => {
+                    if (response.data.success) {
+                        this.$vs.notify({
+                            title: "Ajout d'une tâche",
+                            text: `"${this.itemLocal.name}" ajouté avec succès`,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
+                        });
+                        this.clearFields(false);
+                    } else {
+                        this.$vs.notify({
+                            title: "Indisponnible",
+                            text: response.data.error,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger"
+                        });
+                    }
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Error",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                })
+                .finally(() => {
+                    this.isSubmiting = false;
+                    this.$vs.loading.close();
+                });
         },
         uploadFile(e) {
             e.preventDefault();

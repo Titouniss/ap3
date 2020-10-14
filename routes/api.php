@@ -217,6 +217,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::get('index', 'API\TaskController@index');
             Route::get('bundle/{id}', 'API\TaskController@getByBundle');
             Route::get('skill/{id}', 'API\TaskController@getBySkill');
+            Route::get('user/{user}', 'API\TaskController@getByUser');
             Route::post('skills', 'API\TaskController@getBySkills');
             Route::get('show/{id}', 'API\TaskController@show');
         });
@@ -365,3 +366,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
     });
 });
+
+/***********************************************************************************/
+/***************************** NOT AUTHENTICATED ***********************************/
+/***********************************************************************************/
+
+Route::get('document-management/get-file/{path}', 'API\DocumentController@getFile');

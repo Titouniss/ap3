@@ -548,68 +548,61 @@ export default {
             return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
         },
         submitItem() {
-            if (
-                this.itemLocal.comment != null &&
-                this.itemLocal.comment != ""
-            ) {
+            if (!this.validateForm) return;
+
+            if (this.itemLocal.comment) {
                 this.addComment();
             }
 
-            this.$validator.validateAll().then(result => {
-                if (this.project_data != null) {
-                    this.itemLocal.project_id = this.project_data.id;
-                } else if (this.type && this.type === "projects") {
-                    this.itemLocal.project_id = this.idType;
-                } else {
-                    this.itemLocal.project_id = this.itemLocal.project.id;
-                }
-                this.itemLocal.date = this.itemLocal.date
-                    ? moment(this.itemLocal.date, "DD-MM-YYYY HH:mm").format(
-                          "YYYY-MM-DD HH:mm"
-                      )
-                    : null;
+            const item = JSON.parse(JSON.stringify(this.itemLocal));
 
-                if (result) {
-                    this.itemLocal.token = this.token;
-                    this.$store
-                        .dispatch(
-                            "taskManagement/updateItem",
-                            Object.assign({}, this.itemLocal)
-                        )
-                        .then(response => {
-                            if (response.data.success) {
-                                this.isSubmiting = false;
+            if (this.project_data != null) {
+                item.project_id = this.project_data.id;
+            } else if (this.type && this.type === "projects") {
+                item.project_id = this.idType;
+            } else {
+                item.project_id = this.itemLocal.project.id;
+            }
+            item.date = this.itemLocal.date
+                ? moment(this.itemLocal.date, "DD-MM-YYYY HH:mm").format(
+                      "YYYY-MM-DD HH:mm"
+                  )
+                : null;
 
-                                this.$vs.loading.close();
-                                this.$vs.notify({
-                                    title: "Modification d'une tâche",
-                                    text: `"${this.itemLocal.name}" modifiée avec succès`,
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "success"
-                                });
-                            } else {
-                                this.$vs.notify({
-                                    title: "Indisponnible",
-                                    text: response.data.error,
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "danger"
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            this.$vs.loading.close();
-                            this.$vs.notify({
-                                title: "Error",
-                                text: error.message,
-                                iconPack: "feather",
-                                icon: "icon-alert-circle",
-                                color: "danger"
-                            });
+            item.token = this.token;
+            this.$store
+                .dispatch("taskManagement/updateItem", item)
+                .then(response => {
+                    if (response.data.success) {
+                        this.$vs.notify({
+                            title: "Modification d'une tâche",
+                            text: `"${this.itemLocal.name}" modifiée avec succès`,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
                         });
-                }
-            });
+                    } else {
+                        this.$vs.notify({
+                            title: "Indisponnible",
+                            text: response.data.error,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger"
+                        });
+                    }
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Error",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                })
+                .finally(() => {
+                    this.$vs.loading.close();
+                });
         },
         uploadFile(e) {
             e.preventDefault();

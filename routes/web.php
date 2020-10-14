@@ -10,5 +10,8 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-Auth::routes(['verify' => true]) ;
+Auth::routes(['verify' => true]);
+// Route::prefix('document-management')->group(function () {
+//     Route::get('get-file/{item}', 'API\DocumentController@getFile');
+// });
 Route::get('/{any}', 'ApplicationController')->where('any', '.*');

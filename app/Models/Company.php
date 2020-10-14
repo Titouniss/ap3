@@ -22,6 +22,11 @@ class Company extends Model
         return $this->hasMany('App\Models\Skill', 'company_id');
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class, 'company_id');
+    }
+
     public function restoreCascade()
     {
         $this->restore();

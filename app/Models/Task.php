@@ -14,8 +14,6 @@ class Task extends Model
 
     protected $appends = ['dateEnd'];
 
-
-
     public function getDateEndAttribute()
     {
         //return $this->date;

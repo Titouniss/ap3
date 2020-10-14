@@ -54,7 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company')->withTrashed();
+        return $this->belongsTo('App\Models\Company', 'company_id')->withTrashed();
     }
 
     public function workHours()
