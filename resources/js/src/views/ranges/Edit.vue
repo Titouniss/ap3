@@ -158,7 +158,6 @@ import CellRendererActions from "./repetitives-tasks/cell-renderer/CellRendererA
 
 // Store Module
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
-import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
@@ -292,7 +291,7 @@ export default {
                 "skillManagement",
                 moduleSkillManagement
             );
-            moduleCompanyManagement.isRegistered = true;
+            moduleSkillManagement.isRegistered = true;
         }
         if (!moduleWorkareaManagement.isRegistered) {
             this.$store.registerModule(
