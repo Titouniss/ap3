@@ -65,26 +65,24 @@ class UnavailabilityController extends Controller
         $unavailabilities = Unavailability::where('user_id', Auth::user()->id)->orderby('starts_at', 'asc')->get();
 
         $arrayRequest['user_id'] = Auth::user()->id;
-        $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at']);
+        $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at'])->locale('fr_FR');
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
-        $duration = ( floatval(explode(':', $arrayRequest_ends->format('H:i'))[0]) ) - ( floatval(explode(':', $arrayRequest_starts->format('H:i'))[0]) );
+        $duration = (floatval(explode(':', $arrayRequest_ends->format('H:i'))[0])) - (floatval(explode(':', $arrayRequest_starts->format('H:i'))[0]));
 
         // Overtimes verification 
         $Overtimes = DealingHoursController::getOvertimes(true);
         $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'];
 
         if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires') {
-            if ( $OvertimesToUse < $duration ) {
+            if ($OvertimesToUse < $duration) {
                 return response()->json(['error' => "Vous ne disposez pas assez d'heures supplémentaires"], 401);
             }
             // Expected hours for this day
             $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['starts_at']);
             if ($workDuration === 0) {
-                setlocale(LC_TIME, "fr_FR", "French");
-                $target_day = strftime("%A", strtotime($arrayRequest['starts_at']));
-                return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " + $target_day], 401);
+                return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $arrayRequest_starts->dayName], 400);
             } else if ($workDuration < $duration) {
-                return response()->json(['error' => "Vous ne pouvez pas utiliser plus d'heures supplémentaires que d'heures de travail prévues"], 401);
+                return response()->json(['error' => "Vous ne pouvez pas utiliser plus d'heures supplémentaires que d'heures de travail prévues"], 400);
             }
         }
 
@@ -144,7 +142,7 @@ class UnavailabilityController extends Controller
         }
 
         $arrayRequest['user_id'] = Auth::user()->id;
-        $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i:s', $arrayRequest['starts_at']);
+        $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at']);
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
 
         $unavailabilities = Unavailability::where('user_id', Auth::user()->id)->orderby('starts_at', 'asc')->get();

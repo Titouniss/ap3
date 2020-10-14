@@ -273,8 +273,7 @@ class HoursController extends Controller
     public static function getTargetWorkHours($user_id, $date)
     {
         // Expected hours for this day
-        setlocale(LC_TIME, "fr_FR", "French");
-        $target_day = strftime("%A", strtotime($date));
+        $target_day = Carbon::createFromFormat('Y-m-d H:i', $date)->locale('fr_FR')->dayName;
 
         $work_hours = WorkHours::where([['user_id', $user_id], ['day', $target_day]])->select('morning_starts_at', 'morning_ends_at', 'afternoon_starts_at', 'afternoon_ends_at')->first();
 
