@@ -240,7 +240,15 @@ export default {
                         model: "skill",
                         modelPlurial: "skills",
                         name: data => `la compétence ${data.name}`,
-                        withPrompt: true
+                        withPrompt: true,
+                        footNotes: {
+                            restore:
+                                "Si vous restaurez la compétence elle sera utilisée à nouveau par les îlots, tâches et utilisateurs associés.",
+                            archive:
+                                "Si vous archivez la compétence elle ne sera plus utilisée par les îlots, tâches et utilisateurs associés.",
+                            delete:
+                                "Si vous supprimez la compétence elle ne sera plus associée à ses îlots, tâches et utilisateurs."
+                        }
                     }
                 }
             ],
