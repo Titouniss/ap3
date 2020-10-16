@@ -615,7 +615,6 @@ export default {
                     filter.period_type = this.filters.period_type;
                 }
             }
-            console.log(filter);
             this.clearRefreshDataTimeout();
             this.refreshDataTimeout = setTimeout(() => {
                 this.$vs.loading();

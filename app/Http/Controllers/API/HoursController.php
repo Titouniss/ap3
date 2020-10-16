@@ -62,7 +62,7 @@ class HoursController extends Controller
 
         // Stats
         $stats = [];
-        if (!$items->isEmpty()) {
+        if (!$items->isEmpty() && $request->date) {
             $stats['total'] = CarbonInterval::hours(0);
             foreach ($items as $item) {
                 $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));
@@ -77,7 +77,7 @@ class HoursController extends Controller
                     $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
                     return $morning->add($afternoon)->totalHours;
                 })->sum();
-                $workDayHours = HoursController::getTargetWorkHours($userId, $request->start_at);
+                $workDayHours = HoursController::getTargetWorkHours($userId, Carbon::createFromFormat('d-m-Y', $request->date)->locale('fr_FR')->dayName);
 
                 $defaultWorkHours = 0;
                 if ($request->date) {
@@ -144,7 +144,8 @@ class HoursController extends Controller
             'user_id' => 'required',
             'project_id' => 'required',
             'start_at' => 'required',
-            'end_at' => 'required'
+            'end_at' => 'required',
+            'date' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], $this->successStatus);
@@ -164,10 +165,9 @@ class HoursController extends Controller
         $nb_worked_hours = HoursController::getNbWorkedHours($arrayRequest['user_id'], $parseDuration, $arrayRequest['date']);
 
         // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['date']);
+        $target_day = $start_at->locale('fr_FR')->dayName;
+        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
         if ($target_work_hours === 0) {
-            setlocale(LC_TIME, "fr_FR", "French");
-            $target_day = strftime("%A", strtotime($arrayRequest['date']));
             return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day], $this->successStatus);
         }
 
@@ -270,11 +270,8 @@ class HoursController extends Controller
      * @param  string  $date
      * @return \Illuminate\Http\Response
      */
-    public static function getTargetWorkHours($user_id, $date)
+    public static function getTargetWorkHours($user_id, $target_day)
     {
-        // Expected hours for this day
-        $target_day = Carbon::createFromFormat('Y-m-d H:i', $date)->locale('fr_FR')->dayName;
-
         $work_hours = WorkHours::where([['user_id', $user_id], ['day', $target_day]])->select('morning_starts_at', 'morning_ends_at', 'afternoon_starts_at', 'afternoon_ends_at')->first();
 
         if (!empty($work_hours)) {
@@ -337,18 +334,17 @@ class HoursController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        // Update user hour have worke_hour for this day ? 
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['date']);
-        if ($target_work_hours === 0) {
-            setlocale(LC_TIME, "fr_FR", "French");
-            $target_day = strftime("%A", strtotime($arrayRequest['date']));
-            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le $target_day"], $this->successStatus);
-        }
-
-        // Check if user have already hour on this new entry period
         $start_at = Carbon::parse($arrayRequest['start_at']);
         $end_at = Carbon::parse($arrayRequest['end_at']);
 
+        // Update user hour have worke_hour for this day ? 
+        $target_day = $start_at->locale('fr_FR')->dayName;
+        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
+        if ($target_work_hours === 0) {
+            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day], $this->successStatus);
+        }
+
+        // Check if user have already hour on this new entry period
         $noLayering = $this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at, $arrayRequest['id']);
         if (!$noLayering) {
             return response()->json(['error' => "Attention, vous ne pouvez pas superposer deux horaires"], $this->successStatus);
@@ -373,7 +369,7 @@ class HoursController extends Controller
         $nb_worked_hours = HoursController::getNbWorkedHours($old_hours['user_id'], 0, $old_hours['date']);
 
         // Expected hours for old day
-        $target_work_hours = HoursController::getTargetWorkHours($old_hours['user_id'], $old_hours['date']);
+        $target_work_hours = HoursController::getTargetWorkHours($old_hours['user_id'], $old_date->locale('fr_FR')->dayName);
 
         // Check if value in dealing_hours for old date
         $findDealingHour = DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->first();
@@ -396,7 +392,7 @@ class HoursController extends Controller
         $nb_worked_hours = HoursController::getNbWorkedHours($arrayRequest['user_id'], 0, $arrayRequest['date']);
 
         // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['date']);
+        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
 
         // Check if value in dealing_hours for this date
         $findDealingHour = DealingHours::where([['date', $arrayRequest['date']], ['user_id', $arrayRequest['user_id']]])->first();
@@ -438,7 +434,7 @@ class HoursController extends Controller
         $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $date->format('Y-m-d'));
 
         // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($item->user_id, $item->date);
+        $target_work_hours = HoursController::getTargetWorkHours($item->user_id, $item->date->locale('fr_FR')->dayName);
 
         // Check if value in dealing_hours for old date
         $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->first();
