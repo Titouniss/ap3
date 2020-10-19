@@ -44,6 +44,27 @@ export default {
                 });
             });
     },
+    checkUsernamePwdBeforeLoginJWT({ commit }, payload) {
+        return new Promise((resolve, reject) => {
+            jwt.checkUsernamePwdBeforeLogin(payload.userDetails.login, payload.userDetails.password)
+                .then(response => {
+                    const data = response.data;
+                    if (data && data.success) {
+                        resolve(data);
+                    } else {
+                        reject({
+                            message:
+                                "Connexion impossible l’identifiant ou le mot de passe est incorrect."
+                        });
+                    }
+                })
+                .catch(error => {
+                    let message =
+                        "Connexion au serveur impossible, Veuillez réessayer ultérieurement.";
+                    reject({ message: message});
+                });
+            });
+    },
     // JWT
     loginJWT({ commit }, payload) {
         return new Promise((resolve, reject) => {
@@ -250,6 +271,17 @@ export default {
                 payload.c_password,
                 payload.token
             )
+                .then(response => {
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
+    updatePasswordJWT({ commit }, payload) {
+        return new Promise((resolve, reject) => {
+            jwt.updatePassword(payload.user_id, payload.new_password)
                 .then(response => {
                     resolve(response);
                 })
