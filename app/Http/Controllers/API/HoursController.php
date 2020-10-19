@@ -62,7 +62,7 @@ class HoursController extends Controller
 
         // Stats
         $stats = [];
-        if (!$items->isEmpty() && $request->date) {
+        if (!$items->isEmpty()) {
             $stats['total'] = CarbonInterval::hours(0);
             foreach ($items as $item) {
                 $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));
@@ -70,7 +70,7 @@ class HoursController extends Controller
 
             $stats['total'] = $stats['total']->totalHours;
 
-            if ($userId = $user->hasRole('superAdmin') ? $request->user_id : $user->id) {
+            if ($request->date && $userId = $user->hasRole('superAdmin') ? $request->user_id : $user->id) {
                 $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count() || 1;
                 $workWeekHours = WorkHours::where('user_id', $userId)->where('is_active', 1)->get()->map(function ($day) {
                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
@@ -377,7 +377,7 @@ class HoursController extends Controller
         if ($nb_worked_hours > $target_work_hours) {
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
             DealingHours::where('date', $old_hours['date'])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-        } else {
+        } else if ($findDealingHour) {
             // Not empty and no used_hour ? Delete dealing_hour tuple
             if ($findDealingHour['used_hours'] === 0) {
                 $item = DealingHours::findOrFail($findDealingHour['id']);

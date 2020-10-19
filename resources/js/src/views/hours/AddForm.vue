@@ -209,6 +209,7 @@ export default {
                 project_id: null,
                 user_id: user.id
             },
+            company_id: user.company_id,
             updateEndHour: 12,
             endDisable: true,
             configDatePicker: () => ({
@@ -225,6 +226,7 @@ export default {
         user(newUser, oldUser) {
             if (newUser) {
                 this.itemLocal.user_id = newUser.id;
+                this.company_id = newUser.company_id;
             }
         }
     },
@@ -311,7 +313,9 @@ export default {
             );
         },
         projectsData() {
-            return this.$store.state.projectManagement.projects;
+            return this.$store.state.projectManagement.projects.filter(
+                p => p.company_id === this.company_id
+            );
         }
     },
     methods: {
