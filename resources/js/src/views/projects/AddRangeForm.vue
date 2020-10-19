@@ -105,7 +105,7 @@ export default {
           this.$vs.loading.close() 
           this.$vs.notify({
           title: 'Ajout d\'une gamme au projet',
-          text: `"${this.itemLocal.name}" ajouté avec succès`,
+          text: `"${this.itemLocal.range.name}" ajouté avec succès`,
           iconPack: 'feather',
           icon: 'icon-alert-circle',
           color: 'success'
