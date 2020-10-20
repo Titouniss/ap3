@@ -65,6 +65,7 @@
 
               <vs-input
                 v-validate="'required|max:50'"
+                autocomplete="off"
                 name="lastname"
                 class="w-full mb-4 mt-5"
                 label="Nom du client"
