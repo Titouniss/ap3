@@ -272,6 +272,7 @@ export default {
     },
     addItem() {
       if (this.validateForm) {
+        this.$vs.loading();
         this.itemLocal.full_login = "".concat(
           this.company_login,
           this.itemLocal.login
