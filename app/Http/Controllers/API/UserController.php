@@ -550,7 +550,7 @@ class UserController extends Controller
 
                 return response()->json(['success' => true], $this->successStatus);
             } else {
-                return response()->json(['error' => 'error_format'], 400);
+                return response()->json('error_format', 400);
             }
         }
     }

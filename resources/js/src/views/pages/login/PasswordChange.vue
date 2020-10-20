@@ -115,12 +115,12 @@ export default {
               });
               this.goLoginPage();
             } else {
-              throw new Error(reponse.data);
+              throw new Error(response.data);
             }
           })
           .catch((error) => {
             // Wrong format message
-            if (error.data === "error_format") {
+            if (error == "Error: error_format") {
               this.message =
                 "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
             }
@@ -135,7 +135,7 @@ export default {
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "danger",
-              time: 8000,
+              time: 10000,
             });
           })
           .finally(() => {
