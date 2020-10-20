@@ -8,28 +8,32 @@ use Illuminate\Support\Facades\URL;
 
 class Document extends Model
 {
-    protected $fillable = ['id', 'name', 'path', 'token'];
+    protected $fillable = ['id', 'name', 'path', 'token', 'is_file'];
 
     protected $appends = ['url'];
 
     public function getUrlAttribute()
     {
         $pathArray = explode('/', $this->path);
-        return URL::to('/api/document-management/get-file') . '/' . array_pop($pathArray);
+        return $this->is_file ? URL::to('/api/document-management/get-file') . '/' . array_pop($pathArray) : $this->path;
     }
 
     public function moveFile($subFolder = "")
     {
-        $newPath = str_replace('documents/tmp/', 'documents/' . $subFolder . '/', $this->path);
-        Storage::move($this->path, $newPath);
-        $this->path = $newPath;
-        $this->save();
+        if ($this->is_file) {
+            $newPath = str_replace('documents/tmp/', 'documents/' . $subFolder . '/', $this->path);
+            Storage::move($this->path, $newPath);
+            $this->path = $newPath;
+            $this->save();
+        }
     }
 
     public function deleteFile()
     {
         ModelHasDocuments::where('document_id', $this->id)->delete();
-        Storage::delete($this->path);
+        if ($this->is_file) {
+            Storage::delete($this->path);
+        }
         $this->delete();
     }
 }

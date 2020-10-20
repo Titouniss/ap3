@@ -6,12 +6,43 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
 class DocumentController extends Controller
 {
     public $successStatus = 200;
+
+    /**
+     * Store a newly created resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'name' => 'required',
+            'path' => 'required',
+            'token' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
+        }
+
+        return response()->json(
+            ['success' =>
+            Document::create([
+                'name' => $arrayRequest['name'],
+                'path' => $arrayRequest['path'],
+                'token' => $arrayRequest['token'],
+                'is_file' => false
+            ])],
+            $this->successStatus
+        );
+    }
 
     public function getFile($path)
     {
@@ -34,7 +65,7 @@ class DocumentController extends Controller
         if ($arrayRequest['files']) {
             $originalName = $arrayRequest['files']->getClientOriginalName();
             $path = $arrayRequest['files']->store('documents/tmp');
-            $response = Document::create(['name' => $originalName, 'path' => $path, 'token' => $token]);
+            $response = Document::create(['name' => $originalName, 'path' => $path, 'token' => $token, 'is_file' => true]);
 
             return response()->json(['success' => $response], $this->successStatus);
         }
