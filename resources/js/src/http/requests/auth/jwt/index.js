@@ -48,6 +48,12 @@ export default {
             }
         );
     },
+    checkUsernamePwdBeforeLogin(login, pwd) {
+        return axios.post("/api/auth/checkUsernamePwdBeforeLogin", {
+            login: login,
+            password: pwd
+        });
+    },
     login(login, pwd) {
         return axios.post("/api/auth/login", {
             login,
@@ -107,6 +113,12 @@ export default {
             password: pwd,
             password_confirmation: c_password,
             token: token
+        });
+    },
+    updatePassword(user_id, pwd) {
+        return axios.post("/api/auth/updatePasswordBeforeLogin", {
+            user_id: user_id,
+            new_password: pwd,
         });
     },
     logout() {

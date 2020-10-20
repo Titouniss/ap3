@@ -40,6 +40,26 @@ class UserController extends Controller
 {
     use SoftDeletes;
     public $successStatus = 200;
+
+    /**
+     * check username and password api
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function checkUsernamePwdBeforeLogin(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $user = User::where('login', $arrayRequest['login'])->first();
+
+        if (Auth::attempt(['login' => $arrayRequest['login'], 'password' => $arrayRequest['password']])) {
+            Auth::logout();
+            return response()->json(['success' => true, 'userData' => $user], $this->successStatus);
+        } 
+        else {
+            return response()->json(['success' => false, 'error' => 'Unauthorised'], $this->successStatus);
+        }
+    }
+
     /**
      * login api
      *
@@ -510,6 +530,32 @@ class UserController extends Controller
     }
 
     /**
+     * update password before login api
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function updatePasswordBeforeLogin(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $rule = ['password' => [new StrongPassword]];
+        $user = User::where('id', $arrayRequest['user_id'])->first();
+
+        // Verify user exist
+        if ($user != null) {
+            if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
+                // Save password
+                $user->password = bcrypt($arrayRequest['new_password']);
+                $user->is_password_change = 1;
+                $user->save();
+
+                return response()->json(['success' => true], $this->successStatus);
+            } else {
+                return response()->json('error_format', 400);
+            }
+        }
+    }
+
+    /**
      * update password api
      *
      * @return \Illuminate\Http\Response
@@ -517,32 +563,19 @@ class UserController extends Controller
     public function updatePassword(Request $request, User $user)
     {
         $arrayRequest = $request->all();
-
         $rule = ['password' => [new StrongPassword]];
 
         // Verify user exist
         if ($user != null) {
-            if ($user->is_password_change === 0) {
-                if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
-                    // Save password
-                    $user->password = bcrypt($arrayRequest['new_password']);
-                    $user->is_password_change = 1;
-                    $user->save();
-
-                    return response()->json(['success' => $user, $this->successStatus]);
-                } else {
-                    return response()->json('error_format', 400);
-                }
-            } else {
                 // Verify old same password
-                if (Hash::check($arrayRequest['old_password'], $user->password)) {
+                if (Hash::check($arrayRequest['old_password'], auth()->user()->password)) {
                     // Verify password format
                     if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
                         // Save password
                         $user->password = bcrypt($arrayRequest['new_password']);
                         $user->save();
 
-                        return response()->json(['success', $user]);
+                        return response()->json(['success' => $user], $this->successStatus);
                     } else {
                         Log::debug('ICI 3 :');
                         return response()->json('error_format', 400);
@@ -550,7 +583,8 @@ class UserController extends Controller
                 } else {
                     return response()->json('error_old_password', 400);
                 }
-            }
+        } else {
+            return response()->json('error_user', 400);
         }
     }
 

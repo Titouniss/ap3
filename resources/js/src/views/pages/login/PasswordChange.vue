@@ -39,6 +39,7 @@
           v-model="confirm_new_password"
           v-validate="'required'"
           name="password_confirm"
+          v-on:keyup.enter="change_password"
         />
         <span
           class="text-danger text-sm"
@@ -89,7 +90,7 @@ export default {
       this.$router.push("/pages/login").catch(() => {});
     },
     change_password() {
-      const user = this.$store.state.AppActiveUser;
+      const user_id = this.$route.params.user_id;
 
       if (
         this.new_password !== "" &&
@@ -97,25 +98,29 @@ export default {
         this.new_password === this.confirm_new_password
       ) {
         this.$vs.loading();
-        const itemLocal = {
-          id_user: user.id,
+        const payload = {
+          user_id: user_id,
           new_password: this.new_password,
         };
         this.$store
-          .dispatch("userManagement/updatePassword", itemLocal)
+          .dispatch("auth/updatePasswordJWT", payload)
           .then((response) => {
-            this.$vs.notify({
-              title: "Modification du mot de passe",
-              text: "Votre mot de passe a bien été changé.",
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "success",
-            });
-            this.goLoginPage();
+            if(response.status === 200) {
+              this.$vs.notify({
+                title: "Modification du mot de passe",
+                text: "Votre mot de passe a bien été changé.",
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success",
+              });
+              this.goLoginPage();
+            } else {
+              throw new Error(response.data);
+            }
           })
           .catch((error) => {
             // Wrong format message
-            if (error.data === "error_format") {
+            if (error == "Error: error_format") {
               this.message =
                 "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
             }
@@ -130,7 +135,7 @@ export default {
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "danger",
-              time: 8000,
+              time: 10000,
             });
           })
           .finally(() => {
@@ -146,6 +151,9 @@ export default {
         });
       }
     },
+  },
+  mounted() {
+    this.$vs.loading.close();
   },
   created() {
     if (!moduleUserManagement.isRegistered) {

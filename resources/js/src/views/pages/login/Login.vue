@@ -48,7 +48,7 @@
                             placeholder="Mot de passe"
                             v-model="password"
                             class="w-full mt-6"
-                            v-on:keyup.enter="loginJWT"
+                            v-on:keyup.enter="checkUsernamePwdBeforeLogin"
                         />
 
                         <div class="flex justify-center my-5 ml-auto mr-auto">
@@ -71,7 +71,7 @@
                                 color="primary"
                                 text-color="white"
                                 :disabled="!validateForm"
-                                @click="loginJWT"
+                                @click="checkUsernamePwdBeforeLogin"
                                 >Connexion</vs-button
                             >
                         </vs-row>
@@ -122,11 +122,49 @@ export default {
             }
             return true;
         },
-        loginJWT() {
+        checkUsernamePwdBeforeLogin() {            
             if (!this.checkLogin()) return;
 
             // Loading
             this.$vs.loading();
+
+            const payload = {
+                userDetails: {
+                    login: this.login,
+                    password: this.password
+                }
+            };
+
+            this.$store
+                .dispatch("auth/checkUsernamePwdBeforeLoginJWT", payload)
+                .then(r => {
+                    if (r.userData.is_password_change === 1) {
+                        this.loginJWT()
+                    }
+                    else {
+                        this.$vs.loading.close();
+                        this.$router.push({
+                            name : "page-change-password",
+                            params : { user_id : r.userData.id}
+                        });
+                    }
+                })
+                .catch(error => {
+                    this.$vs.loading.close();
+                    this.$vs.notify({
+                        title: "Echec",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                    if (error.activeResend) {
+                        this.$router.push("/pages/verify").catch(() => {});
+                    }
+                });
+        },
+        loginJWT() {
+            if (!this.checkLogin()) return;
 
             const payload = {
                 checkbox_remember_me: this.checkbox_remember_me,

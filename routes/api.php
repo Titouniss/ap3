@@ -17,6 +17,7 @@ Route::prefix('auth')->group(function () {
     /***********************************************************************************/
     /********************************    USER     **************************************/
     /***********************************************************************************/
+    Route::post('checkUsernamePwdBeforeLogin', 'API\UserController@checkUsernamePwdBeforeLogin');
     Route::post('login', 'API\UserController@login');
     Route::get('user', 'API\UserController@getUserByToken');
     Route::get('user/registration/{token}', 'API\UserController@getUserForRegistration');
@@ -29,6 +30,7 @@ Route::prefix('auth')->group(function () {
     Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
     Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
     Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
+    Route::post('updatePasswordBeforeLogin', 'API\UserController@updatePasswordBeforeLogin');
 
     Route::get('email/verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
     Route::post('email/resend', 'API\UserController@resendVerification');
