@@ -10,6 +10,18 @@
 import axios from "@/axios.js";
 
 export default {
+    addItem({ commit }, item) {
+        return new Promise((resolve, reject) => {
+            axios
+                .post(`/api/document-management/store`, item)
+                .then(response => {
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
     uploadFile({ commit }, item) {
         return new Promise((resolve, reject) => {
             axios

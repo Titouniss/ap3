@@ -360,7 +360,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************************************************************/
     Route::prefix('document-management')->group(function () {
         Route::group(['middleware' => ['can:publish tasks']], function () {
-            Route::post('upload-file/{id}', 'API\DocumentController@uploadFile');
+            Route::post('store', 'API\DocumentController@store');
+            Route::post('upload-file/{token}', 'API\DocumentController@uploadFile');
             Route::delete('delete-file/{id}', 'API\DocumentController@deleteFile');
             Route::post('delete-files', 'API\DocumentController@deleteFiles');
         });

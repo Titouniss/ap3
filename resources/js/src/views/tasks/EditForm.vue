@@ -223,17 +223,20 @@
                                     "
                                     :current_task_id="this.itemId"
                                 />
-                                <span
+                                <div
                                     v-if="
                                         !descriptionDisplay &&
                                             (itemLocal.description == null ||
                                                 itemLocal.description == '')
                                     "
-                                    v-on:click="showDescription"
-                                    class="linkTxt"
                                 >
-                                    + Ajouter une description
-                                </span>
+                                    <span
+                                        v-on:click="showDescription"
+                                        class="linkTxt"
+                                    >
+                                        + Ajouter une description
+                                    </span>
+                                </div>
                             </div>
                             <div class="mb-4">
                                 <div v-if="orderDisplay">
@@ -305,7 +308,7 @@
                                     v-model="itemLocal.time_spent"
                                 />
                             </div>
-                            <div style="max-width: 200px;">
+                            <div style="max-width: 250px;">
                                 <file-input
                                     :items="itemLocal.documents"
                                     :onUpload="uploadFile"
@@ -604,26 +607,25 @@ export default {
                     this.$vs.loading.close();
                 });
         },
-        uploadFile(e) {
-            e.preventDefault();
-            const files = e.target.files;
-            const data = new FormData();
+        uploadFile(item, is_file = true) {
+            const action = `documentManagement/${
+                is_file ? "uploadFile" : "addItem"
+            }`;
+            const payload = is_file ? {} : item;
 
-            if (files.length > 0) {
-                // for single file
-                data.append("files", files[0]);
-
-                const item = {};
-                item.token = this.token;
-                item.files = data;
-
-                this.$store
-                    .dispatch("documentManagement/uploadFile", item)
-                    .then(response => {
-                        this.itemLocal.documents.push(response.data.success);
-                    })
-                    .catch(error => {});
+            if (is_file) {
+                const data = new FormData();
+                data.append("files", item);
+                payload.files = data;
             }
+            payload.token = this.token;
+
+            this.$store
+                .dispatch(action, item)
+                .then(response => {
+                    this.itemLocal.documents.push(response.data.success);
+                })
+                .catch(error => {});
         },
         deleteFile(file) {
             if (file.token) {

@@ -254,13 +254,14 @@
                                         itemLocal.previousTasksIds
                                     "
                                 />
-                                <span
-                                    v-if="!commentDisplay"
-                                    v-on:click="showComment"
-                                    class="linkTxt"
-                                >
-                                    + Ajouter un commentaire
-                                </span>
+                                <div v-if="!commentDisplay">
+                                    <span
+                                        v-on:click="showComment"
+                                        class="linkTxt"
+                                    >
+                                        + Ajouter un commentaire
+                                    </span>
+                                </div>
                             </div>
                             <div class="mb-4">
                                 <div v-if="orderDisplay">
@@ -301,7 +302,7 @@
                                 />
                             </div>
 
-                            <div style="max-width: 200px;">
+                            <div style="max-width: 250px;">
                                 <file-input
                                     :items="uploadedFiles"
                                     :onUpload="uploadFile"
@@ -602,26 +603,25 @@ export default {
                     this.$vs.loading.close();
                 });
         },
-        uploadFile(e) {
-            e.preventDefault();
-            var files = e.target.files;
-            var data = new FormData();
+        uploadFile(item, is_file = true) {
+            const action = `documentManagement/${
+                is_file ? "uploadFile" : "addItem"
+            }`;
+            const payload = is_file ? {} : item;
 
-            if (files.length > 0) {
-                // for single file
-                data.append("files", files[0]);
-
-                var item = {};
-                item.token = this.token;
-                item.files = data;
-
-                this.$store
-                    .dispatch("documentManagement/uploadFile", item)
-                    .then(response => {
-                        this.uploadedFiles.push(response.data.success);
-                    })
-                    .catch(error => {});
+            if (is_file) {
+                const data = new FormData();
+                data.append("files", item);
+                payload.files = data;
             }
+            payload.token = this.token;
+
+            this.$store
+                .dispatch(action, item)
+                .then(response => {
+                    this.uploadedFiles.push(response.data.success);
+                })
+                .catch(error => {});
         },
         deleteFile(file) {
             this.$store
