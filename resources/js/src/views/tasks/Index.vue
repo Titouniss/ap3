@@ -76,7 +76,9 @@
                             v-if="item.status == 'todo'"
                             class="statusRedTask mr-1"
                         />
-                        <span class="nameTask">{{ item.name }}</span>
+                        <span class="truncate">
+                            {{ item.name }}
+                        </span>
                     </div>
 
                     <div class="dateTask">{{ momentTransform(item.date) }}</div>
@@ -514,9 +516,6 @@ export default {
         font-size: 0.8em;
         border-radius: 5px;
     }
-    .card-task:hover {
-        cursor: pointer;
-    }
     .card-task-add {
         background: #2196f3;
         border: 1px solid #2196f3;
@@ -537,7 +536,6 @@ export default {
         color: #080808;
         font-size: 1.1em;
         font-weight: 600;
-        white-space: nowrap;
         display: flex;
     }
     .info-task {

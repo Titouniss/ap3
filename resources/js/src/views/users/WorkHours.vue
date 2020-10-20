@@ -72,19 +72,30 @@
                     >
                         <vs-row vs-justify="center" vs-type="flex">
                             <vs-col vs-w="6" vs-justify="center" vs-type="flex">
-                                <feather-icon
-                                    icon="XIcon"
-                                    svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
-                                    @click="emptyRow(day)"
-                                />
+                                <vx-tooltip text="Vider la ligne" delay=".5s">
+                                    <feather-icon
+                                        icon="XIcon"
+                                        svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+                                        @click="emptyRow(day)"
+                                    />
+                                </vx-tooltip>
                             </vs-col>
-                            <vs-col vs-w="6" vs-justify="center" vs-type="flex">
-                                <feather-icon
-                                    v-if="day !== 'Dimanche'"
-                                    icon="CornerRightDownIcon"
-                                    svgClasses="h-5 w-5 hover:text-primary cursor-pointer"
-                                    @click="copyRowDown(day)"
-                                />
+                            <vs-col
+                                vs-w="6"
+                                vs-justify="flex-start"
+                                vs-type="flex"
+                            >
+                                <vx-tooltip
+                                    text="Copier vers la prochaine ligne"
+                                    delay=".5s"
+                                >
+                                    <feather-icon
+                                        v-if="day !== 'Dimanche'"
+                                        icon="ClipboardIcon"
+                                        svgClasses="h-5 w-5 hover:text-primary cursor-pointer"
+                                        @click="copyRowDown(day)"
+                                    />
+                                </vx-tooltip>
                             </vs-col>
                         </vs-row>
                     </vs-col>

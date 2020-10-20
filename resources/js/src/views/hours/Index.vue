@@ -12,6 +12,7 @@
                         v-model="filters.project"
                         :options="projects"
                         @input="refreshData()"
+                        @search:blur="refreshData()"
                         @search:focus="clearRefreshDataTimeout"
                         class="w-full"
                     >
@@ -47,11 +48,12 @@
                 </vs-dropdown>
                 <div style="min-width: 15em">
                     <v-select
-                        v-if="authorizedTo('read', 'users')"
+                        v-if="authorizedTo('show', 'users')"
                         label="lastname"
                         :options="users"
                         v-model="filters.user"
                         @input="refreshData()"
+                        @search:blur="refreshData()"
                         @search:focus="clearRefreshDataTimeout"
                         class="w-full"
                     >
@@ -615,7 +617,6 @@ export default {
                     filter.period_type = this.filters.period_type;
                 }
             }
-            console.log(filter);
             this.clearRefreshDataTimeout();
             this.refreshDataTimeout = setTimeout(() => {
                 this.$vs.loading();

@@ -8,21 +8,27 @@
             <span class="ml-2">Retour aux heures</span>
         </router-link>
 
-        <div class="vx-card p-6 mt-3 mb-5">
+        <div
+            v-if="
+                activeUserRole() === 'superAdmin' ||
+                    activeUserRole() === 'Administrateur'
+            "
+            class="vx-card p-6 mt-3 mb-5"
+        >
             <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
                 <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div class="mr-10" style="min-width: 15em">
+                <div
+                    v-if="activeUserRole() === 'superAdmin'"
+                    class="mr-10"
+                    style="min-width: 15em"
+                >
                     <v-select
                         label="name"
                         v-model="filters.company"
                         :options="companiesData"
-                        v-bind:class="{
-                            disabled:
-                                activeUserRole() != 'superAdmin' ? true : false
-                        }"
                         @input="refreshDataUsers"
                         class="w-full"
                     >
@@ -36,14 +42,6 @@
                         label="lastname"
                         v-model="filters.user"
                         :options="usersData"
-                        v-bind:class="{
-                            disabled:
-                                !filters.company ||
-                                (activeUserRole() != 'superAdmin' &&
-                                    activeUserRole() != 'Administrateur')
-                                    ? true
-                                    : false
-                        }"
                         @input="refreshDataCalendar"
                         class="w-full"
                     >
@@ -106,6 +104,7 @@
             <edit-form
                 :reload="calendarEvents"
                 :itemId="itemIdToEdit"
+                :company="filters.company"
                 v-if="itemIdToEdit && authorizedToEdit"
             />
         </div>

@@ -178,6 +178,10 @@ export default {
         itemId: {
             type: Number,
             required: true
+        },
+        company: {
+            type: Object,
+            required: true
         }
     },
     data() {
@@ -291,7 +295,9 @@ export default {
             );
         },
         projectsData() {
-            return this.$store.state.projectManagement.projects;
+            return this.$store.state.projectManagement.projects.filter(
+                p => p.company_id == this.company.id
+            );
         }
     },
     methods: {
