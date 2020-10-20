@@ -367,7 +367,7 @@ class TaskController extends Controller
             $this->storeDocuments($id, $arrayRequest['token'], $project->company);
         }
 
-        $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents');
+        $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
 
         if (isset($arrayRequest['documents'])) {
             $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
@@ -377,6 +377,8 @@ class TaskController extends Controller
             foreach ($documents as $doc) {
                 $doc->deleteFile();
             }
+
+            $item->load('documents');
         }
 
         if ($update) {

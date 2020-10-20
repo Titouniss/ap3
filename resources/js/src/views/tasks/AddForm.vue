@@ -305,8 +305,7 @@
                             <div style="max-width: 250px;">
                                 <file-input
                                     :items="uploadedFiles"
-                                    :onUpload="uploadFile"
-                                    :onDelete="file => deleteFile(file)"
+                                    :token="token"
                                 />
                             </div>
                         </div>
@@ -603,41 +602,8 @@ export default {
                     this.$vs.loading.close();
                 });
         },
-        uploadFile(item, is_file = true) {
-            const action = `documentManagement/${
-                is_file ? "uploadFile" : "addItem"
-            }`;
-            const payload = is_file ? {} : item;
-
-            if (is_file) {
-                const data = new FormData();
-                data.append("files", item);
-                payload.files = data;
-            }
-            payload.token = this.token;
-
-            this.$store
-                .dispatch(action, item)
-                .then(response => {
-                    this.uploadedFiles.push(response.data.success);
-                })
-                .catch(error => {});
-        },
-        deleteFile(file) {
-            this.$store
-                .dispatch("documentManagement/deleteFile", file.id)
-                .then(response => {
-                    const index = this.uploadedFiles.indexOf(file);
-                    if (index > -1) {
-                        this.uploadedFiles.splice(index, 1);
-                    }
-                })
-                .catch(error => {});
-        },
         deleteFiles() {
-            var ids = this.uploadedFiles.map(item => {
-                return item.id;
-            });
+            const ids = this.uploadedFiles.map(item => item.id);
             if (ids.length > 0) {
                 this.$store
                     .dispatch("documentManagement/deleteFiles", ids)
