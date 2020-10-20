@@ -247,7 +247,7 @@
                                 style="flex-direction: column; display: flex;"
                             >
                                 <add-previous-task
-                                    v-if="checkProjectStatus"
+                                    v-if="!checkProjectStatus"
                                     :addPreviousTask="addPreviousTask"
                                     :tasks_list="tasks_list"
                                     :previousTasksIds="
