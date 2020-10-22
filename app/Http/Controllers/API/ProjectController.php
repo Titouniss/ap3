@@ -36,7 +36,7 @@ class ProjectController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Project::withTrashed()->get()->load('company')->load('customer');
+            $items = Project::withTrashed()->get()->load('company')->load('customer', 'documents');
         } else if ($user->company_id != null) {
             $items = Project::where('company_id', $user->company_id)->get()->load('company')->load('customer', 'documents');
         }
