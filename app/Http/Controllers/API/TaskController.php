@@ -377,9 +377,9 @@ class TaskController extends Controller
             foreach ($documents as $doc) {
                 $doc->deleteFile();
             }
-
-            $item->load('documents');
         }
+
+        $item->load('documents');
 
         if ($update) {
             return response()->json(['success' => $item], $this->successStatus);

@@ -26,6 +26,12 @@ const getters = {
         return state.is_touch_device ? "div" : "VuePerfectScrollbar";
     },
     AppActiveUser: state => state.AppActiveUser,
+    AppActiveUserRole: state => {
+        if (state.AppActiveUser.roles && state.AppActiveUser.roles.length > 0) {
+            return state.AppActiveUser.roles[0].name;
+        }
+        return false;
+    },
     userPermissions: state => {
         const user = state.AppActiveUser;
         let userPermissions = [];
