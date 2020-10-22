@@ -116,8 +116,9 @@
                             icon="icon-edit"
                             class="mr-4"
                             @click="editRecord"
-                            >Edit</vs-button
                         >
+                            Edit
+                        </vs-button>
                         <vs-button
                             type="border"
                             color="danger"
@@ -125,8 +126,9 @@
                             icon-pack="feather"
                             icon="icon-trash"
                             @click="confirmDeleteRecord"
-                            >Supprimer</vs-button
                         >
+                            Supprimer
+                        </vs-button>
                         <vs-button
                             v-if="project_data.status == 'todo'"
                             type="border"
@@ -134,8 +136,39 @@
                             icon-pack="feather"
                             icon="icon-play"
                             @click="startProject"
-                            >Démarrer le project</vs-button
                         >
+                            Démarrer le project
+                        </vs-button>
+                    </div>
+                </div>
+                <div
+                    v-if="
+                        project_data.documents &&
+                            project_data.documents.length > 0
+                    "
+                    class="mt-4"
+                >
+                    <div class="font-semibold">Documents</div>
+                    <div class="flex flex-row flex-wrap">
+                        <div
+                            v-for="doc in project_data.documents"
+                            :key="doc.id"
+                            class="m-2"
+                        >
+                            <vs-button
+                                color="dark"
+                                type="border"
+                                size="large"
+                                icon-pack="feather"
+                                :icon="`icon-${iconByDocument(doc)}`"
+                                target
+                                :href="doc.url"
+                            >
+                                <div class="truncate" style="max-width: 200px;">
+                                    {{ doc.name }}
+                                </div>
+                            </vs-button>
+                        </div>
                     </div>
                 </div>
             </vx-card>
@@ -205,6 +238,18 @@ export default {
         }
     },
     methods: {
+        iconByDocument(doc) {
+            switch (doc.name.split(".").pop()) {
+                case "pdf":
+                    return "file-text";
+                case "png":
+                case "jpg":
+                case "jpeg":
+                    return "image";
+                default:
+                    return "globe";
+            }
+        },
         authorizedTo(action, model = "projects") {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
