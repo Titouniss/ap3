@@ -62,11 +62,16 @@ class Project extends Model
             Task::where('tasks_bundle_id', $t->id)->delete();
         }
         TasksBundle::where('project_id', $this->id)->delete();
+        return $this->delete();
+    }
+
+    public function forceDeleteCascade()
+    {
         foreach ($this->documents as $doc) {
             if ($doc->models()->count() == 1) {
                 $doc->deleteFile();
             }
         }
-        return $this->delete();
+        $this->forceDelete();
     }
 }

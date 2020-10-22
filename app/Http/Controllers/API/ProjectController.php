@@ -285,7 +285,7 @@ class ProjectController extends Controller
     {
         try {
             $item = Project::withTrashed()->findOrFail($id);
-            $success = $item->forceDelete();
+            $success = $item->forceDeleteCascade();
 
             if (!$success) {
                 throw new Exception('Impossible de supprimer le projet');

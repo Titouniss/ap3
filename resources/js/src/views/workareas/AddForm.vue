@@ -31,7 +31,9 @@
                                 >{{ errors.first("name") }}</span
                             >
 
-                            <small class="ml-1 mb-2" for>Nombre d'opérateur maximum</small>
+                            <small class="ml-1 mb-2" for
+                                >Nombre d'opérateur maximum</small
+                            >
                             <vs-row vs-w="12">
                                 <vs-col vs-w="6">
                                     <vs-input-number
@@ -178,6 +180,13 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="mt-4">
+                                <file-input
+                                    :items="uploadedFiles"
+                                    :token="token"
+                                />
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -190,13 +199,15 @@
 import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import FileInput from "@/components/inputs/FileInput.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect
+        vSelect,
+        FileInput
     },
     data() {
         return {
@@ -208,7 +219,14 @@ export default {
                 company_id: null,
                 skills: []
             },
-            companySkills: []
+            companySkills: [],
+
+            token:
+                "token_" +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 15),
+            uploadedFiles: []
         };
     },
     computed: {
@@ -238,7 +256,10 @@ export default {
         }
     },
     methods: {
-        clearFields() {
+        clearFields(deleteFiles = true) {
+            if (deleteFiles) {
+                this.deleteFiles();
+            }
             this.itemLocal = {
                 name: "",
                 max_users: 1,
@@ -254,11 +275,12 @@ export default {
         addItem() {
             this.$validator.validateAll().then(result => {
                 if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    if (this.uploadedFiles.length) {
+                        item.token = this.token;
+                    }
                     this.$store
-                        .dispatch(
-                            "workareaManagement/addItem",
-                            Object.assign({}, this.itemLocal)
-                        )
+                        .dispatch("workareaManagement/addItem", item)
                         .then(() => {
                             this.$vs.notify({
                                 title: "Ajout d'un îlot",
@@ -278,11 +300,22 @@ export default {
                             });
                         })
                         .finally(() => {
-                            this.clearFields();
+                            this.clearFields(false);
                             this.$vs.loading.close();
                         });
                 }
             });
+        },
+        deleteFiles() {
+            const ids = this.uploadedFiles.map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/deleteFiles", ids)
+                    .then(response => {
+                        this.uploadedFiles = [];
+                    })
+                    .catch(error => {});
+            }
         }
     }
 };

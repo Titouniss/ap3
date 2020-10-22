@@ -182,6 +182,7 @@ import vSelect from "vue-select";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -462,6 +463,13 @@ export default {
             );
             moduleCompanyManagement.isRegistered = true;
         }
+        if (!moduleDocumentManagement.isRegistered) {
+            this.$store.registerModule(
+                "documentManagement",
+                moduleDocumentManagement
+            );
+            moduleDocumentManagement.isRegistered = true;
+        }
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
@@ -478,9 +486,11 @@ export default {
         moduleWorkareaManagement.isRegistered = false;
         moduleSkillManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
+        moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("companyManagement");
+        this.$store.unregisterModule("documentManagement");
     }
 };
 </script>

@@ -24,7 +24,7 @@
                     class="fileContainer py-2 px-3 w-1/2"
                     @click="isUrlMode = true"
                 >
-                    <feather-icon icon="LinkIcon" svgClasses="h-4 w-4 mr-2" />
+                    <feather-icon icon="GlobeIcon" svgClasses="h-4 w-4 mr-2" />
                     Web
                 </label>
             </div>
@@ -63,7 +63,10 @@
                 <div
                     class="fileContainer fileContainerValid my-2 py-2 px-3 justify-between items-center"
                 >
-                    <div class="truncate">
+                    <div
+                        class="truncate hover:text-primary cursor-pointer"
+                        @click="openUrl(item.url)"
+                    >
                         {{ item.name }}
                     </div>
                     <feather-icon
@@ -109,6 +112,9 @@ export default {
         }
     },
     methods: {
+        openUrl(url) {
+            window.open(url);
+        },
         resetFileInput() {
             if (this.$refs && this.$refs.files) {
                 this.$refs.files.value = "";
