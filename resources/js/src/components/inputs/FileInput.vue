@@ -31,7 +31,11 @@
 
             <div v-if="isUrlMode">
                 <vs-input
-                    v-validate="{ url: { require_protocol: true } }"
+                    v-validate="{
+                        url: { require_protocol: true },
+                        required: true,
+                        max: 2000
+                    }"
                     placeholder="https://..."
                     name="url"
                     v-model="url"
