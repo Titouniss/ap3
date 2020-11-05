@@ -3,7 +3,7 @@
         <small class="date-label">Documents</small>
         <div class="filesContainer">
             <div
-                v-if="!activeAddUrl"
+                v-if="!isUrlMode"
                 class="my-2 flex flex-row items-center justify-between"
             >
                 <label for="files" class="fileContainer py-2 px-3 mr-2 w-1/2">
@@ -15,23 +15,27 @@
                     name="files"
                     id="files"
                     ref="files"
-                    @click="reset"
-                    @change="uploadFile"
+                    @click="resetFileInput"
+                    @change="onFileAdd"
                     class="inputfile"
                     accept="application/pdf|text/html|images/*"
                 />
                 <label
                     class="fileContainer py-2 px-3 w-1/2"
-                    @click="activeAddUrl = true"
+                    @click="isUrlMode = true"
                 >
-                    <feather-icon icon="LinkIcon" svgClasses="h-4 w-4 mr-2" />
+                    <feather-icon icon="GlobeIcon" svgClasses="h-4 w-4 mr-2" />
                     Web
                 </label>
             </div>
 
-            <div v-if="activeAddUrl">
+            <div v-if="isUrlMode">
                 <vs-input
-                    v-validate="{ url: { require_protocol: true } }"
+                    v-validate="{
+                        url: { require_protocol: true },
+                        required: true,
+                        max: 2000
+                    }"
                     placeholder="https://..."
                     name="url"
                     v-model="url"
@@ -43,7 +47,7 @@
                     <feather-icon
                         icon="XIcon"
                         svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
-                        @click="activeAddUrl = false"
+                        @click="isUrlMode = false"
                     />
                     <feather-icon
                         icon="PlusIcon"
@@ -54,21 +58,24 @@
                                 'cursor-pointer': validateForm
                             }
                         ]"
-                        @click="addUrl"
+                        @click="onUrlAdd"
                     />
                 </div>
             </div>
 
-            <div v-for="item in items" v-bind:key="item.id">
+            <div v-for="item in displayItems" v-bind:key="item.id">
                 <div
                     class="fileContainer fileContainerValid my-2 py-2 px-3 justify-between items-center"
                 >
-                    <div class="truncate">
+                    <div
+                        class="truncate hover:text-primary cursor-pointer"
+                        @click="openUrl(item.url)"
+                    >
                         {{ item.name }}
                     </div>
                     <feather-icon
                         icon="TrashIcon"
-                        @click="onDelete(item)"
+                        @click="deleteFile(item)"
                         svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                     />
                 </div>
@@ -86,42 +93,45 @@ export default {
             type: Array,
             required: true
         },
-        onUpload: {
-            type: Function,
-            required: true
-        },
-        onDelete: {
-            type: Function,
+        token: {
+            type: String,
             required: true
         }
     },
     data() {
         return {
-            activeAddUrl: false,
-            url: ""
+            url: "",
+            isUrlMode: false,
+            hiddenItems: []
         };
     },
     computed: {
         validateForm() {
             return !this.errors.any() && this.url !== "";
+        },
+        displayItems() {
+            return this.items.filter(
+                item => this.hiddenItems.indexOf(item) === -1
+            );
         }
     },
     methods: {
-        reset() {
+        openUrl(url) {
+            window.open(url);
+        },
+        resetFileInput() {
             if (this.$refs && this.$refs.files) {
                 this.$refs.files.value = "";
             }
-            this.url = "";
-            this.activeAddUrl = false;
         },
-        uploadFile(e) {
+        onFileAdd(e) {
             e.preventDefault();
             const files = e.target.files;
             if (files.length > 0) {
-                this.onUpload(files[0], true);
+                this.uploadFile(files[0], true);
             }
         },
-        addUrl() {
+        onUrlAdd() {
             if (!this.validateForm) {
                 return;
             }
@@ -131,14 +141,53 @@ export default {
                 name = this.url.replace("https://", "").replace("http://", "");
             }
 
-            this.onUpload(
+            this.uploadFile(
                 {
                     name: name,
                     path: this.url
                 },
                 false
             );
-            this.reset();
+            this.url = "";
+            this.isUrlMode = false;
+        },
+        uploadFile(item, is_file = true) {
+            const action = `documentManagement/${
+                is_file ? "uploadFile" : "addItem"
+            }`;
+            const payload = is_file ? {} : item;
+
+            if (is_file) {
+                const data = new FormData();
+                data.append("files", item);
+                payload.files = data;
+            }
+            payload.token = this.token;
+
+            this.$store
+                .dispatch(action, payload)
+                .then(response => {
+                    this.items.push(response.data.success);
+                })
+                .catch(error => {});
+        },
+        deleteFile(file) {
+            if (file.token) {
+                this.$store
+                    .dispatch("documentManagement/deleteFile", file.id)
+                    .then(response => {
+                        const index = this.items.indexOf(file);
+                        if (index > -1) {
+                            this.items.splice(index, 1);
+                        }
+                    })
+                    .catch(error => {});
+            } else {
+                const index = this.items.indexOf(file);
+                if (index > -1) {
+                    this.items.splice(index, 1);
+                }
+            }
         }
     }
 };

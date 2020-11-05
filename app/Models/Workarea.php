@@ -20,4 +20,19 @@ class Workarea extends Model
     {
         return $this->belongsToMany('App\Models\Skill', 'workareas_skills', 'workarea_id')->withTrashed();
     }
+
+    public function documents()
+    {
+        return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', Workarea::class);
+    }
+
+    public function forceDeleteCascade()
+    {
+        foreach ($this->documents as $doc) {
+            if ($doc->models()->count() == 1) {
+                $doc->deleteFile();
+            }
+        }
+        $this->forceDelete();
+    }
 }

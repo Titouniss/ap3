@@ -31,6 +31,11 @@ class Project extends Model
         return $this->hasMany('App\Models\TasksBundle');
     }
 
+    public function documents()
+    {
+        return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', Project::class);
+    }
+
     public function getTasksAttribute()
     {
         $tasksBundles = $this->tasksBundles;
@@ -58,5 +63,15 @@ class Project extends Model
         }
         TasksBundle::where('project_id', $this->id)->delete();
         return $this->delete();
+    }
+
+    public function forceDeleteCascade()
+    {
+        foreach ($this->documents as $doc) {
+            if ($doc->models()->count() == 1) {
+                $doc->deleteFile();
+            }
+        }
+        $this->forceDelete();
     }
 }

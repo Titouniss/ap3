@@ -45,7 +45,7 @@ class ModuleDataRow extends Model
                     break;
                 case 'relationship':
                     if ($value && $drDetails && isset($drDetails->model)) {
-                        $newValue = ModelHasOldId::where('company_id', $this->module->company_id)->where('model', $drDetails->model)->where('old_id', $value)->firstOr(function () {
+                        $newValue = ModelHasOldId::where('company_id', $this->moduleDataType->module->company_id)->where('model', $drDetails->model)->where('old_id', $value)->firstOr(function () {
                             return new ModelHasOldId(); // Rendra new_id vide
                         })->new_id;
                     }

@@ -36,9 +36,9 @@ class ProjectController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Project::withTrashed()->get()->load('company')->load('customer');
+            $items = Project::withTrashed()->get()->load('company')->load('customer', 'documents');
         } else if ($user->company_id != null) {
-            $items = Project::where('company_id', $user->company_id)->get()->load('company')->load('customer');
+            $items = Project::where('company_id', $user->company_id)->get()->load('company')->load('customer', 'documents');
         }
         return response()->json(['success' => $items], $this->successStatus);
     }
@@ -52,7 +52,7 @@ class ProjectController extends Controller
     public function show($id)
     {
         $item = Project::where('id', $id)->first();
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $item->load('documents')], $this->successStatus);
     }
 
     /**
@@ -74,7 +74,24 @@ class ProjectController extends Controller
         }
         $item = Project::create($arrayRequest)->load('company');
         ProjectController::checkIfTaskBundleExist($item->id);
-        return response()->json(['success' => $item], $this->successStatus);
+        if (isset($arrayRequest['token'])) {
+            $this->storeProjectDocuments($item, $arrayRequest['token']);
+        }
+        return response()->json(['success' => $item->load('documents')], $this->successStatus);
+    }
+
+    private function storeProjectDocuments($project, $token)
+    {
+        if ($token && $project) {
+            $documents = Document::where('token', $token)->get();
+
+            foreach ($documents as $doc) {
+                ModelHasDocuments::firstOrCreate(['model' => Project::class, 'model_id' => $project->id, 'document_id' => $doc->id]);
+                $doc->moveFile($project->company->name);
+                $doc->token = null;
+                $doc->save();
+            }
+        }
     }
 
     public function addRange(Request $request, $id)
@@ -191,12 +208,27 @@ class ProjectController extends Controller
                 'color' => $arrayRequest['color']
             ]);
 
-        if ($update) {
-            $item = Project::find($id)->load('company')->load('customer');
-            return response()->json(['success' => $item], $this->successStatus);
-        } else {
+        if (!$update) {
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
+
+        $item = Project::find($id)->load('company')->load('customer');
+
+        if (isset($arrayRequest['token'])) {
+            $this->storeProjectDocuments($item, $arrayRequest['token']);
+        }
+
+        if (isset($arrayRequest['documents'])) {
+            $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
+                return $doc['id'];
+            }, $arrayRequest['documents']))->get();
+
+            foreach ($documents as $doc) {
+                $doc->deleteFile();
+            }
+        }
+
+        return response()->json(['success' => $item->load('documents')], $this->successStatus);
     }
 
     /**
@@ -253,7 +285,7 @@ class ProjectController extends Controller
     {
         try {
             $item = Project::withTrashed()->findOrFail($id);
-            $success = $item->forceDelete();
+            $success = $item->forceDeleteCascade();
 
             if (!$success) {
                 throw new Exception('Impossible de supprimer le projet');

@@ -18,6 +18,11 @@ class Document extends Model
         return $this->is_file ? URL::to('/api/document-management/get-file') . '/' . array_pop($pathArray) : $this->path;
     }
 
+    public function models()
+    {
+        return ModelHasDocuments::where('document_id', $this->id)->get();
+    }
+
     public function moveFile($subFolder = "")
     {
         if ($this->is_file) {

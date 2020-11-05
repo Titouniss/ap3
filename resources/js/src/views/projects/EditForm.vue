@@ -116,6 +116,12 @@
                                 </template>
                             </v-select>
                         </div>
+                        <div class="my-4">
+                            <file-input
+                                :items="itemLocal.documents"
+                                :token="token"
+                            />
+                        </div>
                     </div>
                 </div>
             </form>
@@ -134,6 +140,7 @@ import vSelect from "vue-select";
 import VSwatches from "vue-swatches";
 import "vue-swatches/dist/vue-swatches.css";
 
+import FileInput from "@/components/inputs/FileInput.vue";
 import { project_colors } from "../../../themeConfig";
 
 // register custom messages
@@ -143,7 +150,8 @@ export default {
     components: {
         vSelect,
         Datepicker,
-        VSwatches
+        VSwatches,
+        FileInput
     },
     props: {
         itemId: {
@@ -161,7 +169,12 @@ export default {
                 )
             ),
             colors: project_colors,
-            langFr: fr
+            langFr: fr,
+            token:
+                "token_" +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 15)
         };
     },
     computed: {
@@ -223,6 +236,7 @@ export default {
     },
     methods: {
         init() {
+            this.deleteFiles();
             this.itemLocal = Object.assign(
                 {},
                 this.$store.getters["projectManagement/getItem"](this.itemId)
@@ -230,14 +244,17 @@ export default {
         },
         submitItem() {
             this.$validator.validateAll().then(result => {
-                this.itemLocal.date = moment(this.itemLocal.date).format(
-                    "YYYY-MM-DD"
-                );
-                this.itemLocal.company_id = this.itemLocal.company.id;
-                this.itemLocal.customer_id = this.itemLocal.customer.id;
+                const item = JSON.parse(JSON.stringify(this.itemLocal));
+
+                item.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
+                item.company_id = this.itemLocal.company.id;
+                if (this.itemLocal.customer) {
+                    item.customer_id = this.itemLocal.customer.id;
+                }
+                item.token = this.token;
 
                 this.$store
-                    .dispatch("projectManagement/updateItem", this.itemLocal)
+                    .dispatch("projectManagement/updateItem", item)
                     .then(() => {
                         this.$vs.loading.close();
                         this.$vs.notify({
@@ -283,6 +300,16 @@ export default {
                 }
             }
             return filteredItems;
+        },
+        deleteFiles() {
+            const ids = this.itemLocal.documents
+                .filter(item => item.token)
+                .map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/deleteFiles", ids)
+                    .catch(error => {});
+            }
         }
     },
     mounted() {

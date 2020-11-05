@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Document;
+use App\Models\ModelHasDocuments;
 use Illuminate\Http\Request;
 use App\Models\Workarea;
 use App\Models\WorkareasSkill;
@@ -25,9 +27,9 @@ class WorkareaController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->hasRole('superAdmin')) {
-            $items = Workarea::withTrashed()->get()->load('company', 'skills');
+            $items = Workarea::withTrashed()->get()->load('company', 'skills', 'documents');
         } else if ($user->company_id != null) {
-            $items = Workarea::withTrashed()->where('company_id', $user->company_id)->get()->load('company', 'skills');
+            $items = Workarea::withTrashed()->where('company_id', $user->company_id)->get()->load('company', 'skills', 'documents');
         }
         return response()->json(['success' => $items], $this->successStatus);
     }
@@ -40,7 +42,7 @@ class WorkareaController extends Controller
      */
     public function show($id)
     {
-        $item = Workarea::where('id', $id)->first()->load('skills', 'company');
+        $item = Workarea::where('id', $id)->first()->load('skills', 'company', 'documents');
         return response()->json(['success' => $item], $this->successStatus);
     }
 
@@ -68,7 +70,11 @@ class WorkareaController extends Controller
             }
         }
 
-        return response()->json(['success' => $item->load('skills')], $this->successStatus);
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocuments($item, $arrayRequest['token']);
+        }
+
+        return response()->json(['success' => $item->load('skills', 'documents')], $this->successStatus);
     }
 
     /**
@@ -92,7 +98,6 @@ class WorkareaController extends Controller
     public function update(Request $request, $id)
     {
         $arrayRequest = $request->all();
-
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'company_id' => 'required'
@@ -109,10 +114,38 @@ class WorkareaController extends Controller
                     WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
                 }
             }
+
+            if (isset($arrayRequest['token'])) {
+                $this->storeDocuments($item, $arrayRequest['token']);
+            }
+
+            if (isset($arrayRequest['documents'])) {
+                $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
+                    return $doc['id'];
+                }, $arrayRequest['documents']))->get();
+
+                foreach ($documents as $doc) {
+                    $doc->deleteFile();
+                }
+            }
             $item->save();
+            $item->load('skills', 'company', 'documents');
         }
-        $item = Workarea::find($id)->load('skills', 'company');
         return response()->json(['success' => $item], $this->successStatus);
+    }
+
+    private function storeDocuments($workarea, $token)
+    {
+        if ($token && $workarea) {
+            $documents = Document::where('token', $token)->get();
+
+            foreach ($documents as $doc) {
+                ModelHasDocuments::firstOrCreate(['model' => Workarea::class, 'model_id' => $workarea->id, 'document_id' => $doc->id]);
+                $doc->moveFile($workarea->company->name);
+                $doc->token = null;
+                $doc->save();
+            }
+        }
     }
 
     /**
@@ -154,7 +187,7 @@ class WorkareaController extends Controller
     public function forceDelete($id)
     {
         $item = Workarea::withTrashed()->findOrFail($id);
-        $item->forceDelete();
+        $item->forceDeleteCascade();
         return response()->json(['success' => true], $this->successStatus);
     }
 }

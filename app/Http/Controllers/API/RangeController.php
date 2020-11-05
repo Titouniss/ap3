@@ -250,6 +250,8 @@ class RangeController extends Controller
                 foreach ($documents as $doc) {
                     $doc->deleteFile();
                 }
+
+                $item->load('documents');
             }
 
             if (isset($repetitive_task['token'])) {

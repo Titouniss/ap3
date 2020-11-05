@@ -112,8 +112,7 @@
                             <div class="my-4">
                                 <file-input
                                     :items="itemLocal.documents"
-                                    :onUpload="uploadFile"
-                                    :onDelete="file => deleteFile(file)"
+                                    :token="token"
                                 />
                             </div>
                         </div>
@@ -205,7 +204,6 @@ export default {
             this.deleteFiles();
             this.itemLocal = {};
             this.workareasDataFiltered = [];
-            this.uploadedFiles = [];
         },
         submitItem() {
             this.$validator.validateAll().then(result => {
@@ -239,44 +237,6 @@ export default {
                 }
             });
         },
-        uploadFile(item, is_file = true) {
-            const action = `documentManagement/${
-                is_file ? "uploadFile" : "addItem"
-            }`;
-            const payload = is_file ? {} : item;
-
-            if (is_file) {
-                const data = new FormData();
-                data.append("files", item);
-                payload.files = data;
-            }
-            payload.token = this.token;
-
-            this.$store
-                .dispatch(action, item)
-                .then(response => {
-                    this.itemLocal.documents.push(response.data.success);
-                })
-                .catch(error => {});
-        },
-        deleteFile(file) {
-            if (file.token) {
-                this.$store
-                    .dispatch("documentManagement/deleteFile", file.id)
-                    .then(response => {
-                        const index = this.itemLocal.documents.indexOf(file);
-                        if (index > -1) {
-                            this.itemLocal.documents.splice(index, 1);
-                        }
-                    })
-                    .catch(error => {});
-            } else {
-                const index = this.itemLocal.documents.indexOf(file);
-                if (index > -1) {
-                    this.itemLocal.documents.splice(index, 1);
-                }
-            }
-        },
         deleteFiles() {
             const ids = this.itemLocal.documents
                 .filter(item => item.token)
@@ -284,9 +244,6 @@ export default {
             if (ids.length > 0) {
                 this.$store
                     .dispatch("documentManagement/deleteFiles", ids)
-                    .then(response => {
-                        this.uploadedFiles = [];
-                    })
                     .catch(error => {});
             }
         },
