@@ -382,6 +382,13 @@ export default {
                     field: "duration"
                 },
                 {
+                    headerName: "Opérateur",
+                    field: "user",
+                    cellRenderer: data => {
+                        return data.data.user.firstname + ' ' + data.data.user.lastname;
+                    }
+                },
+                {
                     headerName: "Description",
                     field: "description"
                 },
@@ -522,6 +529,7 @@ export default {
             return this.$store.state.userManagement.users;
         },
         hoursData() {
+            console.log("hoursData -> this.$store.state.hoursManagement.hours", this.$store.state.hoursManagement.hours)
             return this.$store.state.hoursManagement.hours;
         },
         paginationPageSize() {
@@ -761,10 +769,23 @@ export default {
                     return value;
                 })
             );
+        },
+        activeUserRole() {
+            const user = this.$store.state.AppActiveUser;
+            if (user.roles && user.roles.length > 0) {
+                return user.roles[0].name;
+            }
+            return false;
         }
     },
     mounted() {
         this.gridApi = this.gridOptions.api;
+
+        // Hide user column ?
+        this.gridOptions.columnApi.setColumnVisible(
+            "user",
+            this.activeUserRole() == "superAdmin" || this.activeUserRole() == "Administrateur"? true : false
+        );
 
         window.addEventListener("resize", this.onResize);
         if (this.gridApi) {
