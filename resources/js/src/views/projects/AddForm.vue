@@ -132,7 +132,7 @@ export default {
         date: new Date(),
         customer: null,
         company:
-          this.activeUserRole() != "superAdmin"
+          this.activeUserRole() != "superAdmin" || this.activeUserRole() != "Administrateur"
             ? this.$store.state.AppActiveUser.company.id
             : null,
         company:
