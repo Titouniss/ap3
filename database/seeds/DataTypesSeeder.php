@@ -63,8 +63,8 @@ class DataTypesSeeder extends Seeder
         $type = $this->dataType('workareas');
         if (!$type->exists) {
             $type->fill([
-                'display_name_singular' => 'Îlot',
-                'display_name_plurial' => 'Îlots',
+                'display_name_singular' => 'pôle de produciton',
+                'display_name_plurial' => 'pôles de producitons',
                 'model' => Workarea::class,
                 'order' => 1
             ])->save();

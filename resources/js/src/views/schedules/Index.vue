@@ -19,7 +19,7 @@
                             v-on:click="changeList('ilots')"
                             class="text-dark cursor-pointer"
                         >
-                            Plannings par îlot
+                            Plannings par pôle de production
                         </a>
                         <hr
                             v-if="schedulList === 'ilots'"
@@ -105,7 +105,7 @@
                             {{ workarea.name }}
                         </div>
                     </div>
-                    <h4 v-if="!workareasData" color="red">Aucun îlot</h4>
+                    <h4 v-if="!workareasData" color="red">Aucun pôle de produciton</h4>
                 </div>
                 <!-- users list-->
                 <div

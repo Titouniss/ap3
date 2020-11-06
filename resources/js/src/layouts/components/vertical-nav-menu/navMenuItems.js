@@ -27,7 +27,7 @@ export default [
     },
     {
         url: "/workareas",
-        name: "Ilots",
+        name: "Pôles de productions",
         slug: "workareas",
         icon: "ArchiveIcon"
     },

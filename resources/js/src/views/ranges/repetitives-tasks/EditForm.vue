@@ -89,12 +89,12 @@
                                         workareasDataFiltered.length == 0
                                 "
                                 class="text-danger text-sm"
-                                >Attention, aucun îlot ne possède cette
+                                >Attention, aucun pôle de produciton ne possède cette
                                 combinaison de compétences</span
                             >
 
                             <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
-                      <vs-select name="workarea" label="Ilot" v-model="itemLocal.workarea_id" class="w-full mt-3">
+                      <vs-select name="workarea" label="Pôle de production" v-model="itemLocal.workarea_id" class="w-full mt-3">
                           <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
                       </vs-select>
                     </div> -->

@@ -167,7 +167,7 @@ const router = new Router({
                     component: () => import("./views/workareas/Index.vue"),
                     meta: {
                         rule: "admin",
-                        pageTitle: "Gestion des îlots",
+                        pageTitle: "Gestion des pôles de producitons",
                         requiresAuth: true
                     }
                 },

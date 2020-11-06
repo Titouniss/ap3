@@ -101,13 +101,13 @@
                                 "
                                 class="text-danger text-sm"
                             >
-                                Attention, aucun îlot ne possède cette
+                                Attention, aucun pôle de produciton ne possède cette
                                 combinaison de compétences
                             </span>
                             <!--
                 <vs-select
                   name="workarea"
-                  label="Ilot"
+                  label="Pôle de production"
                   v-model="itemLocal.workarea_id"
                   class="w-full mt-3"
                 >

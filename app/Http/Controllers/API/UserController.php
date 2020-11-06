@@ -390,7 +390,7 @@ class UserController extends Controller
         $item = User::create($arrayRequest)->load('company');
         $item->markEmailAsVerified();
         if ($item->email !== null) {
-            $item->sendEmailAdUserNotification($password);
+            $item->sendEmailAdUserNotification($item->id);
         }
 
         if (isset($arrayRequest['roles'])) {

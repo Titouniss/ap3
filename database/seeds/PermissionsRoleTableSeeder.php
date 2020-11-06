@@ -25,7 +25,7 @@ class PermissionsRoleTableSeeder extends Seeder
 
             ['permissions', 'permissions', false],
             ['companies', 'entreprises', false],
-            ['workareas', 'îlots', true],
+            ['workareas', 'pôles_de_productions', true],
             ['skills', 'compétences', true],
             ['projects', 'projets', true],
             ['tasks', 'tâches', true],

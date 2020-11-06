@@ -403,7 +403,7 @@ class ProjectController extends Controller
         $alerts = [];
         $haveHours ? null : $alerts[] = "Aucun utilisateur ne possède d'heures de travail";
         $workersHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un utilisateur";
-        $workareasHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un îlot";
+        $workareasHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un pôle de produciton";
 
         return count($alerts) > 0 ? $alerts : null;
     }

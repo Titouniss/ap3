@@ -1,10 +1,10 @@
 <template>
     <div class="p-3 mb-4 mr-4">
         <vs-button @click="activePrompt = true" class="w-full"
-            >Ajouter un îlot</vs-button
+            >Ajouter un pôle de produciton</vs-button
         >
         <vs-prompt
-            title="Ajouter un îlot"
+            title="Ajouter un pôle de produciton"
             accept-text="Ajouter"
             cancel-text="Annuler"
             button-cancel="border"
@@ -283,7 +283,7 @@ export default {
                         .dispatch("workareaManagement/addItem", item)
                         .then(() => {
                             this.$vs.notify({
-                                title: "Ajout d'un îlot",
+                                title: "Ajout d'un pôle de produciton",
                                 text: `"${this.itemLocal.name}" ajoutée avec succès`,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",

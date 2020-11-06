@@ -1,6 +1,6 @@
 <template>
     <vs-prompt
-        title="Editer un îlot"
+        title="Editer un pôle de produciton"
         accept-text="Modifier"
         cancel-text="Annuler"
         button-cancel="border"
@@ -235,7 +235,7 @@ export default {
                         .then(() => {
                             this.$vs.loading.close();
                             this.$vs.notify({
-                                title: "Modification d'un îlot",
+                                title: "Modification d'un pôle de produciton",
                                 text: `"${this.itemLocal.name}" modifié avec succès`,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",

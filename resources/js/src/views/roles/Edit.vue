@@ -398,12 +398,12 @@ export default {
         dependencyChecking(type, item) {
             switch (item.name) {
                 case "show workareas":
-                    if (this.selected[this.permissions.îlots.show.id]) {
-                        this.selected[this.permissions.îlots.read.id] = true;
+                    if (this.selected[this.permissions.pôles_de_productions.show.id]) {
+                        this.selected[this.permissions.pôles_de_productions.read.id] = true;
                         this.selected[this.permissions.compétences.read.id] = true;
                     } else {
-                        const dependencies = ["îlots", "compétences"];
-                        this.otherModuleNeedRead("îlots", dependencies)
+                        const dependencies = ["pôles_de_productions", "compétences"];
+                        this.otherModuleNeedRead("pôles_de_productions", dependencies)
                     }
                     break;
                 case "show users":
@@ -436,10 +436,10 @@ export default {
                 case "show skills":
                     if (this.selected[this.permissions.compétences.show.id]) {
                         this.selected[this.permissions.compétences.read.id] = true;
-                        this.selected[this.permissions.îlots.read.id] = true;
+                        this.selected[this.permissions.pôles_de_productions.read.id] = true;
                         this.selected[this.permissions.tâches.read.id] = true;
                     } else {
-                        const dependencies = ["compétences", "îlots", "îlots", "tâches"];
+                        const dependencies = ["compétences", "pôles_de_productions", "pôles_de_productions", "tâches"];
                         this.otherModuleNeedRead("compétences", dependencies);
                     }
                     break;
@@ -447,12 +447,12 @@ export default {
                     if (this.selected[this.permissions.planning.show.id]) {
                         this.selected[this.permissions.planning.read.id] = true;
                         this.selected[this.permissions.projets.read.id] = true;
-                        this.selected[this.permissions.îlots.read.id] = true;
+                        this.selected[this.permissions.pôles_de_productions.read.id] = true;
                         this.selected[this.permissions.tâches.read.id] = true;
                         this.selected[this.permissions.compétences.read.id] = true;
                         this.selected[this.permissions.utilisateurs.read.id] = true;
                     } else {
-                        const dependencies = ["planning", "projets", "îlots", "tâches", "compétences", "utilisateurs"];
+                        const dependencies = ["planning", "projets", "pôles_de_productions", "tâches", "compétences", "utilisateurs"];
                         this.otherModuleNeedRead("planning", dependencies);
                     }
                     
@@ -469,12 +469,12 @@ export default {
                 case "show projects":
                     if (this.selected[this.permissions.projets.show.id]) {
                         this.selected[this.permissions.projets.read.id] = true;
-                        this.selected[this.permissions.îlots.read.id] = true;
+                        this.selected[this.permissions.pôles_de_productions.read.id] = true;
                         this.selected[this.permissions.compétences.read.id] = true;
                         this.selected[this.permissions.clients.read.id] = true;
                         this.selected[this.permissions.gammes.read.id] = true;
                     } else {
-                        const dependencies = ["projets", "îlots", "compétences", "clients", "gammes"];
+                        const dependencies = ["projets", "pôles_de_productions", "compétences", "clients", "gammes"];
                         this.otherModuleNeedRead("projets", dependencies);
                     }
                     
@@ -513,7 +513,7 @@ export default {
         },
         otherModuleNeedRead(origin, moduleDependencies) {
             // Get all show module
-            const modules = ["îlots", "utilisateurs", "indiponibilités", "compétences", "tâches", "planning", "roles", "projets", "heures", "heures_supplémentaires", "clients"];
+            const modules = ["pôles_de_productions", "utilisateurs", "indiponibilités", "compétences", "tâches", "planning", "roles", "projets", "heures", "heures_supplémentaires", "clients"];
             let modulesShow = [];
             modules.forEach(m => {
                 if (this.selected[this.permissions[m].show.id] === true) {
@@ -523,14 +523,14 @@ export default {
         
             // Define all dependences
             const dependencies = {
-                "îlots" : ["îlots", "compétences", "entreprise"],
+                "pôles_de_productions" : ["pôles_de_productions", "compétences", "entreprise"],
                 "utilisateurs" : ["utilisateurs", "roles", "entreprises", "compétences" ],
                 "indisponibilités" : [],
                 "tâches" : ["utilisateurs"],
-                "compétences" : ["compétences", "entreprises", "îlots"],
-                "planning" : ["planning", "îlots", "compétences", "utilisateurs"],
+                "compétences" : ["compétences", "entreprises", "pôles_de_productions"],
+                "planning" : ["planning", "pôles_de_productions", "compétences", "utilisateurs"],
                 "roles" : ["roles", "utilisateurs", "permissions"],
-                "projets" : ["entreprises", "gammes", "clients", "îlots"],
+                "projets" : ["entreprises", "gammes", "clients", "pôles_de_productions"],
                 "heures" : ['heures', "utilisateurs", "entreprise", "planning"],
                 "clients" : ["clients", "entreprise"],
                 "entreprises" : ["entreprises"]

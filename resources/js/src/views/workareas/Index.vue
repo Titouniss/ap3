@@ -172,7 +172,7 @@
 <script>
 var model = "workarea";
 var modelPlurial = "workareas";
-var modelTitle = "Ilot";
+var modelTitle = "Pôle de production";
 
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
@@ -197,7 +197,7 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 
-var modelTitle = "Ilot";
+var modelTitle = "Pôle de production";
 
 export default {
     components: {
@@ -223,7 +223,7 @@ export default {
             // AgGrid
             gridApi: null,
             gridOptions: {
-                localeText: { noRowsToShow: "Aucun îlot à afficher" }
+                localeText: { noRowsToShow: "Aucun pôle de production à afficher" }
             },
             defaultColDef: {
                 sortable: true,
@@ -271,7 +271,7 @@ export default {
                         model: "workarea",
                         modelPlurial: "workareas",
                         withPrompt: true,
-                        name: data => `l'îlot ${data.name}`
+                        name: data => `le pôle de production ${data.name}`
                     },
                     width: 60
                 }
@@ -333,13 +333,13 @@ export default {
                 text:
                     type === "delete" &&
                     this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces îlots ?`
+                        ? `Voulez vous vraiment supprimer ces pôles de productions ?`
                         : type === "delete" &&
                           this.gridApi.getSelectedRows().length === 1
-                        ? `Voulez vous vraiment supprimer l'îlot ${singleWorkarea.name} ?`
+                        ? `Voulez vous vraiment supprimer le pôle de produciton ${singleWorkarea.name} ?`
                         : this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment archiver ces îlots ?`
-                        : `Voulez vous vraiment archiver l'îlot ${singleWorkarea.name} ?`,
+                        ? `Voulez vous vraiment archiver ces pôles de producitons ?`
+                        : `Voulez vous vraiment archiver le pôle de produciton ${singleWorkarea.name} ?`,
                 accept:
                     type === "delete" ? this.deleteRecord : this.archiveRecord,
                 acceptText: type === "delete" ? "Supprimer" : "Archiver",
@@ -395,12 +395,12 @@ export default {
                 title: modelTitle,
                 text:
                     type === "delete" && selectedRowLength > 1
-                        ? `Îlots supprimés`
+                        ? `pôles de producitons supprimés`
                         : type === "delete" && selectedRowLength === 1
-                        ? `Îlot supprimé`
+                        ? `pôle de produciton supprimé`
                         : selectedRowLength > 1
-                        ? `Îlots archivés`
-                        : `Îlot archivé`
+                        ? `pôles de producitons archivés`
+                        : `pôle de produciton archivé`
             });
         },
         onResize(event) {

@@ -74,7 +74,7 @@
               v-show="errors.has('userId')"
             >{{ errors.first('userId') }}</span>
 
-            <p class="mt-4" v-if="workareasSkillsData && workareasSkillsData.length > 0">Îlot</p>
+            <p class="mt-4" v-if="workareasSkillsData && workareasSkillsData.length > 0">Pôle de produciton</p>
             <vs-select
               v-if="workareasSkillsData && workareasSkillsData.length > 0"
               v-validate="'required'"

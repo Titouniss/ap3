@@ -507,7 +507,7 @@ export default {
       let workarea = this.$store.state.workareaManagement.workareas.find(
         (w) => w.id === parseInt(this.$route.query.id, 10)
       );
-      this.scheduleTitle = "Planning de l'îlot : " + workarea.name;
+      this.scheduleTitle = "Planning du pôle de produciton : " + workarea.name;
     }
   },
   created() {

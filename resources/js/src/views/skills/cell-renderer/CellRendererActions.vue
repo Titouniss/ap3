@@ -54,7 +54,7 @@ export default {
               message =
                 "La compétence " +
                 this.params.data.name +
-                " est utilisée dans des îlots et des tâches. Voulez vous vraiment la supprimer ?";
+                " est utilisée dans des pôles de producitons et des tâches. Voulez vous vraiment la supprimer ?";
             } else if (tasks.length > 0) {
               message =
                 "La compétence " +
@@ -64,7 +64,7 @@ export default {
               message =
                 "La compétence " +
                 this.params.data.name +
-                " est utilisée dans un îlot ou plus. Voulez vous vraiment la supprimer ?";
+                " est utilisée dans un pôle de produciton ou plus. Voulez vous vraiment la supprimer ?";
             }
 
             if (message !== "") {

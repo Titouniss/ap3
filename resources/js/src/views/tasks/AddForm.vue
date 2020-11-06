@@ -206,7 +206,7 @@
                                 "
                                 class="text-danger text-sm"
                             >
-                                Attention, aucun îlot ne possède cette
+                                Attention, aucun pôle de produciton ne possède cette
                                 combinaison de compétences
                             </span>
 
@@ -229,7 +229,7 @@
                                     class="w-full"
                                 >
                                     <template #header>
-                                        <div class="vs-select--label">Ilot</div>
+                                        <div class="vs-select--label">Pôle de production</div>
                                     </template>
                                 </v-select>
                                 <span
