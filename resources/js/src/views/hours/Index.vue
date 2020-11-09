@@ -165,6 +165,17 @@
                     {{ " " + getStats("overtime") }}
                 </vs-col>
             </vs-row>
+            <vs-row
+                vs-justify="center"
+                vs-align="center"
+                vs-type="flex"
+                vs-w="12"
+                class="mt-6"
+            >
+                <vs-button v-if="(activeUserRole() !== 'Administrateur' && !isAdmin()) || (filters.user && filters.user.id === this.$store.state.AppActiveUser.id)" @click="goToUnavailabilities()">{{
+                    "Gérer mes indisponibilités"
+                }}</vs-button>
+            </vs-row>
         </div>
         <div class="vx-card p-6 mt-1">
             <div
@@ -736,6 +747,12 @@ export default {
             this.$router
                 .push(`/${modelPlurial}/${model}-view/`)
                 .catch(() => {});
+        },
+        goToUnavailabilities() {
+            this.$router.push({
+                path: `/users/user-profil-edit/`+ this.$store.state.AppActiveUser.id,
+                query: { tab: 1 }
+            })
         },
         onExport() {
             import("@/vendor/Export2Excel").then(excel => {
