@@ -492,7 +492,7 @@ export default {
                 return "success";
             } else if (
                 moment(project.end || project.date).isAfter(
-                    moment().add(1, "m")
+                    moment().add(1, "month")
                 )
             ) {
                 return "primary";
@@ -511,11 +511,11 @@ export default {
                 this.gantt = new Gantt(
                     "#gantt",
                     this.projectsData
-                        .filter(p => p.date && moment(p.date).isAfter())
+                        .filter(p => p.status === "doing" && p.start_date)
                         .map(p => ({
                             id: p.id.toString(),
                             name: p.name || "",
-                            start: moment().format("YYYY-MM-DD"),
+                            start: moment(p.start_date).format("YYYY-MM-DD"),
                             end: moment(p.date).format("YYYY-MM-DD"),
                             progress: p.progress,
                             custom_class: `bar-${this.getProjectStatusColor(p)}`
@@ -527,7 +527,9 @@ export default {
                         view_mode: "Week",
                         date_format: "YYYY-MM-DD",
                         language: "fr",
-                        custom_popup_html: project => `
+                        custom_popup_html: project => {
+                            moment.locale("fr");
+                            return `
                             <div 
                                 class="w-64 p-3 rounded text-white shadow-drop" 
                                 style="background-color: rgba(var(--vs-${this.getProjectStatusColor(
@@ -535,16 +537,17 @@ export default {
                                 )}, 1));"
                             >
                                 <p class="mb-3 text-lg">${project.name}</p>
-                                <p class="mb-3">
-                                    Livraison prévu le ${moment(
-                                        project.end
-                                    ).format("DD/MM/YYYY")}
+                                <p class="mb-2 text-base">
+                                    Livraison: ${moment(project.end).format(
+                                        "DD MMM YYYY"
+                                    )}
                                 </p>
-                                <p class="italic">
-                                    ${project.progress}% finalisé
+                                <p class="text-base">
+                                    Avancement: ${project.progress}%
                                 </p>
                             </div>
-                        `,
+                        `;
+                        },
 
                         // Events
                         on_click: project => {

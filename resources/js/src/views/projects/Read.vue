@@ -47,6 +47,17 @@
                                 <td class="font-semibold">Nom du projet :</td>
                                 <td>{{ project_data.name }}</td>
                             </tr>
+                            <tr
+                                v-if="
+                                    project_data.status == 'doing' &&
+                                        project_data.start_date_string
+                                "
+                            >
+                                <td class="font-semibold">
+                                    Date de lancement :
+                                </td>
+                                <td>{{ project_data.start_date_string }}</td>
+                            </tr>
                             <tr>
                                 <td class="font-semibold">
                                     Date de livraison prévu :
@@ -411,6 +422,11 @@ export default {
                 this.project_data.date_string = moment(
                     this.project_data.date
                 ).format("DD MMMM YYYY");
+                if (this.project_data.start_date) {
+                    this.project_data.start_date_string = moment(
+                        this.project_data.start_date
+                    ).format("DD MMMM YYYY");
+                }
             })
             .catch(err => {
                 if (err.response.status === 404) {
