@@ -530,6 +530,7 @@ class ProjectController extends Controller
 
 
         //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
+        $alerts = null;
         if ($allPlanified) {
             Project::findOrFail($project->id)->update(['status' => 'doing']);
 

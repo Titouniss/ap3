@@ -270,6 +270,7 @@ export default {
             this.$store
                 .dispatch("projectManagement/start", this.project_data.id)
                 .then(response => {
+                    console.log(response);
                     if (response.data.success) {
                         this.$vs.notify({
                             title: "Planification",
@@ -314,6 +315,7 @@ export default {
                     }
                 })
                 .catch(err => {
+                    console.log(err);
                     this.$vs.notify({
                         title: "Planification",
                         text: "Une erreur c'est produite",
