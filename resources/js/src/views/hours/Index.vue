@@ -140,6 +140,7 @@
                 <h4 class="ml-3">Résumé</h4>
             </div>
             <vs-row
+                v-if="showSummary"
                 vs-justify="center"
                 vs-align="center"
                 vs-type="flex"
@@ -154,16 +155,24 @@
                     Heures travaillées sur la période :
                     {{ " " + getStats("total") }}
                 </vs-col>
+                    <!-- v-if="stats.overtime" -->
                 <vs-col
-                    v-if="stats.overtime"
                     vs-w="6"
                     vs-type="flex"
                     vs-justify="center"
                     vs-align="center"
                 >
-                    Heures supplémentaires sur la période :
-                    {{ " " + getStats("overtime") }}
+                    {{ lostTimeOrOvertime()+ " " + getStats("overtime")  }}
                 </vs-col>
+            </vs-row>
+            <vs-row
+                v-else
+                vs-justify="center"
+                vs-align="center"
+                vs-type="flex"
+                vs-w="12"
+            >
+                Veuillez renseigner des heures sur cette période afin d'avoir le résumé
             </vs-row>
             <vs-row
                 vs-justify="center"
@@ -543,6 +552,14 @@ export default {
             console.log("hoursData -> this.$store.state.hoursManagement.hours", this.$store.state.hoursManagement.hours)
             return this.$store.state.hoursManagement.hours;
         },
+        showSummary() {
+            if (this.stats.length === undefined) {
+                return true;
+            } 
+            else {
+                return false;
+            }
+        },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
             else return 10;
@@ -574,10 +591,34 @@ export default {
             }
         },
         getStats(name) {
-            return (this.stats[name]
-                ? parseFloat(this.stats[name])
-                : 0
-            ).toFixed(2);
+            console.log("getStats -> this.stats", this.stats)
+            if (name === "overtime") {
+                if (this.stats['overtime']) {
+                    return (this.stats[name]
+                        ? parseFloat(this.stats[name])
+                        : 0
+                    ).toFixed(2);
+                }
+                else {
+                    return (this.stats['lost_time']
+                        ? parseFloat(this.stats['lost_time'])
+                        : 0
+                    ).toFixed(2);
+                }
+            }
+            else {
+                return (this.stats[name]
+                    ? parseFloat(this.stats[name])
+                    : 0
+                ).toFixed(2);
+            }
+        },
+        lostTimeOrOvertime() {
+            if (this.stats['overtime']) {
+                return "Heures supplémentaires sur la période :";
+            } else {
+                return "Heures manquante sur la période :"
+            }
         },
         addToFilterDate() {
             this.filters.date = moment(this.filters.date).add(
@@ -644,6 +685,8 @@ export default {
                     .dispatch("hoursManagement/fetchItems", filter)
                     .then(response => {
                         this.stats = response.data.stats;
+                        console.log("refreshData -> response.data", response.data)
+                        
                     })
                     .catch(error => {
                         this.$vs.notify({
