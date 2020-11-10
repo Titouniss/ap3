@@ -1,9 +1,6 @@
 <template>
     <div id="app">
-        <div
-            class="vx-card no-scroll-content"
-            style="border: 1px solid #c1c1c1;"
-        >
+        <div class="vx-card " style="border: 1px solid #c1c1c1;">
             <vs-row vs-type="flex" vs-justify="space-around">
                 <vs-col
                     vs-type="flex"
@@ -79,7 +76,7 @@
                 </vs-col>
             </vs-row>
 
-            <div class="flex w-full mt-10 justify-center">
+            <div class="flex w-full p-3 justify-center">
                 <!-- ilots list-->
                 <div
                     v-if="schedulList === 'ilots'"
@@ -105,7 +102,9 @@
                             {{ workarea.name }}
                         </div>
                     </div>
-                    <h4 v-if="!workareasData" color="red">Aucun pôle de produciton</h4>
+                    <h4 v-if="!workareasData" color="red">
+                        Aucun pôle de produciton
+                    </h4>
                 </div>
                 <!-- users list-->
                 <div
