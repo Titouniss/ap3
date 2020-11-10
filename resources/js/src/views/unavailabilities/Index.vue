@@ -4,17 +4,17 @@
       <h6 class="mb-4">Heures supplémentaires</h6>
       <div class="flex items-center mb-4">
         <span class="ml-4">Total :</span>
-        <span class="ml-4">{{overtimes}} {{overtimes > 1 ? "heures" : "heure"}}</span>
+        <span class="ml-4">{{overtimes.toFixed(2)}} {{overtimes > 1 ? "heures" : "heure"}}</span>
       </div>
       <div class="flex items-center mb-4">
         <span class="ml-4">{{usedOvertimes > 1 ? "Utilisées :" : "Utilisée :"}}</span>
-        <span class="ml-4">{{usedOvertimes}} {{usedOvertimes > 1 ? "heures" : "heure"}}</span>
+        <span class="ml-4">{{usedOvertimes.toFixed(2)}} {{usedOvertimes > 1 ? "heures" : "heure"}}</span>
       </div>
       <div class="flex items-center mb-4">
         <span class="ml-4">Reste à utiliser :</span>
         <span
           class="ml-4"
-        >{{overtimes - usedOvertimes}} {{(overtimes - usedOvertimes) > 1 ? "heures" : "heure"}}</span>
+        >{{(overtimes - usedOvertimes).toFixed(2)}} {{(overtimes - usedOvertimes) > 1 ? "heures" : "heure"}}</span>
       </div>
     </div>
 
