@@ -15,6 +15,7 @@
                 vs-justify="space-between"
                 vs-align="center"
                 vs-w="12"
+                class="mb-4"
             >
                 <vs-col
                     vs-type="flex"
@@ -33,135 +34,194 @@
                     vs-sm="6"
                 >
                     <refresh-module />
-                </vs-col>
-            </vs-row>
-            <div class="flex flex-wrap items-center">
-                <!-- ITEMS PER PAGE -->
-                <div class="flex-grow">
-                    <vs-row type="flex">
-                        <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
-
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('archive')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="ArchiveIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Archiver</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
-
-                        <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-                        <vs-input
-                            class="ml-5"
-                            v-model="searchQuery"
-                            @input="updateSearchQuery"
-                            placeholder="Rechercher..."
-                        />
-                    </vs-row>
-                </div>
-                <vs-dropdown vs-trigger-click class="cursor-pointer">
-                    <div
-                        class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
-                    >
-                        <span class="mr-2">
-                            {{
-                                currentPage * paginationPageSize -
-                                    (paginationPageSize - 1)
-                            }}
-                            -
-                            {{
-                                projectsData.length -
-                                    currentPage * paginationPageSize >
-                                0
-                                    ? currentPage * paginationPageSize
-                                    : projectsData.length
-                            }}
-                            sur {{ projectsData.length }}
-                        </span>
+                    <div class="ml-4 selectProjectsView">
                         <feather-icon
-                            icon="ChevronDownIcon"
-                            svgClasses="h-4 w-4"
+                            icon="AlignLeftIcon"
+                            svgClasses="h-5 w-5"
+                            v-bind:class="[
+                                ganttView
+                                    ? 'btnProjectsViewActive p-3'
+                                    : 'btnProjectsView p-3'
+                            ]"
+                            @click="ganttView = true"
+                        />
+                        <feather-icon
+                            icon="ListIcon"
+                            svgClasses="h-5 w-5"
+                            v-bind:class="[
+                                !ganttView
+                                    ? 'btnProjectsViewActive p-3'
+                                    : 'btnProjectsView p-3'
+                            ]"
+                            @click="ganttView = false"
                         />
                     </div>
-                    <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
-                    <vs-dropdown-menu>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(10)"
+                </vs-col>
+            </vs-row>
+
+            <div v-show="ganttView" class="w-full">
+                <div class="flex flex-row justify-center items-center">
+                    <div class="btn-group">
+                        <vs-button
+                            v-for="(displayName, key) in {
+                                ['Day']: 'Jour',
+                                ['Week']: 'Semaine',
+                                ['Month']: 'Mois'
+                            }"
+                            :key="key"
+                            type="flat"
+                            :disabled="ganttViewMode === key"
+                            @click="ganttViewMode = key"
                         >
-                            <span>10</span>
-                        </vs-dropdown-item>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(20)"
-                        >
-                            <span>20</span>
-                        </vs-dropdown-item>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(25)"
-                        >
-                            <span>25</span>
-                        </vs-dropdown-item>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(30)"
-                        >
-                            <span>30</span>
-                        </vs-dropdown-item>
-                    </vs-dropdown-menu>
-                </vs-dropdown>
+                            {{ displayName }}
+                        </vs-button>
+                    </div>
+                </div>
+                <div
+                    class="m-3 rounded border border-solid d-theme-border-grey-light"
+                >
+                    <svg id="gantt"></svg>
+                </div>
             </div>
 
-            <!-- AgGrid Table -->
-            <ag-grid-vue
-                ref="agGridTable"
-                :components="components"
-                :gridOptions="gridOptions"
-                class="ag-theme-material w-100 my-4 ag-grid-table"
-                overlayLoadingTemplate="Chargement..."
-                :columnDefs="columnDefs"
-                :defaultColDef="defaultColDef"
-                :rowData="projectsData"
-                rowSelection="multiple"
-                colResizeDefault="shift"
-                :animateRows="true"
-                :floatingFilter="false"
-                :pagination="true"
-                :paginationPageSize="paginationPageSize"
-                :suppressPaginationPanel="true"
-                :enableRtl="$vs.rtl"
-            ></ag-grid-vue>
+            <div v-show="!ganttView" class="w-full">
+                <div class="flex flex-wrap items-center">
+                    <!-- ITEMS PER PAGE -->
+                    <div class="flex-grow">
+                        <vs-row type="flex">
+                            <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-            <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
+                            <!-- ACTION - DROPDOWN -->
+                            <vs-dropdown
+                                vs-trigger-click
+                                class="cursor-pointer"
+                            >
+                                <div
+                                    class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+                                >
+                                    <span class="mr-2 leading-none"
+                                        >Actions</span
+                                    >
+                                    <feather-icon
+                                        icon="ChevronDownIcon"
+                                        svgClasses="h-4 w-4"
+                                    />
+                                </div>
+
+                                <vs-dropdown-menu>
+                                    <vs-dropdown-item
+                                        @click="confirmDeleteRecord('delete')"
+                                    >
+                                        <span class="flex items-center">
+                                            <feather-icon
+                                                icon="TrashIcon"
+                                                svgClasses="h-4 w-4"
+                                                class="mr-2"
+                                            />
+                                            <span>Supprimer</span>
+                                        </span>
+                                    </vs-dropdown-item>
+
+                                    <vs-dropdown-item
+                                        @click="confirmDeleteRecord('archive')"
+                                    >
+                                        <span class="flex items-center">
+                                            <feather-icon
+                                                icon="ArchiveIcon"
+                                                svgClasses="h-4 w-4"
+                                                class="mr-2"
+                                            />
+                                            <span>Archiver</span>
+                                        </span>
+                                    </vs-dropdown-item>
+                                </vs-dropdown-menu>
+                            </vs-dropdown>
+
+                            <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
+                            <vs-input
+                                class="ml-5"
+                                v-model="searchQuery"
+                                @input="updateSearchQuery"
+                                placeholder="Rechercher..."
+                            />
+                        </vs-row>
+                    </div>
+                    <vs-dropdown vs-trigger-click class="cursor-pointer">
+                        <div
+                            class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
+                        >
+                            <span class="mr-2">
+                                {{
+                                    currentPage * paginationPageSize -
+                                        (paginationPageSize - 1)
+                                }}
+                                -
+                                {{
+                                    projectsData.length -
+                                        currentPage * paginationPageSize >
+                                    0
+                                        ? currentPage * paginationPageSize
+                                        : projectsData.length
+                                }}
+                                sur {{ projectsData.length }}
+                            </span>
+                            <feather-icon
+                                icon="ChevronDownIcon"
+                                svgClasses="h-4 w-4"
+                            />
+                        </div>
+                        <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
+                        <vs-dropdown-menu>
+                            <vs-dropdown-item
+                                @click="gridApi.paginationSetPageSize(10)"
+                            >
+                                <span>10</span>
+                            </vs-dropdown-item>
+                            <vs-dropdown-item
+                                @click="gridApi.paginationSetPageSize(20)"
+                            >
+                                <span>20</span>
+                            </vs-dropdown-item>
+                            <vs-dropdown-item
+                                @click="gridApi.paginationSetPageSize(25)"
+                            >
+                                <span>25</span>
+                            </vs-dropdown-item>
+                            <vs-dropdown-item
+                                @click="gridApi.paginationSetPageSize(30)"
+                            >
+                                <span>30</span>
+                            </vs-dropdown-item>
+                        </vs-dropdown-menu>
+                    </vs-dropdown>
+                </div>
+
+                <!-- AgGrid Table -->
+                <ag-grid-vue
+                    ref="agGridTable"
+                    :components="components"
+                    :gridOptions="gridOptions"
+                    class="ag-theme-material w-100 my-4 ag-grid-table"
+                    overlayLoadingTemplate="Chargement..."
+                    :columnDefs="columnDefs"
+                    :defaultColDef="defaultColDef"
+                    :rowData="projectsData"
+                    rowSelection="multiple"
+                    colResizeDefault="shift"
+                    :animateRows="true"
+                    :floatingFilter="false"
+                    :pagination="true"
+                    :paginationPageSize="paginationPageSize"
+                    :suppressPaginationPanel="true"
+                    :enableRtl="$vs.rtl"
+                ></ag-grid-vue>
+
+                <vs-pagination
+                    :total="totalPages"
+                    :max="7"
+                    v-model="currentPage"
+                />
+            </div>
         </div>
 
         <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
@@ -173,6 +233,7 @@ import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
 import moment from "moment";
+import Gantt from "frappe-gantt";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -213,6 +274,9 @@ export default {
     data() {
         return {
             searchQuery: "",
+
+            ganttView: true,
+            gantt: null,
 
             // AgGrid
             gridApi: null,
@@ -285,11 +349,33 @@ export default {
                 CellRendererLink,
                 CellRendererActions,
                 CellRendererRelations
-            }
+            },
+
+            ganttViewMode: "Week"
         };
+    },
+    watch: {
+        projectsData(val) {
+            if (val && val.length > 0) {
+                this.onResize();
+            }
+        },
+        ganttView(val, oldVal) {
+            if (val !== oldVal) {
+                if (!val) {
+                    this.onResize();
+                }
+            }
+        },
+        ganttViewMode(val, oldVal) {
+            this.gantt.change_view_mode(val);
+        }
     },
     computed: {
         projectsData() {
+            if (!this.$store.state.projectManagement) {
+                return [];
+            }
             return this.sortProjects(
                 this.$store.state.projectManagement.projects
             );
@@ -401,13 +487,81 @@ export default {
                         : `Projet archivé`
             });
         },
+        getProjectStatusColor(project) {
+            if (project.progress === 100) {
+                return "success";
+            } else if (
+                moment(project.end || project.date).isAfter(
+                    moment().add(1, "m")
+                )
+            ) {
+                return "primary";
+            } else if (
+                moment(project.end || project.date).isAfter(
+                    moment().add(1, "w")
+                )
+            ) {
+                return "warning";
+            } else {
+                return "danger";
+            }
+        },
         onResize(event) {
-            if (this.gridApi) {
-                // refresh the grid
-                this.gridApi.refreshView();
+            if (this.ganttView) {
+                this.gantt = new Gantt(
+                    "#gantt",
+                    this.projectsData
+                        .filter(p => p.date && moment(p.date).isAfter())
+                        .map(p => ({
+                            id: p.id.toString(),
+                            name: p.name || "",
+                            start: moment().format("YYYY-MM-DD"),
+                            end: moment(p.date).format("YYYY-MM-DD"),
+                            progress: p.progress,
+                            custom_class: `bar-${this.getProjectStatusColor(p)}`
+                        })),
+                    {
+                        view_modes: ["Day", "Week", "Month"],
+                        bar_height: 25,
+                        padding: 15,
+                        view_mode: "Week",
+                        date_format: "YYYY-MM-DD",
+                        language: "fr",
+                        custom_popup_html: project => `
+                            <div 
+                                class="w-64 p-3 rounded text-white shadow-drop" 
+                                style="background-color: rgba(var(--vs-${this.getProjectStatusColor(
+                                    project
+                                )}, 1));"
+                            >
+                                <p class="mb-3 text-lg">${project.name}</p>
+                                <p class="mb-3">
+                                    Livraison prévu le ${moment(
+                                        project.end
+                                    ).format("DD/MM/YYYY")}
+                                </p>
+                                <p class="italic">
+                                    ${project.progress}% finalisé
+                                </p>
+                            </div>
+                        `,
 
-                // resize columns in the grid to fit the available space
-                this.gridApi.sizeColumnsToFit();
+                        // Events
+                        on_click: project => {
+                            this.$router.push(
+                                `/projects/project-view/${project.id}`
+                            );
+                        }
+                    }
+                );
+            } else {
+                if (this.gridApi) {
+                    // refresh the grid
+                    this.gridApi.redrawRows();
+
+                    // resize columns in the grid to fit the available space
+                    this.gridApi.sizeColumnsToFit();
+                }
             }
         },
         sortProjects(projects) {
@@ -430,6 +584,7 @@ export default {
         }
     },
     mounted() {
+        // Load grid view
         this.gridApi = this.gridOptions.api;
 
         // Hide company column ?
@@ -439,21 +594,8 @@ export default {
         );
 
         window.addEventListener("resize", this.onResize);
-        if (this.gridApi) {
-            // refresh the grid
-            this.gridApi.refreshView();
+        // this.onResize();
 
-            // resize columns in the grid to fit the available space
-            this.gridApi.sizeColumnsToFit();
-
-            this.gridApi.showLoadingOverlay();
-        }
-
-        /* =================================================================
-      NOTE:
-      Header is not aligned properly in RTL version of agGrid table.
-      However, we given fix to this issue. If you want more robust solution please contact them at gitHub
-    ================================================================= */
         if (this.$vs.rtl) {
             const header = this.$refs.agGridTable.$el.querySelector(
                 ".ag-header-container"
@@ -543,6 +685,48 @@ export default {
             top: 50%;
             transform: translateY(-58%);
         }
+    }
+}
+
+.selectProjectsView {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #b3b3b3;
+    border-radius: 5px;
+    background-color: #e2e2e2;
+}
+.btnProjectsViewActive {
+    background-color: white;
+    color: #2196f3;
+    border-radius: 5px;
+}
+.btnProjectsView:hover {
+    cursor: pointer;
+    color: #2196f3;
+}
+.handle {
+    display: none;
+}
+.bar-success {
+    .bar-progress {
+        fill: rgba($color: var(--vs-success), $alpha: 1) !important;
+    }
+}
+.bar-primary {
+    .bar-progress {
+        fill: rgba($color: var(--vs-primary), $alpha: 1) !important;
+    }
+}
+.bar-warning {
+    .bar-progress {
+        fill: rgba($color: var(--vs-warning), $alpha: 1) !important;
+    }
+}
+.bar-danger {
+    .bar-progress {
+        fill: rgba($color: var(--vs-danger), $alpha: 1) !important;
     }
 }
 </style>

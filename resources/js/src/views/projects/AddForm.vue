@@ -166,21 +166,22 @@ export default {
             activePrompt: false,
             langFr: fr,
 
-      itemLocal: {
-        name: "",
-        date: new Date(),
-        customer: null,
-        company:
-          this.activeUserRole() != "superAdmin" || this.activeUserRole() != "Administrateur"
-            ? this.$store.state.AppActiveUser.company.id
-            : null,
-        company:
-          this.activeUserRole() != "superAdmin"
-            ? this.$store.state.AppActiveUser.company
-            : null,
-        color: "",
-      },
-      colors: project_colors,
+            itemLocal: {
+                name: "",
+                date: new Date(),
+                customer: null,
+                company:
+                    this.$store.getters.AppActiveUserRole != "superAdmin" ||
+                    this.$store.getters.AppActiveUserRole != "Administrateur"
+                        ? this.$store.state.AppActiveUser.company.id
+                        : null,
+                company:
+                    this.$store.getters.AppActiveUserRole != "superAdmin"
+                        ? this.$store.state.AppActiveUser.company
+                        : null,
+                color: ""
+            },
+            colors: project_colors,
 
             token:
                 "token_" +

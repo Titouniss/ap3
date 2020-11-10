@@ -14,7 +14,14 @@ class Project extends Model
 
     protected $fillable = ['name', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
-    protected $appends = ['tasks'];
+    protected $appends = ['tasks', 'progress'];
+
+    public function getProgressAttribute()
+    {
+        return floor(100 * ($this->tasks->isNotEmpty() ? $this->tasks->filter(function ($task) {
+            return $task->status === "done";
+        })->count() / $this->tasks->count() : 0));
+    }
 
     public function company()
     {
@@ -39,7 +46,7 @@ class Project extends Model
     public function getTasksAttribute()
     {
         $tasksBundles = $this->tasksBundles;
-        $tasks = [];
+        $tasks = collect();
         foreach ($tasksBundles as $t) {
             $tasks = Task::where('tasks_bundle_id', $t->id)->with('skills', 'previousTasks')->get();
         }
