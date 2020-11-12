@@ -329,6 +329,7 @@ class ProjectController extends Controller
             if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
 
                 $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
+                Project::where('id', $id)->update(['start_date' => Carbon::now()]);
                 return response()->json(['success' => $response], $this->successStatus);
             } else {
 
@@ -529,6 +530,7 @@ class ProjectController extends Controller
 
 
         //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
+        $alerts = null;
         if ($allPlanified) {
             Project::findOrFail($project->id)->update(['status' => 'doing']);
 

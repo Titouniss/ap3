@@ -47,6 +47,17 @@
                                 <td class="font-semibold">Nom du projet :</td>
                                 <td>{{ project_data.name }}</td>
                             </tr>
+                            <tr
+                                v-if="
+                                    project_data.status == 'doing' &&
+                                        project_data.start_date_string
+                                "
+                            >
+                                <td class="font-semibold">
+                                    Date de lancement :
+                                </td>
+                                <td>{{ project_data.start_date_string }}</td>
+                            </tr>
                             <tr>
                                 <td class="font-semibold">
                                     Date de livraison prévu :
@@ -259,6 +270,7 @@ export default {
             this.$store
                 .dispatch("projectManagement/start", this.project_data.id)
                 .then(response => {
+                    console.log(response);
                     if (response.data.success) {
                         this.$vs.notify({
                             title: "Planification",
@@ -303,6 +315,7 @@ export default {
                     }
                 })
                 .catch(err => {
+                    console.log(err);
                     this.$vs.notify({
                         title: "Planification",
                         text: "Une erreur c'est produite",
@@ -411,6 +424,11 @@ export default {
                 this.project_data.date_string = moment(
                     this.project_data.date
                 ).format("DD MMMM YYYY");
+                if (this.project_data.start_date) {
+                    this.project_data.start_date_string = moment(
+                        this.project_data.start_date
+                    ).format("DD MMMM YYYY");
+                }
             })
             .catch(err => {
                 if (err.response.status === 404) {

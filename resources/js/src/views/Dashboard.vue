@@ -335,13 +335,7 @@
                                                 <span class="mb-1">
                                                     {{ project.name }}
                                                 </span>
-                                                <h4>
-                                                    {{
-                                                        projectCompletion(
-                                                            project
-                                                        )
-                                                    }}%
-                                                </h4>
+                                                <h4>{{ project.progress }}%</h4>
                                             </div>
                                             <feather-icon
                                                 icon="ExternalLinkIcon"
@@ -350,9 +344,7 @@
                                         </div>
                                         <vs-progress
                                             :height="10"
-                                            :percent="
-                                                projectCompletion(project)
-                                            "
+                                            :percent="project.progress"
                                         ></vs-progress>
                                     </vs-button>
                                 </transition-group>
@@ -668,16 +660,6 @@ export default {
         },
         displayDateTime(date) {
             return moment(date).format("HH:mm DD/MM/YYYY");
-        },
-        projectCompletion(project) {
-            return project.tasks && project.tasks.length
-                ? parseInt(
-                      (project.tasks.filter(task => task.status === "done")
-                          .length /
-                          project.tasks.length) *
-                          100
-                  )
-                : 0;
         }
     },
     created() {
