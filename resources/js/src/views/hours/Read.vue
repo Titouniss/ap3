@@ -125,6 +125,7 @@ import moduleHourManagement from "@/store/hours-management/moduleHoursManagement
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
 
 // Component
 import EditForm from "./EditForm.vue";
@@ -134,6 +135,7 @@ import AddForm from "./AddForm.vue";
 import "@fullcalendar/core/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
+import { colors } from '../../../themeConfig';
 
 var model = "schedule";
 var modelPlurial = "schedules";
@@ -188,11 +190,37 @@ export default {
             return this.$store.state.hoursManagement.hour.id || -1;
         },
         calendarEvents() {
-            return this.filters.user
+            console.log("calendarEvents -> this.$store.state.hoursManagement.hoursCalendar", this.$store.state.hoursManagement.hoursCalendar)
+            // console.log("calendarEvents -> this.$store.state.unavailabilityManagement.unavailabilities", this.$store.state.unavailabilityManagement.unavailabilities)
+            let finalHours = []
+            let hours = this.filters.user
                 ? this.$store.state.hoursManagement.hoursCalendar.filter(
                       item => item.user_id === this.filters.user.id
                   )
                 : [];
+
+            finalHours = hours;
+
+            let paidHolidays = this.$store.state.unavailabilityManagement.unavailabilities.filter(
+                item => item.reason === "Congés payés"
+            )
+            
+            console.log("calendarEvents -> paidHolidays", paidHolidays)
+
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    'color': "#AEAEAE ",
+                    'title': "Congés payés",
+                    'end': pH.ends_at,
+                    'start': pH.starts_at,
+                    'user_id': this.filters.user.id
+                })
+            });
+
+            console.log("calendarEvents -> finalHours", finalHours)
+            return finalHours;
+
+            
         },
         companiesData() {
             return this.$store.state.companyManagement.companies;
@@ -412,6 +440,15 @@ export default {
             );
             moduleProjectManagement.isRegistered = true;
         }
+
+        if (!moduleUnavailabilityManagement.isRegistered) {
+            this.$store.registerModule(
+                "unavailabilityManagement",
+                moduleUnavailabilityManagement
+            );
+            moduleUnavailabilityManagement.isRegistered = true;
+        }
+
         if (!moduleUserManagement.isRegistered) {
             this.$store.registerModule("userManagement", moduleUserManagement);
             moduleUserManagement.isRegistered = true;
@@ -433,6 +470,9 @@ export default {
         if (this.authorizedTo("read", "projects")) {
             this.$store.dispatch("projectManagement/fetchItems");
         }
+        if (this.authorizedTo("read", "unavailabilities")) {
+            this.$store.dispatch("unavailabilityManagement/fetchItems");
+        }
         if (this.filters.user) {
             this.getBusinessHours();
         }
@@ -442,10 +482,12 @@ export default {
         moduleProjectManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
         moduleUserManagement.isRegistered = false;
+        moduleUnavailabilityManagement.isRegistered = false;
         this.$store.unregisterModule("hoursManagement");
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("userManagement");
+        this.$store.unregisterModule("unavailabilityManagement");
     }
 };
 </script>
