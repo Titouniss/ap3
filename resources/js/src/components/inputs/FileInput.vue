@@ -18,7 +18,7 @@
                     @click="resetFileInput"
                     @change="onFileAdd"
                     class="inputfile"
-                    accept="application/pdf|text/html|images/*"
+                    accept=".pdf,.jpg,.jpeg,.png"
                 />
                 <label
                     class="fileContainer py-2 px-3 w-1/2"
@@ -128,7 +128,30 @@ export default {
             e.preventDefault();
             const files = e.target.files;
             if (files.length > 0) {
-                this.uploadFile(files[0], true);
+                const file = files[0];
+
+                // Validate file type
+                let error =
+                    ["application/pdf", "image/jpeg", "image/png"].indexOf(
+                        file.type
+                    ) === -1
+                        ? "Le fichier doit être de type pdf, png ou jpeg"
+                        : "";
+
+                // Validate file size
+                if (!error && file.size > 7000000) {
+                    error = "Le fichier doit faire moins de 7mo";
+                }
+
+                if (error) {
+                    this.$vs.notify({
+                        color: "danger",
+                        title: "Erreur",
+                        text: error
+                    });
+                } else {
+                    this.uploadFile(file, true);
+                }
             }
         },
         onUrlAdd() {

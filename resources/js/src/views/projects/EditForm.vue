@@ -40,7 +40,6 @@
                                 <v-select
                                     label="name"
                                     @input="cleanCustomerInput"
-                                    v-validate="'required'"
                                     v-model="itemLocal.company"
                                     :options="companiesData"
                                     class="w-full"
@@ -82,9 +81,9 @@
                             </vs-row>
                         </vs-col>
                         <div class="my-4">
-                            <small class="date-label"
-                                >Date de livraison prévue</small
-                            >
+                            <small class="date-label">
+                                Date de livraison prévue
+                            </small>
                             <datepicker
                                 class="pickadate"
                                 :disabledDates="{
@@ -99,7 +98,6 @@
                         <div class="my-4" v-if="itemLocal.company != null">
                             <v-select
                                 label="name"
-                                v-validate="'required'"
                                 v-model="itemLocal.customer"
                                 :options="customersData"
                                 class="w-full"
@@ -319,8 +317,10 @@ export default {
         }
 
         // Parse customer label
-        if (this.itemLocal.customer.professional === 0) {
-            this.itemLocal.customer.name = this.itemLocal.customer.lastname;
+        if (this.itemLocal.customer) {
+            if (this.itemLocal.customer.professional === 0) {
+                this.itemLocal.customer.name = this.itemLocal.customer.lastname;
+            }
         }
     }
 };
