@@ -33,8 +33,9 @@
                             <span
                                 class="text-danger text-sm"
                                 v-show="errors.has('name')"
-                                >{{ errors.first("name") }}</span
                             >
+                                {{ errors.first("name") }}
+                            </span>
 
                             <div class="my-3">
                                 <div
@@ -44,9 +45,9 @@
                                                 itemLocal.description != '')
                                     "
                                 >
-                                    <small class="date-label"
-                                        >Description</small
-                                    >
+                                    <small class="date-label">
+                                        Description
+                                    </small>
                                     <vs-textarea
                                         rows="2"
                                         label="Ajouter une description"
@@ -115,8 +116,9 @@
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('skills')"
-                                    >{{ errors.first("skills") }}</span
                                 >
+                                    {{ errors.first("skills") }}
+                                </span>
                             </div>
 
                             <span
@@ -180,8 +182,8 @@
                                 "
                                 class="text-danger text-sm"
                             >
-                                Attention, aucun pôle de produciton ne possède cette
-                                combinaison de compétences
+                                Attention, aucun pôle de produciton ne possède
+                                cette combinaison de compétences
                             </span>
 
                             <div
@@ -204,7 +206,9 @@
                                     class="w-full"
                                 >
                                     <template #header>
-                                        <div class="vs-select--label">Pôle de production</div>
+                                        <div class="vs-select--label">
+                                            Pôle de production
+                                        </div>
                                     </template>
                                 </v-select>
                             </div>
@@ -270,8 +274,9 @@
                                         color="warning"
                                         v-model="itemLocal.status"
                                         vs-value="doing"
-                                        >En cours</vs-radio
                                     >
+                                        En cours
+                                    </vs-radio>
                                 </li>
                                 <li v-on:click="setTimeSpent">
                                     <vs-radio
@@ -389,7 +394,7 @@
             </div>
             <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
                 <vs-button
-                    @click="confirmDeleteTask(itemLocal.id)"
+                    @click="deleteTask"
                     color="danger"
                     type="filled"
                     size="small"
@@ -428,13 +433,17 @@ export default {
             type: Number,
             required: true
         },
-        companyId: {},
         project_data: { type: Object },
         tasks_list: { required: true },
         type: { type: String },
         idType: { type: Number }
     },
     data() {
+        const item = JSON.parse(
+            JSON.stringify(
+                this.$store.getters["taskManagement/getItem"](this.itemId)
+            )
+        );
         return {
             configdateTimePicker: {
                 disableMobile: "true",
@@ -443,12 +452,8 @@ export default {
                 locale: FrenchLocale
             },
 
-            itemLocal: JSON.parse(
-                JSON.stringify(
-                    this.$store.getters["taskManagement/getItem"](this.itemId)
-                )
-            ),
-
+            itemLocal: item,
+            companyId: item.project.company_id,
             token:
                 "token_" +
                 Math.random()
@@ -458,7 +463,6 @@ export default {
             workareasDataFiltered: [],
             comments: [],
 
-            deleteWarning: false,
             orderDisplay: false,
             descriptionDisplay: false,
             commentDisplay: false,
@@ -501,10 +505,10 @@ export default {
             return this.filterItemsAdmin(usersDate);
         },
         skillsData() {
-            let $skillsData = this.$store.state.skillManagement.skills;
+            let skillsData = this.$store.state.skillManagement.skills;
             this.updateWorkareasList(this.itemLocal.skills);
             this.updateUsersList(this.itemLocal.skills);
-            return this.filterItemsAdmin($skillsData);
+            return this.filterItemsAdmin(skillsData);
         },
         projectsData() {
             return this.$store.state.projectManagement.projects;
@@ -676,8 +680,8 @@ export default {
                 return false;
             }
         },
-        filterItemsAdmin($items) {
-            let $filteredItems = [];
+        filterItemsAdmin(items) {
+            let filteredItems = items;
             const user = this.$store.state.AppActiveUser;
             if (user.roles && user.roles.length > 0) {
                 if (
@@ -685,16 +689,14 @@ export default {
                         r => r.name === "superAdmin" || r.name === "littleAdmin"
                     )
                 ) {
-                    if (this.companyId !== null) {
-                        $filteredItems = $items.filter(
+                    if (this.companyId) {
+                        filteredItems = items.filter(
                             item => item.company_id === this.companyId
                         );
                     }
-                } else {
-                    $filteredItems = $items;
                 }
             }
-            return $filteredItems;
+            return filteredItems;
         },
         addPreviousTask(taskIds) {
             this.itemLocal.previousTasksIds = taskIds;
@@ -715,37 +717,32 @@ export default {
         showDescription() {
             this.descriptionDisplay = true;
         },
-        confirmDeleteTask(idEvent) {
-            this.deleteWarning = true;
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text: `Vous allez supprimer la tâche "${this.itemLocal.title}"`,
-                accept: this.deleteTask,
-                cancel: this.keepTask,
-                acceptText: "Supprimer !",
-                cancelText: "Annuler"
-            });
-        },
-        keepTask() {
-            this.deleteWarning = false;
-        },
         deleteTask() {
-            this.deleteWarning = false;
             this.$store
                 .dispatch("scheduleManagement/removeEvent", this.idEvent)
-                .then(() => {})
                 .catch(err => {
                     console.error(err);
                 });
 
             this.$store
                 .dispatch("taskManagement/removeItem", this.itemLocal.id)
-                .then(() => {})
+                .then(response => {
+                    this.$vs.notify({
+                        color: "success",
+                        title: "Succès",
+                        text: `Suppression terminée avec succès`
+                    });
+                })
                 .catch(err => {
                     console.error(err);
+                    this.$vs.notify({
+                        color: "danger",
+                        title: "Erreur",
+                        text: err.message
+                    });
                 });
+
+            this.activePrompt = false;
         }
     }
 };

@@ -214,7 +214,6 @@
 
         <edit-form
             :itemId="itemIdToEdit"
-            :companyId="project_data.company_id"
             :project_data="this.project_data"
             v-if="itemIdToEdit"
             :tasks_list="tasksData"

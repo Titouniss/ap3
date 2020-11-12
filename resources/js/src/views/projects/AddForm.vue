@@ -94,7 +94,7 @@
                                     name="date"
                                     v-model="itemLocal.date"
                                     :color="validateForm ? 'success' : 'danger'"
-                                ></datepicker>
+                                > </datepicker>
                             </div>
                             <div class="my-4" v-if="itemLocal.company != null">
                                 <v-select
@@ -171,8 +171,7 @@ export default {
                 date: new Date(),
                 customer: null,
                 company:
-                    this.$store.getters.AppActiveUserRole != "superAdmin" ||
-                    this.$store.getters.AppActiveUserRole != "Administrateur"
+                    this.$store.getters.AppActiveUserRole != "superAdmin"
                         ? this.$store.state.AppActiveUser.company.id
                         : null,
                 company:
