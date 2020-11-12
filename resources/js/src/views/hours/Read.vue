@@ -190,37 +190,29 @@ export default {
             return this.$store.state.hoursManagement.hour.id || -1;
         },
         calendarEvents() {
-            console.log("calendarEvents -> this.$store.state.hoursManagement.hoursCalendar", this.$store.state.hoursManagement.hoursCalendar)
-            // console.log("calendarEvents -> this.$store.state.unavailabilityManagement.unavailabilities", this.$store.state.unavailabilityManagement.unavailabilities)
             let finalHours = []
             let hours = this.filters.user
                 ? this.$store.state.hoursManagement.hoursCalendar.filter(
                       item => item.user_id === this.filters.user.id
                   )
                 : [];
-
             finalHours = hours;
 
             let paidHolidays = this.$store.state.unavailabilityManagement.unavailabilities.filter(
                 item => item.reason === "Congés payés"
             )
-            
-            console.log("calendarEvents -> paidHolidays", paidHolidays)
-
             paidHolidays.forEach(pH => {
                 finalHours.push({
-                    'color': "#AEAEAE ",
-                    'title': "Congés payés",
-                    'end': pH.ends_at,
-                    'start': pH.starts_at,
-                    'user_id': this.filters.user.id
+                    color: "#AEAEAE ",
+                    title: "Congés payés",
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user.id
                 })
             });
 
             console.log("calendarEvents -> finalHours", finalHours)
             return finalHours;
-
-            
         },
         companiesData() {
             return this.$store.state.companyManagement.companies;
