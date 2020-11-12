@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Unavailability;
+use App\Models\WorkHours;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -103,11 +104,91 @@ class UnavailabilityController extends Controller
                     return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
                 }
             }
-            // Ajouter l'indisponibilité
-            return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
+            // Ajouter l'indisponibilité            
+            if ($arrayRequest['reason'] == 'Congés payés') {   
+                return response()->json(['success' => UnavailabilityController::setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)], $this->successStatus);
+            } else {
+                return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
+            }
         } else {
             // Ajouter l'indisponibilité
-            return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
+            if ($arrayRequest['reason'] == 'Congés payés') {   
+                return response()->json(['success' => UnavailabilityController::setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)], $this->successStatus);
+            } else {
+                return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
+            }
+        }
+    }
+
+    /**
+     * Set paid holidays unavailabilities.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends) {
+
+        $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['starts_at']);
+        $date_start = $arrayRequest_starts->format('Y-m-d');
+        $date_end = $arrayRequest_ends->format('Y-m-d');  
+
+        //pour chaque jours je note les noms de jours dans un tableau
+        $dayDuration = $arrayRequest_starts->diffInDays($arrayRequest_ends);
+        $days = [];
+        $workingDaysNames = [];
+
+        for ($i=0; $i <= $dayDuration; $i++) { 
+            $date = Carbon::create($date_start)->addDays($i)->format('Y-m-d');
+            $dayName = Carbon::create($date_start)->addDays($i)->locale('fr_FR')->dayName;
+            array_push($days, $date);
+            if (!in_array($dayName, $workingDaysNames)) {
+                array_push($workingDaysNames, $dayName);
+            }
+        }
+
+        // Au moins un jours où il doit travailler doit etre dans le tableau
+        $userWorkingDays = [];
+        $userWorkingHours = [];
+        foreach ($workingDaysNames as $key => $dN) {
+            $daysWorkinghours = WorkHours::where([['user_id', $arrayRequest['user_id']], ['is_active', 1], ['day', $dN]])->get();
+            foreach ($daysWorkinghours as $key => $dWH) {
+                // On ajout les horraires de travail
+                array_push($userWorkingDays, $dWH->day);
+                array_push($userWorkingHours, $dWH);
+            }
+        }            
+        if (count($userWorkingDays) > 0) {
+            // Pour chaques $days je regarde s'il est dans $userWorkingDays
+            
+            // return response()->json(['error' => [$days, $userWorkingDays, $userWorkingHours]], 400);
+            foreach ($days  as $key => $d) {
+                //d est il un jour ou je travaille ?
+                $dayTemp = Carbon::create($d)->locale('fr_FR')->dayName;
+                if (in_array($dayTemp, $userWorkingDays)) {
+                    $index = array_search($dayTemp, array_column($userWorkingHours, 'day'));
+                    $dayWorkingHours = $userWorkingHours[$index];
+                    
+                    // si travail le matin on ajoute une indispo égale au temps de travail et au même heures
+                    if ($dayWorkingHours->morning_starts_at !== null && $dayWorkingHours->morning_ends_at != null) {
+                        $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->morning_starts_at;
+                        $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->morning_ends_at;
+
+                        Unavailability::create($arrayRequest);
+                    }
+
+                    // si travail l'après midi on ajoute une indispo égale au temps de travail et au même heures
+                    if ($dayWorkingHours->afternoon_starts_at !== null && $dayWorkingHours->afternoon_ends_at != null) {
+                        $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->afternoon_starts_at;
+                        $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->afternoon_ends_at;
+
+                        Unavailability::create($arrayRequest);
+                    }
+                }
+            }
+            return response()->json(['success' => $arrayRequest], $this->successStatus);
+        }
+        else {
+            return response()->json(['error' => "vous ne travaillez pas sur cette période"], 400);
         }
     }
 

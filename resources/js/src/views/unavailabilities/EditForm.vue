@@ -14,7 +14,46 @@
             <form>
                 <div class="vx-row">
                     <div class="vx-col w-full">
+                        <v-select
+                                v-validate="'required'"
+                                name="reason"
+                                label="name"
+                                :multiple="false"
+                                v-model="itemLocal.reason"
+                                :reduce="name => name.name"
+                                class="w-full mt-2 mb-2"
+                                autocomplete
+                                :options="reasons"
+                            >
+                                <template #header>
+                                    <div style="opacity: .8 font-size: .85rem">
+                                        Motif
+                                    </div>
+                                </template>
+                                <template #option="reason">
+                                    <span>{{ `${reason.name}` }}</span>
+                                </template>
+                            </v-select>
+                            <vs-input
+                                v-if="itemLocal.reason === 'Autre...'"
+                                name="custom_reason"
+                                class="w-full mb-4 mt-6"
+                                placeholder="Motif personnalisé"
+                                v-model="custom_reason"
+                                v-validate="'required'"
+                                :color="
+                                    !errors.has('custom_reason')
+                                        ? 'success'
+                                        : 'danger'
+                                "
+                            />
+                        <span
+                            class="text-danger text-sm"
+                            v-show="errors.has('reason')"
+                            >{{ errors.first("reason") }}</span
+                        >
                         <flat-pickr
+                            v-if="( itemLocal.reason == 'Autre...' && custom_reason !== '' ) || ( itemLocal.reason !== '' && itemLocal.reason !== 'Autre...' )"
                             name="starts_at"
                             class="w-full mb-4 mt-5"
                             :config="configStartsAtDateTimePicker"
@@ -23,6 +62,7 @@
                             @on-change="onStartsAtChange"
                         />
                         <flat-pickr
+                            v-if="( itemLocal.reason == 'Autre...' && custom_reason !== '' ) || ( itemLocal.reason !== '' && itemLocal.reason !== 'Autre...' ) && itemLocal.starts_at"
                             name="ends_at"
                             class="w-full mb-4 mt-5"
                             :config="configEndsAtDateTimePicker"
@@ -30,21 +70,6 @@
                             placeholder="Date de fin"
                             @on-change="onEndsAtChange"
                         />
-                        <vs-input
-                            name="reason"
-                            class="w-full mb-4 mt-5"
-                            placeholder="Motif"
-                            v-model="itemLocal.reason"
-                            v-validate="'required'"
-                            :color="
-                                !errors.has('reason') ? 'success' : 'danger'
-                            "
-                        />
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('reason')"
-                            >{{ errors.first("reason") }}</span
-                        >
                     </div>
                 </div>
             </form>
@@ -59,13 +84,15 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
+import vSelect from "vue-select";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        flatPickr
+        flatPickr,
+        vSelect
     },
     props: {
         itemId: {
@@ -93,7 +120,17 @@ export default {
                 enableTime: true,
                 locale: FrenchLocale,
                 minDate: itemLocal.starts_at
-            }
+            },
+            custom_reason: "",
+            reasons: [
+                { name: "Utilisation heures suplémentaires" },
+                { name: "Réunion" },
+                { name: "Rendez-vous" },
+                { name: "Congés payés" },
+                { name: "Période de cours" },
+                { name: "Arrêt de travail" },
+                { name: "Autre..." },
+            ],
         };
     },
     computed: {
@@ -111,12 +148,22 @@ export default {
             }
         },
         validateForm() {
-            return (
-                !this.errors.any() &&
-                this.itemLocal.starts_at &&
-                this.itemLocal.ends_at &&
-                this.itemLocal.reason
-            );
+            if (this.itemLocal.reason === "Autre...") {
+                return (
+                    !this.errors.any() &&
+                    this.itemLocal.starts_at &&
+                    this.itemLocal.ends_at &&
+                    this.itemLocal.reason !== "" &&
+                    this.custom_reason !== ""
+                );
+            } else {
+                return (
+                    !this.errors.any() &&
+                    this.itemLocal.starts_at &&
+                    this.itemLocal.ends_at &&
+                    this.itemLocal.reason !== ""
+                );
+            }
         }
     },
     methods: {

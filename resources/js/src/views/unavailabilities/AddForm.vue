@@ -21,22 +21,6 @@
                 <form>
                     <div class="vx-row">
                         <div class="vx-col w-full">
-                            <flat-pickr
-                                name="starts_at"
-                                class="w-full mb-4 mt-5"
-                                :config="configStartsAtDateTimePicker"
-                                v-model="itemLocal.starts_at"
-                                placeholder="Date de début"
-                                @on-change="onStartsAtChange"
-                            />
-                            <flat-pickr
-                                name="ends_at"
-                                class="w-full mb-2 mt-5"
-                                :config="configEndsAtDateTimePicker"
-                                v-model="itemLocal.ends_at"
-                                placeholder="Date de fin"
-                                @on-change="onEndsAtChange"
-                            />
                             <v-select
                                 v-validate="'required'"
                                 name="reason"
@@ -76,6 +60,24 @@
                                         : 'danger'
                                 "
                             />
+                            <flat-pickr
+                                v-if="( itemLocal.reason == 'Autre...' && custom_reason !== '' ) || ( itemLocal.reason !== '' && itemLocal.reason !== 'Autre...' )"
+                                name="starts_at"
+                                class="w-full mb-4 mt-5"
+                                :config="configStartsAtDateTimePicker"
+                                v-model="itemLocal.starts_at"
+                                placeholder="Date de début"
+                                @on-change="onStartsAtChange"
+                            />
+                            <flat-pickr
+                                v-if="( itemLocal.reason == 'Autre...' && custom_reason !== '' ) || ( itemLocal.reason !== '' && itemLocal.reason !== 'Autre...' ) && itemLocal.starts_at"
+                                name="ends_at"
+                                class="w-full mb-2 mt-5"
+                                :config="configEndsAtDateTimePicker"
+                                v-model="itemLocal.ends_at"
+                                placeholder="Date de fin"
+                                @on-change="onEndsAtChange"
+                            />
                         </div>
                     </div>
                 </form>
@@ -114,7 +116,11 @@ export default {
             reasons: [
                 { name: "Utilisation heures suplémentaires" },
                 { name: "Réunion" },
-                { name: "Autre..." }
+                { name: "Rendez-vous" },
+                { name: "Congés payés" },
+                { name: "Période de cours" },
+                { name: "Arrêt de travail" },
+                { name: "Autre..." },
             ],
 
             configStartsAtDateTimePicker: {
