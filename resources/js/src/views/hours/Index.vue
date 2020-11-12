@@ -549,15 +549,14 @@ export default {
             return this.$store.state.userManagement.users;
         },
         hoursData() {
-            console.log("hoursData -> this.$store.state.hoursManagement.hours", this.$store.state.hoursManagement.hours)
             return this.$store.state.hoursManagement.hours;
         },
-        showSummary() {
-            if (this.stats.length === undefined) {
-                return true;
+        showSummary() {            
+            if (this.stats.length === undefined && typeof this.stats.total === "object") {
+                return false;
             } 
             else {
-                return false;
+                return true;
             }
         },
         paginationPageSize() {
@@ -591,7 +590,6 @@ export default {
             }
         },
         getStats(name) {
-            console.log("getStats -> this.stats", this.stats)
             if (name === "overtime") {
                 if (this.stats['overtime']) {
                     return (this.stats[name]
@@ -685,7 +683,6 @@ export default {
                     .dispatch("hoursManagement/fetchItems", filter)
                     .then(response => {
                         this.stats = response.data.stats;
-                        console.log("refreshData -> response.data", response.data)
                         
                     })
                     .catch(error => {
