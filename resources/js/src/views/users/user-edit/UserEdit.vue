@@ -72,7 +72,7 @@ export default {
 
         Please check it's watcher
       */
-      activeTab: 0,
+      activeTab: this.$route.query.tab ? this.$route.query.tab : 0,
     };
   },
   watch: {
@@ -97,6 +97,9 @@ export default {
     },
   },
   created() {
+    
+      console.log("this.$route.query", this.$route.query)
+      
     // Register Module UserManagement Module
     if (!moduleUserManagement.isRegistered) {
       this.$store.registerModule("userManagement", moduleUserManagement);
