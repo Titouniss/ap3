@@ -301,8 +301,8 @@ class ProjectController extends Controller
     {
 
         // RAF :
-        //  - Gestion des heures indispo de + de 3,5h 
-        //  - Gestion des tâches de + de 3,5h 
+        //  - Gestion des heures indispo de + de 3,5h
+        //  - Gestion des tâches de + de 3,5h
         //  - Corriger la redirection vers les plannings
 
         $project = Project::find($id);
@@ -329,7 +329,6 @@ class ProjectController extends Controller
             if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
 
                 $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
-                Project::where('id', $id)->update(['start_date' => Carbon::now()]);
                 return response()->json(['success' => $response], $this->successStatus);
             } else {
 
@@ -423,7 +422,7 @@ class ProjectController extends Controller
             // On regarde si on a des heures disponibles pour plannifier une tache
             if (($date['total_hours'] - $date['total_hours_unavailable']) > 0) {
 
-                //On parcours chaque tache 
+                //On parcours chaque tache
                 foreach ($tasksTemp as $keytask => $task) {
 
                     if ($task->date == null) {
@@ -440,7 +439,7 @@ class ProjectController extends Controller
                                 //On regarde si la tache est dépendante d'autre(s) tache(s)
                                 if ($task->previousTasks && count($task->previousTasks) > 0) {
 
-                                    //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède  
+                                    //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède
                                     foreach ($task->previousTasks as $previous) {
                                         $previous_task = Task::find($previous->previous_task_id);
                                         if ($previous_task->date == null || $previous_task->dateEnd > $period['start_time']) {
@@ -450,7 +449,7 @@ class ProjectController extends Controller
                                     }
                                 }
 
-                                //On regarde si un ilôt est disponible pendant la période 
+                                //On regarde si un ilôt est disponible pendant la période
                                 $workareaOk = null;
                                 $workareas = $this->getWorkareasBySkills($task->skills, $project->company_id);
 
@@ -510,7 +509,7 @@ class ProjectController extends Controller
                         }
 
                         //On informe si les utilisateurs ne possèdent pas les compétences nécessaires pour une certaine tache
-                        //return response()->json(['error' => 'No enought users with skills'], 401); 
+                        //return response()->json(['error' => 'No enought users with skills'], 401);
                     }
                 }
             }
@@ -532,7 +531,7 @@ class ProjectController extends Controller
         //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
         $alerts = null;
         if ($allPlanified) {
-            Project::findOrFail($project->id)->update(['status' => 'doing']);
+            Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => Carbon::now()]);
 
             $alerts = ['success' => 'All good'];
         } else { // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
@@ -806,7 +805,7 @@ class ProjectController extends Controller
                         $userHours['hours_tasks_other_project'] = $nbHours;
                     }
 
-                    //On construit un planning de l'utilisateur avec les heures disponibles de la journée 
+                    //On construit un planning de l'utilisateur avec les heures disponibles de la journée
                     $periods = [];
                     if ($userHours['hours_unavailable'] > 0 || $userHours['hours_tasks_other_project'] > 0) {
                         $periods = [];

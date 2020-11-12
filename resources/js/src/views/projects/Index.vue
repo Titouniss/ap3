@@ -511,11 +511,18 @@ export default {
                 this.gantt = new Gantt(
                     "#gantt",
                     this.projectsData
-                        .filter(p => p.status === "doing" && p.start_date)
+                        .filter(
+                            p =>
+                                p.status === "doing" &&
+                                p.start_date &&
+                                moment(p.date).isAfter()
+                        )
                         .map(p => ({
                             id: p.id.toString(),
                             name: p.name || "",
-                            start: moment(p.start_date).format("YYYY-MM-DD"),
+                            start: moment
+                                .max(moment(p.start_date), moment())
+                                .format("YYYY-MM-DD"),
                             end: moment(p.date).format("YYYY-MM-DD"),
                             progress: p.progress,
                             custom_class: `bar-${this.getProjectStatusColor(p)}`
@@ -530,8 +537,8 @@ export default {
                         custom_popup_html: project => {
                             moment.locale("fr");
                             return `
-                            <div 
-                                class="w-64 p-3 rounded text-white shadow-drop" 
+                            <div
+                                class="w-64 p-3 rounded text-white shadow-drop"
                                 style="background-color: rgba(var(--vs-${this.getProjectStatusColor(
                                     project
                                 )}, 1));"

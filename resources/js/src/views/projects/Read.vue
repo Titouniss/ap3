@@ -205,6 +205,7 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
+import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
 
 import moment from "moment";
 
@@ -413,6 +414,13 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
+        if (!moduleScheduleManagement.isRegistered) {
+            this.$store.registerModule(
+                "scheduleManagement",
+                moduleScheduleManagement
+            );
+            moduleScheduleManagement.isRegistered = true;
+        }
 
         moment.locale("fr");
 
@@ -477,6 +485,7 @@ export default {
         moduleRangeManagement.isRegistered = false;
         moduleCustomerManagement.isRegistered = false;
         moduleDocumentManagement.isRegistered = false;
+        moduleScheduleManagement.isRegistered = false;
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("workareaManagement");
@@ -484,6 +493,7 @@ export default {
         this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("customerManagement");
         this.$store.unregisterModule("documentManagement");
+        this.$store.unregisterModule("scheduleManagement");
     }
 };
 </script>
