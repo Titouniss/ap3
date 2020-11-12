@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Hours;
+use App\Models\Unavailability;
 use App\Models\DealingHours;
 use App\Models\Project;
 use App\Models\WorkHours;
@@ -30,11 +31,14 @@ class HoursController extends Controller
     {
         $user = Auth::user();
         $items = $user->hasRole('superAdmin') ? Hours::select('*') : Hours::where('user_id', $user->id);
+        $paidHolidays = $user->hasRole('superAdmin') ? Unavailability::select('*')->where('reason' , 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason' , "Congés payés");
+
         if ($user->hasRole('Administrateur')) {
             $items = Hours::select('hours.*')->join('users', 'hours.user_id', '=', 'users.id')->where('users.company_id', $user->company_id);
         }
         if ($request->user_id) {
             $items->where('user_id', $request->user_id);
+            $paidHolidays->where('user_id', $request->user_id);
         }
         if ($request->project_id) {
             $items->where('project_id', $request->project_id);
@@ -44,26 +48,45 @@ class HoursController extends Controller
             switch ($request->period_type) {
                 case 'week':
                     $items->whereBetween('start_at', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
+                    $paidHolidays->whereBetween('starts_at', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
                     break;
                 case 'month':
                     $items->whereMonth('start_at', Carbon::createFromFormat('d-m-Y', $request->date)->month);
+                    $paidHolidays->whereMonth('starts_at', Carbon::createFromFormat('d-m-Y', $request->date)->month);
                     break;
                 case 'year':
                     $items->whereYear('start_at', Carbon::createFromFormat('d-m-Y', $request->date)->year);
+                    $paidHolidays->whereYear('starts_at', Carbon::createFromFormat('d-m-Y', $request->date)->year);
                     break;
 
                 default:
                     $items->whereDate('start_at', Carbon::createFromFormat('d-m-Y', $request->date));
+                    $paidHolidays->whereDate('starts_at', Carbon::createFromFormat('d-m-Y', $request->date));
                     break;
             }
         }
 
         $items = $items->with('project', 'user')->orderBy('start_at')->get();
+        $paidHolidays = $paidHolidays->get();
 
         // Stats
         $stats = [];
-        if (!$items->isEmpty()) {
+        
+        // // Ajout des congés payés au nombre d'heures
+        if (!$paidHolidays->isEmpty()) {
             $stats['total'] = CarbonInterval::hours(0);
+            foreach ($paidHolidays as $key => $pH) {
+                $hours = Carbon::create($pH->ends_at)->diffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::createFromFormat('H', $hours));
+            }
+        }
+        else {
+            $stats['total'] = CarbonInterval::hours(0);
+            $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
+            $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
+        }
+
+        if (!$items->isEmpty()) {
             foreach ($items as $item) {
                 $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));
             }
@@ -107,6 +130,7 @@ class HoursController extends Controller
                         $defaultWorkHours += $workWeekHours;
                     }
                 }
+
                 //On veut connaitre également le nombre d'heures effectuées en moins.
                 if ($stats['total'] > $defaultWorkHours) {
                     $stats['overtime'] = $stats['total'] - $defaultWorkHours;
