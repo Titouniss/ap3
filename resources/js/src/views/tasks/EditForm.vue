@@ -394,7 +394,7 @@
             </div>
             <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
                 <vs-button
-                    @click="deleteTask"
+                    @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
                     type="filled"
                     size="small"
@@ -463,6 +463,7 @@ export default {
             workareasDataFiltered: [],
             comments: [],
 
+            deleteWarning: false,
             orderDisplay: false,
             descriptionDisplay: false,
             commentDisplay: false,
@@ -484,7 +485,12 @@ export default {
                 this.itemLocal.previous_tasks
                     ? this.addPreviousTask(this.itemLocal.previous_tasks)
                     : null;
-                return this.itemId && this.itemId > 0 ? true : false;
+
+                return this.itemId &&
+                    this.itemId > -1 &&
+                    this.deleteWarning === false
+                    ? true
+                    : false;
             },
             set(value) {
                 return this.$store
@@ -717,6 +723,22 @@ export default {
         showDescription() {
             this.descriptionDisplay = true;
         },
+        confirmDeleteTask(idEvent) {
+            this.deleteWarning = true;
+            this.$vs.dialog({
+                type: "confirm",
+                color: "danger",
+                title: "Confirmer suppression",
+                text: `Vous allez supprimer la tâche "${this.itemLocal.name}"`,
+                accept: this.deleteTask,
+                cancel: this.keepTask,
+                acceptText: "Supprimer !",
+                cancelText: "Annuler"
+            });
+        },
+        keepTask() {
+            this.deleteWarning = false;
+        },
         deleteTask() {
             this.$store
                 .dispatch("scheduleManagement/removeEvent", this.idEvent)
@@ -741,8 +763,6 @@ export default {
                         text: err.message
                     });
                 });
-
-            this.activePrompt = false;
         }
     }
 };

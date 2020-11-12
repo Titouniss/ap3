@@ -147,8 +147,9 @@
                 color="danger"
                 type="filled"
                 size="small"
-                >Supprimer l'horaire</vs-button
             >
+                Supprimer l'horaire
+            </vs-button>
         </vs-row>
     </vs-prompt>
 </template>
