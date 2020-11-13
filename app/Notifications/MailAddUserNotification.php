@@ -62,16 +62,17 @@ class MailAddUserNotification extends Notification
         }
 
         $link = url("/pages/change-password").'?'.http_build_query(['user_id' => $this->id]);
-        return (new MailMessage)->view(
-            'emails.name', ['invoice' => $this->invoice]
-        );
-        // ->subject('Invitation à rejoindre plannigo !')
-        // ->greeting('Bonjour '.$notifiable->firstname)
-        // ->line("Vous êtes invité à rejoindre plannigo, votre identifiant est : ")  // TODO le texte avant bouton clique
-        // ->line($notifiable->login)
-        // ->line("Veuillez maintenant changer votre mot de passe en cliquant sur le bouton ci dessous")
-        // ->action('Changer mot de passe',  $link)
-        // ->line('Merci d\'utiliser plannigo');
+        return (new MailMessage)
+        // ->view(
+        //     'emails.name', ['invoice' => $this->invoice]
+        // );
+        ->subject('Invitation à rejoindre plannigo !')
+        ->greeting('Bonjour '.$notifiable->firstname)
+        ->line("Vous êtes invité à rejoindre plannigo, votre identifiant est : ")  // TODO le texte avant bouton clique
+        ->line($notifiable->login)
+        ->line("Veuillez maintenant changer votre mot de passe en cliquant sur le bouton ci dessous")
+        ->action('Changer mot de passe',  $link)
+        ->line('Merci d\'utiliser plannigo');
     }
 
     /**

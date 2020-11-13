@@ -54,7 +54,7 @@ class UserController extends Controller
         if (Auth::attempt(['login' => $arrayRequest['login'], 'password' => $arrayRequest['password']])) {
             Auth::logout();
             return response()->json(['success' => true, 'userData' => $user], $this->successStatus);
-        } 
+        }
         else {
             return response()->json(['success' => false, 'error' => 'Unauthorised'], $this->successStatus);
         }
@@ -646,7 +646,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         $item = User::findOrFail($id);
-        Task::where('user_id', $id)->update(['user_id', null]);
+        Task::where('user_id', $id)->update(['user_id' => null]);
         $item->delete();
         return response()->json(['success' => $item], $this->successStatus);
     }
