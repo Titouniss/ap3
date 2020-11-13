@@ -15,5 +15,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DataTypesSeeder::class);
         $this->call(DataRowsSeeder::class);
         $this->call(TasksBundleSeeder::class);
+        $this->call(ResetDealingHours::class);
     }
 }
