@@ -60,27 +60,53 @@
             </vs-row>
 
             <div v-show="ganttView" class="w-full">
-                <div class="flex flex-row justify-center items-center">
-                    <div class="btn-group">
-                        <vs-button
-                            v-for="(displayName, key) in {
-                                ['Day']: 'Jour',
-                                ['Week']: 'Semaine',
-                                ['Month']: 'Mois'
-                            }"
-                            :key="key"
-                            type="flat"
-                            :disabled="ganttViewMode === key"
-                            @click="ganttViewMode = key"
-                        >
-                            {{ displayName }}
-                        </vs-button>
+                <div v-show="ganttProjectsData.length > 0" class="w-full">
+                    <div class="flex flex-row justify-center items-center">
+                        <div class="btn-group">
+                            <vs-button
+                                v-for="(displayName, key) in {
+                                    ['Day']: 'Jour',
+                                    ['Week']: 'Semaine',
+                                    ['Month']: 'Mois'
+                                }"
+                                :key="key"
+                                type="flat"
+                                :disabled="ganttViewMode === key"
+                                @click="ganttViewMode = key"
+                            >
+                                {{ displayName }}
+                            </vs-button>
+                        </div>
+                    </div>
+                    <div
+                        class="m-3 rounded border border-solid d-theme-border-grey-light"
+                    >
+                        <svg id="gantt"></svg>
                     </div>
                 </div>
                 <div
-                    class="m-3 rounded border border-solid d-theme-border-grey-light"
+                    v-if="projectsLoaded && ganttProjectsData.length === 0"
+                    class="w-full my-3 flex flex-row justify-center items-center"
                 >
-                    <svg id="gantt"></svg>
+                    <vx-card
+                        card-background="success"
+                        content-color="#fff"
+                        class="max-w-sm"
+                    >
+                        <div class="flex flex-col items-center text-center">
+                            <div
+                                class="mb-3 p-3 flex justify-center items-center rounded-full bg-white"
+                            >
+                                <feather-icon
+                                    icon="CheckIcon"
+                                    svgClasses="h-10 w-10 text-success"
+                                />
+                            </div>
+                            <p class="text-white">
+                                Pas de projets en cours à venir
+                            </p>
+                        </div>
+                    </vx-card>
                 </div>
             </div>
 
@@ -351,14 +377,13 @@ export default {
                 CellRendererRelations
             },
 
-            ganttViewMode: "Week"
+            ganttViewMode: "Week",
+            projectsLoaded: false
         };
     },
     watch: {
-        projectsData(val) {
-            if (val && val.length > 0) {
-                this.onResize();
-            }
+        ganttProjectsData(val) {
+            this.onResize();
         },
         ganttView(val, oldVal) {
             if (val !== oldVal) {
@@ -376,9 +401,33 @@ export default {
             if (!this.$store.state.projectManagement) {
                 return [];
             }
+
             return this.sortProjects(
                 this.$store.state.projectManagement.projects
             );
+        },
+        ganttProjectsData() {
+            if (!this.projectsData || this.projectsData.length <= 0) {
+                return [];
+            }
+
+            return this.projectsData
+                .filter(
+                    p =>
+                        p.status === "doing" &&
+                        p.start_date &&
+                        moment(p.date).isAfter()
+                )
+                .map(p => ({
+                    id: p.id.toString(),
+                    name: p.name || "",
+                    start: moment
+                        .max(moment(p.start_date), moment())
+                        .format("YYYY-MM-DD"),
+                    end: moment(p.date).format("YYYY-MM-DD"),
+                    progress: p.progress,
+                    custom_class: `bar-${this.getProjectStatusColor(p)}`
+                }));
         },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -508,26 +557,8 @@ export default {
         },
         onResize(event) {
             if (this.ganttView) {
-                this.gantt = new Gantt(
-                    "#gantt",
-                    this.projectsData
-                        .filter(
-                            p =>
-                                p.status === "doing" &&
-                                p.start_date &&
-                                moment(p.date).isAfter()
-                        )
-                        .map(p => ({
-                            id: p.id.toString(),
-                            name: p.name || "",
-                            start: moment
-                                .max(moment(p.start_date), moment())
-                                .format("YYYY-MM-DD"),
-                            end: moment(p.date).format("YYYY-MM-DD"),
-                            progress: p.progress,
-                            custom_class: `bar-${this.getProjectStatusColor(p)}`
-                        })),
-                    {
+                if (this.ganttProjectsData.length > 0) {
+                    this.gantt = new Gantt("#gantt", this.ganttProjectsData, {
                         view_modes: ["Day", "Week", "Month"],
                         bar_height: 25,
                         padding: 15,
@@ -562,8 +593,8 @@ export default {
                                 `/projects/project-view/${project.id}`
                             );
                         }
-                    }
-                );
+                    });
+                }
             } else {
                 if (this.gridApi) {
                     // refresh the grid
@@ -652,9 +683,13 @@ export default {
             moduleDocumentManagement.isRegistered = true;
         }
 
-        this.$store.dispatch("projectManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        const that = this;
+        this.$store
+            .dispatch("projectManagement/fetchItems")
+            .then(() => (that.projectsLoaded = true))
+            .catch(err => {
+                console.error(err);
+            });
         this.$store.dispatch("customerManagement/fetchItems").catch(err => {
             console.error(err);
         });
