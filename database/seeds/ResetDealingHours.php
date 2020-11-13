@@ -34,34 +34,28 @@ class ResetDealingHours extends Seeder
                         $end_at = Carbon::parse($hour->end_at);
         
                         $parseDuration = $start_at->floatDiffInHours($end_at);
-        
-                        if ($parseDuration === 0) {
-                            return response()->json(['error' => "Veuillez inserer une durée"], $this->successStatus);
-                        }
-        
+                            
                         // How many hour user worked this day
                         $nb_worked_hours = ResetDealingHours::getNbWorkedHours($user->id, $parseDuration, $start_at->format('Y-m-d'));
         
                         // Expected hours for this day
                         $target_day = $start_at->locale('fr_FR')->dayName;
                         $target_work_hours = ResetDealingHours::getTargetWorkHours($user->id, $target_day);
-                        if ($target_work_hours === 0) {
-                            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day], $this->successStatus);
-                        }
-        
-                        // Check if value in dealing_hours for this date
-                        $findDealingHour = DealingHours::where('user_id', $user->id)->where('date', $start_at->format('Y-m-d'))->first();
-        
-                        if (empty($findDealingHour) === false) {
-                            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-                            $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-                        }
-                        // Else add new tuple in dealing_hours for this date
-                        else {
-                            //Create new tuple in dealing_hours with user_id, date and overtimes
-                            $deallingHourItem = DealingHours::create(
-                                ['user_id' => $user->id, 'date' => $start_at->format('Y-m-d'), 'overtimes' => ($nb_worked_hours - $target_work_hours)]
-                            );
+                        if ($target_work_hours > 0) {
+                                // Check if value in dealing_hours for this date
+                            $findDealingHour = DealingHours::where('user_id', $user->id)->where('date', $start_at->format('Y-m-d'))->first();
+            
+                            if (empty($findDealingHour) === false) {
+                                // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
+                                $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+                            }
+                            // Else add new tuple in dealing_hours for this date
+                            else {
+                                //Create new tuple in dealing_hours with user_id, date and overtimes
+                                $deallingHourItem = DealingHours::create(
+                                    ['user_id' => $user->id, 'date' => $start_at->format('Y-m-d'), 'overtimes' => ($nb_worked_hours - $target_work_hours)]
+                                );
+                            }
                         }
                     }
                 }
