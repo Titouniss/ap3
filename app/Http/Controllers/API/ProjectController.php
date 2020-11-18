@@ -325,7 +325,7 @@ class ProjectController extends Controller
 
             // Hours Available & Hours Unavailable
             $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
-
+        
             if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
 
                 $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
@@ -415,8 +415,6 @@ class ProjectController extends Controller
         $NoPlanTasks = [];
 
         //Foreach jours jusqu'a la date de livraison
-
-
         foreach ($TimeData['details'] as $date) {
 
             // On regarde si on a des heures disponibles pour plannifier une tache
@@ -570,7 +568,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Monday' || $data['day_label'] == 'Lundi'):
 
                     $dayHours = $this->getHoursAvailableByDay('lundi', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -587,7 +584,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Tuesday' || $data['day_label'] == 'Mardi'):
 
                     $dayHours = $this->getHoursAvailableByDay('mardi', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -604,7 +600,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Wednesday' || $data['day_label'] == 'Mercredi'):
 
                     $dayHours = $this->getHoursAvailableByDay('mercredi', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -621,7 +616,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Thursday' || $data['day_label'] == 'Jeudi'):
 
                     $dayHours = $this->getHoursAvailableByDay('jeudi', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -638,7 +632,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Friday' || $data['day_label'] == 'Vendredi'):
 
                     $dayHours = $this->getHoursAvailableByDay('vendredi', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -655,7 +648,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Saturday' || $data['day_label'] == 'Samedi'):
 
                     $dayHours = $this->getHoursAvailableByDay('samedi', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -672,7 +664,6 @@ class ProjectController extends Controller
                 case ($data['day_label'] == 'Sunday' || $data['day_label'] == 'Dimanche'):
 
                     $dayHours = $this->getHoursAvailableByDay('dimanche', $data['date'], $users);
-                    //Raf already task in this date
 
                     if ($dayHours) {
                         $totalHours += $dayHours['total'];
@@ -724,16 +715,16 @@ class ProjectController extends Controller
 
                     //Hours available
                     if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
-                        $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
-                        $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
+                        $first_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+                        $first_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
 
-                        $userHours['hours'] += Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart));
+                        $userHours['hours'] += Carbon::parse($first_time_slot_end)->floatDiffInHours(Carbon::parse($first_time_slot_start));
                     }
                     if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
-                        $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
-                        $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
+                        $second_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+                        $second_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
 
-                        $userHours['hours'] += Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart));
+                        $userHours['hours'] += Carbon::parse($second_time_slot_end)->floatDiffInHours(Carbon::parse($second_time_slot_start));
                     }
 
                     //Hours unavailable
@@ -775,7 +766,7 @@ class ProjectController extends Controller
                         $hours_unavailable_details = $this->mergeHoursUnavailable($hoursUnavailableByPeriod);
 
                         $userHours['hours_unavailable_details'] = $hours_unavailable_details;
-                        $userHours['hours_unavailable'] = $hours_unavailable_details['afternoon']['hours'] + $hours_unavailable_details['morning']['hours'];
+                        $userHours['hours_unavailable'] = $hours_unavailable_details['second_time_slot_start']['hours'] + $hours_unavailable_details['first_time_slot']['hours'];
                     }
 
                     //Hours Tasks other Project
@@ -784,8 +775,8 @@ class ProjectController extends Controller
 
                         $nbHours = 0;
                         $other_tasks_project_periods = [
-                            'morning' => [],
-                            'afternoon' => []
+                            'first_time_slot' => [],
+                            'second_time_slot' => []
                         ];
 
                         foreach ($tasks_user_day as $task) {
@@ -793,12 +784,12 @@ class ProjectController extends Controller
                             $start_time = $task->date;
                             $end_time = Carbon::parse($task->date)->addHours($task->estimated_time);
 
-                            if ($morningEnd && $period['start_date'] < $morningEnd) {
-                                $other_tasks_project_periods['morning'][] = array('start_time' => $start_time, 'end_time' => $end_time);
+                            if ($first_time_slot_end && $period['start_date'] < $first_time_slot_end) {
+                                $other_tasks_project_periods['first_time_slot'][] = array('start_time' => $start_time, 'end_time' => $end_time);
                             }
 
-                            if ($AfternoonStart && $period['end_date'] > $AfternoonStart) {
-                                $other_tasks_project_periods['afternoon'][] = array('start_time' => $start_time, 'end_time' => $end_time);
+                            if ($second_time_slot_start && $period['end_date'] > $second_time_slot_start) {
+                                $other_tasks_project_periods['second_time_slot'][] = array('start_time' => $start_time, 'end_time' => $end_time);
                             }
                         }
 
@@ -810,39 +801,39 @@ class ProjectController extends Controller
                     if ($userHours['hours_unavailable'] > 0 || $userHours['hours_tasks_other_project'] > 0) {
                         $periods = [];
                         $periods_unavailable = [
-                            'morning' => [],
-                            'afternoon' => []
+                            'first_time_slot' => [],
+                            'second_time_slot' => []
                         ];
 
                         if (isset($userHours['hours_unavailable_details'])) {
-                            $periods_unavailable['afternoon'] = array_merge($periods_unavailable['afternoon'], $userHours['hours_unavailable_details']['afternoon']['periods']);
-                            $periods_unavailable['morning'] = array_merge($periods_unavailable['morning'], $userHours['hours_unavailable_details']['morning']['periods']);
+                            $periods_unavailable['second_time_slot'] = array_merge($periods_unavailable['second_time_slot'], $userHours['hours_unavailable_details']['second_time_slot']['periods']);
+                            $periods_unavailable['first_time_slot'] = array_merge($periods_unavailable['first_time_slot'], $userHours['hours_unavailable_details']['first_time_slot']['periods']);
                         }
 
                         if (isset($userHours['hours_tasks_other_project'])) {
-                            $periods_unavailable['afternoon'] = array_merge($periods_unavailable['afternoon'], $other_tasks_project_periods['afternoon']);
-                            $periods_unavailable['morning'] = array_merge($periods_unavailable['morning'], $other_tasks_project_periods['morning']);
+                            $periods_unavailable['second_time_slot'] = array_merge($periods_unavailable['second_time_slot'], $other_tasks_project_periods['second_time_slot']);
+                            $periods_unavailable['first_time_slot'] = array_merge($periods_unavailable['first_time_slot'], $other_tasks_project_periods['first_time_slot']);
                         }
 
                         $periods = $this->reversePeriodsUnavailableToPeriods(
                             $periods_unavailable,
-                            array('morningStart' => $morningStart, 'morningEnd' => $morningEnd, 'afternoonStart' => $AfternoonStart, 'afternoonEnd' => $AfternoonEnd),
+                            array('first_time_slot_start' => $first_time_slot_start, 'first_time_slot_end' => $first_time_slot_end, 'second_time_slot_start' => $second_time_slot_start, 'second_time_slot_end' => $second_time_slot_end),
                             $user
                         );
                     } else {
-                        $periods[] = array(
-                            'start_time' => $morningStart,
-                            'end_time' => $morningEnd,
-                            'hours' => Carbon::parse($morningEnd)->floatDiffInHours(Carbon::parse($morningStart)),
+                        $first_time_slot_start && $first_time_slot_end ? $periods[] = array(
+                            'start_time' => $first_time_slot_start,
+                            'end_time' => $first_time_slot_end,
+                            'hours' => Carbon::parse($first_time_slot_end)->floatDiffInHours(Carbon::parse($first_time_slot_start)),
                             'user' => $user
-                        );
+                        ) : null;
 
-                        $periods[] = array(
-                            'start_time' => $AfternoonStart,
-                            'end_time' => $AfternoonEnd,
-                            'hours' => Carbon::parse($AfternoonEnd)->floatDiffInHours(Carbon::parse($AfternoonStart)),
+                        isset($second_time_slot_start) && isset($second_time_slot_end) ? $periods[] = array(
+                            'start_time' => $second_time_slot_start,
+                            'end_time' => $second_time_slot_end,
+                            'hours' => Carbon::parse($second_time_slot_end)->floatDiffInHours(Carbon::parse($second_time_slot_start)),
                             'user' => $user
-                        );
+                        ) : null;
                     }
 
                     $userHours['periods_available'] = $periods;
@@ -866,14 +857,14 @@ class ProjectController extends Controller
     private function calculNbHoursUnavailable($dayHours, $period, $hours_unavailable = null)
     {
 
-        $hours_unavailable_morning = [
+        $hours_unavailable_first_time_slot = [
             'hours' => 0,
             'periods' => [
                 'start_time' => null,
                 'end_time' => null
             ]
         ];
-        $hours_unavailable_afternoon = [
+        $hours_unavailable_second_time_slot = [
             'hours' => 0,
             'periods' => [
                 'start_time' => null,
@@ -883,86 +874,86 @@ class ProjectController extends Controller
 
         //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
         if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
-            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
-            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
+            $first_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+            $first_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
 
             //Matin
-            if ($period['start_date'] < $morningEnd) {
-                $startMorningUnavailable = null;
-                $endMorningUnavailable = null;
+            if ($period['start_date'] < $first_time_slot_end) {
+                $first_time_slot_start_unavailable = null;
+                $first_time_slot_end_unavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche du matin
-                if ($period['start_date'] > $morningStart) {
-                    $startMorningUnavailable = $period['start_date'];
+                if ($period['start_date'] > $first_time_slot_start) {
+                    $first_time_slot_start_unavailable = $period['start_date'];
                 } else { //Sinon, on prend l'heure d'embauche
-                    $startMorningUnavailable = $morningStart;
+                    $first_time_slot_start_unavailable = $first_time_slot_start;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du midi
-                if ($period['end_date'] <= $morningEnd) {
-                    $endMorningUnavailable = $period['end_date'];
+                if ($period['end_date'] <= $first_time_slot_end) {
+                    $first_time_slot_end_unavailable = $period['end_date'];
                 } else { //Sinon, on prend de débauche du midi.
-                    $endMorningUnavailable = $morningEnd;
+                    $first_time_slot_end_unavailable = $first_time_slot_end;
                 }
 
-                $hours_unavailable_morning = [
-                    'hours' => Carbon::parse($endMorningUnavailable)->floatDiffInHours(Carbon::parse($startMorningUnavailable)),
+                $hours_unavailable_first_time_slot = [
+                    'hours' => Carbon::parse($first_time_slot_end_unavailable)->floatDiffInHours(Carbon::parse($first_time_slot_start_unavailable)),
                     'periods' => [
-                        'start_time' => $startMorningUnavailable,
-                        'end_time' => $endMorningUnavailable
+                        'start_time' => $first_time_slot_start_unavailable,
+                        'end_time' => $first_time_slot_end_unavailable
                     ]
                 ];
             }
         }
 
         if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
-            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
-            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
+            $second_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+            $second_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $period['period']->getStartDate()->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
 
             //Après midi
-            if ($period['end_date'] > $AfternoonStart) {
-                $startAfternoonUnavailable = null;
-                $endAfternoonUnavailable = null;
+            if ($period['end_date'] > $second_time_slot_start) {
+                $second_time_slot_start_unavailable = null;
+                $second_time_slot_end_unavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche d'après-midi
-                if ($period['start_date'] > $AfternoonStart) {
-                    $startAfternoonUnavailable = $period['start_date'];
+                if ($period['start_date'] > $second_time_slot_start) {
+                    $second_time_slot_start_unavailable = $period['start_date'];
                 } else { //Sinon, on prend l'heure d'embauche d'après-midi
-                    $startAfternoonUnavailable = $AfternoonStart;
+                    $second_time_slot_start_unavailable = $second_time_slot_start;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
-                if ($period['end_date'] <= $AfternoonEnd) {
-                    $endAfternoonUnavailable = $period['end_date'];
+                if ($period['end_date'] <= $second_time_slot_end) {
+                    $second_time_slot_end_unavailable = $period['end_date'];
                 } else { //Sinon, on prend de débauche du midi.
-                    $endAfternoonUnavailable = $AfternoonEnd;
+                    $second_time_slot_end_unavailable = $second_time_slot_end;
                 }
 
-                $hours_unavailable_afternoon = [
-                    'hours' => Carbon::parse($endAfternoonUnavailable)->floatDiffInHours(Carbon::parse($startAfternoonUnavailable)),
+                $hours_unavailable_second_time_slot = [
+                    'hours' => Carbon::parse($second_time_slot_end_unavailable)->floatDiffInHours(Carbon::parse($second_time_slot_start_unavailable)),
                     'periods' => [
-                        'start_time' => $startAfternoonUnavailable,
-                        'end_time' => $endAfternoonUnavailable
+                        'start_time' => $second_time_slot_start_unavailable,
+                        'end_time' => $second_time_slot_end_unavailable
                     ]
                 ];;
             }
         }
 
-        return array('morning' => $hours_unavailable_morning, 'afternoon' => $hours_unavailable_afternoon);
+        return array('first_time_slot' => $hours_unavailable_first_time_slot, 'second_time_slot' => $hours_unavailable_second_time_slot);
     }
 
 
     private function calculNbHoursUnavailablePeriod($dayHours, $day, $fisrt_date = null, $last_date = null)
     {
 
-        $hours_unavailable_morning = [
+        $hours_unavailable_first_time_slot = [
             'hours' => 0,
             'periods' => [
                 'start_time' => null,
                 'end_time' => null
             ]
         ];
-        $hours_unavailable_afternoon = [
+        $hours_unavailable_second_time_slot = [
             'hours' => 0,
             'periods' => [
                 'start_time' => null,
@@ -984,72 +975,72 @@ class ProjectController extends Controller
 
         //On regarde si l'indiponiblité est répartie sur le matin et/ou l'après-midi
         if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
-            $morningEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
-            $morningStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
+            $first_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+            $first_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
 
             //Matin
-            if ($startDateTime < $morningEnd) {
-                $startMorningUnavailable = null;
-                $endMorningUnavailable = null;
+            if ($startDateTime < $first_time_slot_end) {
+                $first_time_slot_start_unavailable = null;
+                $first_time_slot_end_unavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche du matin
-                if ($startDateTime > $morningStart) {
-                    $startMorningUnavailable = $startDateTime;
+                if ($startDateTime > $first_time_slot_start) {
+                    $first_time_slot_start_unavailable = $startDateTime;
                 } else { //Sinon, on prend l'heure d'embauche
-                    $startMorningUnavailable = $morningStart;
+                    $first_time_slot_start_unavailable = $first_time_slot_start;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du midi
-                if ($endDateTime <= $morningEnd) {
-                    $endMorningUnavailable = $endDateTime;
+                if ($endDateTime <= $first_time_slot_end) {
+                    $first_time_slot_end_unavailable = $endDateTime;
                 } else { //Sinon, on prend de débauche du midi.
-                    $endMorningUnavailable = $morningEnd;
+                    $first_time_slot_end_unavailable = $first_time_slot_end;
                 }
 
-                $hours_unavailable_morning = [
-                    'hours' => Carbon::parse($endMorningUnavailable)->floatDiffInHours(Carbon::parse($startMorningUnavailable)),
+                $hours_unavailable_first_time_slot = [
+                    'hours' => Carbon::parse($first_time_slot_end_unavailable)->floatDiffInHours(Carbon::parse($first_time_slot_start_unavailable)),
                     'periods' => [
-                        'start_time' => $startMorningUnavailable,
-                        'end_time' => $endMorningUnavailable
+                        'start_time' => $first_time_slot_start_unavailable,
+                        'end_time' => $first_time_slot_end_unavailable
                     ]
                 ];
             }
         }
 
         if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
-            $AfternoonEnd = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
-            $AfternoonStart = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
+            $second_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+            $second_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $day->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
 
             //Après midi
-            if ($endDateTime > $AfternoonStart) {
-                $startAfternoonUnavailable = null;
-                $endAfternoonUnavailable = null;
+            if ($endDateTime > $second_time_slot_start) {
+                $second_time_slot_start_unavailable = null;
+                $second_time_slot_end_unavailable = null;
 
                 //On regarde si la l'heure du début de l'indisponibilité ne commence pas avant l'horaire d'embauche d'après-midi
-                if ($startDateTime > $AfternoonStart) {
-                    $startAfternoonUnavailable = $startDateTime;
+                if ($startDateTime > $second_time_slot_start) {
+                    $second_time_slot_start_unavailable = $startDateTime;
                 } else { //Sinon, on prend l'heure d'embauche d'après-midi
-                    $startAfternoonUnavailable = $AfternoonStart;
+                    $second_time_slot_start_unavailable = $second_time_slot_start;
                 }
 
                 //On regarde si la l'heure de fin de l'indisponibilité ne commence pas après l'horaire de débauche du soir
-                if ($endDateTime <= $AfternoonEnd) {
-                    $endAfternoonUnavailable = $endDateTime;
+                if ($endDateTime <= $second_time_slot_end) {
+                    $second_time_slot_end_unavailable = $endDateTime;
                 } else { //Sinon, on prend de débauche du soir.
-                    $endAfternoonUnavailable = $AfternoonEnd;
+                    $second_time_slot_end_unavailable = $second_time_slot_end;
                 }
 
-                $hours_unavailable_afternoon = [
-                    'hours' => Carbon::parse($endAfternoonUnavailable)->floatDiffInHours(Carbon::parse($startAfternoonUnavailable)),
+                $hours_unavailable_second_time_slot = [
+                    'hours' => Carbon::parse($second_time_slot_end_unavailable)->floatDiffInHours(Carbon::parse($second_time_slot_start_unavailable)),
                     'periods' => [
-                        'start_time' => $startAfternoonUnavailable,
-                        'end_time' => $endAfternoonUnavailable
+                        'start_time' => $second_time_slot_start_unavailable,
+                        'end_time' => $second_time_slot_end_unavailable
                     ]
                 ];;
             }
         }
 
-        return array('morning' => $hours_unavailable_morning, 'afternoon' => $hours_unavailable_afternoon);
+        return array('first_time_slot' => $hours_unavailable_first_time_slot, 'second_time_slot' => $hours_unavailable_second_time_slot);
     }
 
     private function mergeHoursUnavailable($hoursUnavailableByPeriod)
@@ -1060,11 +1051,11 @@ class ProjectController extends Controller
             $response = $hoursUnavailableByPeriod[0];
         } else {
             $hoursUnavailable = [
-                'morning' => [
+                'first_time_slot' => [
                     'hours' => 0,
                     'periods' => []
                 ],
-                'afternoon' => [
+                'second_time_slot' => [
                     'hours' => 0,
                     'periods' => []
                 ]
@@ -1072,14 +1063,14 @@ class ProjectController extends Controller
 
             foreach ($hoursUnavailableByPeriod as $hours) {
 
-                if ($hours['morning']['hours'] != 0) {
-                    $hoursUnavailable['morning']['hours'] += $hours['morning']['hours'];
-                    $hoursUnavailable['morning']['periods'][] = $hours['morning']['periods'];
+                if ($hours['first_time_slot']['hours'] != 0) {
+                    $hoursUnavailable['first_time_slot']['hours'] += $hours['first_time_slot']['hours'];
+                    $hoursUnavailable['first_time_slot']['periods'][] = $hours['first_time_slot']['periods'];
                 }
 
-                if ($hours['afternoon']['hours'] != 0) {
-                    $hoursUnavailable['afternoon']['hours'] += $hours['afternoon']['hours'];
-                    $hoursUnavailable['afternoon']['periods'][] = $hours['afternoon']['periods'];
+                if ($hours['second_time_slot']['hours'] != 0) {
+                    $hoursUnavailable['second_time_slot']['hours'] += $hours['second_time_slot']['hours'];
+                    $hoursUnavailable['second_time_slot']['periods'][] = $hours['second_time_slot']['periods'];
                 }
             }
             $response = $hoursUnavailable;
@@ -1116,49 +1107,49 @@ class ProjectController extends Controller
 
         $periods = [];
 
-        count($periods_unavailable['morning']) > 1 ? usort($periods_unavailable['morning'], array($this, 'date_sort')) : null;
-        count($periods_unavailable['afternoon']) > 1 ? usort($periods_unavailable['afternoon'], array($this, 'date_sort')) : null;
+        count($periods_unavailable['first_time_slot']) > 1 ? usort($periods_unavailable['first_time_slot'], array($this, 'date_sort')) : null;
+        count($periods_unavailable['second_time_slot']) > 1 ? usort($periods_unavailable['second_time_slot'], array($this, 'date_sort')) : null; 
 
         //Matin
-        if ($hours_work['morningStart'] && $hours_work['morningEnd']) {
+        if ($hours_work['first_time_slot_start'] && $hours_work['first_time_slot_end']) {
             //Si pas d'indiponibilité ni de tache d'autre projet
-            if (count($periods_unavailable['morning']) == 0) {
+            if (count($periods_unavailable['first_time_slot']) == 0) {
                 $period_available = [
-                    'start_time' => $hours_work['morningStart'],
-                    'end_time' => $hours_work['morningEnd'],
-                    'hours' => Carbon::parse($hours_work['morningEnd'])->floatDiffInHours(Carbon::parse($hours_work['morningStart'])),
+                    'start_time' => $hours_work['first_time_slot_start'],
+                    'end_time' => $hours_work['first_time_slot_end'],
+                    'hours' => Carbon::parse($hours_work['first_time_slot_end'])->floatDiffInHours(Carbon::parse($hours_work['first_time_slot_start'])),
                     'user' => $user
                 ];
                 $periods[] = $period_available;
-            } elseif (count($periods_unavailable['morning']) == 1) {
+            } elseif (count($periods_unavailable['first_time_slot']) == 1) {
 
                 // 1er cas : On regarde si la periode d'indispo est égale ou déborde de la période de travail
-                if ($periods_unavailable['morning'][0]['start_time'] <= $hours_work['morningStart'] && $hours_work['morningEnd'] <= $periods_unavailable['morning'][0]['end_time']) {
+                if ($periods_unavailable['first_time_slot'][0]['start_time'] <= $hours_work['first_time_slot_start'] && $hours_work['first_time_slot_end'] <= $periods_unavailable['first_time_slot'][0]['end_time']) {
                     $period_available = null;
                 }
 
                 // 2ème cas : On regarde si la période est strictement dans la periode de travail
-                elseif ($periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart'] && $hours_work['morningEnd'] > $periods_unavailable['morning'][0]['end_time']) {
+                elseif ($periods_unavailable['first_time_slot'][0]['start_time'] > $hours_work['first_time_slot_start'] && $hours_work['first_time_slot_end'] > $periods_unavailable['first_time_slot'][0]['end_time']) {
 
                     $period_available1 = [
-                        'start_time' => $hours_work['morningStart'],
-                        'end_time' => $periods_unavailable['morning'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['morning'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['morningStart'])),
+                        'start_time' => $hours_work['first_time_slot_start'],
+                        'end_time' => $periods_unavailable['first_time_slot'][0]['start_time'],
+                        'hours' => Carbon::parse($periods_unavailable['first_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['first_time_slot_start'])),
                         'user' => $user
                     ];
 
                     $period_available2 = [
-                        'start_time' => $periods_unavailable['morning'][0]['end_time'],
-                        'end_time' => $hours_work['morningEnd'],
-                        'hours' => Carbon::parse($hours_work['morningEnd'])->floatDiffInHours(Carbon::parse($periods_unavailable['morning'][0]['end_time'])),
+                        'start_time' => $periods_unavailable['first_time_slot'][0]['end_time'],
+                        'end_time' => $hours_work['first_time_slot_end'],
+                        'hours' => Carbon::parse($hours_work['first_time_slot_end'])->floatDiffInHours(Carbon::parse($periods_unavailable['first_time_slot'][0]['end_time'])),
                         'user' => $user
                     ];
 
                     $periods[] = $period_available1;
                     $periods[] = $period_available2;
                 } else {
-                    $start_time = $periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart'] ? $periods_unavailable['morning'][0]['start_time'] : $hours_work['morningStart'];
-                    $end_time = $hours_work['morningEnd'] > $periods_unavailable['morning'][0]['end_time'] ? $periods_unavailable['morning'][0]['end_time'] : $end_time = $hours_work['morningEnd'];
+                    $start_time = $periods_unavailable['first_time_slot'][0]['start_time'] > $hours_work['first_time_slot_start'] ? $periods_unavailable['first_time_slot'][0]['start_time'] : $hours_work['first_time_slot_start'];
+                    $end_time = $hours_work['first_time_slot_end'] > $periods_unavailable['first_time_slot'][0]['end_time'] ? $periods_unavailable['first_time_slot'][0]['end_time'] : $end_time = $hours_work['first_time_slot_end'];
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
@@ -1173,19 +1164,19 @@ class ProjectController extends Controller
             // Si + de 1 indisponibilité
             else {
                 //On regarde si le premier élément du tableau est supérieur a la l'heure d'embauche du matin
-                if ($periods_unavailable['morning'][0]['start_time'] > $hours_work['morningStart']) {
+                if ($periods_unavailable['first_time_slot'][0]['start_time'] > $hours_work['first_time_slot_start']) {
                     $period_available = [
-                        'start_time' => $hours_work['morningStart'],
-                        'end_time' => $periods_unavailable['morning'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['morning'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['morningStart'])),
+                        'start_time' => $hours_work['first_time_slot_start'],
+                        'end_time' => $periods_unavailable['first_time_slot'][0]['start_time'],
+                        'hours' => Carbon::parse($periods_unavailable['first_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['first_time_slot_start'])),
                         'user' => $user
                     ];
                     $periods[] = $period_available;
                 }
 
-                foreach ($periods_unavailable['morning'] as $key => $morningPeriod) {
-                    $start_time = $morningPeriod['end_time'];
-                    $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['morningEnd'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['morningEnd'];
+                foreach ($periods_unavailable['first_time_slot'] as $key => $first_time_slot_period) {
+                    $start_time = $first_time_slot_period['end_time'];
+                    $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['first_time_slot_end'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['first_time_slot_end'];
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
@@ -1199,45 +1190,45 @@ class ProjectController extends Controller
         }
 
         //Après-midi
-        if ($hours_work['afternoonStart'] && $hours_work['afternoonEnd']) {
+        if ($hours_work['second_time_slot_start'] && $hours_work['second_time_slot_end']) {
             //Si pas d'indiponibilité ni de tache d'autre proje
-            if (count($periods_unavailable['afternoon']) == 0) {
+            if (count($periods_unavailable['second_time_slot']) == 0) {
                 $period_available = [
-                    'start_time' => $hours_work['afternoonStart'],
-                    'end_time' => $hours_work['afternoonEnd'],
-                    'hours' => Carbon::parse($hours_work['afternoonEnd'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart'])),
+                    'start_time' => $hours_work['second_time_slot_start'],
+                    'end_time' => $hours_work['second_time_slot_end'],
+                    'hours' => Carbon::parse($hours_work['second_time_slot_end'])->floatDiffInHours(Carbon::parse($hours_work['second_time_slot_start'])),
                     'user' => $user
                 ];
                 $periods[] = $period_available;
-            } elseif (count($periods_unavailable['afternoon']) == 1) {
+            } elseif (count($periods_unavailable['second_time_slot']) == 1) {
 
                 // 1er cas : On regarde si la periode d'indispo est égale ou déborde de la période de travail
-                if ($periods_unavailable['afternoon'][0]['start_time'] <= $hours_work['afternoonStart'] && $hours_work['afternoonEnd'] <= $periods_unavailable['afternoon'][0]['end_time']) {
+                if ($periods_unavailable['second_time_slot'][0]['start_time'] <= $hours_work['second_time_slot_start'] && $hours_work['second_time_slot_end'] <= $periods_unavailable['second_time_slot'][0]['end_time']) {
                     $period_available = null;
                 }
 
                 // 2ème cas : On regarde si la période est strictement dans la periode de travail
-                elseif ($periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart'] && $hours_work['afternoonEnd'] > $periods_unavailable['afternoon'][0]['end_time']) {
+                elseif ($periods_unavailable['second_time_slot'][0]['start_time'] > $hours_work['second_time_slot_start'] && $hours_work['second_time_slot_end'] > $periods_unavailable['second_time_slot'][0]['end_time']) {
 
                     $period_available1 = [
-                        'start_time' => $hours_work['afternoonStart'],
-                        'end_time' => $periods_unavailable['afternoon'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['afternoon'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart'])),
+                        'start_time' => $hours_work['second_time_slot_start'],
+                        'end_time' => $periods_unavailable['second_time_slot'][0]['start_time'],
+                        'hours' => Carbon::parse($periods_unavailable['second_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['second_time_slot_start'])),
                         'user' => $user
                     ];
 
                     $period_available2 = [
-                        'start_time' => $periods_unavailable['afternoon'][0]['end_time'],
-                        'end_time' => $hours_work['afternoonEnd'],
-                        'hours' => Carbon::parse($hours_work['afternoonEnd'])->floatDiffInHours(Carbon::parse($periods_unavailable['afternoon'][0]['end_time'])),
+                        'start_time' => $periods_unavailable['second_time_slot'][0]['end_time'],
+                        'end_time' => $hours_work['second_time_slot_end'],
+                        'hours' => Carbon::parse($hours_work['second_time_slot_end'])->floatDiffInHours(Carbon::parse($periods_unavailable['second_time_slot'][0]['end_time'])),
                         'user' => $user
                     ];
 
                     $periods[] = $period_available1;
                     $periods[] = $period_available2;
                 } else {
-                    $start_time = $periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart'] ? $periods_unavailable['afternoon'][0]['start_time'] : $hours_work['afternoonStart'];
-                    $end_time = $hours_work['afternoonEnd'] > $periods_unavailable['afternoon'][0]['end_time'] ? $periods_unavailable['afternoon'][0]['end_time'] : $end_time = $hours_work['afternoonEnd'];
+                    $start_time = $periods_unavailable['second_time_slot'][0]['start_time'] > $hours_work['second_time_slot_start'] ? $periods_unavailable['second_time_slot'][0]['start_time'] : $hours_work['second_time_slot_start'];
+                    $end_time = $hours_work['second_time_slot_end'] > $periods_unavailable['second_time_slot'][0]['end_time'] ? $periods_unavailable['second_time_slot'][0]['end_time'] : $end_time = $hours_work['second_time_slot_end'];
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
@@ -1251,19 +1242,19 @@ class ProjectController extends Controller
             // Si + de 1 indisponibilité
             else {
                 //On regarde si le premier élément du tableau est supérieur a la l'heure d'embauche du matin
-                if ($periods_unavailable['afternoon'][0]['start_time'] > $hours_work['afternoonStart']) {
+                if ($periods_unavailable['second_time_slot'][0]['start_time'] > $hours_work['second_time_slot_start']) {
                     $period_available = [
-                        'start_time' => $hours_work['afternoonStart'],
-                        'end_time' => $periods_unavailable['afternoon'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['afternoon'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['afternoonStart'])),
+                        'start_time' => $hours_work['second_time_slot_start'],
+                        'end_time' => $periods_unavailable['second_time_slot'][0]['start_time'],
+                        'hours' => Carbon::parse($periods_unavailable['second_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['second_time_slot_start'])),
                         'user' => $user
                     ];
                     $periods[] = $period_available;
                 }
 
-                foreach ($periods_unavailable['afternoon'] as $key => $afternoonPeriod) {
-                    $start_time = $afternoonPeriod['end_time'];
-                    $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['afternoonEnd'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['afternoonEnd'];
+                foreach ($periods_unavailable['second_time_slot'] as $key => $second_time_slot_period) {
+                    $start_time = $second_time_slot_period['end_time'];
+                    $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['second_time_slot_end'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['second_time_slot_end'];
                     $period_available = [
                         'start_time' => $start_time,
                         'end_time' => $end_time,
@@ -1351,4 +1342,5 @@ class ProjectController extends Controller
 
         return $response;
     }
+
 }
