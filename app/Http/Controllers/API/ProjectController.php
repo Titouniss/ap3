@@ -1432,9 +1432,17 @@ class ProjectController extends Controller
             }
         }
         
-        usort($periods, array($this, 'date_sort'));
-        $newPeriods = $this->compileHours($periods, $availablePeriod['user']);
-        return $unchanged ? array($availablePeriod) : $newPeriods['periods'];
+        
+        if(!$unchanged){
+            usort($periods, array($this, 'date_sort'));
+            $newPeriods = $this->compileHours($periods, $availablePeriod['user']);
+            $response = $newPeriods['periods'];
+        }
+        else{
+            $response = array($availablePeriod);
+        }
+       
+        return $response;
     }
 
 }
