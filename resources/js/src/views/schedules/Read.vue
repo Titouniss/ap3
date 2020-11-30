@@ -148,23 +148,27 @@ export default {
       if (this.$route.query.type === "projects") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
-            eventsParse.push({
-              id: t.id,
-              title: t.name,
-              start: t.date,
-              estimated_time: t.estimated_time,
-              order: t.order,
-              description: t.description,
-              time_spent: t.time_spent,
-              workarea_id: t.workarea_id,
-              status: t.status,
-              end: moment(t.date)
-                .add(t.estimated_time, "hour")
-                .format("YYYY-MM-DD HH:mm:ss"),
-              user_id: t.user_id,
-              project_id: parseInt(this.$route.query.id, 10),
-              color: t.project.color,
-            });
+
+             t.periods.forEach((p) => {
+
+               console.log(p)
+
+              eventsParse.push({
+                id: t.id,
+                title: t.name,
+                start: p.start_time,
+                estimated_time: t.estimated_time,
+                order: t.order,
+                description: t.description,
+                time_spent: t.time_spent,
+                workarea_id: t.workarea_id,
+                status: t.status,
+                end: p.end_time,
+                user_id: t.user_id,
+                project_id: parseInt(this.$route.query.id, 10),
+                color: t.project.color,
+              });
+             });
           });
         }
       } else if (this.$route.query.type === "users") {
@@ -185,22 +189,23 @@ export default {
                 });
               });
 
-              eventsParse.push({
-                id: t.id,
-                title: t.name,
-                start: t.date,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: moment(t.date)
-                  .add(t.estimated_time, "hour")
-                  .format("YYYY-MM-DD HH:mm:ss"),
-                user_id: t.user_id,
-                project_id: project_id,
-                color: t.project.color,
+              t.periods.forEach((p) => {
+
+                eventsParse.push({
+                  id: t.id,
+                  title: t.name,
+                  start: p.start_time,
+                  estimated_time: t.estimated_time,
+                  order: t.order,
+                  description: t.description,
+                  time_spent: t.time_spent,
+                  workarea_id: t.workarea_id,
+                  status: t.status,
+                  end: p.end_time,
+                  user_id: t.user_id,
+                  project_id: project_id,
+                  color: t.project.color,
+                });
               });
             }
           });
@@ -222,23 +227,25 @@ export default {
                   }
                 });
               });
-              eventsParse.push({
-                id: t.id,
-                title: t.name,
-                start: t.date,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: moment(t.date)
-                  .add(t.estimated_time, "hour")
-                  .format("YYYY-MM-DD HH:mm:ss"),
-                user_id: t.user_id,
-                project_id: project_id,
-                color: t.project.color,
-              });
+
+               t.periods.forEach((p) => {
+
+                eventsParse.push({
+                  id: t.id,
+                  title: t.name,
+                  start: p.start_time,
+                  estimated_time: t.estimated_time,
+                  order: t.order,
+                  description: t.description,
+                  time_spent: t.time_spent,
+                  workarea_id: t.workarea_id,
+                  status: t.status,
+                  end: p.end_time,
+                  user_id: t.user_id,
+                  project_id: project_id,
+                  color: t.project.color,
+                });
+               });
             }
           });
         }

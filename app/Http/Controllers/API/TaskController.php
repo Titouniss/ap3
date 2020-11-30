@@ -35,7 +35,7 @@ class TaskController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $items = Task::all()->load('project', 'comments', 'skills', 'documents');
+        $items = Task::all()->load('project', 'comments', 'skills', 'documents', 'periods');
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -46,7 +46,7 @@ class TaskController extends Controller
      */
     public function getByBundle(int $bundle_id)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents')->get();
+        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -98,7 +98,7 @@ class TaskController extends Controller
             return response()->json(['error' => "Utilisateur inconnu"], $this->successStatus);
         }
 
-        $items = Task::where('user_id', $user->id)->with('project:name,status,color', 'skills:name', 'user', 'workarea', 'comments', 'documents')->get();
+        $items = Task::where('user_id', $user->id)->with('project:name,status,color', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')->get();
 
         return response()->json(['success' => $items], $this->successStatus);
     }
@@ -111,7 +111,7 @@ class TaskController extends Controller
      */
     public function show($id)
     {
-        $item = Task::where('id', $id)->first()->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents');
+        $item = Task::where('id', $id)->first()->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods');
         return response()->json(['success' => $item], $this->successStatus);
     }
 
@@ -184,7 +184,7 @@ class TaskController extends Controller
         $this->storeSkills($item->id, $arrayRequest['skills']);
         $this->storePreviousTask($item->id, $arrayRequest['previousTasksIds']);
 
-        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents');
+        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods');
 
         return response()->json(['success' => $item], $this->successStatus);
     }
@@ -298,7 +298,7 @@ class TaskController extends Controller
 
 
         if ($update) {
-            $item = Task::find($id)->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents');
+            $item = Task::find($id)->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods');
             return response()->json(['success' => $item], $this->successStatus);
         } else {
             return response()->json(['error' => 'error'], $this->errorStatus);
@@ -367,7 +367,7 @@ class TaskController extends Controller
             $this->storeDocuments($id, $arrayRequest['token'], $project->company);
         }
 
-        $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
+        $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'periods');
 
         if (isset($arrayRequest['documents'])) {
             $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {

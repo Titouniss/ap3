@@ -421,7 +421,6 @@ export default {
             return (
                 !this.errors.any() &&
                 this.itemLocal.name != "" &&
-                this.itemLocal.date != "" &&
                 this.itemLocal.estimated_time != "" &&
                 this.itemLocal.skills.length > 0
             );

@@ -11,6 +11,7 @@ use App\User;
 use App\Models\Range;
 use App\Models\Task;
 use App\Models\TasksSkill;
+use App\Models\TaskPeriod;
 use App\Models\Workarea;
 use App\Models\PreviousTask;
 use App\Models\TasksBundle;
@@ -299,12 +300,6 @@ class ProjectController extends Controller
 
     public function start($id)
     {
-
-        // RAF :
-        //  - Gestion des heures indispo de + de 3,5h
-        //  - Gestion des tâches de + de 3,5h
-        //  - Corriger la redirection vers les plannings
-
         $project = Project::find($id);
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
         $workareas = Workarea::where('company_id', $project->company_id)->with('skills')->get();
@@ -326,13 +321,13 @@ class ProjectController extends Controller
             // Hours Available & Hours Unavailable
             $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
         
-            if ($TimeData['total_hours'] - $TimeData['total_hours_unavailable'] >= $nbHoursRequired) {
+            if ($TimeData['total_hours_available'] >= $nbHoursRequired) {
 
                 $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
-                return response()->json(['success' => $response], $this->successStatus);
+                return response()->json($response);
             } else {
 
-                return $TimeData['total_hours'] < $nbHoursRequired ? response()->json(['error_time' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
+                return $TimeData['total_hours_available'] < $nbHoursRequired ? response()->json(['error_time' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
             }
         } else {
             return response()->json(['error_alerts' => $alerts], $this->successStatus);
@@ -410,139 +405,249 @@ class ProjectController extends Controller
 
     private function setDateToTasks($tasks, $TimeData, $users, $project)
     {
-
+        $available_periods = $TimeData['details'];
         $tasksTemp = $this->orderTasksByPrevious($tasks);
         $NoPlanTasks = [];
 
-        //Foreach jours jusqu'a la date de livraison
-        foreach ($TimeData['details'] as $date) {
+        try {
+            //On parcours chaque tache
+            foreach ($tasksTemp as $keytask => $task) {
 
-            // On regarde si on a des heures disponibles pour plannifier une tache
-            if (($date['total_hours'] - $date['total_hours_unavailable']) > 0) {
+                if ($task->date == null) {
+                    // On récupère les compétences de la tache
+                    $taskSkills = $task->skills;
+                    $taskPlan = false;
 
-                //On parcours chaque tache
-                foreach ($tasksTemp as $keytask => $task) {
+                    //On parcours la liste des périodes disponible et on regarde si la durée de la tache est inférieur ou égale a la periode disponilbe
+                    foreach ($available_periods as $key => $period) {
 
-                    if ($task->date == null) {
-                        // On récupère les compétences de la tache
-                        $taskSkills = $task->skills;
-                        $taskPlan = false;
+                        if ($task->estimated_time <= $period['hours'] && !$taskPlan) {
 
-                        //On parcours la liste des périodes disponible et on regarde si la durée de la tache est inférieur ou égale a la periode disponilbe
-                        foreach ($date['periods_available'] as $key => $period) {
+                            // On regarde si l'utilisateur de la période possède les compétences nécéssaires
+                            $userHaveSkills = false;
+                            if (count($period['user']->skills) > 0) {
+                                $haveSkillsNb = 0;
+                                foreach ($taskSkills as $skill) {
 
-                            if ($task->estimated_time <= $period['hours'] && !$taskPlan) {
-
-                                $previousOk = true;
-                                //On regarde si la tache est dépendante d'autre(s) tache(s)
-                                if ($task->previousTasks && count($task->previousTasks) > 0) {
-
-                                    //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède
-                                    foreach ($task->previousTasks as $previous) {
-                                        $previous_task = Task::find($previous->previous_task_id);
-                                        if ($previous_task->date == null || $previous_task->dateEnd > $period['start_time']) {
-                                            $previousOk = false;
+                                    foreach ($period['user']->skills as $userskill) {
+                                        if ($skill->id == $userskill->id) {
+                                            $haveSkillsNb++;
                                             break;
                                         }
                                     }
                                 }
-
-                                //On regarde si un ilôt est disponible pendant la période
-                                $workareaOk = null;
-                                $workareas = $this->getWorkareasBySkills($task->skills, $project->company_id);
-
-                                foreach ($workareas as $workarea) {
-                                    $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->where('status', '!=', 'done')->get();
-                                    if (count($tasksWorkarea) > 0) {
-                                        foreach ($tasksWorkarea as $taskWorkarea) {
-                                            $workareaTaskperiod = CarbonPeriod::create($taskWorkarea->date, $taskWorkarea->dateEnd);
-
-                                            if (
-                                                !$workareaTaskperiod->contains($period['start_time'])
-                                                && !$workareaTaskperiod->contains($period['end_time'])
-                                                && !($period['start_time'] <= $taskWorkarea->date && $taskWorkarea->dateEnd <= $period['end_time'])
-                                            ) {
-
-
-                                                $workareaOk = $workarea;
+                                if ($haveSkillsNb == count($taskSkills)) { 
+                                    
+                                    //On regarde si la tache est dépendante d'autre(s) tache(s)
+                                    $previousOk = true;
+                                    if ($task->previousTasks && count($task->previousTasks) > 0) {
+            
+                                        //Si oui, on regarde si les taches sont déjà programmées et si la période est supérieur à la tâche qui précède
+                                        foreach ($task->previousTasks as $previous) {
+                                            $previous_task = Task::find($previous->previous_task_id);
+                                            if ($previous_task->date == null || $previous_task->date_end > $period['start_time']) {
+                                                $previousOk = false;
                                                 break;
                                             }
                                         }
-                                    } else {
-                                        $workareaOk = $workarea;
                                     }
-                                }
+                                
+                                    if($previousOk){
 
+                                        //On regarde si un ilôt est disponible pendant la période
+                                        $workareaOk = null;
+                                        $workareas = $this->getWorkareasBySkills($task->skills, $project->company_id);
 
+                                        foreach ($workareas as $workarea) {
+                                            $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->where('status', '!=', 'done')->get();
+                                            if (count($tasksWorkarea) > 0) {
+                                                
+                                                //return array de periods || null
+                                                $newPeriods = $this->getNewPeriodsWorkareaTasksLess($tasksWorkarea, $period);
+                                                if($newPeriods && count($newPeriods) > 0){
 
-                                //On regarde si la tache est conforme pour être programmée
-                                if ($previousOk && $workareaOk) {
+                                                    foreach($newPeriods as $newPeriod){
 
-                                    // On regarde si l'utilisateur de la période possède les compétences nécéssaires
-                                    if (count($period['user']->skills) > 0) {
-                                        $haveSkillsNb = 0;
-                                        foreach ($taskSkills as $skill) {
+                                                        //On vérifie si la period contient toujours assez d'heure
+                                                        if($task->estimated_time <= $newPeriod['hours']){
 
-                                            foreach ($period['user']->skills as $userskill) {
-                                                if ($skill->id == $userskill->id) {
-                                                    $haveSkillsNb++;
-                                                    break;
+                                                            //On planifie
+                                                            $taskPlan = true;
+                                                            $planifiedTask = $this->planTask($task, $newPeriod, $workarea->id);
+                                                            $tasksTemp[$keytask] = Task::findOrFail($task->id);
+
+                                                            //On supprime les periodes utilisées
+                                                            $available_periods = $this->delUsedPeriods($available_periods, $key, $planifiedTask);
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                        }
+                                            } 
+                                            else {
+                                                //On planifie
+                                                $taskPlan = true;
+                                                $planifiedTask = $this->planTask($task, $period, $workarea->id);
+                                                $tasksTemp[$keytask] = Task::findOrFail($task->id);
 
-                                        if ($haveSkillsNb == count($taskSkills)) {
-                                            $tasksTemp[$keytask] = tap(Task::findOrFail($task->id))->update(['date' => $period['start_time'], 'user_id' => $period['user']->id, 'workarea_id' => $workareaOk->id])->fresh();
-                                            $taskPlan = true;
-
-                                            //On enlève la période des heures dispo de l'utilisateur
-                                            $date['periods_available'][$key]['hours'] = $period['hours'] - $task->estimated_time;
-                                            if ($date['periods_available'][$key]['hours'] > 0) {
-                                                $date['periods_available'][$key]['start_time'] = Carbon::parse($period['start_time'])->addHours($task->estimated_time);
+                                                //On supprime les periodes utilisées
+                                                $available_periods = $this->delUsedPeriods($available_periods, $key, $planifiedTask);
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-
-                        //On informe si les utilisateurs ne possèdent pas les compétences nécessaires pour une certaine tache
-                        //return response()->json(['error' => 'No enought users with skills'], 401);
                     }
                 }
             }
+
+            //On regarde si toute les tâches ont été plannifé
+            $allPlanified = true;
+            $taskIds = [];
+
+            foreach ($tasksTemp as $taskTemp) {
+                array_push($taskIds, $taskTemp->id);
+
+                if (!$taskTemp->date || !$taskTemp->date_end || !$taskTemp->user_id) {
+                    $allPlanified = false;
+                }
+            }
+
+
+            //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
+            if ($allPlanified) {
+                Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => Carbon::now()]);
+
+                return $response = ['success' => 'All good'];
+            } else { // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
+
+                Task::whereIn('id', $taskIds)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
+                return $response = ['error_time' => 'time_less'];
+            }
+        } 
+        catch (\Throwable $th) {
+            //On déprogramme toutes les taches du projet
+            $ids = [];
+            foreach ($tasks as $task) {
+                array_push($ids, $task->id);
+            }
+
+            Task::whereIn('id', $ids)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
+            TaskPeriod::whereIn('task_id', $ids)->delete();
+
+            return $response = ['error_algo' => $th->getMessage()];
         }
 
-        //On regarde si toute les tâches ont été plannifé
-        $allPlanified = true;
-        $taskIds = [];
+    }
 
-        foreach ($tasksTemp as $taskTemp) {
-            array_push($taskIds, $taskTemp->id);
+    private function planTask($task, $globalPeriod, $workarea_id){
 
-            if (!$taskTemp->date || !$taskTemp->user_id) {
-                $allPlanified = false;
+        $counter = $task->estimated_time;
+        $task_start = $globalPeriod['periods'][0]['start_time'];
+        $period_key = 0;
+
+        while($counter != 0){
+           
+            $period = $globalPeriod['periods'][$period_key];
+            $nb_hours_period = Carbon::parse($period['end_time'])->floatDiffInHours(Carbon::parse($period['start_time'])); 
+
+            if($counter >= $nb_hours_period){
+                
+                TaskPeriod::create(['task_id' => $task->id, 'start_time' => $period['start_time'], 'end_time' => $period['end_time']]);
+                $counter -= $nb_hours_period;
+            }
+            else{
+                
+                $task_end = Carbon::parse($period['start_time'])->addHour($counter);
+                TaskPeriod::create(['task_id' => $task->id, 'start_time' => $period['start_time'], 'end_time' => $task_end]);
+                $counter = 0;
+            }
+
+            $period_key++;
+
+            if($counter == 0){
+
+                $task_end = isset($task_end) ? $task_end : Carbon::parse($period['end_time']);
+
+                return tap(Task::findOrFail($task->id))->update([
+                    'date' => $task_start, 
+                    'date_end' => $task_end, 
+                    'user_id' => $globalPeriod['user']->id, 
+                    'workarea_id' => $workarea_id]
+                    )->fresh();
             }
         }
+    }
 
+    private function delUsedPeriods($available_periods, $period_key, $planifiedTask){
 
-        //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
-        $alerts = null;
-        if ($allPlanified) {
-            Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => Carbon::now()]);
+        $globalPeriods = $available_periods[$period_key]['periods'];
+        $new_total_hours = 0;
 
-            $alerts = ['success' => 'All good'];
-        } else { // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
+        $start_task = Carbon::parse($planifiedTask->date);
+        $end_task = Carbon::parse($planifiedTask->date_end);
+        $task_period = CarbonPeriod::create($start_task, $end_task);
 
-            Task::whereIn('id', $taskIds)->update(['date' => null, 'user_id' => null, 'workarea_id' => null]);
+        $periods = [];
+        $globalPeriods_temp = $globalPeriods;
+        foreach($globalPeriods_temp as $key => $period){
+            $period_period = CarbonPeriod::create($period['start_time'], $period['end_time']);
+
+            unset($globalPeriods[$key]);
+            if($period_period->contains($start_task) || $period_period->contains($end_task)){
+
+                $old_period = $period;
+
+                if($period['start_time'] < $start_task){
+
+                    $period1 = $old_period;
+                    $period1['end_time'] = $start_task;
+                    $period1['hours'] = Carbon::parse($period1['end_time'])->floatDiffInHours(Carbon::parse($period1['start_time']));
+                    $period1['additional_period'] = false;
+
+                    array_push($periods, $period1);
+                }
+
+                if($period['end_time'] > $end_task){
+
+                    $period2 = $old_period;
+                    $period2['start_time'] = $end_task;
+                    $period2['hours'] = Carbon::parse($period2['end_time'])->floatDiffInHours(Carbon::parse($period2['start_time']));
+                    $period2['additional_period'] =  true;
+
+                    array_push($periods, $period2);
+                }
+            }
+             //On verifie si la tache n'englobe pas la periode
+            elseif($task_period->contains($period['start_time']) && $task_period->contains($period['end_time'])){ 
+                //do nothing
+            }
+            else{
+
+                $newPeriod = $period;
+                $newPeriod['hours'] = Carbon::parse($newPeriod['end_time'])->floatDiffInHours(Carbon::parse($newPeriod['start_time']));
+                $newPeriod['additional_period'] = true;
+
+                array_push($periods, $newPeriod);
+            }
         }
+        
+        usort($periods, array($this, 'date_sort'));
+        $newPeriods = $this->compileHours($periods, $available_periods[$period_key]['user']);
 
-        return $alerts;
+        //On retire l'ancienne periode
+        unset($available_periods[$period_key]);
+
+        //On ajoute la/les nouvelles periodes
+        $available_periods = array_merge($available_periods, $newPeriods['periods']); 
+        usort($available_periods, array($this, 'date_sort'));
+        
+        return $available_periods;        
     }
 
     private function calculTimeAvailable($users, $date_end)
     {
         $hoursAvailable = [];
+        $usersPeriods = [];
 
         // Get days today date -> end date
         $start_date = Carbon::now()->addDays('1')->startOfDay();
@@ -551,307 +656,198 @@ class ProjectController extends Controller
         $period = CarbonPeriod::create($start_date, $end_date);
 
         foreach ($period as $t) {
-            $hoursAvailable[] = [
+            $daysPeriod[] = [
                 'date' => $t,
                 'day_label' => $t->format('l')
             ];
         }
 
-        $totalHours = 0;
-        $totalHoursUnavailable = 0;
-
+        $totalAvailableHours = 0;
         // foreach days foreach users get day get hours
-        foreach ($hoursAvailable as $key => $data) {
-            $test[] = $data['day_label'];
-            $totalDateHours = 0;
-            switch (true) {
-                case ($data['day_label'] == 'Monday' || $data['day_label'] == 'Lundi'):
+        foreach($users as $user){
 
-                    $dayHours = $this->getHoursAvailableByDay('lundi', $data['date'], $users);
+            $userHours = [];
+            foreach ($daysPeriod as $key => $day) {
 
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+                switch (true) {
+                    case ($day['day_label'] == 'Monday' || $day['day_label'] == 'Lundi'):
 
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
+                        $dayHours = $this->getHoursAvailableByDay('lundi', $day['date'], $user);
+                        $dayHours ? $userHours = array_merge($userHours, $dayHours) : null;
+                        
+                        break;
 
-                case ($data['day_label'] == 'Tuesday' || $data['day_label'] == 'Mardi'):
+                    case ($day['day_label'] == 'Tuesday' || $day['day_label'] == 'Mardi'):
 
-                    $dayHours = $this->getHoursAvailableByDay('mardi', $data['date'], $users);
+                        $dayHours = $this->getHoursAvailableByDay('mardi', $day['date'], $user);
+                        $dayHours ? $userHours = array_merge($userHours, $dayHours) : null;
+                        
+                        break;
 
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+                    case ($day['day_label'] == 'Wednesday' || $day['day_label'] == 'Mercredi'):
 
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
+                        $dayHours = $this->getHoursAvailableByDay('mercredi', $day['date'], $user);
+                        $dayHours ? $userHours = array_merge($userHours, $dayHours) : null;
 
-                case ($data['day_label'] == 'Wednesday' || $data['day_label'] == 'Mercredi'):
+                        break;
 
-                    $dayHours = $this->getHoursAvailableByDay('mercredi', $data['date'], $users);
+                    case ($day['day_label'] == 'Thursday' || $day['day_label'] == 'Jeudi'):
 
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+                        $dayHours = $this->getHoursAvailableByDay('jeudi', $day['date'], $user);
+                        $dayHours ? $userHours = array_merge($userHours, $dayHours) : null;
 
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
+                        break;
 
-                case ($data['day_label'] == 'Thursday' || $data['day_label'] == 'Jeudi'):
+                    case ($day['day_label'] == 'Friday' || $day['day_label'] == 'Vendredi'):
 
-                    $dayHours = $this->getHoursAvailableByDay('jeudi', $data['date'], $users);
+                        $dayHours = $this->getHoursAvailableByDay('vendredi', $day['date'], $user);
+                        $dayHours ? $userHours = array_merge($userHours, $dayHours) : null;
 
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+                        break;
 
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
+                    case ($day['day_label'] == 'Saturday' || $day['day_label'] == 'Samedi'):
 
-                case ($data['day_label'] == 'Friday' || $data['day_label'] == 'Vendredi'):
+                        $dayHours = $this->getHoursAvailableByDay('samedi', $day['date'], $user);
+                        $dayHours ? $userHours = array_push($userHours, $dayHours) : null;
 
-                    $dayHours = $this->getHoursAvailableByDay('vendredi', $data['date'], $users);
+                        break;
 
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
+                    case ($day['day_label'] == 'Sunday' || $day['day_label'] == 'Dimanche'):
 
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
+                        $dayHours = $this->getHoursAvailableByDay('dimanche', $day['date'], $user);
+                        $dayHours ? $userHours = array_merge($userHours, $dayHours) : null;
 
-                case ($data['day_label'] == 'Saturday' || $data['day_label'] == 'Samedi'):
-
-                    $dayHours = $this->getHoursAvailableByDay('samedi', $data['date'], $users);
-
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
-
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
-
-                case ($data['day_label'] == 'Sunday' || $data['day_label'] == 'Dimanche'):
-
-                    $dayHours = $this->getHoursAvailableByDay('dimanche', $data['date'], $users);
-
-                    if ($dayHours) {
-                        $totalHours += $dayHours['total'];
-                        $totalHoursUnavailable += $dayHours['total_unavailable'];
-                        $data['users'] = $dayHours['users'];
-                        $data['periods_available'] = $dayHours['periods_available'];
-                        $data['total_hours'] = $dayHours['total'];
-                        $data['total_hours_unavailable'] = $dayHours['total_unavailable'];
-
-                        $hoursAvailable[$key] = $data;
-                    }
-                    break;
+                        break;
+                }
             }
 
-            $totalHours += $totalDateHours;
+            $userHours = $this->compileHours($userHours, $user);
+
+            usort($userHours['periods'], array($this, 'date_sort'));
+            $usersPeriods = array_merge($usersPeriods, $userHours['periods']);
+
+            $totalAvailableHours += $userHours['total_hours'];
         }
 
+        usort($usersPeriods, array($this, 'date_sort'));
         return $response = [
-            'details' => $hoursAvailable,
-            'total_hours' => $totalHours,
-            'total_hours_unavailable' => $totalHoursUnavailable
+            'details' => $usersPeriods,
+            'total_hours_available' => $totalAvailableHours
         ];
     }
 
-    private function getHoursAvailableByDay($day, $date, $users)
+    private function getHoursAvailableByDay($day, $date, $user)
     {
-        $hours = [
-            'total' => 0,
-            'total_unavailable' => 0,
-            'users' => [],
-            'periods_available' => []
-        ];
-        $conflictUnavailableDate = false;
 
-        foreach ($users as $user) {
-            $userHours = [
-                'user_id' => $user->id,
-                'hours' => 0,
-                'hours_unavailable' => 0,
-                'hours_tasks_other_project' => 0,
-                'periods_available' => []
-            ];
+        $userPeriods = [];
+        $unAvailablePeriods = count($user->unavailabilities) > 0 ? $this->transformDatesToPeriod($user->unavailabilities) : null;
 
-            $unAvailablePeriods = count($user->unavailabilities) > 0 ? $this->transformDatesToPeriod($user->unavailabilities) : null;
+        foreach ($user->workHours as $dayHours) {
 
-            foreach ($user->workHours as $dayHours) {
+            if ($dayHours->day == $day && (string) $dayHours->is_active) {
 
-                if ($dayHours->day == $day && (string) $dayHours->is_active) {
+                $first_time_slot_start = null;
+                $first_time_slot_end = null;
+                $second_time_slot_start = null;
+                $second_time_slot_end = null;
 
-                    //Hours available
-                    if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
-                        $first_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
-                        $first_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
+                //Hours available
+                if ($dayHours->morning_ends_at && $dayHours->morning_starts_at) {
 
-                        $userHours['hours'] += Carbon::parse($first_time_slot_end)->floatDiffInHours(Carbon::parse($first_time_slot_start));
-                    }
-                    if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
-                        $second_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
-                        $second_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
+                    $first_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_ends_at);
+                    $first_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->morning_starts_at);
+                    
+                }
+                if ($dayHours->afternoon_ends_at && $dayHours->afternoon_starts_at) {
 
-                        $userHours['hours'] += Carbon::parse($second_time_slot_end)->floatDiffInHours(Carbon::parse($second_time_slot_start));
-                    }
+                    $second_time_slot_end = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_ends_at);
+                    $second_time_slot_start = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $dayHours->afternoon_starts_at);
+                }
 
+                if(isset($first_time_slot_start) && isset($first_time_slot_end)){
+                #### Indispo + Other projects task
                     //Hours unavailable
                     if ($unAvailablePeriods) {
 
                         $workDate = Carbon::createFromFormat('Y-m-d H:i:s', $date);
-                        $hoursUnavailableByPeriod = [];
-
-                        foreach ($unAvailablePeriods as $period) {
-
-                            //On regarde si la période ne comprend que une seule journée
-                            if (count($period['period']) == 1) {
-
-                                $unavailableDate = $period['period']->getStartDate();
-
-                                if ($unavailableDate == $workDate) {
-
-                                    //On calcul le nombre d'heures d'indisponibilité
-                                    $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailable($dayHours, $period);
-                                }
-                            } else { //plusieurs journées
-                                $startDate = $period['period']->getStartDate();
-                                $endDate = $period['period']->getEndDate();
-
-                                foreach ($period['period'] as $periodDay) {
-
-                                    if ($periodDay == $workDate) {
-                                        if ($workDate == $startDate) {
-                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, $period['start_date']);
-                                        } else if ($workDate == $endDate) {
-                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay, null, $period['end_date']);
-                                        } else {
-                                            $hoursUnavailableByPeriod[] = $this->calculNbHoursUnavailablePeriod($dayHours, $periodDay);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        $hours_unavailable_details = $this->mergeHoursUnavailable($hoursUnavailableByPeriod);
-
-                        $userHours['hours_unavailable_details'] = $hours_unavailable_details;
-                        $userHours['hours_unavailable'] = $hours_unavailable_details['second_time_slot_start']['hours'] + $hours_unavailable_details['first_time_slot']['hours'];
+                        $filteredPeriods = $this->filterUnavailablePeriodsByDay($unAvailablePeriods, $workDate);
                     }
 
-                    //Hours Tasks other Project
-                    $tasks_user_day = Task::where('user_id', $user->id)->where('date', 'like', '%' . $date->format('Y-m-d') . '%')->get();
-                    if (count($tasks_user_day) > 0) {
+                    // //Hours Tasks other Project
+                    $other_project_tasks_day = $this->getOtherTasksProjectsPeriods($user, $date);
+                    
+                    //On compile les indispo et les taches des autres projets 
+                    $compiledUnavailablePeriods = $this->compileUnavailablePeriods(isset($filteredPeriods) ? array_merge($filteredPeriods, $other_project_tasks_day) : $other_project_tasks_day);
 
-                        $nbHours = 0;
-                        $other_tasks_project_periods = [
-                            'first_time_slot' => [],
-                            'second_time_slot' => []
-                        ];
-
-                        foreach ($tasks_user_day as $task) {
-                            $nbHours += $task->estimated_time;
-                            $start_time = $task->date;
-                            $end_time = Carbon::parse($task->date)->addHours($task->estimated_time);
-
-                            if ($first_time_slot_end && $period['start_date'] < $first_time_slot_end) {
-                                $other_tasks_project_periods['first_time_slot'][] = array('start_time' => $start_time, 'end_time' => $end_time);
-                            }
-
-                            if ($second_time_slot_start && $period['end_date'] > $second_time_slot_start) {
-                                $other_tasks_project_periods['second_time_slot'][] = array('start_time' => $start_time, 'end_time' => $end_time);
-                            }
-                        }
-
-                        $userHours['hours_tasks_other_project'] = $nbHours;
-                    }
-
-                    //On construit un planning de l'utilisateur avec les heures disponibles de la journée
-                    $periods = [];
-                    if ($userHours['hours_unavailable'] > 0 || $userHours['hours_tasks_other_project'] > 0) {
-                        $periods = [];
+                
+                #### Construction du planning
+                    $planning = [];
+                    if (count($compiledUnavailablePeriods) > 0) {
+                        $planning = [];
                         $periods_unavailable = [
                             'first_time_slot' => [],
                             'second_time_slot' => []
                         ];
+                        
+                    
+                        usort($compiledUnavailablePeriods, array($this, 'date_sort'));
 
-                        if (isset($userHours['hours_unavailable_details'])) {
-                            $periods_unavailable['second_time_slot'] = array_merge($periods_unavailable['second_time_slot'], $userHours['hours_unavailable_details']['second_time_slot']['periods']);
-                            $periods_unavailable['first_time_slot'] = array_merge($periods_unavailable['first_time_slot'], $userHours['hours_unavailable_details']['first_time_slot']['periods']);
-                        }
+                        $planning = $this->buildPlannings($first_time_slot_start, $first_time_slot_end, $second_time_slot_start, $second_time_slot_end, $user, $compiledUnavailablePeriods);
 
-                        if (isset($userHours['hours_tasks_other_project'])) {
-                            $periods_unavailable['second_time_slot'] = array_merge($periods_unavailable['second_time_slot'], $other_tasks_project_periods['second_time_slot']);
-                            $periods_unavailable['first_time_slot'] = array_merge($periods_unavailable['first_time_slot'], $other_tasks_project_periods['first_time_slot']);
-                        }
-
-                        $periods = $this->reversePeriodsUnavailableToPeriods(
-                            $periods_unavailable,
-                            array('first_time_slot_start' => $first_time_slot_start, 'first_time_slot_end' => $first_time_slot_end, 'second_time_slot_start' => $second_time_slot_start, 'second_time_slot_end' => $second_time_slot_end),
-                            $user
-                        );
                     } else {
-                        $first_time_slot_start && $first_time_slot_end ? $periods[] = array(
+
+                        $first_time_slot_start && $first_time_slot_end ? $planning[] = array(
                             'start_time' => $first_time_slot_start,
                             'end_time' => $first_time_slot_end,
                             'hours' => Carbon::parse($first_time_slot_end)->floatDiffInHours(Carbon::parse($first_time_slot_start)),
-                            'user' => $user
+                            'user' => $user,
+                            'additional_period' => true,
                         ) : null;
 
-                        isset($second_time_slot_start) && isset($second_time_slot_end) ? $periods[] = array(
+                        isset($second_time_slot_start) && isset($second_time_slot_end) ? $planning[] = array(
                             'start_time' => $second_time_slot_start,
                             'end_time' => $second_time_slot_end,
                             'hours' => Carbon::parse($second_time_slot_end)->floatDiffInHours(Carbon::parse($second_time_slot_start)),
-                            'user' => $user
+                            'user' => $user,
+                            'additional_period' => true,
                         ) : null;
                     }
 
-                    $userHours['periods_available'] = $periods;
+                    $userPeriods = $planning;
                 }
             }
+        }
 
+        return !empty($userPeriods) ? $userPeriods : null;
+    }
 
+    private function getOtherTasksProjectsPeriods($user, $date){
 
-            if ($userHours['hours'] != 0) {
-                $hours['total'] += $userHours['hours'];
-                $hours['total_unavailable'] += $userHours['hours_unavailable'];
-                $hours['users'][] = $userHours;
+        $tasks_periods = [];
+        $tasks = Task::where('user_id', $user->id)
+                    ->where('date', 'like', '%' . $date->format('Y-m-d') . '%')
+                    ->orWhere('date_end', 'like', '%' . $date->format('Y-m-d') . '%')
+                    ->orWhere(function($query) use ($date){
+                        $query->where('date', '<', $date);
+                        $query->where('date_end', '>', $date);
+                    })
+                    ->get();
 
-                $hours['periods_available'] = array_merge($hours['periods_available'], $userHours['periods_available']);
-                usort($hours['periods_available'], array($this, 'date_sort'));
+        if(count($tasks) > 0){
+
+            foreach($tasks as $task){
+
+                $period = [
+                    'start_time' =>Carbon::createFromFormat('Y-m-d H:i:s', $task->date),
+                    'end_time' => Carbon::createFromFormat('Y-m-d H:i:s', $task->date_end),
+                    'period' => CarbonPeriod::create($task->date, $task->date_end) 
+                ];
+                
+                $tasks_periods[] = $period;
             }
         }
-        return empty($hours) ? null : $hours;
+
+        return $tasks_periods; 
     }
 
     private function calculNbHoursUnavailable($dayHours, $period, $hours_unavailable = null)
@@ -941,7 +937,6 @@ class ProjectController extends Controller
 
         return array('first_time_slot' => $hours_unavailable_first_time_slot, 'second_time_slot' => $hours_unavailable_second_time_slot);
     }
-
 
     private function calculNbHoursUnavailablePeriod($dayHours, $day, $fisrt_date = null, $last_date = null)
     {
@@ -1101,174 +1096,83 @@ class ProjectController extends Controller
         }
     }
 
-    //Permet de transformer le planning des periodes indisponibles en périodes disponibles
-    private function reversePeriodsUnavailableToPeriods($periods_unavailable, $hours_work, $user)
+    private function buildPlannings($first_time_slot_start, $first_time_slot_end, $second_time_slot_start = null, $second_time_slot_end = null, $user, $compiledUnavailablePeriods)
     {
+        $planning = [];
 
-        $periods = [];
+        //On construit le planning des heures dispo de l'utilisateur
+        $first_time_slot_start && $first_time_slot_end ? $planning[] = array(
+            'start_time' => $first_time_slot_start,
+            'end_time' => $first_time_slot_end,
+            'hours' => Carbon::parse($first_time_slot_end)->floatDiffInHours(Carbon::parse($first_time_slot_start)),
+            'user' => $user,
+            'additional_period' => true,
+        ) : null;
 
-        count($periods_unavailable['first_time_slot']) > 1 ? usort($periods_unavailable['first_time_slot'], array($this, 'date_sort')) : null;
-        count($periods_unavailable['second_time_slot']) > 1 ? usort($periods_unavailable['second_time_slot'], array($this, 'date_sort')) : null; 
+        isset($second_time_slot_start) && isset($second_time_slot_end) ? $planning[] = array(
+            'start_time' => $second_time_slot_start,
+            'end_time' => $second_time_slot_end,
+            'hours' => Carbon::parse($second_time_slot_end)->floatDiffInHours(Carbon::parse($second_time_slot_start)),
+            'user' => $user,
+            'additional_period' => true,
+        ) : null;
 
-        //Matin
-        if ($hours_work['first_time_slot_start'] && $hours_work['first_time_slot_end']) {
-            //Si pas d'indiponibilité ni de tache d'autre projet
-            if (count($periods_unavailable['first_time_slot']) == 0) {
-                $period_available = [
-                    'start_time' => $hours_work['first_time_slot_start'],
-                    'end_time' => $hours_work['first_time_slot_end'],
-                    'hours' => Carbon::parse($hours_work['first_time_slot_end'])->floatDiffInHours(Carbon::parse($hours_work['first_time_slot_start'])),
-                    'user' => $user
-                ];
-                $periods[] = $period_available;
-            } elseif (count($periods_unavailable['first_time_slot']) == 1) {
 
-                // 1er cas : On regarde si la periode d'indispo est égale ou déborde de la période de travail
-                if ($periods_unavailable['first_time_slot'][0]['start_time'] <= $hours_work['first_time_slot_start'] && $hours_work['first_time_slot_end'] <= $periods_unavailable['first_time_slot'][0]['end_time']) {
-                    $period_available = null;
+        foreach($compiledUnavailablePeriods as $unavailableHours){
+
+            usort($planning, array($this, 'date_sort'));
+            $planning_temp = [];
+
+            //Pour chaque indispo, on parcours les periodes de travail dispo afin de voir si elles contiennent l'indispo  
+            foreach($planning as $key => $workHours){
+                
+                $work_period = CarbonPeriod::create($workHours['start_time'], $workHours['end_time']);
+                $unavailable_period = CarbonPeriod::create($unavailableHours['start_time'], $unavailableHours['end_time']);
+
+                // l'indispo est comprise dans le créneau
+                if($work_period->contains($unavailableHours['start_time']) || $work_period->contains($unavailableHours['end_time'])){
+                    
+                    $old_period = $workHours;
+
+                    if($workHours['start_time'] != $unavailableHours['start_time'] || $workHours['end_time'] != $unavailableHours['end_time']){
+
+                        if($workHours['start_time'] < $unavailableHours['start_time']){
+
+                            $period1 = $old_period;
+                            $period1['end_time'] = $unavailableHours['start_time'];
+                            $period1['hours'] = Carbon::parse($period1['end_time'])->floatDiffInHours(Carbon::parse($period1['start_time']));
+                            $period1['additional_period'] = false;
+
+                            array_push($planning_temp, $period1);
+                        }
+    
+                        if($workHours['end_time'] > $unavailableHours['end_time']){
+    
+                            $period2 = $old_period;
+                            $period2['start_time'] = $unavailableHours['end_time'];
+                            $period2['hours'] = Carbon::parse($period2['end_time'])->floatDiffInHours(Carbon::parse($period2['start_time']));
+                            $period2['additional_period'] = $period2['additional_period'] ? true : false;
+
+                            array_push($planning_temp, $period2);
+                        }
+                    }
+                }
+                // le créneau est compris dans l'indispo : on retire le créneau
+                elseif($unavailable_period->contains($workHours['start_time']) && $unavailable_period->contains($workHours['end_time'])){ 
+
+                    // ne pas ajouter de créneau
+                }
+                else{
+                    array_push($planning_temp, $workHours);
                 }
 
-                // 2ème cas : On regarde si la période est strictement dans la periode de travail
-                elseif ($periods_unavailable['first_time_slot'][0]['start_time'] > $hours_work['first_time_slot_start'] && $hours_work['first_time_slot_end'] > $periods_unavailable['first_time_slot'][0]['end_time']) {
-
-                    $period_available1 = [
-                        'start_time' => $hours_work['first_time_slot_start'],
-                        'end_time' => $periods_unavailable['first_time_slot'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['first_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['first_time_slot_start'])),
-                        'user' => $user
-                    ];
-
-                    $period_available2 = [
-                        'start_time' => $periods_unavailable['first_time_slot'][0]['end_time'],
-                        'end_time' => $hours_work['first_time_slot_end'],
-                        'hours' => Carbon::parse($hours_work['first_time_slot_end'])->floatDiffInHours(Carbon::parse($periods_unavailable['first_time_slot'][0]['end_time'])),
-                        'user' => $user
-                    ];
-
-                    $periods[] = $period_available1;
-                    $periods[] = $period_available2;
-                } else {
-                    $start_time = $periods_unavailable['first_time_slot'][0]['start_time'] > $hours_work['first_time_slot_start'] ? $periods_unavailable['first_time_slot'][0]['start_time'] : $hours_work['first_time_slot_start'];
-                    $end_time = $hours_work['first_time_slot_end'] > $periods_unavailable['first_time_slot'][0]['end_time'] ? $periods_unavailable['first_time_slot'][0]['end_time'] : $end_time = $hours_work['first_time_slot_end'];
-                    $period_available = [
-                        'start_time' => $start_time,
-                        'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
-                        'user' => $user
-                    ];
-
-                    $periods[] = $period_available;
-                }
             }
-
-            // Si + de 1 indisponibilité
-            else {
-                //On regarde si le premier élément du tableau est supérieur a la l'heure d'embauche du matin
-                if ($periods_unavailable['first_time_slot'][0]['start_time'] > $hours_work['first_time_slot_start']) {
-                    $period_available = [
-                        'start_time' => $hours_work['first_time_slot_start'],
-                        'end_time' => $periods_unavailable['first_time_slot'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['first_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['first_time_slot_start'])),
-                        'user' => $user
-                    ];
-                    $periods[] = $period_available;
-                }
-
-                foreach ($periods_unavailable['first_time_slot'] as $key => $first_time_slot_period) {
-                    $start_time = $first_time_slot_period['end_time'];
-                    $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['first_time_slot_end'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['first_time_slot_end'];
-                    $period_available = [
-                        'start_time' => $start_time,
-                        'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
-                        'user' => $user
-                    ];
-
-                    $periods[] = $period_available;
-                }
-            }
+            
+            $planning = $planning_temp;
         }
 
-        //Après-midi
-        if ($hours_work['second_time_slot_start'] && $hours_work['second_time_slot_end']) {
-            //Si pas d'indiponibilité ni de tache d'autre proje
-            if (count($periods_unavailable['second_time_slot']) == 0) {
-                $period_available = [
-                    'start_time' => $hours_work['second_time_slot_start'],
-                    'end_time' => $hours_work['second_time_slot_end'],
-                    'hours' => Carbon::parse($hours_work['second_time_slot_end'])->floatDiffInHours(Carbon::parse($hours_work['second_time_slot_start'])),
-                    'user' => $user
-                ];
-                $periods[] = $period_available;
-            } elseif (count($periods_unavailable['second_time_slot']) == 1) {
-
-                // 1er cas : On regarde si la periode d'indispo est égale ou déborde de la période de travail
-                if ($periods_unavailable['second_time_slot'][0]['start_time'] <= $hours_work['second_time_slot_start'] && $hours_work['second_time_slot_end'] <= $periods_unavailable['second_time_slot'][0]['end_time']) {
-                    $period_available = null;
-                }
-
-                // 2ème cas : On regarde si la période est strictement dans la periode de travail
-                elseif ($periods_unavailable['second_time_slot'][0]['start_time'] > $hours_work['second_time_slot_start'] && $hours_work['second_time_slot_end'] > $periods_unavailable['second_time_slot'][0]['end_time']) {
-
-                    $period_available1 = [
-                        'start_time' => $hours_work['second_time_slot_start'],
-                        'end_time' => $periods_unavailable['second_time_slot'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['second_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['second_time_slot_start'])),
-                        'user' => $user
-                    ];
-
-                    $period_available2 = [
-                        'start_time' => $periods_unavailable['second_time_slot'][0]['end_time'],
-                        'end_time' => $hours_work['second_time_slot_end'],
-                        'hours' => Carbon::parse($hours_work['second_time_slot_end'])->floatDiffInHours(Carbon::parse($periods_unavailable['second_time_slot'][0]['end_time'])),
-                        'user' => $user
-                    ];
-
-                    $periods[] = $period_available1;
-                    $periods[] = $period_available2;
-                } else {
-                    $start_time = $periods_unavailable['second_time_slot'][0]['start_time'] > $hours_work['second_time_slot_start'] ? $periods_unavailable['second_time_slot'][0]['start_time'] : $hours_work['second_time_slot_start'];
-                    $end_time = $hours_work['second_time_slot_end'] > $periods_unavailable['second_time_slot'][0]['end_time'] ? $periods_unavailable['second_time_slot'][0]['end_time'] : $end_time = $hours_work['second_time_slot_end'];
-                    $period_available = [
-                        'start_time' => $start_time,
-                        'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
-                        'user' => $user
-                    ];
-
-                    $periods[] = $period_available;
-                }
-            }
-            // Si + de 1 indisponibilité
-            else {
-                //On regarde si le premier élément du tableau est supérieur a la l'heure d'embauche du matin
-                if ($periods_unavailable['second_time_slot'][0]['start_time'] > $hours_work['second_time_slot_start']) {
-                    $period_available = [
-                        'start_time' => $hours_work['second_time_slot_start'],
-                        'end_time' => $periods_unavailable['second_time_slot'][0]['start_time'],
-                        'hours' => Carbon::parse($periods_unavailable['second_time_slot'][0]['start_time'])->floatDiffInHours(Carbon::parse($hours_work['second_time_slot_start'])),
-                        'user' => $user
-                    ];
-                    $periods[] = $period_available;
-                }
-
-                foreach ($periods_unavailable['second_time_slot'] as $key => $second_time_slot_period) {
-                    $start_time = $second_time_slot_period['end_time'];
-                    $end_time = $periods_unavailable[$key + 1]  && $periods_unavailable[$key + 1]['start_time'] < $hours_work['second_time_slot_end'] ? $periods_unavailable[$key + 1]['start_time'] : $hours_work['second_time_slot_end'];
-                    $period_available = [
-                        'start_time' => $start_time,
-                        'end_time' => $end_time,
-                        'hours' => Carbon::parse($end_time)->floatDiffInHours(Carbon::parse($start_time)),
-                        'user' => $user
-                    ];
-
-                    $periods[] = $period_available;
-                }
-            }
-        }
-
-
-        return $periods;
+        usort($planning, array($this, 'date_sort'));
+        return $planning;
     }
 
     private function date_sort($a, $b)
@@ -1341,6 +1245,196 @@ class ProjectController extends Controller
         }
 
         return $response;
+    }
+
+    private function compileHours($userHours, $user){ 
+
+        $compiledPeriods = [];
+        $totalHours = 0;
+
+        while(!empty($userHours)){
+
+            $period = [
+                'user' => $user,
+                'start_time' => null,
+                'end_time' => null,
+                'hours' => 0,
+                'periods' => []
+            ];
+            $lastKey = key(array_slice($userHours, -1, 1, true));
+            foreach($userHours as $key => $hour){
+
+                $period['hours'] += $hour['hours'];
+                $period['start_time'] ? null : $period['start_time'] = $hour['start_time'];
+                array_push($period['periods'], array('start_time' => $hour['start_time'], 'end_time' => $hour['end_time']));
+
+                unset($userHours[$key]);
+
+                if(!$hour['additional_period'] || $key == $lastKey){
+
+                    $period['end_time'] = $hour['end_time'];
+                    $totalHours += $period['hours']; 
+                    array_push($compiledPeriods, $period);
+
+                    break;
+                }                
+            }
+        }
+        return array('periods' => $compiledPeriods, 'total_hours' => $totalHours);
+    }
+
+    private function filterUnavailablePeriodsByDay($unAvailablePeriods, $date){
+
+        $periodsDate = [];
+
+        $start_date = $date->copy()->startOfDay();
+        $end_date = $date->copy()->endOfDay();
+
+        //On regarde si la periode est hors/comprise/deborde de la date envoyée en paramètre
+        foreach($unAvailablePeriods as $unavailablePeriod){
+
+            $period = [
+                'start_time' => null,
+                'end_time' => null,
+            ];
+
+            $test = $unavailablePeriod['end_date'] < $start_date;
+            $test2 = $unavailablePeriod['start_date'] > $end_date;
+
+            //Hors de notre date
+            if($unavailablePeriod['end_date'] < $start_date || $unavailablePeriod['start_date'] > $end_date){ }
+            else{
+
+                if($start_date >= $unavailablePeriod['start_date'] && $unavailablePeriod['end_date'] <= $end_date){ //la periode est comprise dans notre date
+            
+                    $new_start_time = $unavailablePeriod['start_date'];
+                    $new_end_time = $unavailablePeriod['end_date'];
+                }
+                else{ // la periode deborde de notre date 
+    
+                    $new_start_time = $unavailablePeriod['start_date'] < $start_date ? $start_date : $unavailablePeriod['start_date'];
+                    $new_end_time = $unavailablePeriod['end_date'] > $end_date ? $end_date : $unavailablePeriod['end_date'];
+                }
+    
+                $period = [
+                    'start_time' => Carbon::createFromFormat('Y-m-d H:i:s', $new_start_time),
+                    'end_time' => Carbon::createFromFormat('Y-m-d H:i:s', $new_end_time),
+                    'period' => CarbonPeriod::create(Carbon::createFromFormat('Y-m-d H:i:s', $new_start_time), Carbon::createFromFormat('Y-m-d H:i:s', $new_end_time)) 
+                ];
+
+                $periodsDate[] = $period;
+            }
+        }
+
+        return count($periodsDate) > 0 ? $periodsDate : null;
+    }
+
+    private function compileUnavailablePeriods($unAvailablePeriods){
+
+        $compiledUnavailablePeriods = [];
+
+        while(!empty($unAvailablePeriods)){
+
+            $first_element = array_shift($unAvailablePeriods);
+            $period = [
+                'start_time' => $first_element['start_time'],
+                'end_time' => $first_element['end_time'],
+                'period' => $first_element['period'],
+            ];
+            $lastKey = key(array_slice($unAvailablePeriods, -1, 1, true));
+
+            foreach($unAvailablePeriods as $key => $hour){
+
+                //On regarde si la période peut être mixer
+                if( $period['period']->contains($hour['start_time']) || $period['period']->contains($hour['end_time'])
+                    || $hour['period']->contains($period['start_time']) || $hour['period']->contains($period['end_time'])){
+
+                    //On prend le min start_time et le max end_time
+                    $period['start_time'] >= $hour['start_time'] ? $period['start_time'] = $hour['start_time'] : null;
+                    $period['end_time'] <= $hour['end_time'] ? $period['end_time'] = $hour['end_time'] : null;
+
+                    unset($unAvailablePeriods[$key]);
+                }       
+            }
+
+            $period['period'] = CarbonPeriod::create($period['start_time'], $period['end_time']);
+            $compiledUnavailablePeriods[] = $period;
+        }
+        return $compiledUnavailablePeriods;
+    }
+
+    private function getNewPeriodsWorkareaTasksLess($tasksWorkarea, $availablePeriod){
+
+        $unchanged = true;
+        $periods = $availablePeriod['periods'];
+        $globalPeriod = CarbonPeriod::create($availablePeriod['start_time'], $availablePeriod['end_time']);
+
+        foreach ($tasksWorkarea as $taskWorkarea) {
+
+            $start_task = Carbon::parse($taskWorkarea->date);
+            $end_task = Carbon::parse($taskWorkarea->date_end);
+            $workareaTaskperiod = CarbonPeriod::create($start_task, $end_task);
+
+            //On regarde si la tache est dans la periode
+            if($globalPeriod->contains($start_task) || $globalPeriod->contains($end_task)){
+
+                $unchanged = false;
+
+                //On transforme la periode pour prendre en compte les taches de l'ilôt afin d'avoir les dispo
+                $temp_periods = $periods;
+                foreach($temp_periods as $key => $period){
+
+                    unset($periods[$key]);
+                    $period_period = CarbonPeriod::create($period['start_time'], $period['end_time']);
+                    if($period_period->contains($start_task) || $period_period->contains($end_task)){
+
+                   
+                        $old_period = $period;
+
+                        if($period['start_time'] < $start_task){
+
+                            $period1 = $old_period;
+                            $period1['end_time'] = $start_task;
+                            $period1['hours'] = Carbon::parse($period1['end_time'])->floatDiffInHours(Carbon::parse($period1['start_time']));
+                            $period1['additional_period'] = false;
+
+                            array_push($periods, $period1);
+                        }
+
+                        if($period['end_time'] > $end_task){
+
+                            $period2 = $old_period;
+                            $period2['start_time'] = $end_task;
+                            $period2['hours'] = Carbon::parse($period2['end_time'])->floatDiffInHours(Carbon::parse($period2['start_time']));
+                            $period2['additional_period'] = true;
+
+                            array_push($periods, $period2);
+                        }
+                    }
+                    //On verifie si la tache n'englobe pas la periode
+                    elseif($workareaTaskperiod->contains($period['start_time']) && $workareaTaskperiod->contains($period['end_time'])){ 
+                        //do nothing
+                    }
+                    else{
+
+                        $newPeriod = $period;
+                        $newPeriod['hours'] = Carbon::parse($newPeriod['end_time'])->floatDiffInHours(Carbon::parse($newPeriod['start_time']));
+                        $newPeriod['additional_period'] = true;
+
+                        array_push($periods, $newPeriod);
+                    }
+                }
+            }
+            //On verifie si la tache n'englobe pas la periode
+            elseif($workareaTaskperiod->contains($availablePeriod['start_time']) && $workareaTaskperiod->contains($availablePeriod['end_time'])){ 
+
+                return null;
+            }
+        }
+        
+        usort($periods, array($this, 'date_sort'));
+        $newPeriods = $this->compileHours($periods, $availablePeriod['user']);
+        return $unchanged ? array($availablePeriod) : $newPeriods['periods'];
     }
 
 }

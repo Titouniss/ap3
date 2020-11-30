@@ -10,14 +10,12 @@ class Task extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'order', 'description', 'date', 'estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
+    protected $fillable = ['name', 'order', 'description', 'date', 'date_end','estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
-    protected $appends = ['dateEnd'];
 
-    public function getDateEndAttribute()
+    public function periods()
     {
-        //return $this->date;
-        return $this->date && $this->estimated_time ? Carbon::parse($this->date)->addHours($this->estimated_time) : null;
+        return $this->hasMany('App\Models\TaskPeriod')->orderBy('start_time');
     }
 
     public function workarea()

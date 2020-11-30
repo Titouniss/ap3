@@ -268,10 +268,10 @@ export default {
             );
         },
         startProject() {
+            this.$vs.loading({ color: this.colorLoading, type: 'material', text: 'Planification en cours ...' })
             this.$store
                 .dispatch("projectManagement/start", this.project_data.id)
                 .then(response => {
-                    console.log(response);
                     if (response.data.success) {
                         this.$vs.notify({
                             title: "Planification",
@@ -302,6 +302,17 @@ export default {
                             color: "danger",
                             time: 4000
                         });
+                    } else if (response.data.error_algo) {
+                        let message = response.data.error_algo
+
+                        this.$vs.notify({
+                            title: "Planification",
+                            text: message,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger",
+                            time: 4000
+                        });
                     } else {
                         response.data.error_alerts.map(alert => {
                             this.$vs.notify({
@@ -316,7 +327,6 @@ export default {
                     }
                 })
                 .catch(err => {
-                    console.log(err);
                     this.$vs.notify({
                         title: "Planification",
                         text: "Une erreur c'est produite",
@@ -324,7 +334,8 @@ export default {
                         icon: "icon-alert-circle",
                         color: "danger"
                     });
-                });
+                })
+                .finally(() => this.$vs.loading.close());
         },
         editRecord() {
             this.$store
