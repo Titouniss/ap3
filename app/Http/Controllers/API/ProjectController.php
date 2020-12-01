@@ -65,6 +65,7 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $arrayRequest = $request->all();
+        $arrayRequest['company_id'] = $arrayRequest['company']['id'];
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'date' => 'required',
