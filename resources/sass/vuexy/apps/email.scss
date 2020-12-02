@@ -52,7 +52,7 @@
 
     .email__mails {
         .mail__opened-mail {
-            background-color: rgb(145, 36, 36);
+            background-color: #eee;
         }
     }
 
@@ -93,8 +93,8 @@
         }
 
         .email-header{
-            box-shadow: 0px 4px 6px rgba(58, 233, 0, 0.04);
-            border-bottom: 1px solid rgb(255, 1, 1);
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.04);
+            border-bottom: 1px solid #eee;
             z-index: 1;
             position: relative;
         }
