@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 
 class ModuleDataRow extends Model
@@ -29,7 +30,7 @@ class ModuleDataRow extends Model
 
             switch ($this->dataRow->type) {
                 case 'integer':
-                    $newValue = intval($newValue);
+                    $newValue = intval(ceil($newValue));
                     break;
                 case 'datetime':
                     if ($details && isset($details->format)) {
@@ -45,9 +46,60 @@ class ModuleDataRow extends Model
                     break;
                 case 'relationship':
                     if ($value && $drDetails && isset($drDetails->model)) {
-                        $newValue = ModelHasOldId::where('company_id', $this->moduleDataType->module->company_id)->where('model', $drDetails->model)->where('old_id', $value)->firstOr(function () {
-                            return new ModelHasOldId(); // Rendra new_id vide
-                        })->new_id;
+                        $newValue = ModelHasOldId::firstOrNew([
+                            'company_id' => $this->moduleDataType->module->company_id,
+                            'model' => $drDetails->model,
+                            'old_id' => $value,
+                        ])->new_id;
+
+                        if (!$newValue && $details && isset($details->pivot_type) && isset($details->pivot_to_model) && isset($details->pivot_local_id) && isset($details->pivot_foreign_id)) {
+                            switch ($details->pivot_type) {
+                                case 'hasOneThrough':
+                                    // Trouver l'entité de déstination
+                                    $destinationId = ModelHasOldId::firstOrNew([
+                                        'company_id' => $this->moduleDataType->module->company_id,
+                                        'model' => $details->pivot_to_model,
+                                        'old_id' => $value,
+                                    ])->new_id;
+
+                                    // S'il existe on peut créer le pont entre les deux
+                                    if ($destinationId) {
+                                        $pivot = app($drDetails->model)->firstOrNew([$details->pivot_foreign_id => $destinationId]);
+                                        if (in_array($drDetails->model, ['App\\Models\\TasksBundle']) && !$pivot->company_id) {
+                                            $pivot->company_id = $this->moduleDataType->module->company_id;
+                                        }
+                                        $pivot->save();
+                                        $newValue = $pivot->{$details->pivot_local_id};
+                                        ModelHasOldId::create([
+                                            'company_id' => $this->moduleDataType->module->company_id,
+                                            'model' => $drDetails->model,
+                                            'old_id' => $value,
+                                            'new_id' => $newValue
+                                        ]);
+                                    } else {
+                                        throw new Exception("No destination " . $details->pivot_to_model . " : Id = " . $value);
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+
+                        if (isset($drDetails->pivot_type) && $newValue) {
+                            switch ($drDetails->pivot_type) {
+                                case 'hasOneThrough':
+                                    $values = [$drDetails->pivot_foreign_id => $newValue];
+                                    if (property_exists($drDetails->pivot_model, 'company_id')) {
+                                        $values['company_id'] = $this->moduleDataType->module->company_id;
+                                    }
+                                    $newValue = app($drDetails->pivot_model)->firstOrCreate($values)->{$drDetails->pivot_local_id};
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
                     }
                     break;
                 case 'string':
@@ -116,7 +168,7 @@ class ModuleDataRow extends Model
                     if ($drDetails) {
                         if (isset($drDetails->max_length)) {
                             if ($drDetails->max_length) {
-                                $newValue = substr($newValue, 0, intval($details->max_length));
+                                $newValue = substr($newValue, 0, intval($drDetails->max_length));
                             }
                         }
                         if (isset($drDetails->is_password)) {
