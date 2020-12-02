@@ -63,36 +63,43 @@ class SqlModule extends BaseModule
                     $row->company_id = $this->module->company_id;
                 }
 
-                foreach (get_object_vars($result) as $key => $value) {
-                    $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
-                    $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
-                    $details = json_decode($mdr->details);
+                try {
+                    foreach (get_object_vars($result) as $key => $value) {
+                        $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
+                        $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
+                        $details = json_decode($mdr->details);
 
-                    $newValue = $value ?? $mdr->default_value;
-                    if ($details && isset($details->only_if_null)) {
-                        if (
-                            $details->only_if_null
-                            && $currentModel = app($mdr->moduleDataType->dataType->model)->find(
-                                ModelHasOldId::where('company_id', $this->module->company_id)->where('model', $mdr->moduleDataType->dataType->model)->where('old_id', $result->id)->firstOr(function () {
-                                    return new ModelHasOldId(); // Rendra new_id vide
-                                })->new_id
-                            )
-                        ) {
-                            $newValue = $currentModel->{$mdr->dataRow->field};
+                        $newValue = $value ?? $mdr->default_value;
+                        if ($details && isset($details->only_if_null)) {
+                            if (
+                                $details->only_if_null
+                                && $currentModel = app($mdr->moduleDataType->dataType->model)->find(
+                                    ModelHasOldId::where('company_id', $this->module->company_id)->where('model', $mdr->moduleDataType->dataType->model)->where('old_id', $result->id)->firstOr(function () {
+                                        return new ModelHasOldId(); // Rendra new_id vide
+                                    })->new_id
+                                )
+                            ) {
+                                $newValue = $currentModel->{$mdr->dataRow->field};
+                            } else {
+                                $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
+                            }
                         } else {
                             $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
                         }
-                    } else {
-                        $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
+                        $row->{$key} = $newValue;
                     }
-                    $row->{$key} = $newValue;
-                }
 
-                foreach ($onlyDefaultValueRows as $mdr) {
-                    $row->{$mdr->dataRow->field} = $mdr->applyDetailsToValue($mdr->default_value, $lowestUniqueId);
-                }
+                    foreach ($onlyDefaultValueRows as $mdr) {
+                        $row->{$mdr->dataRow->field} = $mdr->applyDetailsToValue($mdr->default_value, $lowestUniqueId);
+                    }
 
-                array_push($rows, $row);
+                    array_push($rows, $row);
+                } catch (\Throwable $th) {
+                    echo $th->getMessage() . "\n\r";
+                    $controllerLog = new Logger('SQLModule');
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::ERROR);
+                    $controllerLog->error('SQLModule', [$th->getMessage()]);
+                }
             }
         } catch (\Throwable $th) {
             $rows = [];

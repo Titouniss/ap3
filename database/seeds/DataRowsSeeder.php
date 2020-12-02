@@ -3,6 +3,8 @@
 use App\Models\Customers;
 use App\Models\DataRow;
 use App\Models\DataType;
+use App\Models\Project;
+use App\Models\TasksBundle;
 use App\Models\Workarea;
 use App\User;
 use Illuminate\Database\Seeder;
@@ -326,10 +328,21 @@ class DataRowsSeeder extends Seeder
         $row->fill([
             'type'         => 'relationship',
             'display_name' => 'Utilisateur',
-            'required'     => 1,
+            'required'     => 0,
             'details' => json_encode([
                 'model' => User::class,
                 'label' => 'email'
+            ])
+        ])->save();
+
+        $row = $this->dataRow($type, 'task_bundle_id');
+        $row->fill([
+            'type'         => 'relationship',
+            'display_name' => 'Lot de tâches',
+            'required'     => 1,
+            'details' => json_encode([
+                'model' => TasksBundle::class,
+                'label' => 'id'
             ])
         ])->save();
 
@@ -344,7 +357,7 @@ class DataRowsSeeder extends Seeder
         $row->fill([
             'type'         => 'string',
             'display_name' => 'Description',
-            'required'     => 1,
+            'required'     => 0,
             'details' => json_encode([
                 'max_length' => 1500
             ])
