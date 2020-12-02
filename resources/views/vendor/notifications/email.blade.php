@@ -56,8 +56,8 @@
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                     <td style="text-align: left; padding-right: 10px;">
-                        <h3>A propos</h3>
-                        <p>Numidev est une société de développement informatique spécialisé dans la création d'applications web et mobile, logiciels, sites web sur mesure, maintenance & hébergement. Nous accompagnons les entreprises dans leur transformation digitale et numérique. Vous avez une idée ou un projet numérique ? Contactez-nous pour échanger.</p>
+                        <h3>À propos</h3>
+                        <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéréssé ?  Contactez-nous pour échanger.</p>
                     </td>
                 </tr>
             </table>
