@@ -516,7 +516,7 @@ export default {
         border-radius: 5px;
     }
     .card-task-add {
-        background: #2196f3;
+        background: linear-gradient(#2196f3, #0c3352);
         border: 1px solid #2196f3;
         border-radius: 5px;
         color: #080808;
@@ -529,6 +529,7 @@ export default {
         justify-content: center;
     }
     .card-task-add:hover {
+        background: linear-gradient(#17619e, #071c2e);
         cursor: pointer;
     }
     .titleTask {
