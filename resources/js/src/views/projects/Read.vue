@@ -38,6 +38,26 @@
 
         <div id="project-data" v-if="project_data">
             <vx-card title="Informations" class="mb-base">
+                <div class="vx-col flex" id="account-manage-buttons" style="right: 0; position: absolute; top: -2rem;">
+                    <vs-button
+                        icon-pack="feather"
+                        icon="icon-edit"
+                        size="medium"
+                        class="mr-1"
+                        @click="editRecord"
+                    >
+                    </vs-button>
+                    <vs-button
+                        type="border"
+                        color="danger"
+                        size="medium"
+                        class="mr-4"
+                        icon-pack="feather"
+                        icon="icon-trash"
+                        @click="confirmDeleteRecord"
+                    >
+                    </vs-button>
+                </div>
                 <!-- Avatar -->
                 <div class="vx-row">
                     <!-- Information - Col 1 -->
@@ -121,34 +141,28 @@
                         </table>
                     </div>
                     <!-- /Information - Col 2 -->
-                    <div class="vx-col w-full flex" id="account-manage-buttons">
-                        <vs-button
-                            icon-pack="feather"
-                            icon="icon-edit"
-                            class="mr-4"
-                            @click="editRecord"
-                        >
-                            Edit
-                        </vs-button>
-                        <vs-button
-                            type="border"
-                            color="danger"
-                            class="mr-4"
-                            icon-pack="feather"
-                            icon="icon-trash"
-                            @click="confirmDeleteRecord"
-                        >
-                            Supprimer
-                        </vs-button>
+                    <div class="vx-col w-full flex mt-3" id="account-manage-buttons">
                         <vs-button
                             v-if="project_data.status == 'todo'"
-                            type="border"
-                            color="success"
+                            type="gradient"
+                            color="#3ad687"
+                            gradient-color-secondary="#175435" 
                             icon-pack="feather"
                             icon="icon-play"
                             @click="startProject"
                         >
-                            Démarrer le project
+                            Démarrer le projet
+                        </vs-button>
+                        <vs-button
+                            v-if="project_data.status != 'todo'"
+                            type="gradient"
+                            color="#208ee7"
+                            gradient-color-secondary="#0c3352" 
+                            icon-pack="feather"
+                            icon="icon-calendar"
+                            @click="redirectToShedule"
+                        >
+                            Voir le planning
                         </vs-button>
                     </div>
                 </div>
@@ -266,6 +280,12 @@ export default {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
             );
+        },
+        redirectToShedule() {
+            this.$router.push({
+              path: `/schedules/schedules-read`,
+              query: { id: this.project_data.id, type: "projects" }
+            })
         },
         startProject() {
             this.$vs.loading({ color: this.colorLoading, type: 'material', text: 'Planification en cours ...' })
