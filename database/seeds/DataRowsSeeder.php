@@ -335,7 +335,7 @@ class DataRowsSeeder extends Seeder
             ])
         ])->save();
 
-        $row = $this->dataRow($type, 'task_bundle_id');
+        $row = $this->dataRow($type, 'tasks_bundle_id');
         $row->fill([
             'type'         => 'relationship',
             'display_name' => 'Lot de tâches',
