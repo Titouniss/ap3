@@ -1,8 +1,3 @@
-/* Base */
-.header {
-    color: #2F3133;
-}
-
 body, body *:not(html):not(style):not(br):not(tr):not(code) {
     font-family: Avenir, Helvetica, sans-serif;
     box-sizing: border-box;
@@ -118,7 +113,16 @@ img {
 }
 
 .header a {
-    color: #bbbfc3;
+    color: #323335;
+    font-size: 19px;
+    font-weight: bold;
+    text-decoration: none;
+    text-shadow: 0 1px 0 #ffffff;
+}
+
+.header a :hover{
+    color: #1f3563;
+    cursor: pointer;
     font-size: 19px;
     font-weight: bold;
     text-decoration: none;

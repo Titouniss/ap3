@@ -50,7 +50,7 @@
 {{-- Subcopy --}}
 @isset($actionText)
 @slot('subcopy')
-<img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo" style="position: absolute; top: 20px; rigth: 20px; width: 150px; height: auto">
+<img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo" style="position: fixed; top: 20px; rigth: 20px; width: 50px; height: auto">
 <table>
     <tr>
         <td valign="top" width="70%">
@@ -68,10 +68,8 @@
                 <tr>
                     <td style="text-align: left; padding-left: 5px; padding-right: 5px;">
                         <h3>Contact</h3>
-                        <ul>
-                            <li><p>12 Rue du Val de Mayenne, 53000 Laval<p></li>
-                            <li style="margin-top: 15px"><span style="font-size: 0.8em">02 43 53 86 97</span></a></li>
-                        </ul>
+                        <p>12 Rue du Val de Mayenne, 53000 Laval<p>
+                        <p style="font-size: 0.8em">02 43 53 86 97</p>
                     </td>
                 </tr>
             </table>
