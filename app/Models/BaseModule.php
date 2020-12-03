@@ -61,10 +61,23 @@ class BaseModule extends Model
                         return $key !== "id";
                     }, ARRAY_FILTER_USE_KEY);
                     $oldId = ModelHasOldId::firstOrNew(['old_id' => $row->id, 'model' => $dataType->model, 'company_id' => $this->company_id]);
-                    if (isset($oldId->new_id) && $model = $table->find($oldId->new_id)) {
-                        $model->update($data);
+                    if (isset($oldId->new_id)) {
+                        if ($model = $table->find($oldId->new_id)) {
+                            $model->update($data);
+                        } else {
+                            ModelHasOldId::where([
+                                'old_id' => $row->id,
+                                'model' => $dataType->model,
+                                'company_id' => $this->company_id
+                            ])->update(['new_id' => $table->create($data)->id]);
+                        }
                     } else {
-                        ModelHasOldId::where(['old_id' => $row->id, 'model' => $dataType->model, 'company_id' => $this->company_id])->update(['new_id' => $table->create($data)->id]);
+                        ModelHasOldId::create([
+                            'old_id' => $row->id,
+                            'model' => $dataType->model,
+                            'company_id' => $this->company_id,
+                            'new_id' => $table->create($data)->id
+                        ]);
                     }
                 }
 
