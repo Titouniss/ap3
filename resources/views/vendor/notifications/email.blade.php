@@ -1,6 +1,6 @@
 @component('mail::message')
-<div style="position: absolute; top: 20px; rigth: 20px;"> 
-    <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="50" height="auto">
+<div style="position: absolute; top: 20px; rigth: 20px; margin-bottom: 25px;"> 
+    <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
 </div>
 {{-- Greeting --}}
 @if (! empty($greeting))
