@@ -47,7 +47,7 @@
 </div>
 
 @else
-<div style="text-align: center">
+<div style="text-align: center; padding: 25px">
     <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
 </div>
 @endif
