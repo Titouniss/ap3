@@ -42,12 +42,12 @@
 {{-- Salutation --}}
 @if (! empty($salutation))
 {{ $salutation }}
-<div style="padding: 25px">
+<div style="text-align: center; padding: 25px">
     <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
 </div>
 
 @else
-<div style=" padding: 25px">
+<div style="text-align: center; padding: 25px">
     <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
 </div>
 @endif
@@ -62,7 +62,7 @@
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                     <td style="text-align: left; padding-right: 10px;">
-                        <h3>À propos test</h3>
+                        <h3>À propos</h3>
                         <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéréssé ?  Contactez-nous pour échanger.</p>
                     </td> 
                 </tr>
