@@ -50,6 +50,7 @@
 {{-- Subcopy --}}
 @isset($actionText)
 @slot('subcopy')
+<img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo" style="position: absolute; top: 20px; rigth: 20px; width: 150px; height: auto">
 <table>
     <tr>
         <td valign="top" width="70%">
@@ -58,7 +59,7 @@
                     <td style="text-align: left; padding-right: 10px;">
                         <h3>À propos</h3>
                         <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéréssé ?  Contactez-nous pour échanger.</p>
-                    </td>
+                    </td> 
                 </tr>
             </table>
         </td>

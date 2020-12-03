@@ -1,4 +1,7 @@
 /* Base */
+.header {
+    color: #2F3133;
+}
 
 body, body *:not(html):not(style):not(br):not(tr):not(code) {
     font-family: Avenir, Helvetica, sans-serif;
@@ -6,7 +9,7 @@ body, body *:not(html):not(style):not(br):not(tr):not(code) {
 }
 
 body {
-    background-color: #2c72a0;
+    background-color: #f5f8fa;
     color: #74787e;
     height: 100%;
     hyphens: auto;
@@ -22,7 +25,14 @@ body {
 }
 
 p,
-ul,
+ul {
+    list-style:none;
+    margin-left:0;
+    padding-left:0;
+}
+li {
+    margin-bottom:15px;/* à adapter */
+}
 ol,
 blockquote {
     line-height: 1.4;
@@ -82,7 +92,7 @@ img {
 /* Layout */
 
 .wrapper {
-    background-color: #2c72a0;
+    background-color: #f5f8fa;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -118,9 +128,9 @@ img {
 /* Body */
 
 .body {
-    background-color: #888888;
-    border-bottom: 1px solid #ff0067;
-    border-top: 1px solid #ff0067;
+    background-color: #ffffff;
+    border-bottom: 1px solid #4b8cb7;
+    border-top: 1px solid #4b8cb7;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -142,7 +152,7 @@ img {
 /* Subcopy */
 
 .subcopy {
-    border-top: 1px solid #ff0067;
+    border-top: 1px solid #ff3096;
     margin-top: 25px;
     padding-top: 25px;
 }
@@ -181,7 +191,7 @@ img {
 
 .table th {
     color: #74787e;
-    border-bottom: 1px solid #ff0067;
+    border-bottom: 1px solid #edeff2;
     padding-bottom: 8px;
 }
 
@@ -234,11 +244,11 @@ img {
 }
 
 .button-red, .button-error {
-    background-color: #b83131;
-    border-top: 10px solid #b83131;
-    border-right: 18px solid #b83131;
-    border-bottom: 10px solid #b83131;
-    border-left: 18px solid #b83131;
+    background-color: #bf2929;
+    border-top: 10px solid #bf2929;
+    border-right: 18px solid #bf2929;
+    border-bottom: 10px solid #bf2929;
+    border-left: 18px solid #bf2929;
 }
 
 /* Panels */
@@ -248,7 +258,7 @@ img {
 }
 
 .panel-content {
-    background-color: #edeff2;
+    background-color: #ffffff;
     padding: 16px;
 }
 
