@@ -1,4 +1,13 @@
 @component('mail::message')
+<div style="position: fixed; top: 20px; rigth: 20px; max-width: 50px; height: auto; background-color: 'red';"> 
+    <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo">
+</div>
+<td class="header" style="font-family: Avenir, Helvetica, sans-serif; box-sizing: border-box; padding: 25px 0; text-align: center;">
+        <a href="https://markdownmail.com" style="font-family: Avenir, Helvetica, sans-serif; box-sizing: border-box; color: #bbbfc3; font-size: 19px; font-weight: bold; text-decoration: none; text-shadow: 0 1px 0 #ffffff;">
+            MarkdownMail
+        </a>
+    </td>
+</tr>
 {{-- Greeting --}}
 @if (! empty($greeting))
 # {{ $greeting }}
@@ -50,9 +59,6 @@
 {{-- Subcopy --}}
 @isset($actionText)
 @slot('subcopy')
-<div style="position: fixed; top: 20px; rigth: 20px; max-width: 50px; height: auto; background-color: 'red';"> 
-    <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo">
-</div>
 <table>
     <tr>
         <td valign="top" width="70%">
