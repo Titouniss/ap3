@@ -43,12 +43,12 @@
 @if (! empty($salutation))
 {{ $salutation }}
 <div style="text-align: center; padding: 25px">
-    <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
+    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
 </div>
 
 @else
 <div style="text-align: center; padding: 25px">
-    <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
+    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
 </div>
 @endif
 
