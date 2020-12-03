@@ -50,7 +50,7 @@ class SqlModule extends BaseModule
             $onlyDefaultValueRows = [];
             foreach ($mdt->moduleDataRows as $mdr) {
                 if ($mdr->source) {
-                    $query->selectRaw($mdr->source . ' AS ' . $mdr->dataRow->field);
+                    $query->selectRaw($mdr->source . ' AS field_' . $mdr->dataRow->field);
                 } else {
                     // Set default value directly without getting from source
                     array_push($onlyDefaultValueRows, $mdr);
@@ -64,7 +64,8 @@ class SqlModule extends BaseModule
                 }
 
                 try {
-                    foreach (get_object_vars($result) as $key => $value) {
+                    foreach (get_object_vars($result) as $k => $value) {
+                        $key = str_replace('field_', "", $k);
                         $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
                         $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
                         $details = json_decode($mdr->details);
@@ -74,9 +75,11 @@ class SqlModule extends BaseModule
                             if (
                                 $details->only_if_null
                                 && $currentModel = app($mdr->moduleDataType->dataType->model)->find(
-                                    ModelHasOldId::where('company_id', $this->module->company_id)->where('model', $mdr->moduleDataType->dataType->model)->where('old_id', $result->id)->firstOr(function () {
-                                        return new ModelHasOldId(); // Rendra new_id vide
-                                    })->new_id
+                                    ModelHasOldId::firstOrNew([
+                                        'company_id' => $this->module->company_id,
+                                        'model' => $mdr->moduleDataType->dataType->model,
+                                        'old_id' => $result->field_id
+                                    ])->new_id
                                 )
                             ) {
                                 $newValue = $currentModel->{$mdr->dataRow->field};

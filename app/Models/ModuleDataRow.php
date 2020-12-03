@@ -76,8 +76,6 @@ class ModuleDataRow extends Model
                                             'old_id' => $value,
                                             'new_id' => $newValue
                                         ]);
-                                    } else {
-                                        throw new Exception("No destination " . $details->pivot_to_model . " : Id = " . $value);
                                     }
                                     break;
 
@@ -100,6 +98,10 @@ class ModuleDataRow extends Model
                                     break;
                             }
                         }
+                    }
+
+                    if ($newValue == null && $this->dataRow->required) {
+                        throw new Exception($this->moduleDataType->dataType->model . " : " . $this->dataRow->field . " cannot be null");
                     }
                     break;
                 case 'string':
