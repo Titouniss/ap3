@@ -42,12 +42,12 @@
 {{-- Salutation --}}
 @if (! empty($salutation))
 {{ $salutation }}
-<div style="text-align: center; padding: 25px">
+<div style="text-align: rigth; padding: 25px">
     <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
 </div>
 
 @else
-<div style="text-align: center; padding: 25px">
+<div style="text-align: rigth; padding: 25px">
     <img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto">
 </div>
 @endif
