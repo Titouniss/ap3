@@ -42,8 +42,14 @@
 {{-- Salutation --}}
 @if (! empty($salutation))
 {{ $salutation }}
+<div style="text-align: center; padding: 25px">
+    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
+</div>
+
 @else
-{{ config('app.name') }}
+<div style="text-align: center; padding: 25px">
+    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
+</div>
 @endif
 
 
@@ -58,7 +64,7 @@
                     <td style="text-align: left; padding-right: 10px;">
                         <h3>À propos</h3>
                         <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéréssé ?  Contactez-nous pour échanger.</p>
-                    </td>
+                    </td> 
                 </tr>
             </table>
         </td>
@@ -67,10 +73,8 @@
                 <tr>
                     <td style="text-align: left; padding-left: 5px; padding-right: 5px;">
                         <h3>Contact</h3>
-                        <ul>
-                            <li><p>12 Rue du Val de Mayenne, 53000 Laval<p></li>
-                            <li style="margin-top: 15px"><span style="font-size: 0.8em">02 43 53 86 97</span></a></li>
-                        </ul>
+                        <p>12 Rue du Val de Mayenne, 53000 Laval<p>
+                        <p style="font-size: 0.8em; margin-top: -15px">02 43 53 86 97</p>
                     </td>
                 </tr>
             </table>
