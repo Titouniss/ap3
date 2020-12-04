@@ -217,6 +217,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('task-management')->group(function () {
         Route::group(['middleware' => ['can:read tasks']], function () {
             Route::get('index', 'API\TaskController@index');
+            Route::get('workarea/{id}', 'API\TaskController@getByWorkarea');
             Route::get('bundle/{id}', 'API\TaskController@getByBundle');
             Route::get('skill/{id}', 'API\TaskController@getBySkill');
             Route::get('user/{user}', 'API\TaskController@getByUser');

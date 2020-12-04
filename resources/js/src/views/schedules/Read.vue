@@ -174,11 +174,11 @@ export default {
       } else if (this.$route.query.type === "users") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
-            if (
-              t.user_id !== null &&
-              (t.user_id.toString() === this.$route.query.id ||
-                t.user_id === this.$route.query.id)
-            ) {
+            // if (
+            //   t.user_id !== null &&
+            //   (t.user_id.toString() === this.$route.query.id ||
+            //     t.user_id === this.$route.query.id)
+            // ) {
               // Get project id
               let project_id = null;
               this.$store.state.projectManagement.projects.forEach((p) => {
@@ -207,17 +207,17 @@ export default {
                   color: t.project.color,
                 });
               });
-            }
+            // }
           });
         }
       } else if (this.$route.query.type === "workarea") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
-            if (
-              t.workarea_id !== null &&
-              (t.workarea_id.toString() === this.$route.query.id ||
-                t.workarea_id === this.$route.query.id)
-            ) {
+            // if (
+            //   t.workarea_id !== null &&
+            //   (t.workarea_id.toString() === this.$route.query.id ||
+            //     t.workarea_id === this.$route.query.id)
+            // ) {
               // Get project id
               let project_id = null;
               this.$store.state.projectManagement.projects.forEach((p) => {
@@ -246,7 +246,7 @@ export default {
                   color: t.project.color,
                 });
                });
-            }
+            // }
           });
         }
       }
@@ -562,8 +562,12 @@ export default {
             this.manageErrors(err);
           });
       }
-    } else {
-      this.$store.dispatch("taskManagement/fetchItems").catch((err) => {
+    } else if (this.$route.query.type === "users") {
+      this.$store.dispatch("taskManagement/fetchItemsByUser", this.$route.query.id).catch((err) => {
+        this.manageErrors(err);
+      });
+    } else if (this.$route.query.type === "workarea") {
+      this.$store.dispatch("taskManagement/fetchItemsByWorkarea", this.$route.query.id).catch((err) => {
         this.manageErrors(err);
       });
     }

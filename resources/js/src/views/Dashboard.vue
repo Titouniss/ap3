@@ -621,9 +621,7 @@ export default {
                 .sort((a, b) => moment(b.date).unix() - moment(a.date).unix());
         },
         tasks() {
-            return this.$store.state.taskManagement.tasks.filter(
-                task => task.user_id === this.$store.state.AppActiveUser.id
-            );
+            return this.$store.state.taskManagement.tasks;
         },
         tasksToday() {
             return this.tasks.filter(task =>

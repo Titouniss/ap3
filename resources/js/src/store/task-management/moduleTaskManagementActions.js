@@ -97,6 +97,32 @@ export default {
                 });
         });
     },
+    fetchItemsByWorkarea({ commit }, workarea_id) {
+        return new Promise((resolve, reject) => {
+            axios
+                .get(`/api/task-management/workarea/${workarea_id}`)
+                .then(response => {
+                    commit("SET_ITEMS", response.data.success);
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
+    fetchItemsByUser({ commit }, user_id) {
+        return new Promise((resolve, reject) => {
+            axios
+                .get(`/api/task-management/user/${user_id}`)
+                .then(response => {
+                    commit("SET_ITEMS", response.data.success);
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
     fetchItemsByBundle({ commit }, bundle_id) {
         return new Promise((resolve, reject) => {
             axios

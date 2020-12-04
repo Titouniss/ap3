@@ -488,9 +488,9 @@ export default {
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
-        this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        // this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        //     console.error(err);
+        // });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

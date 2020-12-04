@@ -35,10 +35,20 @@ class TaskController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $items = Task::all()->load('project', 'comments', 'skills', 'documents', 'periods');
+        $items = Task::where('user_id', $user->id)->with('project', 'comments', 'skills', 'documents', 'periods')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 
+    /**
+     * Display a listing of the resource by workarea.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getByWorkarea(int $workarea_id)
+    {
+        $items = Task::where('workarea_id', $workarea_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods')->get();
+        return response()->json(['success' => $items], $this->successStatus);
+    }
     /**
      * Display a listing of the resource by bundle.
      *
@@ -321,7 +331,7 @@ class TaskController extends Controller
             'estimated_time' => 'required',
         ]);
 
-        // Pour un projet en cours, on regarde si la date et l'ilot sont dispo 
+        // Pour un projet en cours, on regarde si la date et l'ilot sont dispo
         $project = Project::find($arrayRequest['project_id']);
 
         if ($project->status == 'doing') {
