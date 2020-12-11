@@ -122,9 +122,7 @@ export default {
             axios
                 .post(`/api/user-management/updateWorkHours/${item.id}`, item)
                 .then(response => {
-                    commit("UPDATE_USER_INFO", response.data.success, {
-                        root: true
-                    });
+                    commit("UPDATE_ITEM", response.data.success);
                     resolve(response);
                 })
                 .catch(error => {
