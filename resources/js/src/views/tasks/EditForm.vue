@@ -72,6 +72,7 @@
 
                             <div
                                 class="my-3"
+                                :class="itemLocal.project.status == 'doing' ? 'disabled-div' : ''"
                                 style="font-size: 0.9em;"
                                 v-if="checkProjectStatus"
                             >
@@ -91,6 +92,7 @@
 
                             <div
                                 class="my-3"
+                                :class="itemLocal.project.status == 'doing' ? 'disabled-div' : ''"
                                 v-if="
                                     this.type != 'users' &&
                                         this.type != 'workarea'
@@ -138,6 +140,7 @@
 
                             <div
                                 class="my-3"
+                                :class="itemLocal.project.status == 'doing' ? 'disabled-div' : ''"
                                 v-if="
                                     this.type != 'users' &&
                                         this.type != 'workarea' &&
@@ -188,6 +191,7 @@
 
                             <div
                                 class="my-3"
+                                 :class="itemLocal.project.status == 'doing' ? 'disabled-div' : ''"
                                 v-if="
                                     this.type !== 'workarea' &&
                                         itemLocal.skills &&
@@ -219,6 +223,7 @@
                                 class="mb-3"
                                 style="flex-direction: column; display: flex;"
                             >
+                                <span :class="itemLocal.project.status == 'doing' ? 'disabled-div' : ''">
                                 <add-previous-task
                                     :addPreviousTask="addPreviousTask"
                                     :tasks_list="tasks_list"
@@ -226,7 +231,7 @@
                                         itemLocal.previousTasksIds
                                     "
                                     :current_task_id="this.itemId"
-                                />
+                                /></span>
                                 <div
                                     v-if="
                                         !descriptionDisplay &&
@@ -242,7 +247,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="mb-4">
+                            <div class="mb-4" :class="itemLocal.project.status == 'doing' ? 'disabled-div' : ''">
                                 <div v-if="orderDisplay">
                                     <small class="date-label">Ordre</small>
                                     <vs-input-number
@@ -250,6 +255,7 @@
                                         name="order"
                                         class="inputNumber"
                                         v-model="itemLocal.order"
+                                        :disabled="itemLocal.project.status == 'doing'"
                                     />
                                 </div>
                             </div>
@@ -297,6 +303,7 @@
                                     name="estimatedTime"
                                     class="inputNumber"
                                     v-model="itemLocal.estimated_time"
+                                    :disabled="itemLocal.project.status == 'doing'"
                                 />
                             </div>
                             <div
@@ -770,6 +777,10 @@ export default {
 };
 </script>
 <style>
+.disabled-div {
+    pointer-events:none;
+    opacity: .6;
+}
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
 }

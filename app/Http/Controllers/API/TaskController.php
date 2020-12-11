@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\TaskPeriod;
 use App\Models\Hour;
 use App\Models\TasksBundle;
 use App\Models\Project;
@@ -135,28 +136,16 @@ class TaskController extends Controller
     {
         $arrayRequest = $request->all();
 
-        $controllerLog = new Logger('task');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('task arrayRequest', [$arrayRequest]);
-
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'estimated_time' => 'required',
         ]);
         if ($validator->fails()) {
 
-            $controllerLog = new Logger('task');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('task', ['ici 1']);
-
             return response()->json(['error' => $validator->errors()], 401);
         }
         $taskBundle = $this->checkIfTaskBundleExist($arrayRequest['project_id']);
         if (!$taskBundle) {
-
-            $controllerLog = new Logger('task');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('task', ['ici 2']);
 
             return response()->json(['error' => 'error'], 401);
         }
@@ -187,6 +176,7 @@ class TaskController extends Controller
         }
 
         $item = Task::create($arrayRequest);
+        TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
         if (isset($arrayRequest['token'])) {
             $this->storeDocuments($item->id, $arrayRequest['token'], $project->company);
         }
@@ -207,7 +197,7 @@ class TaskController extends Controller
      */
     public function addComment(Request $request, $id)
     {
-        $item = Task::find($id);
+        $item = Task::find($id); 
         $arrayRequest = $request->all();
         $this->storeComment($id, $arrayRequest['comment']);
         $item = Task::find($id)->load('comments');
@@ -217,7 +207,7 @@ class TaskController extends Controller
 
     private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null)
     {
-
+        $available = true;
         $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
 
         $userTasks = $task_id ? Task::where('user_id', $user_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
@@ -226,26 +216,26 @@ class TaskController extends Controller
         if (count($userTasks) > 0) {
 
             foreach ($userTasks as $task) {
-                $date = Carbon::parse($task->date);
-                $task->start_at = $date->format('Y-m-d H:i:s');
-                $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
+                
+                if($available){
+                    foreach ($task->periods as $task_period) {
 
-                $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
-
-                if ($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)) {
-                    return false;
-                } else {
-                    return true;
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+    
+                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
+                            $available = false;
+                            break;
+                        } 
+                    }
                 }
             }
-        } else {
-            return true;
         }
+        return $available;
     }
 
     private function checkIfWorkareaAvailable($workarea_id, $start_at, $end_at, $task_id = null)
     {
-
+        $available = true;
         $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
 
         $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
@@ -254,21 +244,20 @@ class TaskController extends Controller
         if (count($workareaTasks) > 0) {
 
             foreach ($workareaTasks as $task) {
-                $date = Carbon::parse($task->date);
-                $task->start_at = $date->format('Y-m-d H:i:s');
-                $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
+                if($available){
+                    foreach ($task->periods as $task_period) {
 
-                $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
-
-                if ($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)) {
-                    return false;
-                } else {
-                    return true;
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+    
+                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
+                            $available = false;
+                            break;
+                        }
+                    }
                 }
             }
-        } else {
-            return true;
         }
+        return $available;
     }
 
     /**

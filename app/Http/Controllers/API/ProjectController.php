@@ -410,6 +410,7 @@ class ProjectController extends Controller
     {
         $available_periods_temp = $TimeData['details'];
         $tasksTemp = $this->orderTasksByPrevious($tasks);
+        $start_date_project = null;
         $NoPlanTasks = [];
 
         try {
@@ -518,6 +519,7 @@ class ProjectController extends Controller
                                                                 $taskPlan = true;
                                                                 $planifiedTask = $this->planTask($task, $newPeriod, $workarea->id);
                                                                 $tasksTemp[$keytask] = Task::findOrFail($task->id);
+                                                                $start_date_project = $start_date_project == null || $start_date_project > $planifiedTask->date ? $planifiedTask->date : $start_date_project;
 
                                                                 //On supprime les periodes utilisées
                                                                 $available_periods_temp = $this->delUsedPeriods($available_periods, $key, $planifiedTask);
@@ -532,6 +534,7 @@ class ProjectController extends Controller
                                                     $taskPlan = true;
                                                     $planifiedTask = $this->planTask($task, $period, $workarea->id);
                                                     $tasksTemp[$keytask] = Task::findOrFail($task->id);
+                                                    $start_date_project = $start_date_project == null || $start_date_project > $planifiedTask->date ? $planifiedTask->date : $start_date_project;
 
                                                     //On supprime les periodes utilisées
                                                     $available_periods_temp = $this->delUsedPeriods($available_periods, $key, $planifiedTask);
@@ -563,7 +566,7 @@ class ProjectController extends Controller
 
             //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
             if ($allPlanified) {
-                Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => Carbon::now()]);
+                Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => $start_date_project]);
 
                 return $response = ['success' => 'All good'];
             } else { // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
