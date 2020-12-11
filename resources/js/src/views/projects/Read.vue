@@ -142,17 +142,9 @@
                     </div>
                     <!-- /Information - Col 2 -->
                     <div class="vx-col w-full flex mt-3" id="account-manage-buttons">
-                        <vs-button
-                            v-if="project_data.status == 'todo'"
-                            type="gradient"
-                            color="#3ad687"
-                            gradient-color-secondary="#175435" 
-                            icon-pack="feather"
-                            icon="icon-play"
-                            @click="startProject"
-                        >
-                            Démarrer le projet
-                        </vs-button>
+                        <start-project-prompt
+                            :project_data="this.project_data" :startProject="startProject"
+                        ></start-project-prompt>
                         <vs-button
                             v-if="project_data.status != 'todo'"
                             type="gradient"
@@ -201,7 +193,7 @@
             <div class="vx-row">
                 <div class="vx-col w-full">
                     <vx-card title="Tâches" class="mb-base">
-                        <index-tasks :project_data="this.project_data" />
+                        <index-tasks :project_data="this.project_data" :refreshData="refreshData"/>
                     </vx-card>
                 </div>
             </div>
@@ -225,12 +217,14 @@ import moment from "moment";
 
 import EditForm from "./EditForm.vue";
 import AddRangeForm from "./AddRangeForm.vue";
+import StartProjectPrompt from "./StartProjectPrompt.vue";
 import IndexTasks from "./../tasks/Index.vue";
 
 export default {
     components: {
         EditForm,
         AddRangeForm,
+        StartProjectPrompt,
         IndexTasks
     },
     data() {
@@ -290,7 +284,7 @@ export default {
         startProject() {
             this.$vs.loading({ color: this.colorLoading, type: 'material', text: 'Planification en cours ...' })
             this.$store
-                .dispatch("projectManagement/start", this.project_data.id)
+                .dispatch("projectManagement/start", this.project_data,)
                 .then(response => {
                     console.log(response)
                     if (response.data.success) {
@@ -392,6 +386,29 @@ export default {
                 color: "success",
                 title: modelTitle,
                 text: `Projet supprimé`
+            });
+        },
+        refreshData() {
+            console.log('Je refresh')
+            this.$store
+            .dispatch("projectManagement/fetchItem", this.project_data.id)
+            .then(res => {
+                this.project_data = res.data.success;
+                this.project_data.date_string = moment(
+                    this.project_data.date
+                ).format("DD MMMM YYYY");
+                if (this.project_data.start_date) {
+                    this.project_data.start_date_string = moment(
+                        this.project_data.start_date
+                    ).format("DD MMMM YYYY");
+                }
+            })
+            .catch(err => {
+                if (err.response.status === 404) {
+                    this.project_not_found = true;
+                    return;
+                }
+                console.error(err);
             });
         }
     },

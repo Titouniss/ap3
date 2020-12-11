@@ -42,6 +42,7 @@
                 :project_data="this.project_data"
                 :tasks_list="tasksData"
                 :hideProjectInput="true"
+                :refreshData="refreshData"
             />
 
             <div
@@ -217,6 +218,7 @@
             :project_data="this.project_data"
             v-if="itemIdToEdit"
             :tasks_list="tasksData"
+            :refreshData="refreshData"
         />
     </div>
 </template>
@@ -247,6 +249,9 @@ import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
 export default {
     props: {
         project_data: {
+            required: true
+        },
+        refreshData: {
             required: true
         }
     },
@@ -407,6 +412,7 @@ export default {
             this.$store
                 .dispatch("taskManagement/removeItem", this.itemToDel.id)
                 .then(() => {
+                    this.refreshData()
                     this.showDeleteSuccess();
                 })
                 .catch(err => {
@@ -516,7 +522,7 @@ export default {
         border-radius: 5px;
     }
     .card-task-add {
-        background: linear-gradient(#2196f3, #0c3352);
+        background: linear-gradient(#2196f3, #0079da);
         border: 1px solid #2196f3;
         border-radius: 5px;
         color: #080808;
@@ -529,7 +535,7 @@ export default {
         justify-content: center;
     }
     .card-task-add:hover {
-        background: linear-gradient(#17619e, #071c2e);
+        background: linear-gradient(#1f87dd, #0164b6);
         cursor: pointer;
     }
     .titleTask {

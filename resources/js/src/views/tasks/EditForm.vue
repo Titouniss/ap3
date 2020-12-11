@@ -436,7 +436,8 @@ export default {
         project_data: { type: Object },
         tasks_list: { required: true },
         type: { type: String },
-        idType: { type: Number }
+        idType: { type: Number },
+        refreshData: { type: Function }
     },
     data() {
         const item = JSON.parse(
@@ -586,6 +587,7 @@ export default {
                 .dispatch("taskManagement/updateItem", item)
                 .then(response => {
                     if (response.data.success) {
+                        this.refreshData ? this.refreshData() : null
                         this.$vs.notify({
                             title: "Modification d'une tâche",
                             text: `"${this.itemLocal.name}" modifiée avec succès`,

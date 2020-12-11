@@ -361,7 +361,8 @@ export default {
         type: { type: String },
         idType: { type: Number },
         hideProjectInput: { type: Boolean },
-        hideUserInput: { type: Boolean }
+        hideUserInput: { type: Boolean },
+        refreshData: { type: Function }
     },
     data() {
         return {
@@ -569,6 +570,7 @@ export default {
                 .dispatch("taskManagement/addItem", item)
                 .then(response => {
                     if (response.data.success) {
+                        this.refreshData ? this.refreshData() : null
                         this.$vs.notify({
                             title: "Ajout d'une tâche",
                             text: `"${this.itemLocal.name}" ajouté avec succès`,

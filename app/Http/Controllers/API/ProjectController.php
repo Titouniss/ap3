@@ -299,9 +299,11 @@ class ProjectController extends Controller
         }
     }
 
-    public function start($id)
+    public function start(Request $request)
     {
-        $project = Project::find($id);
+        $arrayRequest = $request->all();
+        $project = Project::find($arrayRequest['id']);
+        $project->start_date = $arrayRequest['start_date'];
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
         $workareas = Workarea::where('company_id', $project->company_id)->with('skills')->get();
 
@@ -320,7 +322,7 @@ class ProjectController extends Controller
             }
 
             // Hours Available & Hours Unavailable
-            $TimeData = $this->calculTimeAvailable($users, $project->date, $users);
+            $TimeData = $this->calculTimeAvailable($users, $project, $users);
         
             if ($TimeData['total_hours_available'] >= $nbHoursRequired) {
 
@@ -692,14 +694,14 @@ class ProjectController extends Controller
         return $available_periods;        
     }
 
-    private function calculTimeAvailable($users, $date_end)
+    private function calculTimeAvailable($users, $project)
     {
         $hoursAvailable = [];
         $usersPeriods = [];
 
         // Get days today date -> end date
-        $start_date = Carbon::now()->addDays('1')->startOfDay();
-        $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $date_end)->subDays('1')->endOfDay();
+        $start_date = Carbon::createFromFormat('Y-m-d', $project->start_date)->startOfDay();
+        $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->date)->subDays('1')->endOfDay();
 
         $period = CarbonPeriod::create($start_date, $end_date);
 

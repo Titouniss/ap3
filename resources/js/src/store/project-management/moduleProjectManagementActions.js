@@ -85,9 +85,9 @@ export default {
     })
   },
 
-  start({ commit }, id) {
+  start({ commit }, item) {
     return new Promise((resolve, reject) => {
-      axios.get(`/api/project-management/start/${id}`)
+      axios.post(`/api/project-management/start`, item)
         .then((response) => {
           resolve(response)
         })

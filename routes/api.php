@@ -180,7 +180,7 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::post('store', 'API\ProjectController@store');
         });
         Route::group(['middleware' => ['can:edit projects']], function () {
-            Route::get('start/{id}', 'API\ProjectController@start');
+            Route::post('start', 'API\ProjectController@start');
             Route::post('store-range/{id}', 'API\ProjectController@addRange');
             Route::post('update/{id}', 'API\ProjectController@update');
             Route::put('restore/{id}', 'API\ProjectController@restore');
