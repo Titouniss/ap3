@@ -23,7 +23,7 @@
         <vs-input
           type="password"
           class="w-full mb-base"
-          label-placeholder="Nouveau mot de passe"
+          label-placeholder="Nouveau mot de passef:ejhlhebilbe"
           v-model="new_password"
           v-validate="'required'"
           name="password"
