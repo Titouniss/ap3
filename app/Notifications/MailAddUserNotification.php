@@ -18,15 +18,17 @@ class MailAddUserNotification extends Notification
      * @var string
      */
     public $id;
+    public $register_token;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($id)
+    public function __construct($id, $register_token)
     {
         $this->id = $id;
+        $this->register_token = $register_token;
     }
 
     /**

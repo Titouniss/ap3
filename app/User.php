@@ -111,8 +111,8 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Override the mail body for add user email notification mail.
      */
-    public function sendEmailAdUserNotification($id)
+    public function sendEmailAdUserNotification($id, $register_token)
     {
-        $this->notify(new \App\Notifications\MailAddUserNotification($id));
+        $this->notify(new \App\Notifications\MailAddUserNotification($id, $register_token));
     }
 }
