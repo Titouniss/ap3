@@ -90,7 +90,7 @@ export default {
       this.$router.push("/pages/login").catch(() => {});
     },
     change_password() {
-      const user_id = this.$route.params.user_id;
+      const register_token = this.$route.query.token
 
       if (
         this.new_password !== "" &&
@@ -99,7 +99,7 @@ export default {
       ) {
         this.$vs.loading();
         const payload = {
-          user_id: user_id,
+          register_token: register_token,
           new_password: this.new_password,
         };
         this.$store

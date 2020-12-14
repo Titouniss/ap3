@@ -61,7 +61,7 @@ class MailAddUserNotification extends Notification
             return call_user_func(static::$toMailCallback, $notifiable, $verificationUrl);
         }
 
-        $link = url("/pages/change-password").'?'.http_build_query(['user_id' => $this->id]);
+        $link = url("/pages/change-password").'?'.http_build_query(['token' => $this->register_token]);
         return (new MailMessage)
         // ->view(
         //     'emails.name', ['invoice' => $this->invoice]

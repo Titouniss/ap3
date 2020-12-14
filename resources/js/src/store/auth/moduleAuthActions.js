@@ -281,7 +281,7 @@ export default {
     },
     updatePasswordJWT({ commit }, payload) {
         return new Promise((resolve, reject) => {
-            jwt.updatePassword(payload.user_id, payload.new_password)
+            jwt.updatePassword(payload.register_token, payload.new_password)
                 .then(response => {
                     resolve(response);
                 })

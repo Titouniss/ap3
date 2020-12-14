@@ -538,7 +538,7 @@ class UserController extends Controller
     {
         $arrayRequest = $request->all();
         $rule = ['password' => [new StrongPassword]];
-        $user = User::where('id', $arrayRequest['user_id'])->first();
+        $user = User::where('register_token', $arrayRequest['register_token'])->first();
 
         // Verify user exist
         if ($user != null) {
@@ -546,6 +546,7 @@ class UserController extends Controller
                 // Save password
                 $user->password = bcrypt($arrayRequest['new_password']);
                 $user->is_password_change = 1;
+                $user->register_token = Str::random(8);
                 $user->save();
 
                 return response()->json(['success' => true], $this->successStatus);
