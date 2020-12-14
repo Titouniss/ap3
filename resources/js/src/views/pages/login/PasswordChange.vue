@@ -17,7 +17,8 @@
     <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
       <vx-card>
         <img src="@assets/images/pages/reset-password.png" alt="graphic-500" class="mx-auto mb-4" />
-        <h4 class="mb-4 text-center">Changement de mot de passe</h4>
+        <h4 class="mb-4 text-center">Changement de mot de passe {{this.$route.params.token}}</h4>
+        <h4 class="mb-4 text-center">Changement de mot de passe {{this.$route.query.token}}</h4>
 
         <vs-input
           type="password"
