@@ -90,11 +90,7 @@ export default {
       this.$router.push("/pages/login").catch(() => {});
     },
     change_password() {
-      const register_token = this.$route.query.token
-      const register_token1 = this.$route.params.token
-
-      console.log(register_token)
-      console.log(register_token1)
+      const register_token = this.$route.params.token
 
       if (
         this.new_password !== "" &&
