@@ -537,6 +537,11 @@ class UserController extends Controller
     public function updatePasswordBeforeLogin(Request $request)
     {
         $arrayRequest = $request->all();
+
+        $controllerLog = new Logger('user');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('arrayRequest', [$arrayRequest]);
+
         $rule = ['password' => [new StrongPassword]];
         $user = User::where('register_token', $arrayRequest['register_token'])->first();
 

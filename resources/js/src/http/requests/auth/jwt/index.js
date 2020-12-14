@@ -116,7 +116,6 @@ export default {
         });
     },
     updatePassword(register_token, pwd) {
-        console.log(register_token)
         return axios.post("/api/auth/updatePasswordBeforeLogin", {
             register_token: register_token,
             new_password: pwd,
