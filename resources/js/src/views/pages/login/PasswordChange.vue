@@ -91,6 +91,10 @@ export default {
     },
     change_password() {
       const register_token = this.$route.query.token
+      const register_token1 = this.$route.params.token
+
+      console.log(register_token)
+      console.log(register_token1)
 
       if (
         this.new_password !== "" &&
