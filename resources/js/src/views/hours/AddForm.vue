@@ -15,7 +15,7 @@
             :active.sync="showPrompt"
         >
             <div>
-                <form>
+                <form autocomplete="off">
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <v-select

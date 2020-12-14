@@ -20,7 +20,7 @@
         :active.sync="activePrompt"
     >
         <div>
-            <form>
+            <form autocomplete="off">
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <vs-input

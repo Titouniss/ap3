@@ -22,6 +22,7 @@
             >
                 <vx-card>
                     <form-wizard
+                        autocomplete="off"
                         :title="null"
                         :subtitle="null"
                         @on-complete="$router.push('/modules')"
@@ -38,7 +39,7 @@
                             :before-change="validateFirstStep"
                         >
                             <!-- Sql configuration -->
-                            <form v-if="item && sqlMode" data-vv-scope="step-1">
+                            <form autocomplete="off" v-if="item && sqlMode" data-vv-scope="step-1">
                                 <vs-row
                                     vs-type="flex"
                                     vs-justify="center"
@@ -528,7 +529,7 @@
                             </form>
 
                             <!-- Api configuration -->
-                            <form
+                            <form  autocomplete="off"
                                 v-if="item && !sqlMode"
                                 data-vv-scope="step-1"
                             >

@@ -23,7 +23,7 @@
       :is-valid="validateForm"
       :active.sync="activePrompt">
       <div>
-        <form>
+        <form autocomplete="off">
             <template>
                 <div class="vs-select--label">Date de démarrage</div>
             </template>

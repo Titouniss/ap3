@@ -22,7 +22,7 @@
                     :title="item.display_name_plurial"
                     :title-color="statusColor(item.slug)"
                 >
-                    <form :data-vv-scope="item.slug">
+                    <form autocomplete="off" :data-vv-scope="item.slug">
                         <div class="w-full my-6 flex-row items-center">
                             <vs-input
                                 name="source"

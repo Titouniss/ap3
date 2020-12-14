@@ -13,7 +13,7 @@
             class="task-compose"
         >
             <div>
-                <form class="edit-task-form">
+                <form class="edit-task-form" autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div

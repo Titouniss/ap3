@@ -13,7 +13,7 @@
       :is-valid="validateForm"
       :active.sync="activePrompt">
       <div>
-        <form>
+        <form autocomplete="off">
           <vx-tooltip
           style="z-index: 52007;"
           title="Information"

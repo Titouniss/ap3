@@ -32,7 +32,7 @@
             class="task-compose"
         >
             <div>
-                <form class="add-task-form">
+                <form class="add-task-form" autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -131,7 +131,6 @@
                                     v-model="itemLocal.skills"
                                     class="w-full"
                                     multiple
-                                    autocomplete
                                     name="skills"
                                 >
                                     <vs-select-item
