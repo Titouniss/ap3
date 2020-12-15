@@ -74,7 +74,6 @@
                 ref="fullCalendar"
                 defaultView="timeGridWeek"
                 :editable="true"
-                :eventStartEditable="false"
                 :droppable="false"
                 :header="{
                     left: 'prev today next',
@@ -98,8 +97,10 @@
                 :weekNumbers="true"
                 :businessHours="businessHours"
                 :events="calendarEvents"
+                @eventDrop="handleEventDrop"
                 @dateClick="handleDateClick"
                 @eventClick="handleEventClick"
+                @eventResize="handleEventResize"
             />
             <edit-form
                 :reload="calendarEvents"
@@ -266,7 +267,93 @@ export default {
                     console.error(err);
                 });
         },
+        handleEventResize(arg) {
+            var itemTemp = this.calendarEvents.find(
+                (e) => e.id.toString() === arg.event.id
+            );
+
+            var itemToSave = {
+                id: itemTemp.id,
+                description: itemTemp.description,
+                start_at: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                date: moment(arg.event.start).format("YYYY-MM-DD")
+            };
+            this.$vs.loading();
+            this.$store
+                .dispatch("hoursManagement/updateItem", itemToSave)
+                .then((data) => {
+                if (data && data.status === 200) {
+                    //this.refresh();
+                    this.$vs.loading.close();
+                } else {
+                    this.$vs.loading.close();
+                }
+                })
+                .catch((err) => {
+                console.error(err);
+            });
+        },
+        handleEventDrop(arg) {
+
+            var itemTemp = this.calendarEvents.find(
+                (e) => e.id.toString() === arg.event.id
+            );
+
+            var itemToSave = {
+                id: itemTemp.id,
+                description: itemTemp.description,
+                start_at: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                date: moment(arg.event.start).format("YYYY-MM-DD")
+            };
+
+            this.$vs.loading();
+
+            this.$store
+                .dispatch("hoursManagement/addItem", itemToSave)
+                .then(response => {
+                    if (response.data.success) {
+                        this.$vs.loading.close();
+                        this.$vs.notify({
+                            title: "Ajout d'un horaire",
+                            text: `Horaire ajouté avec succès`,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
+                        });
+                    } else {
+                        this.$vs.loading.close();
+                        this.$vs.notify({
+                            title: "Une erreur est survenue",
+                            text: response.data.error,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger"
+                        });
+                    }
+                })
+                .catch(error => {
+                    this.$vs.loading.close();
+                    this.$vs.notify({
+                        title: "Une erreur est survenue",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                });
+            this.clearFields();
+
+            this.handleClose()
+
+        },
         handleClose() {
+            console.log('tesst')
             this.calendarEvents = [];
             let test = this.calendarEvents;
 
