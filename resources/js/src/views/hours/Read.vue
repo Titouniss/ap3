@@ -253,6 +253,27 @@ export default {
             calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
         },
         handleDateClick(arg) {
+
+            const period_start = moment(arg.dateStr).format("YYYY-MM-DD HH:mm:ss")
+            const period_end = moment(arg.dateStr).add(30, 'm').format("YYYY-MM-DD HH:mm:ss")
+            
+            var targetsEvent = this.calendarEvents.filter(
+                item => moment(item.end).format("YYYY-MM-DD HH:mm:ss") >  period_start && moment(item.end).format("YYYY-MM-DD HH:mm:ss") < period_end
+            )
+            if(targetsEvent.length == 1){
+                arg.dateStr = targetsEvent[0].end
+            }
+            else if(targetsEvent.length > 1){
+                let lastEvent = null; 
+                targetsEvent.forEach(element => {
+                    if(lastEvent == null || element.end > lastEvent.end){
+                        lastEvent = element
+                    }
+                });
+
+                arg.dateStr = lastEvent.end
+            }
+
             this.activeAddPrompt = true;
             this.dateData = arg;
         },
@@ -353,7 +374,6 @@ export default {
 
         },
         handleClose() {
-            console.log('tesst')
             this.calendarEvents = [];
             let test = this.calendarEvents;
 
