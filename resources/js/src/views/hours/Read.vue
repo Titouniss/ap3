@@ -216,7 +216,11 @@ export default {
             return finalHours;
         },
         companiesData() {
-            return this.$store.state.companyManagement.companies;
+            return this.$store.state.companyManagement.companies.sort(function(a, b) {
+                var textA = a.name.toUpperCase();
+                var textB = b.name.toUpperCase();
+                return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+            });
         },
         usersData() {
             return this.filters.company
