@@ -134,7 +134,7 @@ export default {
         },
       },
       businessHours: false,
-      minTime: "00:00",
+      minTime: "05:00",
       maxTime: "24:00",
     };
   },
@@ -145,13 +145,20 @@ export default {
     calendarEvents() {
       // Get all task and parse to show
       var eventsParse = [];
+      let minHour = null
+      let maxHour = null
       if (this.$route.query.type === "projects") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
 
              t.periods.forEach((p) => {
 
-               console.log(p)
+              let start_period_hour= moment(p.start_time).format("HH:mm")
+              let end_period_hour= moment(p.end_time).format("HH:mm")
+              
+              minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
+              maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
+              
 
               eventsParse.push({
                 id: t.id,
@@ -171,6 +178,9 @@ export default {
              });
           });
         }
+
+        console.log(minHour)
+        console.log(maxHour)
       } else if (this.$route.query.type === "users") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
@@ -190,6 +200,17 @@ export default {
               });
 
               t.periods.forEach((p) => {
+
+                let start_period_hour= moment(p.start_time, "HH:mm")
+                let end_period_hour= moment(p.end_time, "HH:mm")
+                if( start_period_hour < end_period_hour){
+                  minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
+                  maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
+                }
+                else{
+                  minHour == null || end_period_hour < minHour ? minHour = end_period_hour : null
+                  maxHour == null || start_period_hour > maxHour ? maxHour = start_period_hour : null
+                }
 
                 eventsParse.push({
                   id: t.id,
@@ -230,6 +251,17 @@ export default {
 
                t.periods.forEach((p) => {
 
+                let start_period_hour= moment(p.start_time, "HH:mm")
+                let end_period_hour= moment(p.end_time, "HH:mm")
+                if( start_period_hour < end_period_hour){
+                  minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
+                  maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
+                }
+                else{
+                  minHour == null || end_period_hour < minHour ? minHour = end_period_hour : null
+                  maxHour == null || start_period_hour > maxHour ? maxHour = start_period_hour : null
+                }
+
                 eventsParse.push({
                   id: t.id,
                   title: t.name,
@@ -250,6 +282,19 @@ export default {
           });
         }
       }
+      
+      this.minTime =
+              minHour && minHour >= "02:00"
+                  ? moment(minHour, "HH:mm")
+                        .subtract(2, "hour")
+                        .format("HH:mm")
+                  : "00:00";
+      this.maxTime =
+          maxHour && maxHour <= "22:00"
+              ? moment(maxHour, "HH:mm")
+                    .add(2, "hour")
+                    .format("HH:mm")
+              : "24:00";
 
       this.$store
         .dispatch("scheduleManagement/addEvents", eventsParse)
