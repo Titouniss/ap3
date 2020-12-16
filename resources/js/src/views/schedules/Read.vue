@@ -158,7 +158,6 @@ export default {
               
               minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
               maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
-              
 
               eventsParse.push({
                 id: t.id,
@@ -201,16 +200,11 @@ export default {
 
               t.periods.forEach((p) => {
 
-                let start_period_hour= moment(p.start_time, "HH:mm")
-                let end_period_hour= moment(p.end_time, "HH:mm")
-                if( start_period_hour < end_period_hour){
-                  minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
-                  maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
-                }
-                else{
-                  minHour == null || end_period_hour < minHour ? minHour = end_period_hour : null
-                  maxHour == null || start_period_hour > maxHour ? maxHour = start_period_hour : null
-                }
+                let start_period_hour= moment(p.start_time).format("HH:mm")
+              let end_period_hour= moment(p.end_time).format("HH:mm")
+              
+              minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
+              maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
 
                 eventsParse.push({
                   id: t.id,
@@ -251,16 +245,11 @@ export default {
 
                t.periods.forEach((p) => {
 
-                let start_period_hour= moment(p.start_time, "HH:mm")
-                let end_period_hour= moment(p.end_time, "HH:mm")
-                if( start_period_hour < end_period_hour){
-                  minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
-                  maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
-                }
-                else{
-                  minHour == null || end_period_hour < minHour ? minHour = end_period_hour : null
-                  maxHour == null || start_period_hour > maxHour ? maxHour = start_period_hour : null
-                }
+                 let start_period_hour= moment(p.start_time).format("HH:mm")
+              let end_period_hour= moment(p.end_time).format("HH:mm")
+              
+              minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
+              maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
 
                 eventsParse.push({
                   id: t.id,
