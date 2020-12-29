@@ -371,7 +371,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     Route::prefix('subscription-management')->group(function () {
-        Route::group(['middleware' => ['can:edit companies']], function () {
+        Route::group(['middleware' => ['can:read subscriptions']], function () {
             Route::get('components', 'API\SubscriptionController@components');
         });
     });
