@@ -69,7 +69,7 @@ class PermissionsRoleTableSeeder extends Seeder
 
         $role = Role::where(['name' => 'Administrateur'])->first();
         $role->givePermissionTo(Permission::all()->filter(function ($perm) {
-            return $perm->name_fr != 'permissions' && $perm->name_fr != 'companies' && $perm->name_fr != 'modules';
+            return !in_array($perm->name_fr, ['permissions', 'entreprises', 'modules', 'abonnements']);
         }));
         $role->givePermissionTo('read permissions');
         $role->givePermissionTo('read companies');

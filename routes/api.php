@@ -369,6 +369,12 @@ Route::group(['middleware' => 'auth:api'], function () {
             Route::post('delete-files', 'API\DocumentController@deleteFiles');
         });
     });
+
+    Route::prefix('subscription-management')->group(function () {
+        Route::group(['middleware' => ['can:edit companies']], function () {
+            Route::get('components', 'API\SubscriptionController@components');
+        });
+    });
 });
 
 /***********************************************************************************/
