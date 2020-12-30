@@ -370,9 +370,12 @@ Route::group(['middleware' => 'auth:api'], function () {
         });
     });
 
-    Route::prefix('subscription-management')->group(function () {
+    /***********************************************************************************/
+    /******************************** Subscription Components ************************************/
+    /***********************************************************************************/
+    Route::prefix('package-management')->group(function () {
         Route::group(['middleware' => ['can:read subscriptions']], function () {
-            Route::get('components', 'API\SubscriptionController@components');
+            Route::get('index', 'API\PackagesController@index');
         });
     });
 });

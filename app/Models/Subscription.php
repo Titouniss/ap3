@@ -23,4 +23,9 @@ class Subscription extends Model
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
+
+    public function packages()
+    {
+        return $this->belongsToMany(Package::class, 'subscription_packages', 'subscription_id', 'package_id');
+    }
 }

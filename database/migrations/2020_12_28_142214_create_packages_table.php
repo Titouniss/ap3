@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSubscriptionComponentsTable extends Migration
+class CreatePackagesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateSubscriptionComponentsTable extends Migration
      */
     public function up()
     {
-        Schema::create('subscription_components', function (Blueprint $table) {
+        Schema::create('packages', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('display_name');
@@ -29,6 +29,6 @@ class CreateSubscriptionComponentsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('subscription_components');
+        Schema::dropIfExists('packages');
     }
 }
