@@ -8,206 +8,186 @@
 ========================================================================================== -->
 
 <template>
-    <div id="page-role-add">
-        <vx-card>
-            <vs-row vs-justify="center" vs-type="flex" vs-w="12">
-                <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
-                    <vs-input
-                        v-validate="'required|max:255'"
-                        name="lastname"
-                        class="w-full mb-4"
-                        label="Nom"
-                        v-model="itemLocal.lastname"
-                        :color="!errors.has('lastname') ? 'success' : 'danger'"
-                    />
-                    <span
-                        class="text-danger text-sm"
-                        v-show="errors.has('lastname')"
-                        >{{ errors.first("lastname") }}</span
-                    >
+  <div id="page-role-add">
+    <vx-card>
+      <vs-row vs-justify="center" vs-type="flex" vs-w="12">
+        <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+          <vs-input
+            v-validate="'required|max:255'"
+            name="lastname"
+            class="w-full mb-4"
+            label="Nom"
+            v-model="itemLocal.lastname"
+            :color="!errors.has('lastname') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('lastname')">{{
+            errors.first("lastname")
+          }}</span>
 
-                    <vs-input
-                        v-validate="'required|max:255'"
-                        name="firstname"
-                        class="w-full mb-4 mt-5"
-                        label="Prénom"
-                        v-model="itemLocal.firstname"
-                        :color="!errors.has('firstname') ? 'success' : 'danger'"
-                    />
-                    <span
-                        class="text-danger text-sm"
-                        v-show="errors.has('firstname')"
-                        >{{ errors.first("firstname") }}</span
-                    >
+          <vs-input
+            v-validate="'required|max:255'"
+            name="firstname"
+            class="w-full mb-4 mt-5"
+            label="Prénom"
+            v-model="itemLocal.firstname"
+            :color="!errors.has('firstname') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('firstname')">{{
+            errors.first("firstname")
+          }}</span>
 
-                    <!-- Login -->
-                    <div class="vs-input--label">Identifiant</div>
-                    <vx-input-group>
-                        <template slot="prepend">
-                            <div class="prepend-text bg-primary">
-                                <span> {{ company_login }} </span>
-                            </div>
-                        </template>
+          <!-- Login -->
+          <div class="vs-input--label">Identifiant</div>
+          <vx-input-group>
+            <template slot="prepend">
+              <div class="prepend-text bg-primary">
+                <span> {{ company_login }} </span>
+              </div>
+            </template>
 
-                        <vs-input
-                            v-validate="{
-                                required: true,
-                                regex: /^((?![ÇçèéêëÈÉÊËàáâãäå@ÀÁÂÃÄÅìíîïÌÍÎÏðòóôõöÒÓÔÕÖùúûüÙÚÛÜýÿÝ]+).)*$/
-                            }"
-                            name="login"
-                            class="w-full"
-                            v-model="itemLocal.login"
-                        />
-                    </vx-input-group>
-                    <span
-                        class="text-danger text-sm"
-                        v-show="errors.has('login')"
-                    >
-                        {{ errors.first("login") }}
-                    </span>
+            <vs-input
+              v-validate="{
+                required: true,
+                regex: /^((?![ÇçèéêëÈÉÊËàáâãäå@ÀÁÂÃÄÅìíîïÌÍÎÏðòóôõöÒÓÔÕÖùúûüÙÚÛÜýÿÝ]+).)*$/,
+              }"
+              name="login"
+              class="w-full"
+              v-model="itemLocal.login"
+            />
+          </vx-input-group>
+          <span class="text-danger text-sm" v-show="errors.has('login')">
+            {{ errors.first("login") }}
+          </span>
 
-                    <vs-input
-                        v-validate="'required|email'"
-                        name="email"
-                        class="w-full mb-4 mt-5"
-                        label="E-mail"
-                        v-model="itemLocal.email"
-                        :color="!errors.has('email') ? 'success' : 'danger'"
-                    />
-                    <span
-                        class="text-danger text-sm"
-                        v-show="errors.has('email')"
-                        >{{ errors.first("email") }}</span
-                    >
-                </vs-col>
-                <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
-                    <div>
-                        <v-select
-                            v-validate="'required'"
-                            name="role"
-                            label="name"
-                            :multiple="false"
-                            v-model="itemLocal.roles[0]"
-                            :reduce="name => name.id"
-                            class="w-full"
-                            autocomplete
-                            :options="rolesData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .60rem">
-                                    Rôle
-                                </div>
-                            </template>
-                            <template #option="role">
-                                <span>{{ `${role.name}` }}</span>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('role')"
-                            >{{ errors.first("role") }}</span
-                        >
-                    </div>
+          <vs-input
+            v-validate="'required|email'"
+            name="email"
+            class="w-full mb-4 mt-5"
+            label="E-mail"
+            v-model="itemLocal.email"
+            :color="!errors.has('email') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('email')">{{
+            errors.first("email")
+          }}</span>
+        </vs-col>
+        <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
+          <div>
+            <v-select
+              v-validate="'required'"
+              name="role"
+              label="name"
+              :multiple="false"
+              v-model="itemLocal.roles[0]"
+              :reduce="(name) => name.id"
+              class="w-full"
+              autocomplete
+              :options="rolesData"
+            >
+              <template #header>
+                <div style="opacity: .8 font-size: .60rem">Rôle</div>
+              </template>
+              <template #option="role">
+                <span>{{ `${role.name}` }}</span>
+              </template>
+            </v-select>
+            <span class="text-danger text-sm" v-show="errors.has('role')">{{
+              errors.first("role")
+            }}</span>
+          </div>
 
-                    <div v-if="!disabled">
-                        <v-select
-                            v-validate="'required'"
-                            @input="selectCompanySkills"
-                            name="company"
-                            label="name"
-                            :multiple="false"
-                            v-model="itemLocal.company_id"
-                            :reduce="name => name.id"
-                            class="w-full mt-5"
-                            autocomplete
-                            :options="companiesData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Société
-                                </div>
-                            </template>
-                            <template #option="company">
-                                <span>{{ `${company.name}` }}</span>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('company_id')"
-                            >{{ errors.first("company_id") }}</span
-                        >
-                    </div>
+          <div v-if="!disabled">
+            <v-select
+              v-validate="'required'"
+              @input="selectCompanySkills"
+              name="company"
+              label="name"
+              :multiple="false"
+              v-model="itemLocal.company_id"
+              :reduce="(name) => name.id"
+              class="w-full mt-5"
+              autocomplete
+              :options="companiesData"
+            >
+              <template #header>
+                <div style="opacity: .8 font-size: .85rem">Société</div>
+              </template>
+              <template #option="company">
+                <span>{{ `${company.name}` }}</span>
+              </template>
+            </v-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('company_id')"
+              >{{ errors.first("company_id") }}</span
+            >
+          </div>
 
-                    <div v-if="itemLocal.company_id">
-                        <div
-                            v-if="companySkills.length === 0"
-                            class="mt-12 mb-2"
-                        >
-                            <span
-                                label="Compétences"
-                                v-if="companySkills.length === 0"
-                                class="msgTxt mt-10"
-                                >Aucune compétences trouvées.</span
-                            >
-                            <router-link
-                                v-if="companySkills.length === 0"
-                                class="linkTxt"
-                                :to="{ path: '/skills' }"
-                                >Ajouter une compétence</router-link
-                            >
-                        </div>
-                        <v-select
-                            v-validate="'required'"
-                            v-if="companySkills.length !== 0"
-                            name="skill"
-                            label="name"
-                            :multiple="true"
-                            v-model="itemLocal.skills"
-                            :reduce="name => name.id"
-                            class="w-full mt-5"
-                            autocomplete
-                            :options="companySkills"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Compétences
-                                </div>
-                            </template>
-                            <template #option="companyskill">
-                                <span>{{ `${companyskill.name}` }}</span>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('company_id')"
-                            >{{ errors.first("company_id") }}</span
-                        >
-                    </div>
-                </vs-col>
-            </vs-row>
-
-            <!-- Save & Reset Button -->
-            <div class="vx-row">
-                <div class="vx-col w-full">
-                    <div class="mt-8 flex flex-wrap items-center justify-end">
-                        <vs-button
-                            class="ml-auto mt-2"
-                            @click="addItem"
-                            :disabled="!validateForm"
-                            >Ajouter</vs-button
-                        >
-                        <vs-button
-                            class="ml-4 mt-2"
-                            type="border"
-                            color="warning"
-                            @click="back"
-                            >Annuler</vs-button
-                        >
-                    </div>
-                </div>
+          <div v-if="itemLocal.company_id">
+            <div v-if="companySkills.length === 0" class="mt-12 mb-2">
+              <span
+                label="Compétences"
+                v-if="companySkills.length === 0"
+                class="msgTxt mt-10"
+                >Aucune compétences trouvées.</span
+              >
+              <router-link
+                v-if="companySkills.length === 0"
+                class="linkTxt"
+                :to="{ path: '/skills' }"
+                >Ajouter une compétence</router-link
+              >
             </div>
-        </vx-card>
-    </div>
+            <v-select
+              v-validate="'required'"
+              v-if="companySkills.length !== 0"
+              name="skill"
+              label="name"
+              :multiple="true"
+              v-model="itemLocal.skills"
+              :reduce="(name) => name.id"
+              class="w-full mt-5"
+              autocomplete
+              :options="companySkills"
+            >
+              <template #header>
+                <div style="opacity: .8 font-size: .85rem">Compétences</div>
+              </template>
+              <template #option="companyskill">
+                <span>{{ `${companyskill.name}` }}</span>
+              </template>
+            </v-select>
+            <span
+              class="text-danger text-sm"
+              v-show="errors.has('company_id')"
+              >{{ errors.first("company_id") }}</span
+            >
+          </div>
+        </vs-col>
+      </vs-row>
+
+      <!-- Save & Reset Button -->
+      <div class="vx-row">
+        <div class="vx-col w-full">
+          <div class="mt-8 flex flex-wrap items-center justify-end">
+            <vs-button
+              class="ml-auto mt-2"
+              @click="addItem"
+              :disabled="!validateForm"
+              >Ajouter</vs-button
+            >
+            <vs-button
+              class="ml-4 mt-2"
+              type="border"
+              color="warning"
+              @click="back"
+              >Annuler</vs-button
+            >
+          </div>
+        </div>
+      </div>
+    </vx-card>
+  </div>
 </template>
 
 <script>
@@ -229,271 +209,252 @@ var model = "user";
 var modelPlurial = "users";
 
 export default {
-    components: {
-        vSelect
+  components: {
+    vSelect,
+  },
+  data() {
+    return {
+      activePrompt: false,
+      itemLocal: {
+        firstname: "",
+        lastname: "",
+        login: "",
+        full_login: "",
+        email: "",
+        company_id: null,
+        roles: [],
+        skills: [],
+      },
+      companySkills: [],
+      company_login: "",
+    };
+  },
+  computed: {
+    companiesData() {
+      return this.$store.state.companyManagement.companies;
     },
-    data() {
-        return {
-            activePrompt: false,
-            itemLocal: {
-                firstname: "",
-                lastname: "",
-                login: "",
-                full_login: "",
-                email: "",
-                company_id: null,
-                roles: [],
-                skills: []
-            },
-            companySkills: [],
-            company_login: ""
-        };
+    rolesData() {
+      return this.$store.getters["roleManagement/getItemsForCompany"](
+        this.itemLocal.company_id
+      );
     },
-    computed: {
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
-        },
-        rolesData() {
-            return this.$store.getters["roleManagement/getItemsForCompany"](
-                this.itemLocal.company_id
-            );
-        },
-        skillsData() {
-            return this.$store.state.skillManagement.skills;
-        },
-        authorizedToPublish() {
-            return this.$store.getters.userHasPermissionTo(
-                `publish ${modelPlurial}`
-            );
-        },
-        authorizedToDelete() {
-            return this.$store.getters.userHasPermissionTo(
-                `delete ${modelPlurial}`
-            );
-        },
-        authorizedToEdit() {
-            return this.$store.getters.userHasPermissionTo(
-                `edit ${modelPlurial}`
-            );
-        },
-        disabled() {
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    return false;
-                } else {
-                    this.itemLocal.company_id = user.company_id;
-                    return true;
-                }
-            } else return true;
-        },
-        validateForm() {
-            return (
-                !this.errors.any() &&
-                this.itemLocal.lastname != "" &&
-                this.itemLocal.firstname != "" &&
-                this.itemLocal.login != "" &&
-                this.itemLocal.company_id != null &&
-                this.itemLocal.roles > 0
-            );
+    skillsData() {
+      return this.$store.state.skillManagement.skills;
+    },
+    authorizedToPublish() {
+      return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
+    },
+    authorizedToDelete() {
+      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
+    },
+    authorizedToEdit() {
+      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
+    },
+    disabled() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          return false;
+        } else {
+          this.itemLocal.company_id = user.company_id;
+          return true;
         }
+      } else return true;
     },
-    methods: {
-        authorizedTo(action, model = "users") {
-            return this.$store.getters.userHasPermissionTo(
-                `${action} ${model}`
-            );
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.lastname != "" &&
+        this.itemLocal.firstname != "" &&
+        this.itemLocal.login != "" &&
+        this.itemLocal.company_id != null &&
+        this.itemLocal.roles > 0
+      );
+    },
+  },
+  methods: {
+    authorizedTo(action, model = "users") {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
+    clearFields() {
+      Object.assign(this.itemLocal, {
+        itemLocal: {
+          email: "",
+          company_id: null,
+          roles: [],
         },
-        clearFields() {
-            Object.assign(this.itemLocal, {
-                itemLocal: {
-                    email: "",
-                    company_id: null,
-                    roles: []
-                }
+      });
+    },
+    addItem() {
+      if (this.validateForm) {
+        this.$vs.loading();
+        this.itemLocal.full_login = "".concat(
+          this.company_login,
+          this.itemLocal.login
+        );
+
+        this.$store
+          .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
+          .then((response) => {
+            this.back();
+            this.$vs.notify({
+              title: "Ajout d'un utilisateur",
+              text: `Utilisateur ajouté avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success",
             });
-        },
-        addItem() {
-            if (this.validateForm) {
-                this.$vs.loading();
-                this.itemLocal.full_login = "".concat(
-                    this.company_login,
-                    this.itemLocal.login
-                );
-
-                this.$store
-                    .dispatch(
-                        "userManagement/addItem",
-                        Object.assign({}, this.itemLocal)
-                    )
-                    .then(response => {
-                        this.back();
-                        this.$vs.notify({
-                            title: "Ajout d'un utilisateur",
-                            text: `Utilisateur ajouté avec succès`,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "success"
-                        });
-                        this.$vs.dialog({
-                            color: "warning",
-                            title: "Attention !",
-                            text:
-                                "le mot de passe du compte est " +
-                                response.data.success[1] +
-                                " notez le bien, il devraz être changé lors de la première connexion",
-                            acceptText: "OK"
-                        });
-                    })
-                    .catch(error => {
-                        this.$vs.notify({
-                            title: "Echec",
-                            text: error.message,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "danger"
-                        });
-                    })
-                    .finally(() => this.$vs.loading.close());
-            }
-        },
-        selectCompanySkills(item) {
-            this.companySkills = this.companiesData.find(
-                company => company.id === item
-            ).skills;
-
-            this.getCompanyName();
-        },
-        filterItemsAdmin($items) {
-            let $filteredItems = [];
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    $filteredItems = $items.filter(
-                        item => item.company_id === this.itemLocal.company_id
-                    );
-                } else {
-                    $filteredItems = $items;
-                }
-            }
-            return $filteredItems;
-        },
-        back() {
-            this.$router.push(`/${modelPlurial}`).catch(() => {});
-        },
-        activeUserRole() {
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                return user.roles[0].name;
-            }
-            return false;
-        },
-        getCompanyName() {
-            if (this.activeUserRole() == "superAdmin") {
-                if (this.itemLocal.company_id != null) {
-                    let company = this.$store.getters[
-                        "companyManagement/getItem"
-                    ](this.itemLocal.company_id);
-
-                    this.company_login = "".concat(
-                        company.name.replace(/ /gi, "_").toLowerCase(),
-                        "."
-                    );
-                    this.company_login = this.removeAccents(this.company_login);
-                } else {
-                    this.company_login = "selectionner_société.";
-                }
-            } else {
-                const user = this.$store.state.AppActiveUser;
-                this.company_login = "".concat(
-                    user.company.name.replace(/ /gi, "_").toLowerCase(),
-                    "."
-                );
-                this.company_login = this.removeAccents(this.company_login);
-            }
-        },
-        removeAccents(str) {
-            let accents =
-                "ÀÁÂÃÄÅàáâãäåßÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž";
-            let accentsOut =
-                "AAAAAAaaaaaaBOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz";
-            str = str.split("");
-            str.forEach((letter, index) => {
-                let i = accents.indexOf(letter);
-                if (i != -1) {
-                    str[index] = accentsOut[i];
-                }
+            this.$vs.dialog({
+              color: "warning",
+              title: "Attention !",
+              text:
+                "le mot de passe du compte est " +
+                response.data.success[1] +
+                " notez le bien, il devra être changé lors de la première connexion",
+              acceptText: "OK",
             });
-            return str.join("");
-        }
+          })
+          .catch((error) => {
+            this.$vs.notify({
+              title: "Echec",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+            });
+          })
+          .finally(() => this.$vs.loading.close());
+      }
     },
-    mounted() {
-        if (this.activeUserRole() != "superAdmin") {
-            this.selectCompanySkills(
-                this.$store.state.AppActiveUser.company_id
-            );
-        }
+    selectCompanySkills(item) {
+      this.companySkills = this.companiesData.find(
+        (company) => company.id === item
+      ).skills;
 
-        this.getCompanyName();
+      this.getCompanyName();
     },
-    created() {
-        if (!moduleUserManagement.isRegistered) {
-            this.$store.registerModule("userManagement", moduleUserManagement);
-            moduleUserManagement.isRegistered = true;
+    filterItemsAdmin($items) {
+      let $filteredItems = [];
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        if (
+          user.roles.find(
+            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
+          )
+        ) {
+          $filteredItems = $items.filter(
+            (item) => item.company_id === this.itemLocal.company_id
+          );
+        } else {
+          $filteredItems = $items;
         }
-        if (!moduleRoleManagement.isRegistered) {
-            this.$store.registerModule("roleManagement", moduleRoleManagement);
-            moduleRoleManagement.isRegistered = true;
-        }
-        if (!moduleCompanyManagement.isRegistered) {
-            this.$store.registerModule(
-                "companyManagement",
-                moduleCompanyManagement
-            );
-            moduleCompanyManagement.isRegistered = true;
-        }
-        if (!moduleSkillManagement.isRegistered) {
-            this.$store.registerModule(
-                "skillManagement",
-                moduleSkillManagement
-            );
-            moduleSkillManagement.isRegistered = true;
-        }
-
-        this.$store.dispatch("skillManagement/fetchItems");
-        if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems");
-        }
-        this.$store.dispatch("userManagement/fetchItems");
-        if (this.authorizedTo("read", "users")) {
-            this.$store.dispatch("userManagement/fetchItems");
-        }
-        this.$store.dispatch("userManagement/fetchItems");
-        if (this.authorizedTo("read", "companies")) {
-            this.$store.dispatch("companyManagement/fetchItems");
-        }
-        if (this.authorizedTo("read", "roles")) {
-            this.$store.dispatch("roleManagement/fetchItems");
-        }
+      }
+      return $filteredItems;
     },
-    beforeDestroy() {
-        moduleUserManagement.isRegistered = false;
-        moduleRoleManagement.isRegistered = false;
-        moduleCompanyManagement.isRegistered = false;
-        moduleSkillManagement.isRegistered = false;
+    back() {
+      this.$router.push(`/${modelPlurial}`).catch(() => {});
+    },
+    activeUserRole() {
+      const user = this.$store.state.AppActiveUser;
+      if (user.roles && user.roles.length > 0) {
+        return user.roles[0].name;
+      }
+      return false;
+    },
+    getCompanyName() {
+      if (this.activeUserRole() == "superAdmin") {
+        if (this.itemLocal.company_id != null) {
+          let company = this.$store.getters["companyManagement/getItem"](
+            this.itemLocal.company_id
+          );
 
-        this.$store.unregisterModule("skillManagement");
-        this.$store.unregisterModule("userManagement");
-        this.$store.unregisterModule("roleManagement");
-        this.$store.unregisterModule("companyManagement");
+          this.company_login = "".concat(
+            company.name.replace(/ /gi, "_").toLowerCase(),
+            "."
+          );
+          this.company_login = this.removeAccents(this.company_login);
+        } else {
+          this.company_login = "selectionner_société.";
+        }
+      } else {
+        const user = this.$store.state.AppActiveUser;
+        this.company_login = "".concat(
+          user.company.name.replace(/ /gi, "_").toLowerCase(),
+          "."
+        );
+        this.company_login = this.removeAccents(this.company_login);
+      }
+    },
+    removeAccents(str) {
+      let accents =
+        "ÀÁÂÃÄÅàáâãäåßÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž";
+      let accentsOut =
+        "AAAAAAaaaaaaBOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz";
+      str = str.split("");
+      str.forEach((letter, index) => {
+        let i = accents.indexOf(letter);
+        if (i != -1) {
+          str[index] = accentsOut[i];
+        }
+      });
+      return str.join("");
+    },
+  },
+  mounted() {
+    if (this.activeUserRole() != "superAdmin") {
+      this.selectCompanySkills(this.$store.state.AppActiveUser.company_id);
     }
+
+    this.getCompanyName();
+  },
+  created() {
+    if (!moduleUserManagement.isRegistered) {
+      this.$store.registerModule("userManagement", moduleUserManagement);
+      moduleUserManagement.isRegistered = true;
+    }
+    if (!moduleRoleManagement.isRegistered) {
+      this.$store.registerModule("roleManagement", moduleRoleManagement);
+      moduleRoleManagement.isRegistered = true;
+    }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
+    if (!moduleSkillManagement.isRegistered) {
+      this.$store.registerModule("skillManagement", moduleSkillManagement);
+      moduleSkillManagement.isRegistered = true;
+    }
+
+    this.$store.dispatch("skillManagement/fetchItems");
+    if (this.authorizedTo("read", "skills")) {
+      this.$store.dispatch("skillManagement/fetchItems");
+    }
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "users")) {
+      this.$store.dispatch("userManagement/fetchItems");
+    }
+    this.$store.dispatch("userManagement/fetchItems");
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems");
+    }
+    if (this.authorizedTo("read", "roles")) {
+      this.$store.dispatch("roleManagement/fetchItems");
+    }
+  },
+  beforeDestroy() {
+    moduleUserManagement.isRegistered = false;
+    moduleRoleManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
+    moduleSkillManagement.isRegistered = false;
+
+    this.$store.unregisterModule("skillManagement");
+    this.$store.unregisterModule("userManagement");
+    this.$store.unregisterModule("roleManagement");
+    this.$store.unregisterModule("companyManagement");
+  },
 };
 </script>

@@ -11,6 +11,12 @@ class Company extends Model
     use SoftDeletes;
 
     protected $fillable = ['name', 'siret', 'is_trial', 'expires_at'];
+    protected $appends = ['active_subscription'];
+
+    public function getActiveSubscriptionAttribute()
+    {
+        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->first();
+    }
 
     public function module()
     {
@@ -25,6 +31,11 @@ class Company extends Model
     public function users()
     {
         return $this->hasMany(User::class, 'company_id');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class, 'company_id')->orderBy('state')->orderby('start_date');
     }
 
     public function restoreCascade()
@@ -43,6 +54,7 @@ class Company extends Model
             $project->restoreCascade();
         }
 
+        Subscription::withTrashed()->where('company_id', $this->id)->restore();
         User::withTrashed()->where('company_id', $this->id)->restore();
         Role::withTrashed()->where('company_id', $this->id)->restore();
         return true;
@@ -52,6 +64,7 @@ class Company extends Model
     {
         Role::where('company_id', $this->id)->delete();
         User::where('company_id', $this->id)->delete();
+        Subscription::where('company_id', $this->id)->delete();
 
         foreach (Project::where('company_id', $this->id)->get() as $project) {
             $project->deleteCascade();

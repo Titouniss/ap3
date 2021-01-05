@@ -373,9 +373,23 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************************************************************/
     /******************************** Subscription Components ************************************/
     /***********************************************************************************/
-    Route::prefix('package-management')->group(function () {
+    Route::prefix('subscription-management')->group(function () {
         Route::group(['middleware' => ['can:read subscriptions']], function () {
-            Route::get('index', 'API\PackagesController@index');
+            Route::get('index', 'API\SubscriptionController@index');
+            Route::get('packages', 'API\SubscriptionController@index');
+            Route::get('company/{item}', 'API\SubscriptionController@getByCompany');
+            Route::get('show/{item}', 'API\SubscriptionController@show');
+        });
+        Route::group(['middleware' => ['can:publish subscriptions']], function () {
+            Route::post('store', 'API\SubscriptionController@store');
+        });
+        Route::group(['middleware' => ['can:edit subscriptions']], function () {
+            Route::post('update/{item}', 'API\SubscriptionController@update');
+            Route::put('restore/{id}', 'API\SubscriptionController@restore');
+        });
+        Route::group(['middleware' => ['can:delete subscriptions']], function () {
+            Route::delete('destroy/{item}', 'API\SubscriptionController@destroy');
+            Route::delete('forceDelete/{id}', 'API\SubscriptionController@forceDelete');
         });
     });
 });

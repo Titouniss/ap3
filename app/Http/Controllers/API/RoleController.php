@@ -17,10 +17,10 @@ class RoleController extends Controller
 {
     public $successStatus = 200;
 
-    /** 
-     * list of items api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * list of items api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
@@ -32,16 +32,16 @@ class RoleController extends Controller
             $listObject = Role::where('company_id', $user->company_id)
                 ->orWhere(function ($query) {
                     $query->where('company_id', '=', null)
-                        ->where('isPublic', true);
+                        ->where('is_public', true);
                 })->get()->load('permissions');
         }
         return response()->json(['success' => $listObject], $this->successStatus);
     }
 
-    /** 
-     * get single item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * get single item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
@@ -49,10 +49,10 @@ class RoleController extends Controller
         return response()->json(['success' => $item], $this->successStatus);
     }
 
-    /** 
-     * create item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * create item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -75,7 +75,7 @@ class RoleController extends Controller
             }
         }
         sort($permissions);
-        
+
         unset($arrayRequest['permissions']);
         if ($user != null) {
             $arrayRequest['company_id'] = $user->company_id;
@@ -90,10 +90,10 @@ class RoleController extends Controller
         return response()->json(['success' => 'notAuthentified'], 500);
     }
 
-    /** 
-     * update item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * update item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
@@ -106,7 +106,7 @@ class RoleController extends Controller
         if ($role != null) {
             $role->name = $arrayRequest['name'];
             $role->description = $arrayRequest['description'];
-            $role->isPublic = $arrayRequest['isPublic'];
+            $role->is_public = $arrayRequest['is_public'];
             if (isset($arrayRequest['permissions'])) {
                 $role->syncPermissions($arrayRequest['permissions']);
             }
@@ -115,10 +115,10 @@ class RoleController extends Controller
         return response()->json(['success' => $role], $this->successStatus);
     }
 
-    /** 
-     * delete item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * delete item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {

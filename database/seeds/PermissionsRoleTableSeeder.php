@@ -18,7 +18,7 @@ class PermissionsRoleTableSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // [name, name_fr, isPublic]
+        // [name, name_fr, is_public]
         $Permkeys = [
             ['users', 'utilisateurs', true],
             ['roles', 'roles', true],
@@ -40,22 +40,21 @@ class PermissionsRoleTableSeeder extends Seeder
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
-            Permission::firstOrCreate(['name' => 'read ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'edit ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'delete ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'publish ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
-            Permission::firstOrCreate(['name' => 'show ' . $Permkey[0], 'name_fr' => $Permkey[1], 'isPublic' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'read ' . $Permkey[0], 'name_fr' => $Permkey[1], 'is_public' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'edit ' . $Permkey[0], 'name_fr' => $Permkey[1], 'is_public' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'delete ' . $Permkey[0], 'name_fr' => $Permkey[1], 'is_public' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'publish ' . $Permkey[0], 'name_fr' => $Permkey[1], 'is_public' => $Permkey[2]]);
+            Permission::firstOrCreate(['name' => 'show ' . $Permkey[0], 'name_fr' => $Permkey[1], 'is_public' => $Permkey[2]]);
         }
 
         $Rolekeys = [
             ['superAdmin', false],
-            ['littleAdmin', false],
             ['Administrateur', true], // role publique
             ['Utilisateur', true] // role publique
         ];
 
         foreach ($Rolekeys as $roleKey) {
-            $role = Role::firstOrCreate(['name' => $roleKey[0], 'isPublic' => $roleKey[1]]);
+            $role = Role::firstOrCreate(['name' => $roleKey[0], 'is_public' => $roleKey[1]]);
             foreach ($Permkeys as $PermkeyArray) {
                 $Permkey = $PermkeyArray[0];
                 $role->revokePermissionTo(['read ' . $Permkey, 'edit ' . $Permkey, 'delete ' . $Permkey, 'publish ' . $Permkey, 'show ' . $Permkey]);
@@ -63,9 +62,6 @@ class PermissionsRoleTableSeeder extends Seeder
         }
 
         $role = Role::where(['name' => 'superAdmin'])->first();
-        $role->givePermissionTo(Permission::all());
-
-        $role = Role::where(['name' => 'littleAdmin'])->first();
         $role->givePermissionTo(Permission::all());
 
         $role = Role::where(['name' => 'Administrateur'])->first();

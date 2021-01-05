@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use App\Models\Role;
+use App\Models\Subscription;
 use App\Models\WorkareasSkill;
 use Carbon\Carbon;
 use Exception;
@@ -47,7 +49,7 @@ class CompanyController extends Controller
      */
     public function show($id)
     {
-        $item = Company::where('id', $id)->first()->load('skills');
+        $item = Company::where('id', $id)->with('skills', 'subscriptions', 'subscriptions.packages')->first();
         return response()->json(['success' => $item], $this->successStatus);
     }
 
@@ -66,13 +68,31 @@ class CompanyController extends Controller
             'is_trial' => 'required'
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+            return response()->json(['error' => $validator->errors()], 400);
         }
-        $item = Company::create($arrayRequest);
+
+        if (Company::where('siret', $arrayRequest['siret'])->exists()) {
+            return response()->json(['error' => 'Siret déjà utilisé par une autre sociéte'], 400);
+        }
+
+        $item = Company::create([
+            'name' => $arrayRequest['name'],
+            'siret' => $arrayRequest['siret'],
+            'is_trial' => $arrayRequest['is_trial'],
+        ]);
         if ($item->is_trial && !$item->expires_at) {
             $item->expires_at = Carbon::now()->addWeeks(4);
             $item->save();
         }
+
+        if (isset($arrayRequest['subscription'])) {
+            try {
+                $this->createOrUpdateSubscription($arrayRequest['subscription'], $item);
+            } catch (\Throwable $th) {
+                return response()->json(['error' => $th->getMessage()], 400);
+            }
+        }
+
         return response()->json(['success' => $item], $this->successStatus);
     }
 
@@ -108,16 +128,52 @@ class CompanyController extends Controller
         $item = Company::find($id);
         $item->name = $arrayRequest['name'];
         $item->siret = $arrayRequest['siret'];
-        if ($user->hasRole('superAdmin') || $user->hasRole('littleAdmin')) {
+        if ($user->hasRole('superAdmin')) {
             $item->is_trial = $arrayRequest['is_trial'];
             if ($item->is_trial && !$item->expires_at) {
                 $item->expires_at = Carbon::now()->addWeeks(4);
             }
         }
         $item->save();
+
+        if (isset($arrayRequest['subscription'])) {
+            try {
+                $this->createOrUpdateSubscription($arrayRequest['subscription'], $item);
+            } catch (\Throwable $th) {
+                return response()->json(['error' => $th->getMessage()], 400);
+            }
+        }
+
         return response()->json(['success' => $item], $this->successStatus);
     }
 
+    private function createOrUpdateSubscription(array $subscriptionArray, Company $item)
+    {
+        $validator = Validator::make($subscriptionArray, [
+            'start_date' => 'required',
+            'end_date' => 'required',
+            'packages' => 'required',
+            'state' => 'required'
+        ]);
+        if ($validator->fails()) {
+            throw new Exception($validator->errors());
+        }
+
+        $subscription = isset($subscriptionArray['id'])
+            ? Subscription::find($subscriptionArray['id'])
+            : Subscription::create(['company_id' => $item->id]);
+
+        try {
+            $subscription->start_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
+            $subscription->end_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
+            $subscription->packages()->sync($subscriptionArray['packages']);
+            $subscription->state = $subscriptionArray['state'];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+        $subscription->save();
+    }
 
     /**
      * Restore the specified resource in storage.

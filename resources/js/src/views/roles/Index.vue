@@ -19,9 +19,16 @@
               </div>
 
               <vs-dropdown-menu>
-                <vs-dropdown-item @click="this.confirmDeleteRecord" v-if="authorizedToDelete">
+                <vs-dropdown-item
+                  @click="this.confirmDeleteRecord"
+                  v-if="authorizedToDelete"
+                >
                   <span class="flex items-center">
-                    <feather-icon icon="TrashIcon" svgClasses="h-4 w-4" class="mr-2" />
+                    <feather-icon
+                      icon="TrashIcon"
+                      svgClasses="h-4 w-4"
+                      class="mr-2"
+                    />
                     <span>Supprimer</span>
                   </span>
                 </vs-dropdown-item>
@@ -43,17 +50,12 @@
             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
           >
             <span class="mr-2">
-              {{
-              currentPage * paginationPageSize -
-              (paginationPageSize - 1)
-              }}
+              {{ currentPage * paginationPageSize - (paginationPageSize - 1) }}
               -
               {{
-              rolesData.length -
-              currentPage * paginationPageSize >
-              0
-              ? currentPage * paginationPageSize
-              : rolesData.length
+                rolesData.length - currentPage * paginationPageSize > 0
+                  ? currentPage * paginationPageSize
+                  : rolesData.length
               }}
               sur {{ rolesData.length }}
             </span>
@@ -95,7 +97,7 @@
         :paginationPageSize="paginationPageSize"
         :suppressPaginationPanel="true"
         :enableRtl="$vs.rtl"
-        :isRowSelectable="row => !isRowDisabled(row.data)"
+        :isRowSelectable="(row) => !isRowDisabled(row.data)"
       ></ag-grid-vue>
 
       <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -124,7 +126,7 @@ export default {
     AgGridVue,
     vSelect,
     // Cell Renderer
-    CellRendererActions
+    CellRendererActions,
   },
   data() {
     return {
@@ -132,12 +134,12 @@ export default {
       // AgGrid
       gridApi: null,
       gridOptions: {
-        localeText: { noRowsToShow: "Aucun rôle à afficher" }
+        localeText: { noRowsToShow: "Aucun rôle à afficher" },
       },
       defaultColDef: {
         sortable: true,
         resizable: true,
-        suppressMenu: true
+        suppressMenu: true,
       },
       columnDefs: [
         {
@@ -147,15 +149,15 @@ export default {
           suppressSizeToFit: true,
           checkboxSelection: true,
           headerCheckboxSelectionFilteredOnly: false,
-          headerCheckboxSelection: true
+          headerCheckboxSelection: true,
         },
         {
           headerName: "Titre",
-          field: "name"
+          field: "name",
         },
         {
           headerName: "Description",
-          field: "description"
+          field: "description",
         },
         {
           sortable: false,
@@ -166,20 +168,20 @@ export default {
           cellRendererParams: {
             model: "role",
             modelPlurial: "roles",
-            name: data => `le rôle ${data.name}`,
+            name: (data) => `le rôle ${data.name}`,
             usesSoftDelete: false,
             disabled: this.isRowDisabled,
-            blockDelete: data => this.blockRowDelete(data),
-            blockDeleteMessage: data =>
-              `Impossible de supprimer le rôle ${data.name}, il est utilisé par un ou plusieurs utilisateurs`
-          }
-        }
+            blockDelete: (data) => this.blockRowDelete(data),
+            blockDeleteMessage: (data) =>
+              `Impossible de supprimer le rôle ${data.name}, il est utilisé par un ou plusieurs utilisateurs`,
+          },
+        },
       ],
 
       // Cell Renderer Components
       components: {
-        CellRendererActions
-      }
+        CellRendererActions,
+      },
     };
   },
   computed: {
@@ -213,26 +215,26 @@ export default {
       },
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
-      }
-    }
+      },
+    },
   },
   methods: {
     blockRowDelete(data) {
-      return this.$store.state.userManagement.users.find(user =>
-        user.roles.find(r => r.id === data.id)
+      return this.$store.state.userManagement.users.find((user) =>
+        user.roles.find((r) => r.id === data.id)
       );
     },
     isRowDisabled(data) {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find(r => r.name === "superAdmin")) {
+        if (user.roles.find((r) => r.name === "superAdmin")) {
           return (
             ["superAdmin", "Administrateur", "Utilisateur"].includes(
               data.name
-            ) || data.isPublic
+            ) || data.is_public
           );
         } else {
-          return data.company_id === null && data.isPublic;
+          return data.company_id === null && data.is_public;
         }
       } else return true;
     },
@@ -255,7 +257,7 @@ export default {
       // Reset Filter Options
       this.roleFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
         label: "All",
-        value: "all"
+        value: "all",
       };
 
       this.$refs.filterCard.removeRefreshAnimation();
@@ -277,17 +279,17 @@ export default {
             : `Voulez vous vraiment supprimer le rôle ${singleRole.name} ?`,
         accept: this.deleteRecord,
         acceptText: "Supprimer",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     deleteRecord() {
-      this.gridApi.getSelectedRows().map(selectRow => {
+      this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
           .dispatch("roleManagement/removeItem", selectRow.id)
-          .then(data => {
+          .then((data) => {
             this.showDeleteSuccess();
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
       });
@@ -299,7 +301,7 @@ export default {
         text:
           this.gridApi.getSelectedRows().length > 1
             ? `Utilisateurs supprimés?`
-            : `Utilisateur supprimé`
+            : `Utilisateur supprimé`,
       });
     },
     onResize(event) {
@@ -313,7 +315,7 @@ export default {
     },
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-    }
+    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -352,10 +354,10 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
+    this.$store.dispatch("roleManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    this.$store.dispatch("userManagement/fetchItems").catch(err => {
+    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
       console.error(err);
     });
   },
@@ -365,6 +367,6 @@ export default {
     moduleUserManagement.isRegistered = false;
     this.$store.unregisterModule("roleManagement");
     this.$store.unregisterModule("userManagement");
-  }
+  },
 };
 </script>

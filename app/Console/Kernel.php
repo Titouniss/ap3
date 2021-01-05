@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Models\BaseModule;
 use App\Models\Document;
 use App\Models\ModelHasDocuments;
+use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -44,6 +45,10 @@ class Kernel extends ConsoleKernel
                     $doc->deleteFile();
                 }
             }
+
+            // Update subscription states based on date
+            Subscription::whereDate('start_date', '<', Carbon::now())->where('state', 'pending')->update(['state' => 'active']);
+            Subscription::whereDate('end_date', '<', Carbon::now())->where('state', 'active')->update(['state' => 'inactive']);
         })->dailyAt("00:00");
     }
 

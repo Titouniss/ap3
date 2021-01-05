@@ -54,8 +54,7 @@ class UserController extends Controller
         if (Auth::attempt(['login' => $arrayRequest['login'], 'password' => $arrayRequest['password']])) {
             Auth::logout();
             return response()->json(['success' => true, 'userData' => $user], $this->successStatus);
-        }
-        else {
+        } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised'], $this->successStatus);
         }
     }
@@ -93,7 +92,7 @@ class UserController extends Controller
             $success['tokenExpires'] =  $token->token->expires_at;
             $user->load(['roles' => function ($query) {
                 $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                    $query->select(['id', 'name', 'name_fr', 'isPublic']);
+                    $query->select(['id', 'name', 'name_fr', 'is_public']);
                 }]);
             }]);
             $user->load(['company:id,name']);
@@ -170,7 +169,7 @@ class UserController extends Controller
         if ($user != null) {
             $user->load(['roles' => function ($query) {
                 $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                    $query->select(['id', 'name', 'name_fr', 'isPublic']);
+                    $query->select(['id', 'name', 'name_fr', 'is_public']);
                 }]);
             }])->load('company:id,name');
             $success = true;
@@ -318,7 +317,7 @@ class UserController extends Controller
         // get full data user before or after update
         $user->load(['roles' => function ($query) {
             $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                $query->select(['id', 'name', 'name_fr', 'isPublic']);
+                $query->select(['id', 'name', 'name_fr', 'is_public']);
             }]);
         }])->load('company:id,name');
 
@@ -573,22 +572,22 @@ class UserController extends Controller
 
         // Verify user exist
         if ($user != null) {
-                // Verify old same password
-                if (Hash::check($arrayRequest['old_password'], auth()->user()->password)) {
-                    // Verify password format
-                    if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
-                        // Save password
-                        $user->password = bcrypt($arrayRequest['new_password']);
-                        $user->save();
+            // Verify old same password
+            if (Hash::check($arrayRequest['old_password'], auth()->user()->password)) {
+                // Verify password format
+                if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
+                    // Save password
+                    $user->password = bcrypt($arrayRequest['new_password']);
+                    $user->save();
 
-                        return response()->json(['success' => $user], $this->successStatus);
-                    } else {
-                        Log::debug('ICI 3 :');
-                        return response()->json('error_format', 400);
-                    }
+                    return response()->json(['success' => $user], $this->successStatus);
                 } else {
-                    return response()->json('error_old_password', 400);
+                    Log::debug('ICI 3 :');
+                    return response()->json('error_format', 400);
                 }
+            } else {
+                return response()->json('error_old_password', 400);
+            }
         } else {
             return response()->json('error_user', 400);
         }

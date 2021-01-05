@@ -4,6 +4,7 @@ namespace App;
 
 use App\Models\BaseModule;
 use App\Models\ModelHasOldId;
+use App\Models\Role;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -70,6 +71,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function skills()
     {
         return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     public function getRelatedUsersAttribute()

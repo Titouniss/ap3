@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSubscriptionPackagesTable extends Migration
+class CreateSubscriptionHasPackagesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,12 @@ class CreateSubscriptionPackagesTable extends Migration
      */
     public function up()
     {
-        Schema::create('subscription_packages', function (Blueprint $table) {
+        Schema::create('subscription_has_packages', function (Blueprint $table) {
             $table->unsignedBigInteger('subscription_id');
             $table->foreign('subscription_id')->references('id')->on('subscriptions')->onDelete('cascade');
             $table->unsignedBigInteger('package_id');
             $table->foreign('package_id')->references('id')->on('packages')->onDelete('cascade');
+            $table->primary(['subscription_id', 'package_id']);
         });
     }
 
@@ -28,6 +29,6 @@ class CreateSubscriptionPackagesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('subscription_packages');
+        Schema::dropIfExists('subscription_has_packages');
     }
 }
