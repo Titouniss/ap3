@@ -42,3 +42,10 @@ export default {
   },
 };
 </script>
+
+<style lang="scss">
+.text-chip {
+  text-align: center !important;
+  width: 5rem !important;
+}
+</style>

@@ -76,7 +76,7 @@
         </div>
       </div>
     </vx-card>
-    <div v-if="itemLocal.id" class="mt-5">
+    <div v-if="itemLocal.id && isAdmin" class="mt-5">
       <subscriptions-index :companyId="itemLocal.id"></subscriptions-index>
     </div>
   </div>
@@ -157,7 +157,6 @@ export default {
             item.subscription = null;
           }
           this.itemLocal = item;
-          console.log(item);
         })
         .catch((error) => {
           console.log(error);
