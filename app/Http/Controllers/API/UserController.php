@@ -420,7 +420,7 @@ class UserController extends Controller
     {
         $item = User::where('id', $user->id)
             ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities', 'skills')
-            ->first();
+            ->first()->append('related_users');
         return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
     }
 

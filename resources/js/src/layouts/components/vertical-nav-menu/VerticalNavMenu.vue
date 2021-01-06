@@ -25,15 +25,23 @@
     >
       <div @mouseenter="mouseEnter" @mouseleave="mouseLeave">
         <!-- Header -->
-        <div class="header-sidebar flex items-end justify-between" slot="header">
+        <div
+          class="header-sidebar flex items-end justify-between"
+          slot="header"
+        >
           <!-- Logo -->
-          <router-link tag="div" class="vx-logo cursor-pointer flex items-center" to="/">
+          <router-link
+            tag="div"
+            class="vx-logo cursor-pointer flex items-center"
+            to="/"
+          >
             <logo class="w-10 mr-4 fill-current text-primary" />
             <span
               class="vx-logo-text text-primary"
               v-show="isMouseEnter || !reduce"
               v-if="title"
-            >{{ title }}</span>
+              >{{ title }}</span
+            >
           </router-link>
           <!-- /Logo -->
 
@@ -44,7 +52,9 @@
               <feather-icon
                 icon="XIcon"
                 class="m-0 cursor-pointer"
-                @click="$store.commit('TOGGLE_IS_VERTICAL_NAV_MENU_ACTIVE', false)"
+                @click="
+                  $store.commit('TOGGLE_IS_VERTICAL_NAV_MENU_ACTIVE', false)
+                "
               />
             </template>
 
@@ -81,7 +91,8 @@
               v-if="item.header && !verticalNavMenuItemsMin"
               class="navigation-header truncate"
               :key="`header-${index}`"
-            >{{ item.header }}</span>
+              >{{ item.header }}</span
+            >
             <!-- /Group Header -->
 
             <template v-else-if="!item.header && item.show">
@@ -90,19 +101,30 @@
                 v-if="!item.submenu"
                 :key="`item-${index}`"
                 :index="index"
-                :to="item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/'+companyId: item.slug !== 'external' ? item.url : null"
+                :to="
+                  item.slug !== 'external' &&
+                  !isAdmin &&
+                  item.name == 'Sociétés'
+                    ? '/companies/company-edit/' + companyId
+                    : item.slug !== 'external'
+                    ? item.url
+                    : null
+                "
                 :href="item.slug === 'external' ? item.url : null"
                 :icon="item.icon"
                 :target="item.target"
                 :isDisabled="item.isDisabled"
                 :slug="item.slug"
               >
-                <span v-show="!verticalNavMenuItemsMin" class="truncate">{{ !isAdmin && item.name == "Sociétés" ? "Ma société" : item.name }}</span>
+                <span v-show="!verticalNavMenuItemsMin" class="truncate">{{
+                  !isAdmin && item.name == "Sociétés" ? "Ma société" : item.name
+                }}</span>
                 <vs-chip
                   class="ml-auto"
                   :color="item.tagColor"
                   v-if="item.tag && (isMouseEnter || !reduce)"
-                >{{ item.tag }}</vs-chip>
+                  >{{ item.tag }}</vs-chip
+                >
               </v-nav-menu-item>
 
               <!-- Nav-Group -->
@@ -118,11 +140,19 @@
               <!-- /Nav-Group -->
             </template>
           </template>
-          <div class="mt-2 flex flex-wrap items-center justify-end" style="bottom: 15px; position: absolute; padding-left: 15px;">
-          <vs-row vs-type="flex" vs-justify="center" vs-align="center">
+          <div
+            class="mt-2 flex flex-wrap items-center justify-end"
+            style="bottom: 15px; position: absolute; padding-left: 15px"
+          >
+            <vs-row vs-type="flex" vs-justify="center" vs-align="center">
               <feather-icon icon="DownloadIcon" svgClasses="h-5 w-5" />
-              <a style="text-decoration: none" class="text-white" href="https://drive.google.com/file/d/1WccVYF5XYspiG9uYHfVhm2BBDoRbJ7it/view">Télécharger l'application</a>
-          </vs-row>
+              <a
+                style="text-decoration: none"
+                class="text-white"
+                href="https://drive.google.com/file/d/1WccVYF5XYspiG9uYHfVhm2BBDoRbJ7it/view"
+                >Télécharger l'application</a
+              >
+            </vs-row>
           </div>
         </component>
         <!-- /Menu Items -->
@@ -153,7 +183,7 @@ export default {
     VNavMenuGroup,
     VNavMenuItem,
     VuePerfectScrollbar,
-    Logo
+    Logo,
   },
   props: {
     logo: { type: String },
@@ -161,7 +191,7 @@ export default {
     parent: { type: String },
     reduceNotRebound: { type: Boolean, default: true },
     navMenuItems: { type: Array, required: true },
-    title: { type: String }
+    title: { type: String },
   },
   data: () => ({
     clickNotClose: false, // disable close navMenu on outside click
@@ -172,35 +202,33 @@ export default {
       // perfectScrollbar settings
       maxScrollbarLength: 60,
       wheelSpeed: 1,
-      swipeEasing: true
+      swipeEasing: true,
     },
-    showShadowBottom: false
+    showShadowBottom: false,
   }),
   computed: {
     isAdmin() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        return user.roles.find(
-          r => r.name === "superAdmin" || r.name === "littleAdmin"
-        );
+        return user.roles.find((r) => r.name === "superAdmin");
       }
 
       return false;
     },
     companyId() {
-      return this.$store.state.AppActiveUser.company_id
+      return this.$store.state.AppActiveUser.company_id;
     },
     isGroupActive() {
-      return item => {
+      return (item) => {
         const path = this.$route.fullPath;
         const routeParent = this.$route.meta
           ? this.$route.meta.parent
           : undefined;
         let open = false;
 
-        const func = item => {
+        const func = (item) => {
           if (item.submenu) {
-            item.submenu.forEach(item => {
+            item.submenu.forEach((item) => {
               if (
                 item.url &&
                 (path === item.url || routeParent === item.slug)
@@ -222,20 +250,20 @@ export default {
       let userPermissions = this.$store.getters.userPermissions;
       for (const [index, item] of this.navMenuItems.entries()) {
         if (item.header && item.items.length && (index || 1)) {
-          const i = clone.findIndex(ix => ix.header === item.header);
+          const i = clone.findIndex((ix) => ix.header === item.header);
           for (const [subIndex, subItem] of item.items.entries()) {
             clone.splice(i + 1 + subIndex, 0, subItem);
           }
         }
         if (user && user.id !== null) {
           if (
-            user.roles.findIndex(r => r.name === "superAdmin") > -1 ||
+            user.roles.findIndex((r) => r.name === "superAdmin") > -1 ||
             item.slug === "home"
           ) {
             item.show = true;
           } else if (userPermissions.length > 0) {
             item.show =
-              userPermissions.findIndex(p => p.name === `show ${item.slug}`) >
+              userPermissions.findIndex((p) => p.name === `show ${item.slug}`) >
               -1;
           } else item.show = false;
         }
@@ -249,7 +277,7 @@ export default {
       },
       set(val) {
         this.$store.commit("TOGGLE_IS_VERTICAL_NAV_MENU_ACTIVE", val);
-      }
+      },
     },
     layoutType() {
       return this.$store.state.mainLayoutType;
@@ -260,7 +288,7 @@ export default {
       },
       set(val) {
         this.$store.commit("TOGGLE_REDUCE_BUTTON", val);
-      }
+      },
     },
     isVerticalNavMenuReduced() {
       return Boolean(this.reduce && this.reduceButton);
@@ -273,7 +301,7 @@ export default {
     },
     windowWidth() {
       return this.$store.state.windowWidth;
-    }
+    },
   },
   watch: {
     $route() {
@@ -288,7 +316,7 @@ export default {
         : "default";
       this.$store.dispatch("updateVerticalNavMenuWidth", verticalNavMenuWidth);
 
-      setTimeout(function() {
+      setTimeout(function () {
         window.dispatchEvent(new Event("resize"));
       }, 100);
     },
@@ -300,7 +328,7 @@ export default {
     },
     windowWidth() {
       this.setVerticalNavMenuWidth();
-    }
+    },
   },
   methods: {
     // handleWindowResize(event) {
@@ -420,11 +448,11 @@ export default {
     toggleReduce(val) {
       this.reduceButton = val;
       this.setVerticalNavMenuWidth();
-    }
+    },
   },
   mounted() {
     this.setVerticalNavMenuWidth();
-  }
+  },
 };
 </script>
 

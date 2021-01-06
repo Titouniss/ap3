@@ -13,7 +13,6 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 
 use Spatie\Permission\Traits\HasRoles;
-use TomLingham\Searchy\Facades\Searchy;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -42,7 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array
      */
-    protected $appends = ['related_users'];
+    // protected $appends = ['related_users'];
 
     /**
      * The attributes that should be cast to native types.

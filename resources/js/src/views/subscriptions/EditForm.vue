@@ -58,7 +58,7 @@
         </small>
       </vs-col>
       <vs-col vs-w="12" vs-xs="12" class="pb-3">
-        <small class="ml-2"> Annuler l'abonnement ? </small>
+        <small class="ml-2"> Annulé </small>
         <vs-switch
           color="danger"
           vs-icon-off="close"

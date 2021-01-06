@@ -253,11 +253,7 @@ export default {
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (
-          user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
-          )
-        ) {
+        if (user.roles.find((r) => r.name === "superAdmin")) {
           return false;
         } else {
           this.itemLocal.company_id = user.company_id;
@@ -341,11 +337,7 @@ export default {
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (
-          user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
-          )
-        ) {
+        if (user.roles.find((r) => r.name === "superAdmin")) {
           $filteredItems = $items.filter(
             (item) => item.company_id === this.itemLocal.company_id
           );

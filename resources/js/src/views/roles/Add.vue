@@ -161,11 +161,7 @@ export default {
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (
-          user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
-          )
-        ) {
+        if (user.roles.find((r) => r.name === "superAdmin")) {
           return false;
         }
         return true;
