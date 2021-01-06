@@ -22,9 +22,9 @@ class SubscriptionController extends Controller
      */
     public function index()
     {
-        $items = Subscription::withTrashed()->with('company')->orderBy('start_date')->orderBy('end_date')->get();
+        $items = Subscription::withTrashed()->with('company')->get();
 
-        return response()->json(['success' => $items->sortBy('statusOrder')->values()], $this->successStatus);
+        return response()->json(['success' => $items->sortBy('end_date')->sortBy('start_date')->sortBy('status_order')->values()], $this->successStatus);
     }
 
     /**
@@ -49,9 +49,9 @@ class SubscriptionController extends Controller
             return response()->json(['error' => 'Société inconnue'], 404);
         }
 
-        $items = Subscription::withTrashed()->with('company', 'packages')->orderBy('start_date')->orderBy('end_date')->get();
+        $items = Subscription::withTrashed()->with('company', 'packages')->get();
 
-        return response()->json(['success' => $items->sortBy('statusOrder')->values()], $this->successStatus);
+        return response()->json(['success' => $items->sortBy('end_date')->sortBy('start_date')->sortBy('status_order')->values()], $this->successStatus);
     }
 
     /**

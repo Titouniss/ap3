@@ -157,6 +157,7 @@ export default {
             item.subscription = null;
           }
           this.itemLocal = item;
+          console.log(item);
         })
         .catch((error) => {
           console.log(error);

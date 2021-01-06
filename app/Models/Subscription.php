@@ -34,10 +34,10 @@ class Subscription extends Model
             case 'cancelled':
                 return 2;
             case 'inactive':
-                return 3;
+                return 2;
 
             default:
-                return 4;
+                return 3;
         }
     }
 

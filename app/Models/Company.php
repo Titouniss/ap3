@@ -11,11 +11,26 @@ class Company extends Model
     use SoftDeletes;
 
     protected $fillable = ['name', 'siret', 'is_trial', 'expires_at'];
-    protected $appends = ['active_subscription'];
+    protected $appends = ['has_active_subscription', 'active_permissions'];
 
-    public function getActiveSubscriptionAttribute()
+    public function getActiveSubscriptionsAttribute()
     {
-        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->first();
+        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->get();
+    }
+
+    public function getHasActiveSubscriptionAttribute()
+    {
+        return $this->active_subscriptions->count() > 0;
+    }
+
+    public function getActivePermissionsAttribute()
+    {
+        $permissions = collect([]);
+        $subscriptions = $this->active_subscriptions;
+        foreach ($subscriptions as $subscription) {
+            $permissions = $permissions->merge($subscription->permissions);
+        }
+        return $permissions;
     }
 
     public function module()
