@@ -26,7 +26,7 @@ class PackagesSeeder extends Seeder
         $package = $this->package('schedules');
         if (!$package->exists) {
             $package->fill([
-                'display_name' => 'Planning',
+                'display_name' => 'Plannings',
             ])->save();
 
             $package->givePermissionTo(Permission::whereIn('name_fr', ['roles', 'utilisateurs', 'projects', 'clients', 'pôles_de_productions', 'tâches', 'compétences', 'planning'])

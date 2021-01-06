@@ -1,6 +1,6 @@
 /*=========================================================================================
-  File Name: moduleCalendarState.js
-  Description: Calendar Module State
+  File Name: moduleCalendarGetters.js
+  Description: Calendar Module Getters
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
@@ -8,6 +8,7 @@
 ==========================================================================================*/
 
 export default {
-    packages: [],
-    package: {}
-}
+    getItem: state => id => state.subscriptions.find(item => item.id === id),
+    getItems: state => state.subscriptions,
+    getPackages: state => state.packages
+};

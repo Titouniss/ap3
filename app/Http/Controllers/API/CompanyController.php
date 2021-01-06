@@ -65,7 +65,8 @@ class CompanyController extends Controller
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'siret' => 'required',
-            'is_trial' => 'required'
+            'is_trial' => 'required',
+            'subscription' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
@@ -85,13 +86,34 @@ class CompanyController extends Controller
             $item->save();
         }
 
-        if (isset($arrayRequest['subscription'])) {
-            try {
-                $this->createOrUpdateSubscription($arrayRequest['subscription'], $item);
-            } catch (\Throwable $th) {
-                return response()->json(['error' => $th->getMessage()], 400);
-            }
+        $subscriptionArray = $arrayRequest['subscription'];
+        $validator = Validator::make($subscriptionArray, [
+            'start_date' => 'required',
+            'end_date' => 'required',
+            'packages' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
         }
+
+        $subscription = Subscription::create(['company_id' => $item->id]);
+
+        try {
+            $subscription->start_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
+            $subscription->end_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
+            $subscription->packages()->sync($subscriptionArray['packages']);
+            if ($subscription->start_date->isFuture()) {
+                $subscription->state = 'pending';
+            } else if ($subscription->end_date->isFuture()) {
+                $subscription->state = 'active';
+            } else {
+                $subscription->state = 'inactive';
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 400);
+        }
+
+        $subscription->save();
 
         return response()->json(['success' => $item], $this->successStatus);
     }
@@ -136,43 +158,7 @@ class CompanyController extends Controller
         }
         $item->save();
 
-        if (isset($arrayRequest['subscription'])) {
-            try {
-                $this->createOrUpdateSubscription($arrayRequest['subscription'], $item);
-            } catch (\Throwable $th) {
-                return response()->json(['error' => $th->getMessage()], 400);
-            }
-        }
-
         return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    private function createOrUpdateSubscription(array $subscriptionArray, Company $item)
-    {
-        $validator = Validator::make($subscriptionArray, [
-            'start_date' => 'required',
-            'end_date' => 'required',
-            'packages' => 'required',
-            'state' => 'required'
-        ]);
-        if ($validator->fails()) {
-            throw new Exception($validator->errors());
-        }
-
-        $subscription = isset($subscriptionArray['id'])
-            ? Subscription::find($subscriptionArray['id'])
-            : Subscription::create(['company_id' => $item->id]);
-
-        try {
-            $subscription->start_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
-            $subscription->end_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
-            $subscription->packages()->sync($subscriptionArray['packages']);
-            $subscription->state = $subscriptionArray['state'];
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-
-        $subscription->save();
     }
 
     /**

@@ -42,49 +42,16 @@
         </div>
         <vs-divider />
         <vs-row vs-justify="flex-start" vs-type="flex" vs-w="12">
-          <vs-col vs-w="6" vs-xs="12" class="px-3">
-            <v-select
-              name="subscriptionTypes"
-              class="w-full"
-              autocomplete
-              label="display_name"
-              :options="subscriptionTypes"
-              v-model="selectedSubscriptionType"
-              @input="onSubscriptionTypeChange"
+          <vs-col vs-w="2" vs-xs="12" class="px-3">
+            <small class="ml-2"> Période d'essaie </small>
+            <vs-switch
+              class="mt-1"
+              v-model="itemLocal.is_trial"
+              name="is_trial"
             >
-              <template #header>
-                <small class="ml-2"> Types d'abonnement </small>
-              </template>
-            </v-select>
+            </vs-switch>
           </vs-col>
-          <vs-col vs-w="3" vs-xs="12" class="px-3">
-            <small class="ml-2"> Date de début </small>
-            <flat-pickr
-              :config="configDatePicker"
-              class="w-full"
-              v-model="subscription.start_date"
-              :disabled="selectedSubscriptionType == null"
-              @on-change="onStartDateChange"
-            />
-          </vs-col>
-          <vs-col vs-w="3" vs-xs="12" class="px-3">
-            <small class="ml-2"> Date de fin </small>
-            <flat-pickr
-              :config="configDatePicker"
-              v-model="subscription.end_date"
-              class="w-full"
-              disabled
-            />
-          </vs-col>
-        </vs-row>
-        <vs-row
-          v-if="selectedSubscriptionType"
-          vs-justify="flex-start"
-          vs-type="flex"
-          vs-w="12"
-          class="mt-6"
-        >
-          <vs-col vs-xs="12" class="px-3">
+          <vs-col vs-w="4" vs-xs="12" class="px-3">
             <v-select
               name="packagesData"
               label="display_name"
@@ -99,6 +66,22 @@
                 <small class="ml-2"> Paquets </small>
               </template>
             </v-select>
+          </vs-col>
+          <vs-col vs-w="3" vs-xs="12" class="px-3">
+            <small class="ml-2"> Date de début </small>
+            <flat-pickr
+              :config="configDatePicker(null, subscription.end_date)"
+              class="w-full"
+              v-model="subscription.start_date"
+            />
+          </vs-col>
+          <vs-col vs-w="3" vs-xs="12" class="px-3">
+            <small class="ml-2"> Date de fin </small>
+            <flat-pickr
+              :config="configDatePicker(subscription.start_date)"
+              v-model="subscription.end_date"
+              class="w-full"
+            />
           </vs-col>
         </vs-row>
       </div>
@@ -140,7 +123,7 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // Store Module
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
-import modulePackageManagement from "@/store/package-management/modulePackageManagement.js";
+import moduleSubscriptionManagement from "@/store/subscription-management/moduleSubscriptionManagement.js";
 
 var model = "company";
 var modelPlurial = "companies";
@@ -162,32 +145,13 @@ export default {
         end_date: null,
         packages: [],
       },
-      configDatePicker: {
+      configDatePicker: (minDate = null, maxDate = null) => ({
         disableMobile: "true",
         dateFormat: "d/m/Y",
         locale: FrenchLocale,
-      },
-      selectedSubscriptionType: null,
-      subscriptionTypes: [
-        {
-          display_name: "Période d'essaie",
-          value: 1,
-          unit: "month",
-          is_trial: true,
-        },
-        {
-          display_name: "1 an",
-          value: 1,
-          unit: "year",
-          is_trial: false,
-        },
-        {
-          display_name: "3 ans",
-          value: 3,
-          unit: "year",
-          is_trial: false,
-        },
-      ],
+        minDate,
+        maxDate,
+      }),
     };
   },
   computed: {
@@ -196,59 +160,32 @@ export default {
         !this.errors.any() &&
         this.itemLocal.name !== "" &&
         this.itemLocal.siret !== "" &&
-        (!this.selectedSubscriptionType ||
-          (this.subscription.start_date &&
-            this.subscription.end_date &&
-            this.subscription.packages &&
-            this.subscription.packages.length > 0))
+        this.subscription.start_date &&
+        this.subscription.end_date &&
+        this.subscription.packages &&
+        this.subscription.packages.length > 0
       );
     },
     isAdmin() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        return user.roles.find(
-          (r) => r.name === "superAdmin" || r.name === "littleAdmin"
-        );
+        return user.roles.find((r) => r.name === "superAdmin");
       }
 
       return false;
     },
+    subscriptionsData() {
+      return this.$store.state.subscriptionManagement.subscriptions;
+    },
     packagesData() {
-      return this.$store.state.packageManagement.packages;
+      return this.$store.state.subscriptionManagement.packages;
     },
   },
   methods: {
-    onSubscriptionTypeChange(type) {
-      const startDate = this.subscription.start_date;
-      if (type && startDate) {
-        this.updateEndDate(moment(startDate, "DD/MM/YYYY").toDate());
-      } else {
-        this.subscription.start_date = null;
-        this.subscription.end_date = null;
-      }
-    },
-    onStartDateChange(selectedDates, dateStr, instance) {
-      this.updateEndDate(selectedDates[0]);
-    },
-    updateEndDate(startDate) {
-      if (startDate && this.selectedSubscriptionType) {
-        this.subscription.end_date = moment(startDate)
-          .add(
-            this.selectedSubscriptionType.value,
-            this.selectedSubscriptionType.unit
-          )
-          .toDate();
-      } else {
-        this.subscription.end_date = null;
-      }
-    },
     addCompany() {
       if (this.validateForm) {
         const item = JSON.parse(JSON.stringify(this.itemLocal));
-        if (this.selectedSubscriptionType) {
-          item.is_trial = this.selectedSubscriptionType.is_trial;
-          item.subscription = this.subscription;
-        }
+        item.subscription = this.subscription;
         this.$store
           .dispatch("companyManagement/addItem", item)
           .then(() => {
@@ -284,19 +221,27 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    if (!modulePackageManagement.isRegistered) {
-      this.$store.registerModule("packageManagement", modulePackageManagement);
-      modulePackageManagement.isRegistered = true;
+    if (!moduleSubscriptionManagement.isRegistered) {
+      this.$store.registerModule(
+        "subscriptionManagement",
+        moduleSubscriptionManagement
+      );
+      moduleSubscriptionManagement.isRegistered = true;
     }
-    this.$store.dispatch("packageManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("subscriptionManagement/fetchItems").catch((err) => {
       console.error(err);
     });
+    this.$store
+      .dispatch("subscriptionManagement/fetchPackages")
+      .catch((err) => {
+        console.error(err);
+      });
   },
   beforeDestroy() {
     moduleCompanyManagement.isRegistered = false;
     this.$store.unregisterModule("companyManagement");
-    modulePackageManagement.isRegistered = false;
-    this.$store.unregisterModule("packageManagement");
+    moduleSubscriptionManagement.isRegistered = false;
+    this.$store.unregisterModule("subscriptionManagement");
   },
 };
 </script>

@@ -22,7 +22,9 @@ class SubscriptionController extends Controller
      */
     public function index()
     {
-        return response()->json(['success' => Subscription::withTrashed()->with('company')->all()], $this->successStatus);
+        $items = Subscription::withTrashed()->with('company')->orderBy('start_date')->orderBy('end_date')->get();
+
+        return response()->json(['success' => $items->sortBy('statusOrder')->values()], $this->successStatus);
     }
 
     /**
@@ -47,7 +49,9 @@ class SubscriptionController extends Controller
             return response()->json(['error' => 'Société inconnue'], 404);
         }
 
-        return response()->json(['success' => Subscription::withTrashed()->where('company_id', $item->id)->with('company')->get()], $this->successStatus);
+        $items = Subscription::withTrashed()->with('company', 'packages')->orderBy('start_date')->orderBy('end_date')->get();
+
+        return response()->json(['success' => $items->sortBy('statusOrder')->values()], $this->successStatus);
     }
 
     /**
@@ -81,7 +85,8 @@ class SubscriptionController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $item = Subscription::new(['company_id' => $arrayRequest['company_id']]);
+        $item = new Subscription;
+        $item->company_id = $arrayRequest['company_id'];
         return $this->createOrUpdateSubscription($arrayRequest, $item);
     }
 
@@ -114,24 +119,35 @@ class SubscriptionController extends Controller
             'start_date' => 'required',
             'end_date' => 'required',
             'packages' => 'required',
-            'state' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
         try {
-            $item->start_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
-            $item->end_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
+            $item->start_date = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
+            $item->end_date = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
+            $item->save();
             $item->packages()->sync($subscriptionArray['packages']);
-            $item->state = $subscriptionArray['state'];
+            if ($item->start_date->isFuture()) {
+                $item->state = 'pending';
+            } else if ($item->end_date->isFuture()) {
+                $item->state = 'active';
+            } else {
+                $item->state = 'inactive';
+            }
+            if (isset($subscriptionArray['is_cancelled'])) {
+                if ($subscriptionArray['is_cancelled']) {
+                    $item->state = 'cancelled';
+                }
+            }
+            $item->save();
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 400);
         }
 
-        $item->save();
 
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
     }
 
     /**
@@ -150,7 +166,7 @@ class SubscriptionController extends Controller
                 throw new Exception('Impossible de restaurer l\'abonnement');
             }
 
-            return response()->json(['success' => $item], $this->successStatus);
+            return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
@@ -171,7 +187,7 @@ class SubscriptionController extends Controller
                 throw new Exception('Impossible d\'archiver l\'abonnement');
             }
 
-            return response()->json(['success' => $item], $this->successStatus);
+            return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }

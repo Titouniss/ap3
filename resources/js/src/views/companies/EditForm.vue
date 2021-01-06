@@ -42,63 +42,14 @@
         </div>
         <vs-divider />
         <vs-row vs-justify="flex-start" vs-type="flex" vs-w="12">
-          <vs-col vs-w="6" vs-xs="12" class="px-3">
-            <v-select
-              name="subscriptionTypes"
-              class="w-full"
-              autocomplete
-              label="display_name"
-              :options="subscriptionTypes"
-              v-model="selectedSubscriptionType"
-              @input="onSubscriptionTypeChange"
+          <vs-col vs-w="2" vs-xs="12" class="px-3">
+            <small class="ml-2"> Période d'essaie </small>
+            <vs-switch
+              class="mt-1"
+              v-model="itemLocal.is_trial"
+              name="is_trial"
             >
-              <template #header>
-                <small class="ml-2"> Types d'abonnement </small>
-              </template>
-            </v-select>
-          </vs-col>
-          <vs-col vs-w="3" vs-xs="12" class="px-3">
-            <small class="ml-2"> Date de début </small>
-            <flat-pickr
-              :config="configDatePicker"
-              class="w-full"
-              v-model="subscription.start_date"
-              :disabled="selectedSubscriptionType == null"
-              @on-change="onStartDateChange"
-            />
-          </vs-col>
-          <vs-col vs-w="3" vs-xs="12" class="px-3">
-            <small class="ml-2"> Date de fin </small>
-            <flat-pickr
-              :config="configDatePicker"
-              v-model="subscription.end_date"
-              class="w-full"
-              disabled
-            />
-          </vs-col>
-        </vs-row>
-        <vs-row
-          v-if="selectedSubscriptionType"
-          vs-justify="flex-start"
-          vs-type="flex"
-          vs-w="12"
-          class="mt-6"
-        >
-          <vs-col vs-xs="12" class="px-3">
-            <v-select
-              name="packagesData"
-              label="display_name"
-              multiple
-              v-model="subscription.packages"
-              class="w-full"
-              autocomplete
-              :options="packagesData"
-              :reduce="(p) => p.id"
-            >
-              <template #header>
-                <small class="ml-2"> Paquets </small>
-              </template>
-            </v-select>
+            </vs-switch>
           </vs-col>
         </vs-row>
       </div>
@@ -125,6 +76,9 @@
         </div>
       </div>
     </vx-card>
+    <div v-if="itemLocal.id" class="mt-5">
+      <subscriptions-index :companyId="itemLocal.id"></subscriptions-index>
+    </div>
   </div>
 </template>
 
@@ -140,7 +94,8 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // Store Module
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
-import modulePackageManagement from "@/store/package-management/modulePackageManagement.js";
+
+import SubscriptionsIndex from "../subscriptions/Index";
 
 var model = "company";
 var modelPlurial = "companies";
@@ -149,6 +104,7 @@ export default {
   components: {
     vSelect,
     flatPickr,
+    SubscriptionsIndex,
   },
   props: {
     itemId: {
@@ -162,46 +118,13 @@ export default {
         siret: "",
         is_trial: false,
       },
-      subscription: {
-        start_date: null,
-        end_date: null,
-        packages: [],
-      },
-      configDatePicker: {
-        disableMobile: "true",
-        dateFormat: "d/m/Y",
-        locale: FrenchLocale,
-      },
-      selectedSubscriptionType: null,
-      subscriptionTypes: [
-        {
-          display_name: "Période d'essaie",
-          value: 1,
-          unit: "month",
-          is_trial: true,
-        },
-        {
-          display_name: "1 an",
-          value: 1,
-          unit: "year",
-          is_trial: false,
-        },
-        {
-          display_name: "3 ans",
-          value: 3,
-          unit: "year",
-          is_trial: false,
-        },
-      ],
     };
   },
   computed: {
     isAdmin() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        return user.roles.find(
-          (r) => r.name === "superAdmin" || r.name === "littleAdmin"
-        );
+        return user.roles.find((r) => r.name === "superAdmin");
       }
       return false;
     },
@@ -217,35 +140,8 @@ export default {
             this.subscription.packages.length > 0))
       );
     },
-    packagesData() {
-      return this.$store.state.packageManagement.packages;
-    },
   },
   methods: {
-    onSubscriptionTypeChange(type) {
-      const startDate = this.subscription.start_date;
-      if (type && startDate) {
-        this.updateEndDate(moment(startDate, "DD/MM/YYYY").toDate());
-      } else {
-        this.subscription.start_date = null;
-        this.subscription.end_date = null;
-      }
-    },
-    onStartDateChange(selectedDates, dateStr, instance) {
-      this.updateEndDate(selectedDates[0]);
-    },
-    updateEndDate(startDate) {
-      if (startDate && this.selectedSubscriptionType) {
-        this.subscription.end_date = moment(startDate)
-          .add(
-            this.selectedSubscriptionType.value,
-            this.selectedSubscriptionType.unit
-          )
-          .toDate();
-      } else {
-        this.subscription.end_date = null;
-      }
-    },
     init() {
       this.$vs.loading();
       let id = this.itemId
@@ -256,7 +152,6 @@ export default {
         .dispatch("companyManagement/fetchItem", id)
         .then((res) => {
           const item = JSON.parse(JSON.stringify(res.data.success));
-          console.log(item);
           if (item.subscription != null) {
             this.subscription = this.itemLocal.subscription;
             item.subscription = null;
@@ -271,10 +166,6 @@ export default {
     submitItem() {
       if (this.validateForm) {
         const item = JSON.parse(JSON.stringify(this.itemLocal));
-        if (this.selectedSubscriptionType) {
-          item.is_trial = this.selectedSubscriptionType.is_trial;
-          item.subscription = this.subscription;
-        }
         this.$store
           .dispatch("companyManagement/updateItem", item)
           .then(() => {
@@ -315,20 +206,11 @@ export default {
     this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    if (!modulePackageManagement.isRegistered) {
-      this.$store.registerModule("packageManagement", modulePackageManagement);
-      modulePackageManagement.isRegistered = true;
-    }
-    this.$store.dispatch("packageManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
     this.init();
   },
   beforeDestroy() {
     moduleCompanyManagement.isRegistered = false;
     this.$store.unregisterModule("companyManagement");
-    modulePackageManagement.isRegistered = false;
-    this.$store.unregisterModule("packageManagement");
   },
 };
 </script>

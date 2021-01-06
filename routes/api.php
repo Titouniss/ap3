@@ -376,7 +376,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('subscription-management')->group(function () {
         Route::group(['middleware' => ['can:read subscriptions']], function () {
             Route::get('index', 'API\SubscriptionController@index');
-            Route::get('packages', 'API\SubscriptionController@index');
+            Route::get('packages', 'API\SubscriptionController@packages');
             Route::get('company/{item}', 'API\SubscriptionController@getByCompany');
             Route::get('show/{item}', 'API\SubscriptionController@show');
         });

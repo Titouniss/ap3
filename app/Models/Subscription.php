@@ -17,10 +17,28 @@ class Subscription extends Model
     public function getPermissionsAttribute()
     {
         $permissions = collect([]);
-        $this->belongsToMany(Package::class, 'subscription_has_packages', 'subscription_id', 'package_id')->each(function ($package) use ($permissions) {
-            $permissions->push($package->permissions);
-        });
+        $packages = $this->belongsToMany(Package::class, 'subscription_has_packages', 'subscription_id', 'package_id')->get();
+        foreach ($packages as $package) {
+            $permissions = $permissions->merge($package->permissions);
+        }
         return $permissions;
+    }
+
+    public function getStatusOrderAttribute()
+    {
+        switch ($this->state) {
+            case 'active':
+                return 0;
+            case 'pending':
+                return 1;
+            case 'cancelled':
+                return 2;
+            case 'inactive':
+                return 3;
+
+            default:
+                return 4;
+        }
     }
 
     public function company()

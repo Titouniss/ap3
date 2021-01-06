@@ -1,13 +1,22 @@
 /*=========================================================================================
-  File Name: moduleCalendarGetters.js
-  Description: Calendar Module Getters
+  File Name:
+  Description:
   ----------------------------------------------------------------------------------------
   Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
   Author: Pixinvent
   Author URL: http://www.themeforest.net/user/pixinvent
 ==========================================================================================*/
 
+import state from "./moduleSubscriptionManagementState.js";
+import mutations from "./moduleSubscriptionManagementMutations.js";
+import actions from "./moduleSubscriptionManagementActions.js";
+import getters from "./moduleSubscriptionManagementGetters.js";
 
 export default {
-    getItems: state => state.packages
-}
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
+};
