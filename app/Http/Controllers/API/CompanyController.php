@@ -66,10 +66,24 @@ class CompanyController extends Controller
             'name' => 'required',
             'siret' => 'required',
             'is_trial' => 'required',
+            'code' => 'required',
+            'type' => 'required',
+            'contact_firstname' => 'required',
+            'contact_lastname' => 'required',
+            'contact_email' => 'required|email',
+            'street_number' => 'required',
+            'street_name' => 'required',
+            'postal_code' => 'required',
+            'city' => 'required',
+            'country' => 'required',
             'subscription' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        if (!isset($arrayRequest['contact_tel1']) && !isset($arrayRequest['contact_tel2'])) {
+            return response()->json(['error' => 'Au moins un numéro de téléphone est obligatoire'], 400);
         }
 
         if (Company::where('siret', $arrayRequest['siret'])->exists()) {
@@ -80,11 +94,27 @@ class CompanyController extends Controller
             'name' => $arrayRequest['name'],
             'siret' => $arrayRequest['siret'],
             'is_trial' => $arrayRequest['is_trial'],
+            'code' => $arrayRequest['code'],
+            'type' => $arrayRequest['type'],
+            'contact_firstname' => $arrayRequest['contact_firstname'],
+            'contact_lastname' => $arrayRequest['contact_lastname'],
+            'contact_email' => $arrayRequest['contact_email'],
+            'street_number' => $arrayRequest['street_number'],
+            'street_name' => $arrayRequest['street_name'],
+            'postal_code' => $arrayRequest['postal_code'],
+            'city' => $arrayRequest['city'],
+            'country' => $arrayRequest['country'],
         ]);
+        if (isset($arrayRequest['contact_tel1'])) {
+            $item->contact_tel1 = $arrayRequest['contact_tel1'];
+        }
+        if (isset($arrayRequest['contact_tel2'])) {
+            $item->contact_tel2 = $arrayRequest['contact_tel2'];
+        }
         if ($item->is_trial && !$item->expires_at) {
             $item->expires_at = Carbon::now()->addWeeks(4);
-            $item->save();
         }
+        $item->save();
 
         $subscriptionArray = $arrayRequest['subscription'];
         $validator = Validator::make($subscriptionArray, [

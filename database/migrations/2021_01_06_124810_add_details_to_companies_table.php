@@ -18,7 +18,7 @@ class AddDetailsToCompaniesTable extends Migration
             $table->string('type')->nullable()->after('code');
             $table->string('contact_firstname')->nullable()->after('type');
             $table->string('contact_lastname')->nullable()->after('contact_firstname');
-            $table->string('contact_tel1')->nullable()->after('contact_firstname');
+            $table->string('contact_tel1')->nullable()->after('contact_lastname');
             $table->string('contact_tel2')->nullable()->after('contact_tel1');
             $table->string('contact_email')->nullable()->after('contact_tel2');
             $table->string('street_number')->nullable()->after('contact_email');

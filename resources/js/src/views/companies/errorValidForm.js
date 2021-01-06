@@ -1,16 +1,33 @@
 const errorMessage = {
-  custom: {
-    name: {
-      required: "Le nom d'une société est requis",
-      max: "Le nom d'une société doit être composé de 255 chiffres maximum !",
+    attributes: {
+        name: "nom",
+        siret: "SIRET",
+        code: "n° de client",
+        type: "type de société",
+        contact_firstname: "prénom",
+        contact_lastname: "nom",
+        contact_email: "émail",
+        contact_tel1: "téléphone fixe",
+        contact_tel2: "téléphone mobile",
+        street_number: "n° de rue",
+        street_name: "rue",
+        postal_code: "code postal",
+        city: "ville",
+        country: "pays",
+        start_date: "date de début",
+        end_date: "date de fin"
     },
-    siret: {
-      required: "Le numéro de siret est requis",
-      numeric: "Le numéro de siret doit être composé uniquement de chiffre !",
-      max: "Le numéro de siret doit être composé de 14 chiffres !",
-      min: "Le numéro de siret doit être composé de 14 chiffres !",
+    custom: {
+        packages: {
+            required: "Un abonnement doit contenir au moins un paquet"
+        },
+        contact_tel1: {
+            required: "Au moins un numéro de téléphone est obligatoire"
+        },
+        contact_tel2: {
+            required: "Au moins un numéro de téléphone est obligatoire"
+        }
     }
-  }
-}
+};
 
-export default errorMessage
+export default errorMessage;

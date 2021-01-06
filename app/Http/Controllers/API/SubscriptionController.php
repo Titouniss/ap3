@@ -49,7 +49,7 @@ class SubscriptionController extends Controller
             return response()->json(['error' => 'Société inconnue'], 404);
         }
 
-        $items = Subscription::withTrashed()->with('company', 'packages')->get();
+        $items = Subscription::withTrashed()->where('company_id', $item->id)->with('company', 'packages')->get();
 
         return response()->json(['success' => $items->sortBy('end_date')->sortBy('start_date')->sortBy('status_order')->values()], $this->successStatus);
     }
