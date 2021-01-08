@@ -7,7 +7,7 @@
 <script>
 var modelTitle = "Subscription";
 export default {
-  name: "CellRendererArray",
+  name: "CellRendererState",
   computed: {
     parsedState() {
       switch (this.params.value) {

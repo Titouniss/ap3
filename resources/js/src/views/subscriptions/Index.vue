@@ -159,6 +159,7 @@ import moduleSubscriptionManagement from "@/store/subscription-management/module
 
 // Cell Renderer
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererIsTrial from "./cell-renderer/CellRendererIsTrial.vue";
 import CellRendererState from "./cell-renderer/CellRendererState.vue";
 
 import moment from "moment";
@@ -178,6 +179,7 @@ export default {
 
     // Cell Renderer
     CellRendererActions,
+    CellRendererIsTrial,
     CellRendererState,
   },
   props: {
@@ -214,20 +216,27 @@ export default {
           cellRendererFramework: "CellRendererState",
         },
         {
+          headerName: "Période d'essaie",
+          field: "is_trial",
+          filter: true,
+          sortable: true,
+          cellRendererFramework: "CellRendererIsTrial",
+        },
+        {
           headerName: "Début",
-          field: "start_date",
+          field: "starts_at",
           filter: true,
           sortable: true,
           valueGetter: (params) =>
-            moment(params.data.start_date).format("DD/MM/YYYY"),
+            moment(params.data.starts_at).format("DD/MM/YYYY"),
         },
         {
           headerName: "Fin",
-          field: "end_date",
+          field: "ends_at",
           filter: true,
           sortable: true,
           valueGetter: (params) =>
-            moment(params.data.end_date).format("DD/MM/YYYY"),
+            moment(params.data.ends_at).format("DD/MM/YYYY"),
         },
         {
           headerName: "Paquets",
@@ -252,15 +261,16 @@ export default {
             modelPlurial: "subscriptions",
             withPrompt: true,
             name: (data) =>
-              `l'abonnement du ${moment(data.start_date).format(
+              `l'abonnement du ${moment(data.starts_at).format(
                 "DD/MM/YYYY"
-              )} au ${moment(data.end_date).format("DD/MM/YYYY")}`,
+              )} au ${moment(data.ends_at).format("DD/MM/YYYY")}`,
           },
         },
       ],
       // Cell Renderer Components
       components: {
         CellRendererActions,
+        CellRendererIsTrial,
         CellRendererState,
       },
     };
@@ -291,7 +301,7 @@ export default {
     },
   },
   methods: {
-    authorizedTo(action, model = "subscriptions") {
+    authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     setColumnFilter(column, val) {
@@ -335,16 +345,16 @@ export default {
             ? `Voulez vous vraiment supprimer ces abonnements ?`
             : type === "delete" && this.gridApi.getSelectedRows().length === 1
             ? `Voulez vous vraiment supprimer l'abonnement du ${moment(
-                singleSubscription.start_date
+                singleSubscription.starts_at
               ).format("DD/MM/YYYY")} au ${moment(
-                singleSubscription.end_date
+                singleSubscription.ends_at
               ).format("DD/MM/YYYY")} ?`
             : this.gridApi.getSelectedRows().length > 1
             ? `Voulez vous vraiment archiver ces abonnements ?`
             : `Voulez vous vraiment archiver l'abonnement du ${moment(
-                singleSubscription.start_date
+                singleSubscription.starts_at
               ).format("DD/MM/YYYY")} au ${moment(
-                singleSubscription.end_date
+                singleSubscription.ends_at
               ).format("DD/MM/YYYY")} ?`,
         accept: type === "delete" ? this.deleteRecord : this.archiveRecord,
         acceptText: type === "delete" ? "Supprimer" : "Archiver",

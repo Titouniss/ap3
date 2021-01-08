@@ -14,18 +14,18 @@ class AddDetailsToCompaniesTable extends Migration
     public function up()
     {
         Schema::table('companies', function (Blueprint $table) {
-            $table->string('code')->nullable()->after('siret');
-            $table->string('type')->nullable()->after('code');
-            $table->string('contact_firstname')->nullable()->after('type');
-            $table->string('contact_lastname')->nullable()->after('contact_firstname');
-            $table->string('contact_tel1')->nullable()->after('contact_lastname');
-            $table->string('contact_tel2')->nullable()->after('contact_tel1');
-            $table->string('contact_email')->nullable()->after('contact_tel2');
-            $table->string('street_number')->nullable()->after('contact_email');
-            $table->string('street_name')->nullable()->after('street_number');
-            $table->string('postal_code')->nullable()->after('street_name');
-            $table->string('city')->nullable()->after('postal_code');
-            $table->string('country')->nullable()->after('city');
+            $table->string('code')->default("")->after('siret');
+            $table->string('type')->default("")->after('code');
+            $table->string('contact_firstname')->default("")->after('type');
+            $table->string('contact_lastname')->default("")->after('contact_firstname');
+            $table->string('contact_tel1')->default("")->after('contact_lastname');
+            $table->string('contact_tel2')->default("")->after('contact_tel1');
+            $table->string('contact_email')->default("")->after('contact_tel2');
+            $table->string('street_number')->default("")->after('contact_email');
+            $table->string('street_name')->default("")->after('street_number');
+            $table->string('postal_code')->default("")->after('street_name');
+            $table->string('city')->default("")->after('postal_code');
+            $table->string('country')->default("")->after('city');
         });
     }
 

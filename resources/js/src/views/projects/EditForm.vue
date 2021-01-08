@@ -159,15 +159,7 @@ export default {
   },
   computed: {
     isAdmin() {
-      const user = this.$store.state.AppActiveUser;
-      if (
-        user.roles &&
-        user.roles.length > 0 &&
-        user.roles.find((r) => r.name === "superAdmin")
-      ) {
-        return true;
-      }
-      return false;
+      return this.$store.state.AppActiveUser.is_admin;
     },
     activePrompt: {
       get() {
@@ -261,7 +253,7 @@ export default {
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           filteredItems = items.filter(
             (item) => item.company_id === this.itemLocal.company.id
           );

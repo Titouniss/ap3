@@ -71,8 +71,6 @@
             :danger-text="errors.first('contact_lastname')"
           />
         </vs-col>
-      </vs-row>
-      <vs-row vs-justify="center" vs-type="flex" vs-w="12" class="mb-6">
         <vs-col vs-w="4" vs-xs="12" class="px-3">
           <vs-input
             v-validate="'max:255|email|required'"
@@ -152,8 +150,6 @@
             :danger-text="errors.first('street_name')"
           />
         </vs-col>
-      </vs-row>
-      <vs-row vs-justify="center" vs-type="flex" vs-w="12" class="mb-6">
         <vs-col vs-w="4" vs-xs="12" class="px-3">
           <vs-input
             v-validate="'max:15|required'"
@@ -213,7 +209,7 @@
                 :danger-text="errors.first('code')"
               />
             </vs-col>
-            <vs-col vs-w="4" vs-xs="12" class="px-3">
+            <vs-col vs-w="6" vs-xs="12" class="px-3">
               <vs-input
                 v-validate="'max:255|required'"
                 name="type"
@@ -224,15 +220,6 @@
                 :danger="errors.has('type')"
                 :danger-text="errors.first('type')"
               />
-            </vs-col>
-            <vs-col vs-w="2" vs-xs="12" class="px-3">
-              <small class="ml-2"> Période d'essaie </small>
-              <vs-switch
-                class="mt-2"
-                v-model="itemLocal.is_trial"
-                name="is_trial"
-              >
-              </vs-switch>
             </vs-col>
           </vs-row>
           <div class="pt-6 px-3 flex items-end">
@@ -245,7 +232,7 @@
           </div>
           <vs-divider />
           <vs-row vs-justify="flex-start" vs-type="flex" vs-w="12">
-            <vs-col vs-w="6" vs-xs="12" class="px-3">
+            <vs-col vs-w="4" vs-xs="12" class="px-3">
               <v-select
                 name="packages"
                 label="display_name"
@@ -268,28 +255,37 @@
             <vs-col vs-w="3" vs-xs="12" class="px-3">
               <small class="ml-2"> Date de début </small>
               <flat-pickr
-                name="start_date"
-                :config="configDatePicker(null, subscription.end_date)"
+                name="starts_at"
+                :config="configDatePicker(null, subscription.ends_at)"
                 class="w-full"
                 v-validate="'required'"
-                v-model="subscription.start_date"
+                v-model="subscription.starts_at"
               />
-              <small v-show="errors.has('start_date')" class="text-danger">
-                {{ errors.first("start_date") }}
+              <small v-show="errors.has('starts_at')" class="text-danger">
+                {{ errors.first("starts_at") }}
               </small>
             </vs-col>
             <vs-col vs-w="3" vs-xs="12" class="px-3">
               <small class="ml-2"> Date de fin </small>
               <flat-pickr
-                name="end_date"
-                :config="configDatePicker(subscription.start_date)"
-                v-model="subscription.end_date"
+                name="ends_at"
+                :config="configDatePicker(subscription.starts_at)"
+                v-model="subscription.ends_at"
                 v-validate="'required'"
                 class="w-full"
               />
-              <small v-show="errors.has('end_date')" class="text-danger">
-                {{ errors.first("end_date") }}
+              <small v-show="errors.has('ends_at')" class="text-danger">
+                {{ errors.first("ends_at") }}
               </small>
+            </vs-col>
+            <vs-col vs-w="2" vs-xs="12" class="px-3">
+              <small class="ml-2"> Période d'essaie </small>
+              <vs-switch
+                class="mt-2"
+                v-model="subscription.is_trial"
+                name="is_trial"
+              >
+              </vs-switch>
             </vs-col>
           </vs-row>
         </div>
@@ -363,12 +359,12 @@ export default {
         postal_code: "",
         city: "",
         country: "",
-        is_trial: true,
       },
       subscription: {
-        start_date: null,
-        end_date: null,
+        starts_at: null,
+        ends_at: null,
         packages: [],
+        is_trial: true,
       },
       configDatePicker: (minDate = null, maxDate = null) => ({
         disableMobile: "true",
@@ -397,19 +393,14 @@ export default {
         this.itemLocal.postal_code !== "" &&
         this.itemLocal.city !== "" &&
         this.itemLocal.country !== "" &&
-        this.subscription.start_date &&
-        this.subscription.end_date &&
+        this.subscription.starts_at &&
+        this.subscription.ends_at &&
         this.subscription.packages &&
         this.subscription.packages.length > 0
       );
     },
     isAdmin() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles.find((r) => r.name === "superAdmin");
-      }
-
-      return false;
+      return this.$store.state.AppActiveUser.is_admin;
     },
     subscriptionsData() {
       return this.$store.state.subscriptionManagement.subscriptions;
@@ -465,9 +456,6 @@ export default {
       );
       moduleSubscriptionManagement.isRegistered = true;
     }
-    this.$store.dispatch("subscriptionManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
     this.$store
       .dispatch("subscriptionManagement/fetchPackages")
       .catch((err) => {

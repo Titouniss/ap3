@@ -208,12 +208,7 @@ export default {
   }),
   computed: {
     isAdmin() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles.find((r) => r.name === "superAdmin");
-      }
-
-      return false;
+      return this.$store.state.AppActiveUser.is_admin;
     },
     companyId() {
       return this.$store.state.AppActiveUser.company_id;
@@ -247,7 +242,7 @@ export default {
     menuItemsUpdated() {
       const clone = this.navMenuItems.slice();
       const user = this.$store.state.AppActiveUser;
-      let userPermissions = this.$store.getters.userPermissions;
+      let userPermissions = this.$store.getters.AppActiveUserPermissions;
       for (const [index, item] of this.navMenuItems.entries()) {
         if (item.header && item.items.length && (index || 1)) {
           const i = clone.findIndex((ix) => ix.header === item.header);
@@ -256,10 +251,7 @@ export default {
           }
         }
         if (user && user.id !== null) {
-          if (
-            user.roles.findIndex((r) => r.name === "superAdmin") > -1 ||
-            item.slug === "home"
-          ) {
+          if (this.isAdmin > -1 || item.slug === "home") {
             item.show = true;
           } else if (userPermissions.length > 0) {
             item.show =

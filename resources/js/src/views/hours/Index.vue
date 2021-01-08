@@ -540,7 +540,7 @@ export default {
     },
   },
   methods: {
-    authorizedTo(action, model = "hours") {
+    authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     clearRefreshDataTimeout() {
@@ -586,15 +586,7 @@ export default {
       this.refreshData();
     },
     isAdmin() {
-      const user = this.$store.state.AppActiveUser;
-      if (
-        user.roles &&
-        user.roles.length > 0 &&
-        user.roles.find((r) => r.name === "superAdmin")
-      ) {
-        return true;
-      }
-      return false;
+      return this.$store.state.AppActiveUser.is_admin;
     },
     isFullFilter() {
       return this.filters.period_type === "full";
@@ -786,10 +778,7 @@ export default {
     // Hide user column ?
     this.gridOptions.columnApi.setColumnVisible(
       "user",
-      this.activeUserRole() == "superAdmin" ||
-        this.activeUserRole() == "Administrateur"
-        ? true
-        : false
+      this.isAdmin || this.activeUserRole() == "Administrateur" ? true : false
     );
 
     window.addEventListener("resize", this.onResize);

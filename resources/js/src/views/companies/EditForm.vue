@@ -71,8 +71,6 @@
             :danger-text="errors.first('contact_lastname')"
           />
         </vs-col>
-      </vs-row>
-      <vs-row vs-justify="center" vs-type="flex" vs-w="12" class="mb-6">
         <vs-col vs-w="4" vs-xs="12" class="px-3">
           <vs-input
             v-validate="'max:255|email|required'"
@@ -152,8 +150,6 @@
             :danger-text="errors.first('street_name')"
           />
         </vs-col>
-      </vs-row>
-      <vs-row vs-justify="center" vs-type="flex" vs-w="12" class="mb-6">
         <vs-col vs-w="4" vs-xs="12" class="px-3">
           <vs-input
             v-validate="'max:15|required'"
@@ -213,7 +209,7 @@
                 :danger-text="errors.first('code')"
               />
             </vs-col>
-            <vs-col vs-w="4" vs-xs="12" class="px-3">
+            <vs-col vs-w="6" vs-xs="12" class="px-3">
               <vs-input
                 v-validate="'max:255|required'"
                 name="type"
@@ -224,15 +220,6 @@
                 :danger="errors.has('type')"
                 :danger-text="errors.first('type')"
               />
-            </vs-col>
-            <vs-col vs-w="2" vs-xs="12" class="px-3">
-              <small class="ml-2"> Période d'essaie </small>
-              <vs-switch
-                class="mt-2"
-                v-model="itemLocal.is_trial"
-                name="is_trial"
-              >
-              </vs-switch>
             </vs-col>
           </vs-row>
         </div>
@@ -322,11 +309,7 @@ export default {
   },
   computed: {
     isAdmin() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles.find((r) => r.name === "superAdmin");
-      }
-      return false;
+      return this.$store.state.AppActiveUser.is_admin;
     },
     validateForm() {
       return (

@@ -199,6 +199,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     companiesData() {
       return this.$store.state.companyManagement
         ? this.$store.state.companyManagement.companies
@@ -229,7 +232,7 @@ export default {
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           return false;
         } else {
           this.range_data.company_id = user.company_id;
@@ -303,7 +306,7 @@ export default {
     },
   },
   mounted() {
-    if (this.activeUserRole() != "superAdmin") {
+    if (this.isAdmin) {
       this.range_data.company = this.$store.state.AppActiveUser.company;
     }
   },

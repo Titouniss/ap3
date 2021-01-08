@@ -1,6 +1,6 @@
 <template>
   <vs-prompt
-    title="Ajouter un abonnement"
+    title="Modifier un abonnement"
     accept-text="Modifier"
     cancel-text="Annuler"
     button-cancel="border"
@@ -34,36 +34,46 @@
       <vs-col vs-w="12" class="pb-3">
         <small class="ml-2"> Date de début </small>
         <flat-pickr
-          name="start_date"
+          name="starts_at"
           v-validate="'required'"
-          :config="configDatePicker(null, itemLocal.end_date)"
+          :config="configDatePicker(null, itemLocal.ends_at)"
           class="w-full"
-          v-model="itemLocal.start_date"
+          v-model="itemLocal.starts_at"
         />
-        <small v-show="errors.has('start_date')" class="text-danger">
-          {{ errors.first("start_date") }}
+        <small v-show="errors.has('starts_at')" class="text-danger">
+          {{ errors.first("starts_at") }}
         </small>
       </vs-col>
-      <vs-col vs-w="12" vs-xs="12" class="pb-3">
+      <vs-col vs-w="12" class="pb-3">
         <small class="ml-2"> Date de fin </small>
         <flat-pickr
-          name="end_date"
+          name="ends_at"
           v-validate="'required'"
-          :config="configDatePicker(itemLocal.start_date)"
-          v-model="itemLocal.end_date"
+          :config="configDatePicker(itemLocal.starts_at)"
+          v-model="itemLocal.ends_at"
           class="w-full"
         />
-        <small v-show="errors.has('end_date')" class="text-danger">
-          {{ errors.first("end_date") }}
+        <small v-show="errors.has('ends_at')" class="text-danger">
+          {{ errors.first("ends_at") }}
         </small>
       </vs-col>
-      <vs-col vs-w="12" vs-xs="12" class="pb-3">
+      <vs-col vs-w="6" class="pb-3">
+        <small class="ml-2"> Période d'essaie </small>
+        <vs-switch
+          vs-icon-off="close"
+          vs-icon-on="done"
+          v-model="itemLocal.is_trial"
+          name="is_trial"
+        >
+        </vs-switch>
+      </vs-col>
+      <vs-col vs-w="6" class="pb-3">
         <small class="ml-2"> Annulé </small>
         <vs-switch
           color="danger"
           vs-icon-off="close"
           vs-icon-on="done"
-          v-model="is_cancelled"
+          v-model="itemLocal.is_cancelled"
         ></vs-switch>
       </vs-col>
     </vs-row>
@@ -99,7 +109,6 @@ export default {
   data() {
     return {
       itemLocal: {},
-      is_cancelled: false,
 
       configDatePicker: (minDate = null, maxDate = null) => ({
         altInput: true,
@@ -115,8 +124,8 @@ export default {
     validateForm() {
       return (
         !this.errors.any() &&
-        this.itemLocal.start_date &&
-        this.itemLocal.end_date &&
+        this.itemLocal.starts_at &&
+        this.itemLocal.ends_at &&
         this.itemLocal.packages &&
         this.itemLocal.packages.length > 0
       );
@@ -139,31 +148,29 @@ export default {
   },
   methods: {
     init() {
-      this.itemLocal = JSON.parse(
+      const item = JSON.parse(
         JSON.stringify(
           this.$store.getters["subscriptionManagement/getItem"](this.itemId)
         )
       );
-      this.itemLocal.packages = this.itemLocal.packages.map((p) => p.id);
-      this.is_cancelled = this.itemLocal.state === "cancelled";
+      item.packages = item.packages.map((p) => p.id);
+      item.is_cancelled = item.state === "cancelled";
+      this.itemLocal = item;
     },
     submitItem() {
       this.$validator.validateAll().then((result) => {
         if (result) {
           const item = JSON.parse(JSON.stringify(this.itemLocal));
-          item.start_date = item.start_date.split(" ").shift();
-          item.end_date = item.end_date.split(" ").shift();
-          if (this.is_cancelled) {
-            item.is_cancelled = true;
-          }
+          item.starts_at = item.starts_at.split(" ").shift();
+          item.ends_at = item.ends_at.split(" ").shift();
           this.$store
             .dispatch("subscriptionManagement/updateItem", item)
             .then(() => {
               this.$vs.notify({
                 title: "Modification d'un abonnement",
-                text: `Abonnement du ${moment(item.start_date).format(
+                text: `Abonnement du ${moment(item.starts_at).format(
                   "DD/MM/YYYY"
-                )} au ${moment(item.end_date).format(
+                )} au ${moment(item.ends_at).format(
                   "DD/MM/YYYY"
                 )} modifié avec succès`,
                 iconPack: "feather",

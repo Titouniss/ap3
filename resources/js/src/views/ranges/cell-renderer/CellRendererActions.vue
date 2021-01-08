@@ -3,13 +3,13 @@
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
-      v-if="authorizedToEdit && !params.data.deleted_at"
+      v-if="authorizedTo('edit') && !params.data.deleted_at"
       @click="editRecord"
     />
     <feather-icon
       icon="ArchiveIcon"
       :svgClasses="this.archiveSvg"
-      v-if="authorizedToDelete"
+      v-if="authorizedTo('delete')"
       @click="
         params.data.deleted_at
           ? confirmActionRecord('restore')
@@ -19,7 +19,7 @@
     <feather-icon
       icon="Trash2Icon"
       svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
-      v-if="authorizedToDelete"
+      v-if="authorizedTo('delete')"
       @click="confirmActionRecord('delete')"
     />
   </div>
@@ -37,12 +37,6 @@ export default {
         this.params.data.company_id === null && !this.params.data.is_public
       );
     },
-    authorizedToEdit() {
-      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
-    },
-    authorizedToDelete() {
-      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
-    },
     archiveSvg() {
       return this.params.data.deleted_at
         ? "h-5 w-5 mr-4 text-success cursor-pointer"
@@ -50,6 +44,9 @@ export default {
     },
   },
   methods: {
+    authorizedTo(action, model = modelPlurial) {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     editRecord() {
       this.$router
         .push(`/${modelPlurial}/${model}-edit/${this.params.data.id}`)

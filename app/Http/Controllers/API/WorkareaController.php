@@ -26,7 +26,7 @@ class WorkareaController extends Controller
     {
         $user = Auth::user();
         $items = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $items = Workarea::withTrashed()->get()->load('company', 'skills', 'documents');
         } else if ($user->company_id != null) {
             $items = Workarea::withTrashed()->where('company_id', $user->company_id)->get()->load('company', 'skills', 'documents');

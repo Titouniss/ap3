@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -70,12 +69,14 @@ class UserController extends Controller
             $module = null;
             $user = Auth::user();
 
-            if ($user->company_id) {
+            if (!$user->role->is_admin) {
                 $company = Company::find($user->company_id);
                 if (!$company) {
-                    return response()->json(['success' => false, 'error' => 'Account deactivated']);
-                } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
-                    return response()->json(['success' => false, 'error' => 'Trial ended']);
+                    Auth::logout();
+                    return response()->json(['success' => false, 'error' => 'Connexion impossible, votre compte a été désactivé'], 400);
+                } else if (!$company->has_active_subscription) {
+                    Auth::logout();
+                    return response()->json(['success' => false, 'error' => 'Connexion impossible, votre société ne dispose d\'aucun abonnement actif'], 400);
                 }
                 if ($company->module && $company->module->is_active) {
                     $module = $company->module->load('moduleDataTypes', 'moduleDataTypes.dataType');
@@ -83,7 +84,8 @@ class UserController extends Controller
             }
 
             if (!$user->hasVerifiedEmail()) {
-                return response()->json(['success' => false, 'verify' => false], $this->successStatus);
+                Auth::logout();
+                return response()->json(['success' => false, 'error' => 'Veuillez valider votre adresse e-mail avant de vous connecter', 'verify' => false], 400);
             }
 
             $token = $user->createToken('ProjetX');
@@ -95,14 +97,14 @@ class UserController extends Controller
                     $query->select(['id', 'name', 'name_fr', 'is_public']);
                 }]);
             }]);
-            $user->load(['company:id,name']);
+            $user->load(['company:id,name'])->append('permissions');
             if ($user->hasRole('Administrateur')) {
                 $user->load(['company.users:id,firstname,lastname,company_id']);
             }
 
             return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module && $module->count() > 0 ? $module : null)], $this->successStatus);
         } else {
-            return response()->json(['success' => false, 'error' => 'Unauthorised']);
+            return response()->json(['success' => false, 'error' => 'Connexion impossible l\'identifiant ou le mot de passe est incorrect'], 400);
         }
     }
 
@@ -347,7 +349,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $usersList = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $usersList = User::withTrashed()->get()->load('roles', 'company:id,name', 'skills');
         } else if ($user->company_id != null) {
             $usersList = User::withTrashed()->where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');

@@ -371,6 +371,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     validateForm() {
       return (
         !this.errors.any() &&
@@ -594,7 +597,7 @@ export default {
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           if (this.project_data !== undefined && this.project_data !== null) {
             $filteredItems = $items.filter(
               (item) => item.company_id === this.project_data.company_id

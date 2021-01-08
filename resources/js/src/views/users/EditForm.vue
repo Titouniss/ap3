@@ -281,6 +281,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     relatedUsers() {
       return this.itemLocal.related_users;
     },
@@ -298,7 +301,7 @@ export default {
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           return false;
         } else {
           this.itemLocal.company_id = user.company_id;
@@ -318,7 +321,7 @@ export default {
     },
   },
   methods: {
-    authorizedTo(action, model = "users") {
+    authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     selectCompanySkills(item) {
@@ -427,15 +430,8 @@ export default {
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
-    },
     getCompanyName() {
-      if (this.activeUserRole() == "superAdmin") {
+      if (this.isAdmin) {
         if (this.itemLocal.company_id != null) {
           let company = this.$store.getters["companyManagement/getItem"](
             this.itemLocal.company_id

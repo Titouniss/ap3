@@ -230,6 +230,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     companiesData() {
       return this.$store.state.companyManagement.companies;
     },
@@ -241,19 +244,10 @@ export default {
     skillsData() {
       return this.$store.state.skillManagement.skills;
     },
-    authorizedToPublish() {
-      return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
-    },
-    authorizedToDelete() {
-      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
-    },
-    authorizedToEdit() {
-      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
-    },
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           return false;
         } else {
           this.itemLocal.company_id = user.company_id;
@@ -273,7 +267,7 @@ export default {
     },
   },
   methods: {
-    authorizedTo(action, model = "users") {
+    authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     clearFields() {
@@ -337,7 +331,7 @@ export default {
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           $filteredItems = $items.filter(
             (item) => item.company_id === this.itemLocal.company_id
           );
@@ -350,15 +344,8 @@ export default {
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
-    },
     getCompanyName() {
-      if (this.activeUserRole() == "superAdmin") {
+      if (this.isAdmin) {
         if (this.itemLocal.company_id != null) {
           let company = this.$store.getters["companyManagement/getItem"](
             this.itemLocal.company_id
@@ -397,7 +384,7 @@ export default {
     },
   },
   mounted() {
-    if (this.activeUserRole() != "superAdmin") {
+    if (this.isAdmin) {
       this.selectCompanySkills(this.$store.state.AppActiveUser.company_id);
     }
 

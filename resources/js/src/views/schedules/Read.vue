@@ -34,22 +34,22 @@
         defaultView="timeGridWeek"
         :editable="true"
         :header="{
-                    left: 'prev today next',
-                    center: 'dayGridMonth, timeGridWeek, timeGridDay',
-                    right: 'title'
-                }"
+          left: 'prev today next',
+          center: 'dayGridMonth, timeGridWeek, timeGridDay',
+          right: 'title',
+        }"
         :views="{
-                    timeGridWeek: {
-                        titleFormat: '{dddd DD MMM}, [Semaine] w, YYYY'
-                    }
-                }"
+          timeGridWeek: {
+            titleFormat: '{dddd DD MMM}, [Semaine] w, YYYY',
+          },
+        }"
         :buttonText="{
-                    today: 'Aujourd\'hui',
-                    month: 'Mois',
-                    week: 'Semaine',
-                    day: 'Jour',
-                    list: 'Liste'
-                }"
+          today: 'Aujourd\'hui',
+          month: 'Mois',
+          week: 'Semaine',
+          day: 'Jour',
+          list: 'Liste',
+        }"
         :allDaySlot="false"
         :plugins="calendarPlugins"
         :weekends="calendarWeekends"
@@ -70,7 +70,7 @@
         :tasks_list="tasksEvent"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedToEdit"
+        v-if="itemIdToEdit && authorizedTo('edit')"
       />
     </div>
   </div>
@@ -145,19 +145,21 @@ export default {
     calendarEvents() {
       // Get all task and parse to show
       var eventsParse = [];
-      let minHour = null
-      let maxHour = null
+      let minHour = null;
+      let maxHour = null;
       if (this.$route.query.type === "projects") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
+            t.periods.forEach((p) => {
+              let start_period_hour = moment(p.start_time).format("HH:mm");
+              let end_period_hour = moment(p.end_time).format("HH:mm");
 
-             t.periods.forEach((p) => {
-
-              let start_period_hour= moment(p.start_time).format("HH:mm")
-              let end_period_hour= moment(p.end_time).format("HH:mm")
-              
-              minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
-              maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
+              minHour == null || start_period_hour < minHour
+                ? (minHour = start_period_hour)
+                : null;
+              maxHour == null || end_period_hour > maxHour
+                ? (maxHour = end_period_hour)
+                : null;
 
               eventsParse.push({
                 id: t.id,
@@ -174,12 +176,12 @@ export default {
                 project_id: parseInt(this.$route.query.id, 10),
                 color: t.project.color,
               });
-             });
+            });
           });
         }
 
-        console.log(minHour)
-        console.log(maxHour)
+        console.log(minHour);
+        console.log(maxHour);
       } else if (this.$route.query.type === "users") {
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
@@ -188,40 +190,43 @@ export default {
             //   (t.user_id.toString() === this.$route.query.id ||
             //     t.user_id === this.$route.query.id)
             // ) {
-              // Get project id
-              let project_id = null;
-              this.$store.state.projectManagement.projects.forEach((p) => {
-                p.tasks_bundles.forEach((tb) => {
-                  if (t.tasks_bundle_id === tb.id) {
-                    project_id = tb.project_id;
-                  }
-                });
+            // Get project id
+            let project_id = null;
+            this.$store.state.projectManagement.projects.forEach((p) => {
+              p.tasks_bundles.forEach((tb) => {
+                if (t.tasks_bundle_id === tb.id) {
+                  project_id = tb.project_id;
+                }
               });
+            });
 
-              t.periods.forEach((p) => {
+            t.periods.forEach((p) => {
+              let start_period_hour = moment(p.start_time).format("HH:mm");
+              let end_period_hour = moment(p.end_time).format("HH:mm");
 
-                let start_period_hour= moment(p.start_time).format("HH:mm")
-              let end_period_hour= moment(p.end_time).format("HH:mm")
-              
-              minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
-              maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
+              minHour == null || start_period_hour < minHour
+                ? (minHour = start_period_hour)
+                : null;
+              maxHour == null || end_period_hour > maxHour
+                ? (maxHour = end_period_hour)
+                : null;
 
-                eventsParse.push({
-                  id: t.id,
-                  title: t.name,
-                  start: p.start_time,
-                  estimated_time: t.estimated_time,
-                  order: t.order,
-                  description: t.description,
-                  time_spent: t.time_spent,
-                  workarea_id: t.workarea_id,
-                  status: t.status,
-                  end: p.end_time,
-                  user_id: t.user_id,
-                  project_id: project_id,
-                  color: t.project.color,
-                });
+              eventsParse.push({
+                id: t.id,
+                title: t.name,
+                start: p.start_time,
+                estimated_time: t.estimated_time,
+                order: t.order,
+                description: t.description,
+                time_spent: t.time_spent,
+                workarea_id: t.workarea_id,
+                status: t.status,
+                end: p.end_time,
+                user_id: t.user_id,
+                project_id: project_id,
+                color: t.project.color,
               });
+            });
             // }
           });
         }
@@ -233,57 +238,56 @@ export default {
             //   (t.workarea_id.toString() === this.$route.query.id ||
             //     t.workarea_id === this.$route.query.id)
             // ) {
-              // Get project id
-              let project_id = null;
-              this.$store.state.projectManagement.projects.forEach((p) => {
-                p.tasks_bundles.forEach((tb) => {
-                  if (t.tasks_bundle_id === tb.id) {
-                    project_id = tb.project_id;
-                  }
-                });
+            // Get project id
+            let project_id = null;
+            this.$store.state.projectManagement.projects.forEach((p) => {
+              p.tasks_bundles.forEach((tb) => {
+                if (t.tasks_bundle_id === tb.id) {
+                  project_id = tb.project_id;
+                }
               });
+            });
 
-               t.periods.forEach((p) => {
+            t.periods.forEach((p) => {
+              let start_period_hour = moment(p.start_time).format("HH:mm");
+              let end_period_hour = moment(p.end_time).format("HH:mm");
 
-                 let start_period_hour= moment(p.start_time).format("HH:mm")
-              let end_period_hour= moment(p.end_time).format("HH:mm")
-              
-              minHour == null || start_period_hour < minHour ? minHour = start_period_hour : null
-              maxHour == null || end_period_hour > maxHour ? maxHour = end_period_hour : null
+              minHour == null || start_period_hour < minHour
+                ? (minHour = start_period_hour)
+                : null;
+              maxHour == null || end_period_hour > maxHour
+                ? (maxHour = end_period_hour)
+                : null;
 
-                eventsParse.push({
-                  id: t.id,
-                  title: t.name,
-                  start: p.start_time,
-                  estimated_time: t.estimated_time,
-                  order: t.order,
-                  description: t.description,
-                  time_spent: t.time_spent,
-                  workarea_id: t.workarea_id,
-                  status: t.status,
-                  end: p.end_time,
-                  user_id: t.user_id,
-                  project_id: project_id,
-                  color: t.project.color,
-                });
-               });
+              eventsParse.push({
+                id: t.id,
+                title: t.name,
+                start: p.start_time,
+                estimated_time: t.estimated_time,
+                order: t.order,
+                description: t.description,
+                time_spent: t.time_spent,
+                workarea_id: t.workarea_id,
+                status: t.status,
+                end: p.end_time,
+                user_id: t.user_id,
+                project_id: project_id,
+                color: t.project.color,
+              });
+            });
             // }
           });
         }
       }
-      
+
       this.minTime =
-              minHour && minHour >= "02:00"
-                  ? moment(minHour, "HH:mm")
-                        .subtract(2, "hour")
-                        .format("HH:mm")
-                  : "00:00";
+        minHour && minHour >= "02:00"
+          ? moment(minHour, "HH:mm").subtract(2, "hour").format("HH:mm")
+          : "00:00";
       this.maxTime =
-          maxHour && maxHour <= "22:00"
-              ? moment(maxHour, "HH:mm")
-                    .add(2, "hour")
-                    .format("HH:mm")
-              : "24:00";
+        maxHour && maxHour <= "22:00"
+          ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
+          : "24:00";
 
       this.$store
         .dispatch("scheduleManagement/addEvents", eventsParse)
@@ -293,11 +297,6 @@ export default {
 
       return eventsParse;
     },
-    authorizedToEdit() {
-      return (
-        this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`) > -1
-      );
-    },
     tasksEvent() {
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
@@ -306,7 +305,7 @@ export default {
     project_data() {
       if (this.$route.query.type === "projects") {
         var project_data = this.$store.state.projectManagement.projects.find(
-          (p) => (p.id === parseInt(this.$route.query.id, 10))
+          (p) => p.id === parseInt(this.$route.query.id, 10)
         );
         if (project_data) {
           return project_data;
@@ -317,13 +316,13 @@ export default {
     },
     user_data() {
       var user_data = this.$store.state.userManagement.users.find(
-        (u) => (u.id === this.$route.query.id)
+        (u) => u.id === this.$route.query.id
       );
       return user_data;
     },
     workarea_data() {
       var workarea_data = this.$store.state.workareaManagement.workareas.find(
-        (w) => (w.id === this.$route.query.id)
+        (w) => w.id === this.$route.query.id
       );
       return workarea_data;
     },
@@ -349,7 +348,7 @@ export default {
         .dispatch("taskManagement/editItem", targetEvent)
         .catch((err) => {
           console.error(err);
-      });
+        });
     },
     handleEventDrop(arg) {
       var itemTemp = this.calendarEvents.find(
@@ -425,7 +424,7 @@ export default {
       //this.refresh();
       (this.activeAddPrompt = false), (this.dateData = {});
     },
-    authorizedTo(action, model = "users") {
+    authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     getBusinessHours() {
@@ -597,13 +596,17 @@ export default {
           });
       }
     } else if (this.$route.query.type === "users") {
-      this.$store.dispatch("taskManagement/fetchItemsByUser", this.$route.query.id).catch((err) => {
-        this.manageErrors(err);
-      });
+      this.$store
+        .dispatch("taskManagement/fetchItemsByUser", this.$route.query.id)
+        .catch((err) => {
+          this.manageErrors(err);
+        });
     } else if (this.$route.query.type === "workarea") {
-      this.$store.dispatch("taskManagement/fetchItemsByWorkarea", this.$route.query.id).catch((err) => {
-        this.manageErrors(err);
-      });
+      this.$store
+        .dispatch("taskManagement/fetchItemsByWorkarea", this.$route.query.id)
+        .catch((err) => {
+          this.manageErrors(err);
+        });
     }
 
     this.$store.dispatch("skillManagement/fetchItems").catch((err) => {

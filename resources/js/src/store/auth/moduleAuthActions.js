@@ -46,7 +46,10 @@ export default {
     },
     checkUsernamePwdBeforeLoginJWT({ commit }, payload) {
         return new Promise((resolve, reject) => {
-            jwt.checkUsernamePwdBeforeLogin(payload.userDetails.login, payload.userDetails.password)
+            jwt.checkUsernamePwdBeforeLogin(
+                payload.userDetails.login,
+                payload.userDetails.password
+            )
                 .then(response => {
                     const data = response.data;
                     if (data && data.success) {
@@ -61,9 +64,9 @@ export default {
                 .catch(error => {
                     let message =
                         "Connexion au serveur impossible, Veuillez réessayer ultérieurement.";
-                    reject({ message: message});
+                    reject({ message: message });
                 });
-            });
+        });
     },
     // JWT
     loginJWT({ commit }, payload) {
@@ -71,6 +74,7 @@ export default {
             jwt.login(payload.userDetails.login, payload.userDetails.password)
                 .then(response => {
                     const data = response.data;
+                    console.log(data);
                     // If there's user data in response
                     if (data && data.success) {
                         // Set accessToken
@@ -94,51 +98,32 @@ export default {
                         localStorage.setItem(
                             "tokenExpires",
                             moment(data.success.tokenExpires).unix() ||
-                            moment().unix()
+                                moment().unix()
                         );
                         // Navigate User to homepage
                         if (data.userData.is_password_change === 0) {
-                            router.push(router.currentRoute.query.to || "/pages/change-password");
+                            router.push(
+                                router.currentRoute.query.to ||
+                                    "/pages/change-password"
+                            );
                         } else {
                             router.push(router.currentRoute.query.to || "/");
                         }
                         resolve(response);
-                    } else if (data && data.verify === false) {
-                        reject({
-                            message:
-                                "Veuillez valider votre adresse e-mail avant de vous connecter.",
-                            activeResend: true
-                        });
-                    } else if (data.error.includes("deactivated")) {
-                        reject({
-                            message:
-                                "Connexion impossible le compte est désactivé."
-                        });
-                    } else if (data.error.includes("Trial")) {
-                        reject({
-                            message:
-                                "Connexion impossible la période d'essaie est terminée."
-                        });
-                    } else {
-                        reject({
-                            message:
-                                "Connexion impossible l’identifiant ou le mot de passe est incorrect."
-                        });
                     }
+
+                    const error = { message: data.error };
+                    if (data.verify) {
+                        error.activeResend = true;
+                    }
+                    reject(error);
                 })
-                .catch(error => {
-                    let message =
-                        "Connexion au serveur impossible, Veuillez réessayer ultérieurement.";
-                    let activeResend = false;
-                    if (
-                        error.response.data.message ===
-                        "Your email address is not verified."
-                    ) {
-                        activeResend = true;
-                        message =
-                            "Veuillez valider votre adresse e-mail avant de vous connecter.";
+                .catch(err => {
+                    const error = { message: err.message };
+                    if (err.response.data.verify) {
+                        error.activeResend = true;
                     }
-                    reject({ message: message, activeResend: activeResend });
+                    reject(error);
                 });
         });
     },

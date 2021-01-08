@@ -24,7 +24,7 @@ class SubscriptionController extends Controller
     {
         $items = Subscription::withTrashed()->with('company')->get();
 
-        return response()->json(['success' => $items->sortBy('end_date')->sortBy('start_date')->sortBy('status_order')->values()], $this->successStatus);
+        return response()->json(['success' => $items->sortBy('ends_at')->sortBy('starts_at')->sortBy('status_order')->values()], $this->successStatus);
     }
 
     /**
@@ -51,7 +51,7 @@ class SubscriptionController extends Controller
 
         $items = Subscription::withTrashed()->where('company_id', $item->id)->with('company', 'packages')->get();
 
-        return response()->json(['success' => $items->sortBy('end_date')->sortBy('start_date')->sortBy('status_order')->values()], $this->successStatus);
+        return response()->json(['success' => $items->sortBy('ends_at')->sortBy('starts_at')->sortBy('status_order')->values()], $this->successStatus);
     }
 
     /**
@@ -116,22 +116,24 @@ class SubscriptionController extends Controller
         }
 
         $validator = Validator::make($subscriptionArray, [
-            'start_date' => 'required',
-            'end_date' => 'required',
+            'starts_at' => 'required',
+            'ends_at' => 'required',
             'packages' => 'required',
+            'is_trial' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
         try {
-            $item->start_date = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
-            $item->end_date = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
+            $item->starts_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['starts_at'] . ' 00:00:00');
+            $item->ends_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
+            $item->is_trial = $subscriptionArray['is_trial'];
             $item->save();
             $item->packages()->sync($subscriptionArray['packages']);
-            if ($item->start_date->isFuture()) {
+            if ($item->starts_at->isFuture()) {
                 $item->state = 'pending';
-            } else if ($item->end_date->isFuture()) {
+            } else if ($item->ends_at->isFuture()) {
                 $item->state = 'active';
             } else {
                 $item->state = 'inactive';

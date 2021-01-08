@@ -269,7 +269,7 @@ export default {
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           $filteredItems = $items.filter(
             (item) => item.company_id === this.company_id
           );

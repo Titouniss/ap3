@@ -26,7 +26,7 @@ class RoleController extends Controller
     {
         $user = Auth::user();
         $listObject = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $listObject = Role::all()->load('permissions');
         } else if ($user->company_id != null) {
             $listObject = Role::where('company_id', $user->company_id)

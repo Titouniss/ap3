@@ -141,10 +141,9 @@ export default {
     FileInput,
   },
   data() {
-    const selectedCompany =
-      this.$store.getters.AppActiveUserRole != "superAdmin"
-        ? this.$store.state.AppActiveUser.company
-        : null;
+    const selectedCompany = this.isAdmin
+      ? this.$store.state.AppActiveUser.company
+      : null;
     return {
       activePrompt: false,
       langFr: fr,
@@ -153,14 +152,10 @@ export default {
         name: "",
         date: new Date(),
         customer: null,
-        company:
-          this.$store.getters.AppActiveUserRole != "superAdmin"
-            ? this.$store.state.AppActiveUser.company.id
-            : null,
-        company:
-          this.$store.getters.AppActiveUserRole != "superAdmin"
-            ? this.$store.state.AppActiveUser.company
-            : null,
+        company: this.isAdmin
+          ? this.$store.state.AppActiveUser.company.id
+          : null,
+        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
         color: "",
       },
       colors: project_colors,
@@ -170,6 +165,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     validateForm() {
       return (
         !this.errors.any() &&
@@ -195,7 +193,7 @@ export default {
     disabled() {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           return false;
         } else {
           this.itemLocal.company_id = user.company_id;
@@ -267,7 +265,7 @@ export default {
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           filteredItems = items.filter(
             (item) => item.company_id === this.itemLocal.company.id
           );

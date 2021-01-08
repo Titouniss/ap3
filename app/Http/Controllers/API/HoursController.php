@@ -30,8 +30,8 @@ class HoursController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $items = $user->hasRole('superAdmin') ? Hours::select('*') : Hours::where('user_id', $user->id);
-        $paidHolidays = $user->hasRole('superAdmin') ? Unavailability::select('*')->where('reason' , 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason' , "Congés payés");
+        $items = $user->is_admin ? Hours::select('*') : Hours::where('user_id', $user->id);
+        $paidHolidays = $user->is_admin ? Unavailability::select('*')->where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
 
         if ($user->hasRole('Administrateur')) {
             $items = Hours::select('hours.*')->join('users', 'hours.user_id', '=', 'users.id')->where('users.company_id', $user->company_id);
@@ -71,7 +71,7 @@ class HoursController extends Controller
 
         // Stats
         $stats = [];
-        
+
         // // Ajout des congés payés au nombre d'heures
         if (!$paidHolidays->isEmpty()) {
             $stats['total'] = CarbonInterval::hours(0);
@@ -79,8 +79,7 @@ class HoursController extends Controller
                 $hours = Carbon::create($pH->ends_at)->diffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::createFromFormat('H', $hours));
             }
-        }
-        else {
+        } else {
             $stats['total'] = CarbonInterval::hours(0);
             $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
             $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
@@ -93,7 +92,7 @@ class HoursController extends Controller
 
             $stats['total'] = $stats['total']->totalHours;
 
-            if ($request->date && $userId = $user->hasRole('superAdmin') ? $request->user_id : $user->id) {
+            if ($request->date && $userId = $user->is_admin ? $request->user_id : $user->id) {
                 $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count() || 1;
                 $workWeekHours = WorkHours::where('user_id', $userId)->where('is_active', 1)->get()->map(function ($day) {
                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));

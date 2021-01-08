@@ -26,37 +26,16 @@ const getters = {
         return state.is_touch_device ? "div" : "VuePerfectScrollbar";
     },
     AppActiveUser: state => state.AppActiveUser,
-    AppActiveUserRole: state => {
-        if (state.AppActiveUser.roles && state.AppActiveUser.roles.length > 0) {
-            return state.AppActiveUser.roles[0].name;
-        }
-        return false;
-    },
-    userPermissions: state => {
-        const user = state.AppActiveUser;
-        let userPermissions = [];
-        if (user && user.id !== null) {
-            let userPermissionsMultiple = user.roles.reduce((acc, role) => {
-                if (!acc) acc = [];
-                acc.push(role.permissions); // get role permmissions in 1 list
-                return acc;
-            }, []);
-            userPermissions = [...new Set(userPermissionsMultiple)][0]; // get unique only
-        }
-        return userPermissions;
-    },
+    AppActiveUserPermissions: state =>
+        state.AppActiveUser ? state.AppActiveUser.permissions : [],
     userHasPermissionTo: state => permName => {
-        const user = state.AppActiveUser;
-        let userPermissions = [];
-        if (user && user.id !== null) {
-            let userPermissionsMultiple = user.roles.reduce((acc, role) => {
-                if (!acc) acc = [];
-                acc.push(role.permissions); // get role permmissions in 1 list
-                return acc;
-            }, []);
-            userPermissions = [...new Set(userPermissionsMultiple)][0]; // get unique only
-        }
-        return userPermissions.findIndex(p => p.name === permName) > -1;
+        return (
+            state.AppActiveUser &&
+            state.AppActiveUser.permissions &&
+            state.AppActiveUser.permissions.findIndex(
+                p => p.name === permName
+            ) > -1
+        );
     },
     module: state => state.module,
     moduleUsesSlug: state => slug =>

@@ -1,7 +1,7 @@
 <template>
   <div id="page-role-list">
     <div class="vx-card p-6">
-      <div class="px-4 pt-3 mb-6" v-if="authorizedToPublish">
+      <div class="px-4 pt-3 mb-6" v-if="authorizedTo('publish')">
         <vs-button @click="addRecord" class="w-full">Ajouter un rôle</vs-button>
       </div>
       <div class="flex flex-wrap items-center">
@@ -21,7 +21,7 @@
               <vs-dropdown-menu>
                 <vs-dropdown-item
                   @click="this.confirmDeleteRecord"
-                  v-if="authorizedToDelete"
+                  v-if="authorizedTo('delete')"
                 >
                   <span class="flex items-center">
                     <feather-icon
@@ -185,14 +185,8 @@ export default {
     };
   },
   computed: {
-    authorizedToPublish() {
-      return this.$store.getters.userHasPermissionTo(`publish ${modelPlurial}`);
-    },
-    authorizedToDelete() {
-      return this.$store.getters.userHasPermissionTo(`delete ${modelPlurial}`);
-    },
-    authorizedToEdit() {
-      return this.$store.getters.userHasPermissionTo(`edit ${modelPlurial}`);
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
     },
     itemIdToEdit() {
       return this.$store.state.roleManagement.role.id || 0;
@@ -219,6 +213,9 @@ export default {
     },
   },
   methods: {
+    authorizedTo(action, model = modelPlurial) {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
     blockRowDelete(data) {
       return this.$store.state.userManagement.users.find((user) =>
         user.roles.find((r) => r.id === data.id)
@@ -227,7 +224,7 @@ export default {
     isRowDisabled(data) {
       const user = this.$store.state.AppActiveUser;
       if (user.roles && user.roles.length > 0) {
-        if (user.roles.find((r) => r.name === "superAdmin")) {
+        if (this.isAdmin) {
           return (
             ["superAdmin", "Administrateur", "Utilisateur"].includes(
               data.name

@@ -25,8 +25,6 @@ class Company extends Model
         'postal_code',
         'city',
         'country',
-        'is_trial',
-        'expires_at'
     ];
     protected $appends = ['user_count', 'has_active_subscription', 'active_permissions'];
 
@@ -72,7 +70,7 @@ class Company extends Model
 
     public function subscriptions()
     {
-        return $this->hasMany(Subscription::class, 'company_id')->orderBy('state')->orderby('start_date');
+        return $this->hasMany(Subscription::class, 'company_id')->orderBy('state');
     }
 
     public function restoreCascade()

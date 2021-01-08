@@ -1,6 +1,8 @@
 <template>
   <div class="p-3 mb-4 mr-4">
-    <vs-button @click="activePrompt = true" class="w-full">Ajouter un client</vs-button>
+    <vs-button @click="activePrompt = true" class="w-full"
+      >Ajouter un client</vs-button
+    >
     <vs-prompt
       title="Ajouter un client"
       accept-text="Ajouter"
@@ -17,7 +19,7 @@
           <div class="vx-row">
             <div class="vx-col w-full">
               <v-select
-                v-if="(this.activeUserRole() == 'superAdmin')"
+                v-if="isAdmin"
                 label="name"
                 v-validate="'required'"
                 v-model="itemLocal.company"
@@ -47,10 +49,13 @@
                 v-if="itemLocal.professional"
                 class="text-danger text-sm"
                 v-show="errors.has('name')"
-              >{{ errors.first('name') }}</span>
+                >{{ errors.first("name") }}</span
+              >
               <vs-input
                 v-if="itemLocal.professional"
-                v-validate="itemLocal.professional ? 'required|numeric|min:14|max:14' : ''"
+                v-validate="
+                  itemLocal.professional ? 'required|numeric|min:14|max:14' : ''
+                "
                 name="siret"
                 class="w-full mb-4 mt-5"
                 label="Numéro de siret"
@@ -61,7 +66,8 @@
                 v-if="itemLocal.professional"
                 class="text-danger text-sm"
                 v-show="errors.has('siret')"
-              >{{ errors.first('siret') }}</span>
+                >{{ errors.first("siret") }}</span
+              >
 
               <vs-input
                 v-validate="'required|max:50'"
@@ -76,8 +82,8 @@
               <span
                 class="text-danger text-sm"
                 v-show="errors.has('lastname')"
-              >{{ errors.first('lastname') }}</span>
-              
+                >{{ errors.first("lastname") }}</span
+              >
             </div>
           </div>
         </form>
@@ -91,13 +97,12 @@ import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import vSelect from "vue-select";
 
-
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
   components: {
-    vSelect
+    vSelect,
   },
   data() {
     return {
@@ -106,13 +111,16 @@ export default {
       itemLocal: {
         name: null,
         lastname: null,
-        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null, 
+        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
         siret: null,
-        professional: 0
-      }
+        professional: 0,
+      },
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     validateForm() {
       if (this.itemLocal.professional || this.itemLocal.professional === 1) {
         return (
@@ -122,7 +130,11 @@ export default {
           this.itemLocal.siret !== null
         );
       } else {
-        return !this.errors.any() && this.itemLocal.lastname !== null && this.itemLocal.company !== null;
+        return (
+          !this.errors.any() &&
+          this.itemLocal.lastname !== null &&
+          this.itemLocal.company !== null
+        );
       }
     },
     companiesData() {
@@ -134,13 +146,13 @@ export default {
       Object.assign(this.itemLocal, {
         name: null,
         lastname: null,
-        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null,
+        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
         siret: null,
-        professional: 0
+        professional: 0,
       });
     },
     addCompany() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         if (result) {
           if (
             this.itemLocal.professional ||
@@ -162,20 +174,22 @@ export default {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Ajout d'un client",
-                text: `"${itemLocal.name ? itemLocal.name : itemLocal.lastname}" ajoutée avec succès`,
+                text: `"${
+                  itemLocal.name ? itemLocal.name : itemLocal.lastname
+                }" ajoutée avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "success"
+                color: "success",
               });
             })
-            .catch(error => {
+            .catch((error) => {
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
-                color: "danger"
+                color: "danger",
               });
             });
           this.clearFields();
@@ -184,11 +198,11 @@ export default {
     },
     activeUserRole() {
       const user = this.$store.state.AppActiveUser;
-      if ( user.roles && user.roles.length > 0 ) {
+      if (user.roles && user.roles.length > 0) {
         return user.roles[0].name;
       }
       return false;
     },
-  }
+  },
 };
 </script>

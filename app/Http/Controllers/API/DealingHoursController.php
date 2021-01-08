@@ -18,7 +18,7 @@ use Monolog\Handler\StreamHandler;
 class DealingHoursController extends Controller
 {
     use SoftDeletes;
-    
+
     public static $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -29,7 +29,7 @@ class DealingHoursController extends Controller
     {
         $user = Auth::user();
         $items = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $items = DealingHours::all();
         } else {
             $items = DealingHours::where('user_id', $user->id)->get();
@@ -43,7 +43,8 @@ class DealingHoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public static function getOvertimes($check = false) {
+    public static function getOvertimes($check = false)
+    {
         $user = Auth::user();
 
         // Check if overtimes
@@ -57,27 +58,25 @@ class DealingHoursController extends Controller
             $totalOvertimes = DealingHours::where('user_id', $user->id)->sum('overtimes');
             // Get nb used overtimes
             $usedOrvertimes = Unavailability::where([['user_id', $user->id], ['reason', 'Utilisation heures suplémentaires']])->get();
-            if(!$usedOrvertimes->isEmpty()) {
+            if (!$usedOrvertimes->isEmpty()) {
                 foreach ($usedOrvertimes as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
                     $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
 
-                    $nbUsedOvertimes += ( floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]) );
+                    $nbUsedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
                 }
             }
-            $result = Array (
+            $result = array(
                 "overtimes" => $totalOvertimes,
                 "usedOvertimes" => $nbUsedOvertimes
             );
-
-        }
-        else {
-            $result = Array (
+        } else {
+            $result = array(
                 "overtimes" => $totalOvertimes,
                 "usedOvertimes" => $nbUsedOvertimes
             );
         }
-        if($check === true) {
+        if ($check === true) {
             return $result;
         } else {
             return response()->json(['success' => $result], self::$successStatus);
@@ -126,11 +125,11 @@ class DealingHoursController extends Controller
      */
     public function storeOrUpdateUsed(Request $request)
     {
-        $arrayRequest = $request->all();        
+        $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'date' => 'required',
-            'used_hours' => 'required', 
+            'used_hours' => 'required',
             'used_type' => 'required',
             'overtimes_to_use' => 'required',
         ]);
@@ -140,7 +139,7 @@ class DealingHoursController extends Controller
 
         // Parse used_hours from time to double
         $parts = explode(':', $arrayRequest['used_hours']);
-        $arrayRequest['used_hours'] = $parts[0] + $parts[1]/60*100 / 100;
+        $arrayRequest['used_hours'] = $parts[0] + $parts[1] / 60 * 100 / 100;
 
         // Expected hours for this day
         $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['date']);
@@ -149,7 +148,7 @@ class DealingHoursController extends Controller
             $target_day = strftime("%A", strtotime($arrayRequest['date']));
             return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " + $target_day], 401);
         }
-        
+
         // Check have nb overtimes
         if ($arrayRequest['used_hours'] <= $arrayRequest['overtimes_to_use']) {
             // Check used_hours
@@ -168,7 +167,7 @@ class DealingHoursController extends Controller
                         // Check if same type
                         if ($item->used_type === $arrayRequest['used_type']) {
                             // Check if after update used_hour < workDuration
-                            if (($item->used_hours + $arrayRequest['used_hours'] ) <= $workDuration) {
+                            if (($item->used_hours + $arrayRequest['used_hours']) <= $workDuration) {
                                 $item = DealingHours::where('id', $item->id)->update(['used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
                                 return response()->json(['success' => [$item, "update"]], $this->successStatus);
                             } else {

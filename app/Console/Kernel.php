@@ -47,8 +47,8 @@ class Kernel extends ConsoleKernel
             }
 
             // Update subscription states based on date
-            Subscription::whereDate('start_date', '<', Carbon::now())->where('state', 'pending')->update(['state' => 'active']);
-            Subscription::whereDate('end_date', '<', Carbon::now())->where('state', 'active')->update(['state' => 'inactive']);
+            Subscription::whereDate('starts_at', '<', Carbon::now())->where('state', 'pending')->update(['state' => 'active']);
+            Subscription::whereDate('ends_at', '<', Carbon::now())->where('state', 'active')->update(['state' => 'inactive']);
         })->dailyAt("00:00");
     }
 

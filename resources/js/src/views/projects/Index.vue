@@ -337,6 +337,9 @@ export default {
     },
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     projectsData() {
       if (!this.$store.state.projectManagement) {
         return [];
@@ -549,10 +552,7 @@ export default {
     this.gridApi = this.gridOptions.api;
 
     // Hide company column ?
-    this.gridOptions.columnApi.setColumnVisible(
-      "company",
-      this.$store.getters.AppActiveUserRole == "superAdmin" ? true : false
-    );
+    this.gridOptions.columnApi.setColumnVisible("company", this.isAdmin);
 
     window.addEventListener("resize", this.onResize);
     // this.onResize();

@@ -24,16 +24,16 @@ class RangeController extends Controller
 
     public $successStatus = 200;
 
-    /** 
-     * list of items api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * list of items api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $user = Auth::user();
         $listObject = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $listObject = Range::withTrashed()->get()->load('company');
         } else if ($user->company_id != null) {
             $listObject = Range::withTrashed()->where('company_id', $user->company_id)->get()->load('company');
@@ -41,10 +41,10 @@ class RangeController extends Controller
         return response()->json(['success' => $listObject], $this->successStatus);
     }
 
-    /** 
-     * get single item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * get single item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
@@ -52,10 +52,10 @@ class RangeController extends Controller
         return response()->json(['success' => $item], $this->successStatus);
     }
 
-    /** 
-     * create item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * create item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -84,10 +84,10 @@ class RangeController extends Controller
         return response()->json(['success' => 'notAuthentified'], 500);
     }
 
-    /** 
-     * update item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * update item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
@@ -138,11 +138,11 @@ class RangeController extends Controller
         }
     }
 
-    /** 
-     * Archive the specified resource from storage. 
-     * 
+    /**
+     * Archive the specified resource from storage.
+     *
      * @param  int  $id
-     * @return \Illuminate\Http\Response 
+     * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {

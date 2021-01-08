@@ -31,7 +31,7 @@ class CompanyController extends Controller
     {
         $user = Auth::user();
         $items = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             //$items = Company::all()->load('skills');
             $items = Company::withTrashed()->get()->load('skills');
         } else if ($user->company_id != null) {
@@ -65,7 +65,6 @@ class CompanyController extends Controller
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'siret' => 'required',
-            'is_trial' => 'required',
             'code' => 'required',
             'type' => 'required',
             'contact_firstname' => 'required',
@@ -93,7 +92,6 @@ class CompanyController extends Controller
         $item = Company::create([
             'name' => $arrayRequest['name'],
             'siret' => $arrayRequest['siret'],
-            'is_trial' => $arrayRequest['is_trial'],
             'code' => $arrayRequest['code'],
             'type' => $arrayRequest['type'],
             'contact_firstname' => $arrayRequest['contact_firstname'],
@@ -111,16 +109,14 @@ class CompanyController extends Controller
         if (isset($arrayRequest['contact_tel2'])) {
             $item->contact_tel2 = $arrayRequest['contact_tel2'];
         }
-        if ($item->is_trial && !$item->expires_at) {
-            $item->expires_at = Carbon::now()->addWeeks(4);
-        }
         $item->save();
 
         $subscriptionArray = $arrayRequest['subscription'];
         $validator = Validator::make($subscriptionArray, [
-            'start_date' => 'required',
-            'end_date' => 'required',
+            'starts_at' => 'required',
+            'ends_at' => 'required',
             'packages' => 'required',
+            'is_trial' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
@@ -129,12 +125,13 @@ class CompanyController extends Controller
         $subscription = Subscription::create(['company_id' => $item->id]);
 
         try {
-            $subscription->start_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['start_date'] . ' 00:00:00');
-            $subscription->end_date = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['end_date'] . ' 23:59:59');
+            $subscription->starts_at = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['starts_at'] . ' 00:00:00');
+            $subscription->ends_at = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
+            $item->is_trial = $subscriptionArray['is_trial'];
             $subscription->packages()->sync($subscriptionArray['packages']);
-            if ($subscription->start_date->isFuture()) {
+            if ($subscription->starts_at->isFuture()) {
                 $subscription->state = 'pending';
-            } else if ($subscription->end_date->isFuture()) {
+            } else if ($subscription->ends_at->isFuture()) {
                 $subscription->state = 'active';
             } else {
                 $subscription->state = 'inactive';
@@ -174,19 +171,32 @@ class CompanyController extends Controller
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'siret' => 'required',
-            'is_trial' => 'required'
+            'code' => 'required',
+            'type' => 'required',
+            'contact_firstname' => 'required',
+            'contact_lastname' => 'required',
+            'contact_email' => 'required|email',
+            'street_number' => 'required',
+            'street_name' => 'required',
+            'postal_code' => 'required',
+            'city' => 'required',
+            'country' => 'required',
         ]);
 
-        $item = Company::find($id);
-        $item->name = $arrayRequest['name'];
-        $item->siret = $arrayRequest['siret'];
-        if ($user->hasRole('superAdmin')) {
-            $item->is_trial = $arrayRequest['is_trial'];
-            if ($item->is_trial && !$item->expires_at) {
-                $item->expires_at = Carbon::now()->addWeeks(4);
-            }
-        }
-        $item->save();
+        $item = Company::find($id)->update([
+            'name' => $arrayRequest['name'],
+            'siret' => $arrayRequest['siret'],
+            'code' => $arrayRequest['code'],
+            'type' => $arrayRequest['type'],
+            'contact_firstname' => $arrayRequest['contact_firstname'],
+            'contact_lastname' => $arrayRequest['contact_lastname'],
+            'contact_email' => $arrayRequest['contact_email'],
+            'street_number' => $arrayRequest['street_number'],
+            'street_name' => $arrayRequest['street_name'],
+            'postal_code' => $arrayRequest['postal_code'],
+            'city' => $arrayRequest['city'],
+            'country' => $arrayRequest['country'],
+        ]);
 
         return response()->json(['success' => $item], $this->successStatus);
     }

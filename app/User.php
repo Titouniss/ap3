@@ -33,7 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token', 'register_token'
+        'password', 'remember_token', 'register_token', 'roles'
     ];
 
     /**
@@ -41,7 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array
      */
-    // protected $appends = ['related_users'];
+    protected $appends = ['role', 'is_admin'];
 
     /**
      * The attributes that should be cast to native types.
@@ -72,9 +72,35 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id');
     }
 
-    public function role()
+    public function getPermissionsAttribute()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        $permissions = collect([]);
+
+        if ($role = $this->role) {
+            $permissions = $role->permissions;
+            if (!$role->is_admin && ($company = $this->company)) {
+                if ($company->has_active_subscription) {
+                    $permissionIds = $company->active_permissions->pluck('id');
+                    $permissions = $permissions->whereIn('id', $permissionIds);
+                }
+            }
+        }
+
+        return $permissions;
+    }
+
+    public function getRoleAttribute()
+    {
+        if ($role = $this->roles->first()) {
+            return Role::find($role->id);
+        }
+        return null;
+    }
+
+    public function getIsAdminAttribute()
+    {
+        $role = $this->getRoleAttribute();
+        return $role ? $role->is_admin : false;
     }
 
     public function getRelatedUsersAttribute()

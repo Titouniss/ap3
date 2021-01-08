@@ -38,28 +38,38 @@
         <vs-col vs-w="12" class="pb-3">
           <small class="ml-2"> Date de début </small>
           <flat-pickr
-            name="start_date"
+            name="starts_at"
             v-validate="'required'"
-            :config="configDatePicker(null, itemLocal.end_date)"
+            :config="configDatePicker(null, itemLocal.ends_at)"
             class="w-full"
-            v-model="itemLocal.start_date"
+            v-model="itemLocal.starts_at"
           />
-          <small v-show="errors.has('start_date')" class="text-danger">
-            {{ errors.first("start_date") }}
+          <small v-show="errors.has('starts_at')" class="text-danger">
+            {{ errors.first("starts_at") }}
           </small>
         </vs-col>
         <vs-col vs-w="12" vs-xs="12" class="pb-3">
           <small class="ml-2"> Date de fin </small>
           <flat-pickr
-            name="end_date"
+            name="ends_at"
             v-validate="'required'"
-            :config="configDatePicker(itemLocal.start_date)"
-            v-model="itemLocal.end_date"
+            :config="configDatePicker(itemLocal.starts_at)"
+            v-model="itemLocal.ends_at"
             class="w-full"
           />
-          <small v-show="errors.has('end_date')" class="text-danger">
-            {{ errors.first("end_date") }}
+          <small v-show="errors.has('ends_at')" class="text-danger">
+            {{ errors.first("ends_at") }}
           </small>
+        </vs-col>
+        <vs-col vs-w="12" vs-xs="12" class="pb-3">
+          <small class="ml-2"> Période d'essaie </small>
+          <vs-switch
+            vs-icon-off="close"
+            vs-icon-on="done"
+            v-model="itemLocal.is_trial"
+            name="is_trial"
+          >
+          </vs-switch>
         </vs-col>
       </vs-row>
     </vs-prompt>
@@ -97,9 +107,10 @@ export default {
       activePrompt: false,
 
       itemLocal: {
-        start_date: null,
-        end_date: null,
+        starts_at: null,
+        ends_at: null,
         packages: [],
+        is_trial: false,
       },
       configDatePicker: (minDate = null, maxDate = null) => ({
         altInput: true,
@@ -116,8 +127,8 @@ export default {
       return (
         !this.errors.any() &&
         this.companyId &&
-        this.itemLocal.start_date &&
-        this.itemLocal.end_date &&
+        this.itemLocal.starts_at &&
+        this.itemLocal.ends_at &&
         this.itemLocal.packages &&
         this.itemLocal.packages.length > 0
       );
@@ -129,9 +140,10 @@ export default {
   methods: {
     clearFields() {
       Object.assign(this.itemLocal, {
-        start_date: null,
-        end_date: null,
+        starts_at: null,
+        ends_at: null,
         packages: [],
+        is_trial: false,
       });
     },
     addSubscription() {
@@ -144,9 +156,9 @@ export default {
             .then(() => {
               this.$vs.notify({
                 title: "Ajout d'un abonnement",
-                text: `Abonnement du ${moment(item.start_date).format(
+                text: `Abonnement du ${moment(item.starts_at).format(
                   "DD/MM/YYYY"
-                )} au ${moment(item.end_date).format(
+                )} au ${moment(item.ends_at).format(
                   "DD/MM/YYYY"
                 )} ajouté avec succès`,
                 iconPack: "feather",

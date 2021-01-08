@@ -29,7 +29,7 @@ class SkillController extends Controller
     {
         $user = Auth::user();
         $items = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $items = Skill::withTrashed()->get()->load('company');
         } else if ($user->company_id != null) {
             $items = Skill::withTrashed()->where('company_id', $user->company_id)->get()->load('company');

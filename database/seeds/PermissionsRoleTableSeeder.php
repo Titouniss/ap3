@@ -63,6 +63,8 @@ class PermissionsRoleTableSeeder extends Seeder
 
         $role = Role::where(['name' => 'superAdmin'])->first();
         $role->givePermissionTo(Permission::all());
+        $role->is_admin = true;
+        $role->save();
 
         $role = Role::where(['name' => 'Administrateur'])->first();
         $role->givePermissionTo(Permission::all()->filter(function ($perm) {
@@ -85,7 +87,8 @@ class PermissionsRoleTableSeeder extends Seeder
                 'email' => 'admin@numidev.fr',
                 'password' => Hash::make('password'),
                 //'email_verified_at' => '2020-01-01 00:00:00.000000',
-                'isTermsConditionAccepted' => true
+                'isTermsConditionAccepted' => true,
+                'is_admin' => true
             ]);
             $admin->syncRoles('superAdmin');
         } else {
