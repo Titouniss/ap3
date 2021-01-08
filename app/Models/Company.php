@@ -17,6 +17,7 @@ class Company extends Model
         'type',
         'contact_firstname',
         'contact_lastname',
+        'contact_function',
         'contact_email',
         'contact_tel1',
         'contact_tel2',

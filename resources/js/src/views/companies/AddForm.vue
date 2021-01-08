@@ -41,7 +41,7 @@
       </div>
       <vs-divider />
       <vs-row vs-justify="center" vs-type="flex" vs-w="12" class="mb-6">
-        <vs-col vs-w="6" vs-xs="12" class="px-3">
+        <vs-col vs-w="4" vs-xs="12" class="px-3">
           <vs-input
             v-validate="'max:255|required'"
             name="contact_firstname"
@@ -56,7 +56,7 @@
             :danger-text="errors.first('contact_firstname')"
           />
         </vs-col>
-        <vs-col vs-w="6" vs-xs="12" class="px-3">
+        <vs-col vs-w="4" vs-xs="12" class="px-3">
           <vs-input
             v-validate="'max:255|required'"
             name="contact_lastname"
@@ -69,6 +69,21 @@
             "
             :danger="errors.has('contact_lastname')"
             :danger-text="errors.first('contact_lastname')"
+          />
+        </vs-col>
+        <vs-col vs-w="4" vs-xs="12" class="px-3">
+          <vs-input
+            v-validate="'max:255|required'"
+            name="contact_function"
+            class="w-full"
+            label="Fonction"
+            v-model="itemLocal.contact_function"
+            :success="
+              itemLocal.contact_function.length > 0 &&
+              !errors.first('contact_function')
+            "
+            :danger="errors.has('contact_function')"
+            :danger-text="errors.first('contact_function')"
           />
         </vs-col>
         <vs-col vs-w="4" vs-xs="12" class="px-3">
@@ -351,6 +366,7 @@ export default {
         type: "",
         contact_firstname: "",
         contact_lastname: "",
+        contact_function: "",
         contact_tel1: "",
         contact_tel2: "",
         contact_email: "",
@@ -385,6 +401,7 @@ export default {
         this.itemLocal.type !== "" &&
         this.itemLocal.contact_firstname !== "" &&
         this.itemLocal.contact_lastname !== "" &&
+        this.itemLocal.contact_function !== "" &&
         this.itemLocal.contact_tel1 !== "" &&
         this.itemLocal.contact_tel2 !== "" &&
         this.itemLocal.contact_email !== "" &&

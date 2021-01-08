@@ -6,6 +6,7 @@ const errorMessage = {
         type: "type de société",
         contact_firstname: "prénom",
         contact_lastname: "nom",
+        contact_function: "fonction",
         contact_email: "émail",
         contact_tel1: "téléphone fixe",
         contact_tel2: "téléphone mobile",
