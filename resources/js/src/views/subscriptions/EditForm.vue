@@ -58,7 +58,7 @@
         </small>
       </vs-col>
       <vs-col vs-w="6" class="pb-3">
-        <small class="ml-2"> Période d'essaie </small>
+        <small class="ml-2"> Période d'essai </small>
         <vs-switch
           vs-icon-off="close"
           vs-icon-on="done"
