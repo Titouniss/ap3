@@ -10,7 +10,7 @@ class Subscription extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['company_id', 'starts_at', 'ends_at', 'state'];
+    protected $fillable = ['company_id', 'starts_at', 'ends_at', 'state', 'is_trial'];
     protected $dates = ['starts_at', 'ends_at'];
     protected $appends = ['permissions'];
 

@@ -131,10 +131,12 @@ export default {
         const {
             firstname,
             lastname,
+            companyName,
+            contact_function,
             email,
+            contact_tel1,
             password,
             confirmPassword,
-            companyName,
             isTermsConditionAccepted
         } = payload.userDetails;
 
@@ -142,10 +144,12 @@ export default {
             jwt.registerUser(
                 firstname,
                 lastname,
+                companyName,
+                contact_function,
                 email,
+                contact_tel1,
                 password,
                 confirmPassword,
-                companyName,
                 isTermsConditionAccepted
             )
                 .then(response => {

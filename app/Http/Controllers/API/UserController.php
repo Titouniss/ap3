@@ -25,8 +25,10 @@ use App\User;
 use App\Models\Company;
 use App\Models\DealingHours;
 use App\Models\ModelHasOldId;
+use App\Models\Package;
 use App\Models\Project;
 use App\Models\Range;
+use App\Models\Subscription;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\Unavailability;
@@ -217,10 +219,12 @@ class UserController extends Controller
         $validator = Validator::make($input, [
             'firstname' => 'required',
             'lastname' => 'required',
+            'company_name' => 'required',
+            'contact_function' => 'required',
             'email' => 'required|email',
+            'contact_tel1' => 'required',
             'password' => 'required',
             'c_password' => 'required|same:password',
-            'company_name' => 'required',
             'isTermsConditionAccepted' => 'required',
         ]);
         if ($validator->fails()) {
@@ -259,11 +263,28 @@ class UserController extends Controller
         if ($role != null) {
             $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
-        $company = Company::create(['name' => $input['company_name'], 'is_trial' => true, 'expires_at' => (new Carbon())->addWeeks(4)]);
+        $company = Company::create([
+            'name' => $input['company_name'],
+            'contact_firstname' => $input['firstname'],
+            'contact_lastname' => $input['lastname'],
+            'contact_function' => $input['contact_function'],
+            'contact_email' => $input['email'],
+            'contact_tel1' => $input['contact_tel1'],
+        ]);
         $user->company()->associate($company);
         $user->save();
-        $user->sendEmailVerificationNotification();
-        $token =  $user->createToken('ProjetX');
+
+        $subscription = Subscription::create([
+            'starts_at' => Carbon::now(),
+            'ends_at' => Carbon::now()->addMonth(),
+            'is_trial' => true,
+            'state' => 'active',
+            'company_id' => $company->id
+        ]);
+        $subscription->packages()->sync(Package::pluck('id'));
+
+        //$user->sendEmailVerificationNotification();
+        $token = $user->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;

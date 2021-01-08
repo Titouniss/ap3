@@ -42,14 +42,6 @@ require("vue-tour/dist/vue-tour.css");
 // VeeValidate
 import VeeValidate from "vee-validate";
 import fr from "vee-validate/dist/locale/fr";
-fr.attributes = {
-    ...fr.attributes,
-    firstname: "prénom",
-    lastname: "nom",
-    password: "mot de passe",
-    confirm_password: "confirmation de mot de passe",
-    company: "société"
-};
 Vue.use(VeeValidate, {
     events: "input",
     locale: "fr",

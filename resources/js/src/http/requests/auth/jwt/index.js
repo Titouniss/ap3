@@ -16,10 +16,10 @@ function addSubscriber(callback) {
 export default {
     init() {
         axios.interceptors.response.use(
-            function (response) {
+            function(response) {
                 return response;
             },
-            function (error) {
+            function(error) {
                 // const { config, response: { status } } = error
                 const { config, response } = error;
                 const originalRequest = config;
@@ -63,21 +63,27 @@ export default {
     registerUser(
         firstname,
         lastname,
+        company_name,
+        contact_function,
         email,
+        contact_tel1,
         pwd,
         c_password,
-        company_name,
         isTermsConditionAccepted
     ) {
-        return axios.post("/api/auth/register", {
-            firstname: firstname,
-            lastname: lastname,
-            email,
-            password: pwd,
-            c_password: c_password,
-            company_name: company_name,
-            isTermsConditionAccepted: isTermsConditionAccepted
-        });
+        return axios
+            .post("/api/auth/register", {
+                firstname,
+                lastname,
+                company_name,
+                contact_function,
+                email,
+                contact_tel1,
+                password: pwd,
+                c_password: c_password,
+                isTermsConditionAccepted: isTermsConditionAccepted
+            })
+            .catch(error => console.log(error));
     },
     registerUserWithToken(
         firstname,
@@ -118,7 +124,7 @@ export default {
     updatePassword(register_token, pwd) {
         return axios.post("/api/auth/updatePasswordBeforeLogin", {
             register_token: register_token,
-            new_password: pwd,
+            new_password: pwd
         });
     },
     logout() {
