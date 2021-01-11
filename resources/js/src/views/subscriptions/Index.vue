@@ -159,7 +159,7 @@ import moduleSubscriptionManagement from "@/store/subscription-management/module
 
 // Cell Renderer
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
-import CellRendererIsTrial from "./cell-renderer/CellRendererIsTrial.vue";
+import CellRendererBoolean from "@/components/cell-renderer/CellRendererBoolean.vue";
 import CellRendererState from "./cell-renderer/CellRendererState.vue";
 
 import moment from "moment";
@@ -179,7 +179,7 @@ export default {
 
     // Cell Renderer
     CellRendererActions,
-    CellRendererIsTrial,
+    CellRendererBoolean,
     CellRendererState,
   },
   props: {
@@ -216,11 +216,11 @@ export default {
           cellRendererFramework: "CellRendererState",
         },
         {
-          headerName: "Période d'essaie",
+          headerName: "Période d'essai",
           field: "is_trial",
           filter: true,
           sortable: true,
-          cellRendererFramework: "CellRendererIsTrial",
+          cellRendererFramework: "CellRendererBoolean",
         },
         {
           headerName: "Début",
@@ -239,16 +239,11 @@ export default {
             moment(params.data.ends_at).format("DD/MM/YYYY"),
         },
         {
-          headerName: "Paquets",
+          headerName: "Modules",
           field: "packages",
           filter: true,
           valueGetter: (params) => {
-            const packages = JSON.parse(JSON.stringify(params.data.packages));
-            let text = packages.shift().display_name;
-            packages.forEach((p) => {
-              text += ", " + p.display_name;
-            });
-            return text;
+            return params.data.packages.map((p) => p.display_name).join(", ");
           },
         },
         {
@@ -270,7 +265,7 @@ export default {
       // Cell Renderer Components
       components: {
         CellRendererActions,
-        CellRendererIsTrial,
+        CellRendererBoolean,
         CellRendererState,
       },
     };

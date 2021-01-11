@@ -129,6 +129,27 @@ class SubscriptionController extends Controller
             $item->starts_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['starts_at'] . ' 00:00:00');
             $item->ends_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
             $item->is_trial = $subscriptionArray['is_trial'];
+
+            $conflicts = Subscription::where('company_id', $item->company_id);
+            if ($item->exists) {
+                $conflicts = $conflicts->where('id', '!=', $item->id);
+            }
+            $conflicts = $conflicts->where(function ($query) use ($item) {
+                $query->whereBetween('starts_at', [$item->starts_at, $item->ends_at])
+                    ->orWhereBetween('ends_at', [$item->starts_at, $item->ends_at])
+                    ->orWhere(function ($query) use ($item) {
+                        $query->where('starts_at', '<', $item->starts_at)
+                            ->where('ends_at', '>', $item->starts_at);
+                    })
+                    ->orWhere(function ($query) use ($item) {
+                        $query->where('starts_at', '<', $item->ends_at)
+                            ->where('ends_at', '>', $item->ends_at);
+                    });
+            });
+            if ($conflicts->exists()) {
+                return response()->json(['error' => 'Impossible d\'avoir deux abonnements sur une même période'], 400);
+            }
+
             $item->save();
             $item->packages()->sync($subscriptionArray['packages']);
             if ($item->starts_at->isFuture()) {

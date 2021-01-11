@@ -28,7 +28,7 @@
             :reduce="(p) => p.id"
           >
             <template #header>
-              <small class="ml-2"> Paquets </small>
+              <small class="ml-2"> Modules </small>
             </template>
           </v-select>
           <small v-show="errors.has('packages')" class="text-danger">
@@ -145,6 +145,7 @@ export default {
         packages: [],
         is_trial: false,
       });
+      this.activePrompt = false;
     },
     addSubscription() {
       this.$validator.validateAll().then((result) => {
@@ -154,6 +155,7 @@ export default {
           this.$store
             .dispatch("subscriptionManagement/addItem", item)
             .then(() => {
+              this.clearFields();
               this.$vs.notify({
                 title: "Ajout d'un abonnement",
                 text: `Abonnement du ${moment(item.starts_at).format(
@@ -167,6 +169,7 @@ export default {
               });
             })
             .catch((error) => {
+              this.activePrompt = true;
               this.$vs.notify({
                 title: "Error",
                 text: error.message,
@@ -176,7 +179,6 @@ export default {
               });
             })
             .finally(() => {
-              this.clearFields();
               this.$vs.loading.close();
             });
         }

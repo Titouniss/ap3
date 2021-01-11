@@ -24,7 +24,7 @@
           :reduce="(p) => p.id"
         >
           <template #header>
-            <small class="ml-2"> Paquets </small>
+            <small class="ml-2"> Modules </small>
           </template>
         </v-select>
         <small v-show="errors.has('packages')" class="text-danger">
@@ -130,20 +130,20 @@ export default {
         this.itemLocal.packages.length > 0
       );
     },
-    packagesData() {
-      return this.$store.state.subscriptionManagement.packages;
-    },
     activePrompt: {
       get() {
         return this.itemId && this.itemId > 0 ? true : false;
       },
       set(value) {
         this.$store
-          .dispatch("subscriptionManagement/editItem", {})
+          .dispatch("subscriptionManagement/editItem", value || {})
           .catch((err) => {
             console.error(err);
           });
       },
+    },
+    packagesData() {
+      return this.$store.state.subscriptionManagement.packages;
     },
   },
   methods: {
@@ -179,6 +179,7 @@ export default {
               });
             })
             .catch((error) => {
+              this.activePrompt = this.itemLocal;
               this.$vs.notify({
                 title: "Error",
                 text: error.message,

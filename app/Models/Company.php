@@ -27,31 +27,26 @@ class Company extends Model
         'city',
         'country',
     ];
-    protected $appends = ['user_count', 'has_active_subscription', 'active_permissions'];
+    protected $appends = ['user_count', 'has_active_subscription', 'active_subscription', 'active_permissions'];
 
     public function getUserCountAttribute()
     {
         return User::where('company_id', $this->id)->count();
     }
 
-    public function getActiveSubscriptionsAttribute()
+    public function getActiveSubscriptionAttribute()
     {
-        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->get();
+        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->first();
     }
 
     public function getHasActiveSubscriptionAttribute()
     {
-        return $this->active_subscriptions->count() > 0;
+        return $this->active_subscription !== null;
     }
 
     public function getActivePermissionsAttribute()
     {
-        $permissions = collect([]);
-        $subscriptions = $this->active_subscriptions;
-        foreach ($subscriptions as $subscription) {
-            $permissions = $permissions->merge($subscription->permissions);
-        }
-        return $permissions;
+        return $this->has_active_subscription ? $this->active_subscription->permissions : [];
     }
 
     public function module()

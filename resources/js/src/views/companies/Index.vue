@@ -130,11 +130,14 @@ import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
 
+import moment from "moment";
+
 // Store Module
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
+import CellRendererBoolean from "@/components/cell-renderer/CellRendererBoolean.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 var model = "company";
@@ -148,6 +151,7 @@ export default {
 
     // Cell Renderer
     CellRendererLink,
+    CellRendererBoolean,
     CellRendererActions,
   },
   data() {
@@ -158,6 +162,16 @@ export default {
       gridApi: null,
       gridOptions: {
         localeText: { noRowsToShow: "Aucune société à afficher" },
+        rowClassRules: {
+          "subscription-ending": function (params) {
+            return (
+              params.data.has_active_subscription &&
+              moment(params.data.active_subscription.ends_at).isAfter(
+                moment().subtract(1, "month")
+              )
+            );
+          },
+        },
       },
       defaultColDef: {
         resizable: true,
@@ -172,14 +186,71 @@ export default {
           headerCheckboxSelection: true,
         },
         {
-          headerName: "Nom",
-          field: "name",
+          headerName: "Période d'essai",
+          field: "is_trial",
           filter: true,
           sortable: true,
+          cellRendererFramework: "CellRendererBoolean",
+          valueGetter: (params) => {
+            let bool = null;
+            if (params.data.has_active_subscription) {
+              bool = params.data.active_subscription.is_trial;
+            }
+            return bool;
+          },
         },
         {
-          headerName: "Siret",
-          field: "siret",
+          headerName: "Abonnement",
+          field: "active_subscription",
+          filter: true,
+          sortable: true,
+          valueGetter: (params) => {
+            let text = "Aucun";
+            if (params.data.has_active_subscription) {
+              text = params.data.active_subscription.packages
+                .map((p) => p.display_name)
+                .join(", ");
+            }
+            return text;
+          },
+        },
+        {
+          headerName: "Début",
+          field: "starts_at",
+          filter: true,
+          sortable: true,
+          valueGetter: (params) => {
+            let text = "";
+
+            if (params.data.has_active_subscription) {
+              text = moment(params.data.active_subscription.starts_at).format(
+                "DD/MM/YYYY"
+              );
+            }
+
+            return text;
+          },
+        },
+        {
+          headerName: "Fin",
+          field: "ends_at",
+          filter: true,
+          sortable: true,
+          valueGetter: (params) => {
+            let text = "";
+
+            if (params.data.has_active_subscription) {
+              text = moment(params.data.active_subscription.ends_at).format(
+                "DD/MM/YYYY"
+              );
+            }
+
+            return text;
+          },
+        },
+        {
+          headerName: "Nom",
+          field: "name",
           filter: true,
           sortable: true,
         },
@@ -387,5 +458,21 @@ export default {
       transform: translateY(-58%);
     }
   }
+}
+
+.subscription-ending {
+  background-color: rgba($color: var(--vs-danger), $alpha: 1);
+  color: white;
+}
+.subscription-ending:hover {
+  background-color: rgba($color: var(--vs-danger), $alpha: 0.9);
+}
+
+.subscription-ending.ag-row-selected {
+  background-color: rgba($color: var(--vs-danger), $alpha: 1);
+  color: white;
+}
+.subscription-ending.ag-row-selected:hover {
+  background-color: rgba($color: var(--vs-danger), $alpha: 0.9);
 }
 </style>

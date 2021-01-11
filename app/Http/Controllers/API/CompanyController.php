@@ -33,7 +33,21 @@ class CompanyController extends Controller
         $items = [];
         if ($user->is_admin) {
             //$items = Company::all()->load('skills');
-            $items = Company::withTrashed()->get()->load('skills');
+            $items = Company::withTrashed()->get()->load('skills')->sort(function ($a, $b) {
+                $val = 0;
+
+                if ($a->has_active_subscription && $b->has_active_subscription) {
+                    $val = $a->active_subscription->ends_at->isBefore($b->active_subscription->ends_at) ? -1 : 1;
+                } else {
+                    if ($a->has_active_subscription) {
+                        $val = -1;
+                    } else if ($b->has_active_subscription) {
+                        $val = 1;
+                    }
+                }
+
+                return $val;
+            })->values();
         } else if ($user->company_id != null) {
             $items = Company::where('id', $user->company_id)->get()->load('skills');
         }
