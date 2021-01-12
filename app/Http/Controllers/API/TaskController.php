@@ -176,7 +176,7 @@ class TaskController extends Controller
         }
 
         $item = Task::create($arrayRequest);
-        TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
+        $project->status == 'doing' ? TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]) : null;
         if (isset($arrayRequest['token'])) {
             $this->storeDocuments($item->id, $arrayRequest['token'], $project->company);
         }

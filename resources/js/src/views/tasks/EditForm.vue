@@ -554,7 +554,7 @@ export default {
             });
           } else {
             this.$vs.notify({
-              title: "Indisponnible",
+              title: "Indisponible",
               text: response.data.error,
               iconPack: "feather",
               icon: "icon-alert-circle",
