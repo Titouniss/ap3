@@ -3,15 +3,17 @@
 namespace App;
 
 use App\Models\BaseModule;
+use App\Models\Company;
 use App\Models\ModelHasOldId;
 use App\Models\Role;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
 use Laravel\Passport\HasApiTokens;
-
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -72,35 +74,47 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id');
     }
 
-    public function getPermissionsAttribute()
-    {
-        $permissions = collect([]);
-
-        if ($role = $this->role) {
-            $permissions = $role->permissions;
-            if (!$role->is_admin && ($company = $this->company)) {
-                if ($company->has_active_subscription) {
-                    $permissionIds = $company->active_permissions->pluck('id');
-                    $permissions = $permissions->whereIn('id', $permissionIds);
-                }
-            }
-        }
-
-        return $permissions;
-    }
-
     public function getRoleAttribute()
     {
-        if ($role = $this->roles->first()) {
-            return Role::find($role->id);
+        return $this->belongsToMany(Role::class, 'model_has_roles', 'model_id', 'role_id')->where('model_type', User::class)->first();
+    }
+
+    public function getPermissionsAttribute()
+    {
+        if ($role = $this->role) {
+            $permissions = $role->permissions;
+
+
+            if (!$this->is_admin && ($company = Company::find($this->company_id))) {
+                if ($company->has_active_subscription) {
+                    $active_permissions = $company->active_subscription->permissions->pluck('name')->toArray();
+                    $permissions = $permissions->whereIn('name', $active_permissions);
+                }
+            }
+
+
+            return $permissions->flatten();
         }
-        return null;
+
+        return [];
     }
 
     public function getIsAdminAttribute()
     {
-        $role = $this->getRoleAttribute();
-        return $role ? $role->is_admin : false;
+        if ($role = $this->role) {
+            return $role->code == "super_admin";
+        }
+
+        return false;
+    }
+
+    public function getIsManagerAttribute()
+    {
+        if ($role = $this->role) {
+            return $role->code == "admin";
+        }
+
+        return false;
     }
 
     public function getRelatedUsersAttribute()
@@ -123,6 +137,11 @@ class User extends Authenticatable implements MustVerifyEmail
             });
         }
         return [];
+    }
+
+    public function can($ability, $arguments = [])
+    {
+        return $this->permissions->pluck('name')->contains($ability);
     }
 
     /**

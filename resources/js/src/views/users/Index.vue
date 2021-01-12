@@ -183,7 +183,7 @@ var columnDef = [
   },
   {
     headerName: "Rôle",
-    field: "roles",
+    field: "role",
     filter: true,
     cellRendererFramework: "CellRendererRelations",
     resizable: true,

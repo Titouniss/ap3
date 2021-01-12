@@ -71,11 +71,15 @@ class DocumentController extends Controller
         }
     }
 
-    public function deleteFile($id)
+    /**
+     * Deletes the file.
+     *
+     * @param  \App\Models\Document $document
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteFile(Document $document)
     {
-        $item = Document::findOrFail($id);
-        $item->deleteFile();
-        return response()->json(['success' => true], $this->successStatus);
+        return response()->json(['success' => $document->deleteFile()], $this->successStatus);
     }
 
     public function deleteFiles(Request $request)

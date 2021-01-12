@@ -86,12 +86,12 @@ class DealingHoursController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(DealingHours $dealing_hours)
     {
-        //
+        return response()->json(['success' => $dealing_hours], self::$successStatus);
     }
 
     /**
@@ -219,10 +219,10 @@ class DealingHoursController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, DealingHours $dealing_hours)
     {
         $arrayRequest = $request->all();
 
@@ -234,36 +234,29 @@ class DealingHoursController extends Controller
             'used_type' => 'required'
         ]);
 
-        $item = DealingHours::where('id', $id)->update(['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => $arrayRequest['overtimes'], 'used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
-        return response()->json(['success' => $item], $this->successStatus);
+        $dealing_hours->update(['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => $arrayRequest['overtimes'], 'used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
+        return response()->json(['success' => $dealing_hours], $this->successStatus);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(DealingHours $dealing_hours)
     {
-        $item = DealingHours::findOrFail($id);
-        $item->delete();
-        return '';
+        return response()->json(['success' => $dealing_hours->delete()], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(DealingHours $dealing_hours)
     {
-        $item = DealingHours::findOrFail($id);
-        $item->delete();
-
-        $item = DealingHours::withTrashed()->findOrFail($id);
-        $item->forceDelete();
-        return '';
+        return response()->json(['success' => $dealing_hours->forceDelete()], $this->successStatus);
     }
 }

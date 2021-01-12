@@ -58,13 +58,12 @@ class CompanyController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Company $company)
     {
-        $item = Company::where('id', $id)->with('skills', 'subscriptions', 'subscriptions.packages')->first();
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $company->with('skills', 'subscriptions', 'subscriptions.packages')], $this->successStatus);
     }
 
     /**
@@ -176,10 +175,10 @@ class CompanyController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Company $company)
     {
         $user = Auth::user();
         $arrayRequest = $request->all();
@@ -200,7 +199,7 @@ class CompanyController extends Controller
             'country' => 'required',
         ]);
 
-        $item = Company::find($id)->update([
+        $company->update([
             'name' => $arrayRequest['name'],
             'siret' => $arrayRequest['siret'],
             'code' => $arrayRequest['code'],
@@ -216,76 +215,67 @@ class CompanyController extends Controller
             'country' => $arrayRequest['country'],
         ]);
 
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $company], $this->successStatus);
     }
 
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function restore($id)
+    public function restore(Company $company)
     {
         try {
-            $item = Company::withTrashed()->findOrFail($id);
-            $success = $item->restoreCascade();
-
-            if ($success) {
-                return response()->json(['success' => $item], $this->successStatus);
-            } else {
-                throw new Exception('Impossible de restaurer la société');
+            if (!$company->restoreCascade()) {
+                throw new Exception('Erreur lors de la restauration');
             }
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
+
+        return response()->json(['success' => $company], $this->successStatus);
     }
 
     /**
      * Archive the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Company $company)
     {
         try {
-            $item = Company::findOrFail($id);
-            $success = $item->deleteCascade();
-
-            if (!$success) {
-                throw new Exception('Impossible d\'archiver la société');
+            if (!$company->deleteCascade()) {
+                throw new Exception('Erreur lors de l\'archivage');
             }
-
-            return response()->json(['success' => $item], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
+
+        return response()->json(['success' => $company], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(Company $company)
     {
         $controllerLog = new Logger('company');
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('company', ['forceDelete']);
 
         try {
-            $item = Company::withTrashed()->findOrFail($id);
-            $success = $item->forceDelete();
-
-            if (!$success) {
-                throw new Exception('Impossible de supprimer la société');
+            if (!$company->deleteCascade()) {
+                throw new Exception('Erreur lors de la suppression');
             }
-
-            return response()->json(['success' => true], $this->successStatus);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
         }
+
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

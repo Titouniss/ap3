@@ -5,30 +5,64 @@ namespace App\Policies;
 use App\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class UserPolicy
+class UserPolicy extends BasePolicy
 {
     use HandlesAuthorization;
+
     /**
-     * Determine whether the user can view any models.
+     * Create a new policy instance.
      *
-     * @param  \App\User  $user
-     * @param  \App\User  $model
-     * @return mixed
+     * @return void
      */
-    public function read(User $user, User $model)
+    public function __construct()
     {
-        return $user->id == $model->id || $user->can('read users');
+        parent::__construct('users', 'company_id');
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determine whether the user can view the item.
      *
+     * @param  \App\User  $currentUser
      * @param  \App\User  $user
-     * @param  \App\User  $model
-     * @return mixed
+     * @return boolean
      */
-    public function edit(User $user, User $model)
+    public function show(User $currentUser, User $user)
     {
-        return $user->id == $model->id || $user->can('edit users');
+        return $this->canShow($currentUser, $user) || (!$user->exists || $currentUser->id == $user->id);
+    }
+
+    /**
+     * Determine whether the user can publish an item.
+     *
+     * @param  \App\User  $currentUser
+     * @return boolean
+     */
+    public function publish(User $currentUser)
+    {
+        return $this->canPublish($currentUser);
+    }
+
+    /**
+     * Determine whether the user can edit the item.
+     *
+     * @param  \App\User  $currentUser
+     * @param  \App\User  $user
+     * @return boolean
+     */
+    public function edit(User $currentUser, User $user)
+    {
+        return $this->canEdit($currentUser, $user) || (!$user->exists || $currentUser->id == $user->id);
+    }
+
+    /**
+     * Determine whether the user can delete the item.
+     *
+     * @param  \App\User  $currentUser
+     * @param  \App\User  $user
+     * @return boolean
+     */
+    public function delete(User $currentUser, User $user)
+    {
+        return $this->canDelete($currentUser, $user) || (!$user->exists || $currentUser->id != $user->id);
     }
 }

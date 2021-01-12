@@ -78,8 +78,8 @@
               name="role"
               label="name"
               :multiple="false"
-              v-model="itemLocal.roles[0]"
-              :reduce="(name) => name.id"
+              v-model="itemLocal.role_id"
+              :reduce="(role) => role.id"
               class="w-full"
               autocomplete
               :options="rolesData"
@@ -222,7 +222,7 @@ export default {
         full_login: "",
         email: "",
         company_id: null,
-        roles: [],
+        role_id: 0,
         skills: [],
       },
       companySkills: [],
@@ -246,7 +246,7 @@ export default {
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
+      if (user.role) {
         if (this.isAdmin) {
           return false;
         } else {
@@ -262,7 +262,7 @@ export default {
         this.itemLocal.firstname != "" &&
         this.itemLocal.login != "" &&
         this.itemLocal.company_id != null &&
-        this.itemLocal.roles > 0
+        this.itemLocal.role_id > 0
       );
     },
   },
@@ -275,7 +275,7 @@ export default {
         itemLocal: {
           email: "",
           company_id: null,
-          roles: [],
+          role: 0,
         },
       });
     },
@@ -329,15 +329,12 @@ export default {
     },
     filterItemsAdmin($items) {
       let $filteredItems = [];
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          $filteredItems = $items.filter(
-            (item) => item.company_id === this.itemLocal.company_id
-          );
-        } else {
-          $filteredItems = $items;
-        }
+      if (this.isAdmin) {
+        $filteredItems = $items.filter(
+          (item) => item.company_id === this.itemLocal.company_id
+        );
+      } else {
+        $filteredItems = $items;
       }
       return $filteredItems;
     },

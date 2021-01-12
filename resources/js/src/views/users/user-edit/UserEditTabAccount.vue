@@ -45,10 +45,9 @@
           v-validate="'required|alpha_num'"
           name="firstname"
         />
-        <span
-          class="text-danger text-sm"
-          v-show="errors.has('firstname')"
-        >{{ errors.first('firstname') }}</span>
+        <span class="text-danger text-sm" v-show="errors.has('firstname')">{{
+          errors.first("firstname")
+        }}</span>
 
         <vs-input
           class="w-full mt-4"
@@ -57,10 +56,9 @@
           v-validate="'required|alpha_spaces'"
           name="lastname"
         />
-        <span
-          class="text-danger text-sm"
-          v-show="errors.has('lastname')"
-        >{{ errors.first('lastname') }}</span>
+        <span class="text-danger text-sm" v-show="errors.has('lastname')">{{
+          errors.first("lastname")
+        }}</span>
 
         <vs-input
           class="w-full mt-4"
@@ -70,19 +68,23 @@
           v-validate="'required|email'"
           name="email"
         />
-        <span class="text-danger text-sm" v-show="errors.has('email')">{{ errors.first('email') }}</span>
+        <span class="text-danger text-sm" v-show="errors.has('email')">{{
+          errors.first("email")
+        }}</span>
       </div>
 
       <div class="vx-col md:w-1/2 w-full">
         <vs-input
           class="w-full mt-4"
           label="Rôle"
-          v-model="data_local.roles[0].name"
+          v-model="data_local.role.name"
           v-validate="'alpha_spaces'"
           name="role"
           disabled="true"
         />
-        <span class="text-danger text-sm" v-show="errors.has('role')">{{ errors.first('role') }}</span>
+        <span class="text-danger text-sm" v-show="errors.has('role')">{{
+          errors.first("role")
+        }}</span>
 
         <vs-input
           v-if="data_local.company !== null"
@@ -102,10 +104,9 @@
           name="company"
           disabled="true"
         />
-        <span
-          class="text-danger text-sm"
-          v-show="errors.has('company')"
-        >{{ errors.first('company') }}</span>
+        <span class="text-danger text-sm" v-show="errors.has('company')">{{
+          errors.first("company")
+        }}</span>
       </div>
     </div>
 
@@ -117,13 +118,15 @@
             class="ml-auto mt-2"
             @click="save_changes"
             :disabled="!validateForm"
-          >Sauvegarder</vs-button>
+            >Sauvegarder</vs-button
+          >
           <vs-button
             class="ml-4 mt-2"
             type="border"
             color="warning"
             @click="reset_data"
-          >Réinitialiser</vs-button>
+            >Réinitialiser</vs-button
+          >
         </div>
       </div>
     </div>
@@ -135,28 +138,29 @@ import vSelect from "vue-select";
 
 export default {
   components: {
-    vSelect
+    vSelect,
   },
   props: {
     data: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
+    console.log(this.data);
     return {
       data_local: JSON.parse(JSON.stringify(this.data)),
 
       statusOptions: [
         { label: "Active", value: "active" },
         { label: "Blocked", value: "blocked" },
-        { label: "Deactivated", value: "deactivated" }
+        { label: "Deactivated", value: "deactivated" },
       ],
       roleOptions: [
         { label: "Admin", value: "admin" },
         { label: "User", value: "user" },
-        { label: "Staff", value: "staff" }
-      ]
+        { label: "Staff", value: "staff" },
+      ],
     };
   },
   computed: {
@@ -164,27 +168,27 @@ export default {
       get() {
         return {
           label: this.capitalize(this.data_local.status),
-          value: this.data_local.status
+          value: this.data_local.status,
         };
       },
       set(obj) {
         this.data_local.status = obj.value;
-      }
+      },
     },
     role_local: {
       get() {
         return {
           label: this.capitalize(this.data_local.role),
-          value: this.data_local.role
+          value: this.data_local.role,
         };
       },
       set(obj) {
         this.data_local.role = obj.value;
-      }
+      },
     },
     validateForm() {
       return !this.errors.any();
-    }
+    },
   },
   methods: {
     capitalize(str) {
@@ -207,17 +211,17 @@ export default {
             text: "Vos données ont étés modifiées avec succès",
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "success"
+            color: "success",
           });
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Error",
             text: "Une erreur est survenue, veuillez réessayer plus tard.",
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
 
@@ -230,7 +234,7 @@ export default {
       // You can update avatar Here
       // For reference you can check dataList example
       // We haven't integrated it here, because data isn't saved in DB
-    }
-  }
+    },
+  },
 };
 </script>

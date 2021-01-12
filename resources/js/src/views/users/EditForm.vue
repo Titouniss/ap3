@@ -83,8 +83,8 @@
               name="role"
               label="name"
               :multiple="false"
-              v-model="itemLocal.roles"
-              :reduce="(name) => name.id"
+              v-model="itemLocal.role_id"
+              :reduce="(role) => role.id"
               class="w-full"
               autocomplete
               :options="rolesData"
@@ -268,7 +268,7 @@ export default {
         full_login: "",
         email: "",
         company_id: null,
-        roles: [],
+        role_id: 0,
         skills: [],
         work_hours: [],
         related_user_id: null,
@@ -299,15 +299,12 @@ export default {
       return this.$store.state.skillManagement.skills;
     },
     disabled() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          return false;
-        } else {
-          this.itemLocal.company_id = user.company_id;
-          return true;
-        }
-      } else return true;
+      if (this.isAdmin) {
+        return false;
+      } else {
+        this.itemLocal.company_id = this.$store.state.AppActiveUser.company_id;
+        return true;
+      }
     },
     validateForm() {
       return (
@@ -316,7 +313,7 @@ export default {
         this.itemLocal.firstname != "" &&
         this.itemLocal.login != "" &&
         this.itemLocal.company_id != null &&
-        this.itemLocal.roles != null
+        this.itemLocal.role_id > 0
       );
     },
   },
@@ -344,7 +341,6 @@ export default {
         .dispatch("userManagement/fetchItem", id)
         .then((res) => {
           let item = res.data.success;
-          console.log(item);
           // Get skills
           let skill_ids = [];
           if (item.skills.length > 0) {
@@ -354,7 +350,7 @@ export default {
           }
           item.skills = skill_ids;
           this.itemLocal = item;
-          this.itemLocal.roles = this.itemLocal.roles[0].id;
+          this.itemLocal.role_id = item.role.id;
           if (item.company_id) {
             this.initial_company_id = item.company_id;
             this.company_id_temps = item.company_id;
@@ -396,9 +392,6 @@ export default {
     updateItem() {
       this.$vs.loading();
       const payload = Object.assign({}, this.itemLocal);
-      payload.roles = [
-        this.$store.getters["roleManagement/getItem"](this.itemLocal.roles),
-      ];
 
       // Parse login
       payload.full_login = "".concat(this.company_login, this.itemLocal.login);

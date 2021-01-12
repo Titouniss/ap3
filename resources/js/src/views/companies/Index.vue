@@ -166,8 +166,8 @@ export default {
           "subscription-ending": function (params) {
             return (
               params.data.has_active_subscription &&
-              moment(params.data.active_subscription.ends_at).isAfter(
-                moment().subtract(1, "month")
+              moment(params.data.active_subscription.ends_at).isBefore(
+                moment().add(1, "month")
               )
             );
           },

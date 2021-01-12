@@ -25,17 +25,17 @@ class Project extends Model
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
+        return $this->belongsTo(Company::class, 'company_id', 'id')->withTrashed();
     }
 
     public function customer()
     {
-        return $this->belongsTo('App\Models\Customers', 'customer_id', 'id');
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
     public function tasksBundles()
     {
-        return $this->hasMany('App\Models\TasksBundle');
+        return $this->hasMany(TasksBundle::class);
     }
 
     public function documents()

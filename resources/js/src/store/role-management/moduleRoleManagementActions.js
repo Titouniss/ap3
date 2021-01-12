@@ -60,13 +60,47 @@ export default {
                 });
         });
     },
+    restoreItem({ commit }, id) {
+        return new Promise((resolve, reject) => {
+            axios
+                .put(`/api/role-management/restore/${id}`)
+                .then(response => {
+                    if (response.data.success) {
+                        commit("UPDATE_ITEM", response.data.success);
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
     removeItem({ commit }, id) {
         return new Promise((resolve, reject) => {
             axios
                 .delete(`/api/role-management/destroy/${id}`)
                 .then(response => {
                     if (response.data.success) {
-                        commit("REMOVE_RECORD", id);
+                        commit("UPDATE_ITEM", response.data.success);
+                        resolve(response);
+                    } else {
+                        reject({ message: response.data.error });
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    },
+    forceRemoveItem({ commit }, id) {
+        return new Promise((resolve, reject) => {
+            axios
+                .delete(`/api/role-management/forceDelete/${id}`)
+                .then(response => {
+                    if (response.data.success) {
+                        commit("REMOVE_ITEM", id);
                         resolve(response);
                     } else {
                         reject({ message: response.data.error });

@@ -37,12 +37,12 @@ class UnavailabilityController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Unavailability  $unavailability
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Unavailability $unavailability)
     {
-        //
+        return response()->json(['success' => $unavailability], $this->successStatus);
     }
 
     /**
@@ -70,7 +70,7 @@ class UnavailabilityController extends Controller
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
         $duration = (floatval(explode(':', $arrayRequest_ends->format('H:i'))[0])) - (floatval(explode(':', $arrayRequest_starts->format('H:i'))[0]));
 
-        // Overtimes verification 
+        // Overtimes verification
         $Overtimes = DealingHoursController::getOvertimes(true);
         $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'];
 
@@ -104,15 +104,15 @@ class UnavailabilityController extends Controller
                     return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
                 }
             }
-            // Ajouter l'indisponibilité            
-            if ($arrayRequest['reason'] == 'Congés payés') {   
+            // Ajouter l'indisponibilité
+            if ($arrayRequest['reason'] == 'Congés payés') {
                 return response()->json(['success' => UnavailabilityController::setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)], $this->successStatus);
             } else {
                 return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
             }
         } else {
             // Ajouter l'indisponibilité
-            if ($arrayRequest['reason'] == 'Congés payés') {   
+            if ($arrayRequest['reason'] == 'Congés payés') {
                 return response()->json(['success' => UnavailabilityController::setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)], $this->successStatus);
             } else {
                 return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
@@ -126,18 +126,19 @@ class UnavailabilityController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends) {
+    public function setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)
+    {
 
         $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['starts_at']);
         $date_start = $arrayRequest_starts->format('Y-m-d');
-        $date_end = $arrayRequest_ends->format('Y-m-d');  
+        $date_end = $arrayRequest_ends->format('Y-m-d');
 
         //pour chaque jours je note les noms de jours dans un tableau
         $dayDuration = $arrayRequest_starts->diffInDays($arrayRequest_ends);
         $days = [];
         $workingDaysNames = [];
 
-        for ($i=0; $i <= $dayDuration; $i++) { 
+        for ($i = 0; $i <= $dayDuration; $i++) {
             $date = Carbon::create($date_start)->addDays($i)->format('Y-m-d');
             $dayName = Carbon::create($date_start)->addDays($i)->locale('fr_FR')->dayName;
             array_push($days, $date);
@@ -156,10 +157,10 @@ class UnavailabilityController extends Controller
                 array_push($userWorkingDays, $dWH->day);
                 array_push($userWorkingHours, $dWH);
             }
-        }            
+        }
         if (count($userWorkingDays) > 0) {
             // Pour chaques $days je regarde s'il est dans $userWorkingDays
-            
+
             // return response()->json(['error' => [$days, $userWorkingDays, $userWorkingHours]], 400);
             foreach ($days  as $key => $d) {
                 //d est il un jour ou je travaille ?
@@ -167,7 +168,7 @@ class UnavailabilityController extends Controller
                 if (in_array($dayTemp, $userWorkingDays)) {
                     $index = array_search($dayTemp, array_column($userWorkingHours, 'day'));
                     $dayWorkingHours = $userWorkingHours[$index];
-                    
+
                     // si travail le matin on ajoute une indispo égale au temps de travail et au même heures
                     if ($dayWorkingHours->morning_starts_at !== null && $dayWorkingHours->morning_ends_at != null) {
                         $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->morning_starts_at;
@@ -186,8 +187,7 @@ class UnavailabilityController extends Controller
                 }
             }
             return response()->json(['success' => $arrayRequest], $this->successStatus);
-        }
-        else {
+        } else {
             return response()->json(['error' => "vous ne travaillez pas sur cette période"], 400);
         }
     }
@@ -207,10 +207,10 @@ class UnavailabilityController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Unavailability  $unavailability
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Unavailability $unavailability)
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
@@ -230,28 +230,28 @@ class UnavailabilityController extends Controller
 
         $passage = 0;
 
-        foreach ($unavailabilities as $unavailability) {
-            $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
-            $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
+        foreach ($unavailabilities as $item) {
+            $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $item->starts_at);
+            $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $item->ends_at);
 
             $passage++;
 
             $controllerLog = new Logger('unavailability');
             $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('passage, unavailability_id, id', [$passage, $unavailability->id, intval($id)]);
+            $controllerLog->info('passage, unavailability_id, id', [$passage, $item->id, intval($unavailability->id)]);
 
             // Vérifier que ce n'est pas la même qui bloque et qu'elle n'est pas englobé, dedans ou déjà présente
-            if (($unavailability->id != intval($id)) && (($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i')))) {
+            if (($unavailability->id != intval($item->id)) && (($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->between($unavailability_starts, $unavailability_ends)) || ($unavailability_starts->between($arrayRequest_starts, $arrayRequest_ends) && $unavailability_ends->between($arrayRequest_starts, $arrayRequest_ends)) || ($arrayRequest_starts == $unavailability_starts->format('Y-m-d H:i') && $arrayRequest_ends == $unavailability_ends->format('Y-m-d H:i')))) {
                 return response()->json(['error' => "Une indisponibilité existe déjà sur cette période"], 401);
-            } else if (($unavailability->id != intval($id)) && ($arrayRequest_ends->gt($unavailability_ends->format('Y-m-d H:i')) && ($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_starts->ne($unavailability_ends)))) {
+            } else if (($unavailability->id != intval($item->id)) && ($arrayRequest_ends->gt($unavailability_ends->format('Y-m-d H:i')) && ($arrayRequest_starts->between($unavailability_starts, $unavailability_ends) && $arrayRequest_starts->ne($unavailability_ends)))) {
                 // Vérifier que ce n'est pas la même qui bloque et que ça ne mort pas par le starts_at
                 return response()->json(['error' => "Le début de l'indisponibilité dépasse sur une autre"], 401);
-            } else if (($unavailability->id != intval($id)) && ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts)))) {
+            } else if (($unavailability->id != intval($item->id)) && ($arrayRequest_starts->lt($unavailability_starts->format('Y-m-d H:i')) && ($arrayRequest_ends->between($unavailability_starts, $unavailability_ends) && $arrayRequest_ends->ne($unavailability_starts)))) {
                 // Verifier que ce n'est pas la même qui bloque et que ça ne mort pas par le ends_at
                 return response()->json(['error' => "La fin de l'indisponibilité dépasse sur une autre"], 401);
             } else {
                 // Ajouter l'indisponibilité
-                Unavailability::where('id', $id)->update(['starts_at' => $arrayRequest['starts_at'], 'ends_at' => $arrayRequest['ends_at'], 'reason' => $arrayRequest['reason']]);
+                $unavailability->update(['starts_at' => $arrayRequest['starts_at'], 'ends_at' => $arrayRequest['ends_at'], 'reason' => $arrayRequest['reason']]);
                 return response()->json(['success' => Unavailability::find($id)], $this->successStatus);
             }
         }
@@ -260,13 +260,11 @@ class UnavailabilityController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Unavailability  $unavailability
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Unavailability $unavailability)
     {
-        $item = Unavailability::findOrFail($id);
-        $item->delete();
-        return response()->json(['success' => true], $this->successStatus);
+        return response()->json(['success' => $unavailability->delete()], $this->successStatus);
     }
 }

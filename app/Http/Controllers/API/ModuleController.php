@@ -20,64 +20,61 @@ class ModuleController extends Controller
 {
     public $successStatus = 200;
 
-    /** 
-     * list of items api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * list of items api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
         return response()->json(['success' => BaseModule::all()->load('company')], $this->successStatus);
     }
 
-    /** 
-     * get single item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * get single item api
+     *
+     * @param \App\Models\BaseModule $module
+     * @return \Illuminate\Http\Response
      */
-    public function show(BaseModule $item)
+    public function show(BaseModule $module)
     {
-        if ($item) {
-            $modulable = $item->modulable;
-            $connection = [];
-            if (get_class($modulable) === SqlModule::class) {
-                $connection = [
-                    'id' => $modulable->id,
-                    'driver' => $modulable->driver ?? "",
-                    'host' => $modulable->host ?? "",
-                    'port' => $modulable->port ?? "",
-                    'charset' => $modulable->charset ?? "",
-                    'database' => $modulable->database ?? "",
-                    'username' => $modulable->username ?? "",
-                    'has_password' => $modulable->password !== null,
-                ];
-            } else {
-                $connection = [
-                    'id' => $modulable->id,
-                    'url' => $modulable->url ?? "",
-                    'auth_headers' => $modulable->auth_headers ?? "",
-                ];
-            }
-            $module = [
-                'base' => [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'type' => $item->type,
-                    'company' => $item->company,
-                    'module_data_types' => $item->moduleDataTypes->load('moduleDataRows')
-                ],
-                'connection' => $connection
+        $modulable = $module->modulable;
+        $connection = [];
+        if (get_class($modulable) === SqlModule::class) {
+            $connection = [
+                'id' => $modulable->id,
+                'driver' => $modulable->driver ?? "",
+                'host' => $modulable->host ?? "",
+                'port' => $modulable->port ?? "",
+                'charset' => $modulable->charset ?? "",
+                'database' => $modulable->database ?? "",
+                'username' => $modulable->username ?? "",
+                'has_password' => $modulable->password !== null,
             ];
-            return response()->json(['success' => $module], $this->successStatus);
         } else {
-            return response()->json(['error' => "Not found"], 404);
+            $connection = [
+                'id' => $modulable->id,
+                'url' => $modulable->url ?? "",
+                'auth_headers' => $modulable->auth_headers ?? "",
+            ];
         }
+        $json_module = [
+            'base' => [
+                'id' => $module->id,
+                'name' => $module->name,
+                'type' => $module->type,
+                'company' => $module->company,
+                'module_data_types' => $module->moduleDataTypes->load('moduleDataRows')
+            ],
+            'connection' => $connection
+        ];
+        return response()->json(['success' => $json_module], $this->successStatus);
     }
 
-    /** 
-     * create item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * create item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -116,12 +113,13 @@ class ModuleController extends Controller
         return response()->json(['success' => $module->load('company')], $this->successStatus);
     }
 
-    /** 
-     * update item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * update item api
+     *
+     * @param \App\Models\BaseModule $module
+     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, BaseModule $item)
+    public function update(Request $request, BaseModule $module)
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
@@ -137,7 +135,7 @@ class ModuleController extends Controller
         if (!Company::where('id', $arrayRequest['company_id'])->exists()) {
             return response()->json(['error' => 'Société inconnue'], 400);
         }
-        if ($item->type !== $arrayRequest['type']) {
+        if ($module->type !== $arrayRequest['type']) {
             $modulable = null;
             switch ($arrayRequest['type']) {
                 case 'sql':
@@ -150,24 +148,24 @@ class ModuleController extends Controller
                 default:
                     return response()->json(['error' => "Type inconnu"], 400);
             }
-            $item->modulable->delete();
-            $item->update([
+            $module->modulable->delete();
+            $module->update([
                 'modulable_id' => $modulable->id,
                 'modulable_type' => get_class($modulable),
             ]);
         }
-        $item->update([
+        $module->update([
             'name' => $arrayRequest['name'],
             'company_id' => $arrayRequest['company_id'],
             'is_active' => isset($arrayRequest['is_active']) ? $arrayRequest['is_active'] : true
         ]);
-        return response()->json(['success' => $item->load('company')], $this->successStatus);
+        return response()->json(['success' => $module->load('company')], $this->successStatus);
     }
 
-    /** 
-     * update module item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * update module item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function updateModule(Request $request, $id)
     {
@@ -254,17 +252,14 @@ class ModuleController extends Controller
         return response()->json(['success' => true], $this->successStatus);
     }
 
-    /** 
-     * update item module data types api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * update item module data types api
+     *
+     * @param \App\Models\BaseModule $module
+     * @return \Illuminate\Http\Response
      */
-    public function updateModuleDataTypes(Request $request, BaseModule $item)
+    public function updateModuleDataTypes(Request $request, BaseModule $module)
     {
-        if (!$item) {
-            return response()->json(['error' => "Not found"], 404);
-        }
-
         $validator = Validator::make($request->all(), [
             'module_data_types' => 'required',
         ]);
@@ -295,10 +290,10 @@ class ModuleController extends Controller
             }
         }
 
-        ModuleDataType::where('module_id', $item->id)->delete();
+        ModuleDataType::where('module_id', $module->id)->delete();
         foreach ($module_data_types as $mdt) {
             $moduleDataType = ModuleDataType::create([
-                'module_id' => $item->id,
+                'module_id' => $module->id,
                 'data_type_id' => $mdt['data_type_id'],
                 'source' => $mdt['source']
             ]);
@@ -312,18 +307,19 @@ class ModuleController extends Controller
                 ]);
             }
         }
-        return response()->json(['success' => ['module_data_types' => ModuleDataType::where('module_id', $item->id)->with('moduleDataRows')->get()]], $this->successStatus);
+        return response()->json(['success' => ['module_data_types' => ModuleDataType::where('module_id', $module->id)->with('moduleDataRows')->get()]], $this->successStatus);
     }
 
-    /** 
-     * delete item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * delete item api
+     *
+     * @param \App\Models\BaseModule $module
+     * @return \Illuminate\Http\Response
      */
-    public function destroy(BaseModule $item)
+    public function destroy(BaseModule $module)
     {
         try {
-            $success = $item->modulable->delete() && $item->delete();
+            $success = $module->modulable->delete() && $module->delete();
 
             if (!$success) {
                 throw new Exception('Impossible de supprimer le module');
@@ -335,10 +331,10 @@ class ModuleController extends Controller
         }
     }
 
-    /** 
-     * test db connection api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * test db connection api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function testConnection(Request $request)
     {
@@ -389,10 +385,10 @@ class ModuleController extends Controller
         }
     }
 
-    /** 
-     * sync item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * sync item api
+     *
+     * @return \Illuminate\Http\Response
      */
     public function sync(BaseModule $item)
     {

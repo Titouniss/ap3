@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Customers;
+use App\Models\Customer;
 use App\Models\DataType;
 use App\Models\Project;
 use App\Models\Range;
@@ -35,7 +35,7 @@ class DataTypesSeeder extends Seeder
             $type->fill([
                 'display_name_singular' => 'Client',
                 'display_name_plurial' => 'Clients',
-                'model' => Customers::class,
+                'model' => Customer::class,
                 'order' => 1
             ])->save();
         }

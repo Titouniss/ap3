@@ -50,11 +50,11 @@ class UserController extends Controller
     public function checkUsernamePwdBeforeLogin(Request $request)
     {
         $arrayRequest = $request->all();
-        $user = User::where('login', $arrayRequest['login'])->first();
+        $item = User::where('login', $arrayRequest['login'])->first();
 
         if (Auth::attempt(['login' => $arrayRequest['login'], 'password' => $arrayRequest['password']])) {
             Auth::logout();
-            return response()->json(['success' => true, 'userData' => $user], $this->successStatus);
+            return response()->json(['success' => true, 'userData' => $item], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised'], $this->successStatus);
         }
@@ -69,10 +69,10 @@ class UserController extends Controller
     {
         if (Auth::attempt(['login' => request('login'), 'password' => request('password')])) {
             $module = null;
-            $user = Auth::user();
+            $item = Auth::user();
 
-            if (!$user->role->is_admin) {
-                $company = Company::find($user->company_id);
+            if (!$item->role->is_admin) {
+                $company = Company::find($item->company_id);
                 if (!$company) {
                     Auth::logout();
                     return response()->json(['success' => false, 'error' => 'Connexion impossible, votre compte a été désactivé'], 400);
@@ -85,26 +85,27 @@ class UserController extends Controller
                 }
             }
 
-            if (!$user->hasVerifiedEmail()) {
+            if (!$item->hasVerifiedEmail()) {
                 Auth::logout();
                 return response()->json(['success' => false, 'error' => 'Veuillez valider votre adresse e-mail avant de vous connecter', 'verify' => false], 400);
             }
 
-            $token = $user->createToken('ProjetX');
+            $token = $item->createToken('ProjetX');
             $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
             $success['token'] =  $token->accessToken;
             $success['tokenExpires'] =  $token->token->expires_at;
-            $user->load(['roles' => function ($query) {
-                $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                    $query->select(['id', 'name', 'name_fr', 'is_public']);
-                }]);
-            }]);
-            $user->load(['company:id,name'])->append('permissions');
-            if ($user->hasRole('Administrateur')) {
-                $user->load(['company.users:id,firstname,lastname,company_id']);
+            // $item->load(['roles' => function ($query) {
+            //     $query->select(['id', 'name'])->with(['permissions' => function ($query) {
+            //         $query->select(['id', 'name', 'name_fr', 'is_public']);
+            //     }]);
+            // }]);
+            $item->load(['company']);
+            if ($item->hasRole('Administrateur')) {
+                $item->load(['company.users:id,firstname,lastname,company_id']);
             }
+            $item->append('permissions');
 
-            return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module && $module->count() > 0 ? $module : null)], $this->successStatus);
+            return response()->json(['success' => $success, 'userData' => $item, 'module' => ($module && $module->count() > 0 ? $module : null)], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Connexion impossible l\'identifiant ou le mot de passe est incorrect'], 400);
         }
@@ -122,10 +123,10 @@ class UserController extends Controller
         $arrayRequest = $request->all();
 
         if (isset($arrayRequest['email'])) {
-            $user = User::where('email', $arrayRequest['email'])->first();
+            $item = User::where('email', $arrayRequest['email'])->first();
 
-            if (!$user->hasVerifiedEmail()) {
-                $user->SendEmailVerificationNotification();
+            if (!$item->hasVerifiedEmail()) {
+                $item->SendEmailVerificationNotification();
                 $verificationSend = true;
             }
         }
@@ -142,22 +143,22 @@ class UserController extends Controller
      */
     public function verify(Request $request)
     {
-        $user = User::find($request->route('id'));
-        if ($user === null) {
+        $item = User::find($request->route('id'));
+        if ($item === null) {
             return redirect('/pages/not-authorized');
         }
 
-        if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+        if (!hash_equals((string) $request->route('hash'), sha1($item->getEmailForVerification()))) {
             return redirect('/pages/not-authorized');
         }
 
-        if ($user->hasVerifiedEmail()) {
+        if ($item->hasVerifiedEmail()) {
             return redirect('/pages/verify/success');
             return redirect('/pages/login');
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
+        if ($item->markEmailAsVerified()) {
+            event(new Verified($item));
         }
         return redirect('/pages/verify/success');
     }
@@ -168,17 +169,17 @@ class UserController extends Controller
      */
     public function getUserByUserToken()
     {
-        $user = Auth::user();
+        $item = Auth::user();
         $success = false;
-        if ($user != null) {
-            $user->load(['roles' => function ($query) {
+        if ($item != null) {
+            $item->load(['roles' => function ($query) {
                 $query->select(['id', 'name'])->with(['permissions' => function ($query) {
                     $query->select(['id', 'name', 'name_fr', 'is_public']);
                 }]);
             }])->load('company:id,name');
             $success = true;
         }
-        response()->json(['success' => $success, 'userData' => $user], $this->successStatus);
+        response()->json(['success' => $success, 'userData' => $item], $this->successStatus);
     }
 
     /**
@@ -255,13 +256,13 @@ class UserController extends Controller
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('input', [$input]);
 
-        $user = User::create($input);
-        if ($user == null) {
+        $item = User::create($input);
+        if ($item == null) {
             return response()->json(['error' => $validator->errors()], 401);
         }
         $role = Role::where('name', 'Administrateur');
         if ($role != null) {
-            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+            $item->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
         }
         $company = Company::create([
             'name' => $input['company_name'],
@@ -271,8 +272,8 @@ class UserController extends Controller
             'contact_email' => $input['email'],
             'contact_tel1' => $input['contact_tel1'],
         ]);
-        $user->company()->associate($company);
-        $user->save();
+        $item->company()->associate($company);
+        $item->save();
 
         $subscription = Subscription::create([
             'starts_at' => Carbon::now(),
@@ -283,12 +284,12 @@ class UserController extends Controller
         ]);
         $subscription->packages()->sync(Package::pluck('id'));
 
-        //$user->sendEmailVerificationNotification();
-        $token = $user->createToken('ProjetX');
+        //$item->sendEmailVerificationNotification();
+        $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
-        return response()->json(['success' => $success, 'userData' => $user, 'company' => $company], $this->successStatus);
+        return response()->json(['success' => $success, 'userData' => $item, 'company' => $company], $this->successStatus);
     }
 
     /**
@@ -335,30 +336,26 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
         $input = $request->all();
-        $user = User::where('register_token', $token)->where('email', $input['email'])->first();
-        if (!isset($user)) return response()->json(['success' => false], 404);
+        $item = User::where('register_token', $token)->where('email', $input['email'])->first();
+        if (!isset($item)) return response()->json(['success' => false], 404);
         // get full data user before or after update
-        $user->load(['roles' => function ($query) {
-            $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                $query->select(['id', 'name', 'name_fr', 'is_public']);
-            }]);
-        }])->load('company:id,name');
+        $item->load('company:id,name');
 
         // update user data
-        $user->password = bcrypt($input['password']);
-        $user->firstname = $input['firstname'];
-        $user->lastname = $input['lastname'];
-        $user->isTermsConditionAccepted = $input['isTermsConditionAccepted'];
-        $user->register_token = null;
-        $user->save();
+        $item->password = bcrypt($input['password']);
+        $item->firstname = $input['firstname'];
+        $item->lastname = $input['lastname'];
+        $item->isTermsConditionAccepted = $input['isTermsConditionAccepted'];
+        $item->register_token = null;
+        $item->save();
 
         // generate access token
-        $token =  $user->createToken('ProjetX');
+        $token =  $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
         $success['token'] =  $token->accessToken;
         $success['tokenExpires'] =  $token->token->expires_at;
 
-        return response()->json(['success' => $success, 'userData' => $user], $this->successStatus);
+        return response()->json(['success' => $success, 'userData' => $item], $this->successStatus);
     }
 
     /**
@@ -368,14 +365,14 @@ class UserController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        $usersList = [];
-        if ($user->is_admin) {
-            $usersList = User::withTrashed()->get()->load('roles', 'company:id,name', 'skills');
-        } else if ($user->company_id != null) {
-            $usersList = User::withTrashed()->where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');
+        $item = Auth::user();
+        $itemsList = [];
+        if ($item->is_admin) {
+            $itemsList = User::withTrashed()->get()->load('company:id,name', 'skills');
+        } else if ($item->company_id != null) {
+            $itemsList = User::withTrashed()->where('company_id', $item->company_id)->get()->load('company:id,name', 'skills');
         }
-        return response()->json(['success' => $usersList], $this->successStatus);
+        return response()->json(['success' => $itemsList], $this->successStatus);
     }
 
 
@@ -390,7 +387,8 @@ class UserController extends Controller
         $validator = Validator::make($arrayRequest, [
             'lastname' => 'required',
             'firstname' => 'required',
-            'company_id' => 'required'
+            'company_id' => 'required',
+            'role_id' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
@@ -415,12 +413,8 @@ class UserController extends Controller
             $item->sendEmailAdUserNotification($item->id, $item->register_token);
         }
 
-        if (isset($arrayRequest['roles'])) {
-            $item->assignRole($arrayRequest['roles']); // on ajoute le role à l'utilisateur
-        } else {
-            // on assigne le rôle d'utilisateur sans droit par défault pour éviter un bug.
-            $item->assignRole('basicUsers');
-        }
+        $item->assignRole($arrayRequest['role_id']);
+
         if (!empty($arrayRequest['skills'])) {
             foreach ($arrayRequest['skills'] as $skill_id) {
                 UsersSkill::create(['user_id' => $item->id, 'skill_id' => $skill_id]);
@@ -441,10 +435,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $item = User::where('id', $user->id)
-            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities', 'skills')
-            ->first()->append('related_users');
-        return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
+        return response()->json(['success' => $user->load('company:id,name', 'workHours', 'unavailabilities', 'skills')->append('related_users')], $this->successStatus);
     }
 
     /**
@@ -459,7 +450,8 @@ class UserController extends Controller
         $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
             'lastname' => 'required',
-            'company_id' => 'required'
+            'company_id' => 'required',
+            'role_id' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
@@ -485,13 +477,7 @@ class UserController extends Controller
         }
 
         if ($user != null) {
-            if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null) {
-                $roles = array();
-                foreach ($arrayRequest['roles'] as $role) {
-                    array_push($roles, $role['id']);
-                }
-                $user->syncRoles($roles);
-            }
+            $user->syncRoles([$arrayRequest['role_id']]);
 
             $user->firstname = $arrayRequest['firstname'];
             $user->lastname = $arrayRequest['lastname'];
@@ -565,16 +551,16 @@ class UserController extends Controller
         $controllerLog->info('arrayRequest', [$arrayRequest]);
 
         $rule = ['password' => [new StrongPassword]];
-        $user = User::where('register_token', $arrayRequest['register_token'])->first();
+        $item = User::where('register_token', $arrayRequest['register_token'])->first();
 
         // Verify user exist
-        if ($user != null) {
+        if ($item != null) {
             if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
                 // Save password
-                $user->password = bcrypt($arrayRequest['new_password']);
-                $user->is_password_change = 1;
-                $user->register_token = Str::random(8);
-                $user->save();
+                $item->password = bcrypt($arrayRequest['new_password']);
+                $item->is_password_change = 1;
+                $item->register_token = Str::random(8);
+                $item->save();
 
                 return response()->json(['success' => true], $this->successStatus);
             } else {
@@ -612,7 +598,7 @@ class UserController extends Controller
                 return response()->json('error_old_password', 400);
             }
         } else {
-            return response()->json('error_user', 400);
+            return response()->json('error_user', 404);
         }
     }
 
@@ -654,42 +640,47 @@ class UserController extends Controller
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param  \App\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function restore($id)
+    public function restore(User $user)
     {
-        $item = User::withTrashed()->findOrFail($id)->restore();
-        if ($item) {
-            $item = User::where('id', $id)->first();
-            return response()->json(['success' => $item], $this->successStatus);
+        if (!$user->restore()) {
+            return response()->json(['error' => 'Erreur lors de la restauration'], 400);
         }
+
+        return response()->json(['success' => $user], $this->successStatus);
     }
 
     /**
      * delete item api
      *
+     * @param  \App\User  $item
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $item = User::findOrFail($id);
-        Task::where('user_id', $id)->update(['user_id' => null]);
-        $item->delete();
-        return response()->json(['success' => $item], $this->successStatus);
+        Task::where('user_id', $user->id)->update(['user_id' => null]);
+
+        if (!$user->delete()) {
+            return response()->json(['error' => 'Erreur lors de l\'archivage'], 400);
+        }
+
+        return response()->json(['success' => $user], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(User $user)
     {
-        $item = User::withTrashed()->findOrFail(intval($id));
+        if (!$user->forceDelete()) {
+            return response()->json(['error' => 'Erreur lors de la suppression'], 400);
+        }
 
-        $item->forceDelete();
         return response()->json(['success' => true], $this->successStatus);
     }
 }

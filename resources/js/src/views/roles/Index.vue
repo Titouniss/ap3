@@ -169,7 +169,7 @@ export default {
             model: "role",
             modelPlurial: "roles",
             name: (data) => `le rôle ${data.name}`,
-            usesSoftDelete: false,
+            usesSoftDelete: true,
             disabled: this.isRowDisabled,
             blockDelete: (data) => this.blockRowDelete(data),
             blockDeleteMessage: (data) =>
@@ -217,23 +217,16 @@ export default {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     blockRowDelete(data) {
-      return this.$store.state.userManagement.users.find((user) =>
-        user.roles.find((r) => r.id === data.id)
+      return this.$store.state.userManagement.users.find(
+        (user) => user.role && user.role.id === data.id
       );
     },
     isRowDisabled(data) {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          return (
-            ["superAdmin", "Administrateur", "Utilisateur"].includes(
-              data.name
-            ) || data.is_public
-          );
-        } else {
-          return data.company_id === null && data.is_public;
-        }
-      } else return true;
+      if (this.isAdmin) {
+        return data.code === "super_admin";
+      } else {
+        return data.company_id === null && data.is_public;
+      }
     },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);

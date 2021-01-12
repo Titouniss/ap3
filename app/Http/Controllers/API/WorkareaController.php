@@ -37,13 +37,12 @@ class WorkareaController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Workarea  $workarea
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Workarea $workarea)
     {
-        $item = Workarea::where('id', $id)->first()->load('skills', 'company', 'documents');
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $workarea->load('skills', 'company', 'documents')], $this->successStatus);
     }
 
     /**
@@ -92,46 +91,46 @@ class WorkareaController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Workarea  $workarea
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Workarea $workarea)
     {
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'company_id' => 'required'
         ]);
-        $item = Workarea::find($id);
-        if ($item != null) {
-            $item->name = $arrayRequest['name'];
-            $item->company_id = $arrayRequest['company_id'];
-            $item->max_users = $arrayRequest['max_users'];
 
-            WorkareasSkill::where('workarea_id', $item->id)->delete();
-            if (!empty($arrayRequest['skills'])) {
-                foreach ($arrayRequest['skills'] as $skill_id) {
-                    WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
-                }
+
+        WorkareasSkill::where('workarea_id', $workarea->id)->delete();
+        if (!empty($arrayRequest['skills'])) {
+            foreach ($arrayRequest['skills'] as $skill_id) {
+                WorkareasSkill::create(['workarea_id' => $workarea->id, 'skill_id' => $skill_id]);
             }
-
-            if (isset($arrayRequest['token'])) {
-                $this->storeDocuments($item, $arrayRequest['token']);
-            }
-
-            if (isset($arrayRequest['documents'])) {
-                $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
-                    return $doc['id'];
-                }, $arrayRequest['documents']))->get();
-
-                foreach ($documents as $doc) {
-                    $doc->deleteFile();
-                }
-            }
-            $item->save();
-            $item->load('skills', 'company', 'documents');
         }
-        return response()->json(['success' => $item], $this->successStatus);
+
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocuments($workarea, $arrayRequest['token']);
+        }
+
+        if (isset($arrayRequest['documents'])) {
+            $documents = $workarea->documents()->whereNotIn('id', array_map(function ($doc) {
+                return $doc['id'];
+            }, $arrayRequest['documents']))->get();
+
+            foreach ($documents as $doc) {
+                $doc->deleteFile();
+            }
+        }
+
+        $workarea->update([
+            'name' => $arrayRequest['name'],
+            'company_id' => $arrayRequest['company_id'],
+            'max_users' => $arrayRequest['max_users']
+        ]);
+
+        return response()->json(['success' => $workarea->load('skills', 'company', 'documents')], $this->successStatus);
     }
 
     private function storeDocuments($workarea, $token)
@@ -151,43 +150,42 @@ class WorkareaController extends Controller
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Workarea  $workarea
      * @return \Illuminate\Http\Response
      */
-    public function restore($id)
+    public function restore(Workarea $workarea)
     {
-        $item = Workarea::withTrashed()->findOrFail($id)->restore();
-        if ($item) {
-            $item = Workarea::where('id', $id)->first()->load('skills', 'company');
-            return response()->json(['success' => $item], $this->successStatus);
+        if (!$workarea->restore()) {
+            return response()->json(['error' => 'Erreur lors de la restauration'], 400);
         }
+
+        return response()->json(['success' => $workarea->load('skills', 'company')], $this->successStatus);
     }
 
     /**
      * Archive the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Workarea  $workarea
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Workarea $workarea)
     {
-        $item = Workarea::findOrFail($id);
-        $item->delete();
+        if (!$workarea->delete()) {
+            return response()->json(['error' => 'Erreur lors de l\'archivage'], 400);
+        }
 
-        $item = Workarea::withTrashed()->where('id', $id)->first()->load('skills', 'company');
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $workarea->load('skills', 'company')], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Workarea  $workarea
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(Workarea $workarea)
     {
-        $item = Workarea::withTrashed()->findOrFail($id);
-        $item->forceDeleteCascade();
+        $workarea->forceDeleteCascade();
         return response()->json(['success' => true], $this->successStatus);
     }
 }

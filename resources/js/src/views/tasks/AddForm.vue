@@ -527,6 +527,7 @@ export default {
             });
             this.clearFields(false);
           } else {
+            console.log(response);
             this.$vs.notify({
               title: "Indisponnible",
               text: response.data.error,
@@ -596,20 +597,18 @@ export default {
 
       let $filteredItems = [];
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          if (this.project_data !== undefined && this.project_data !== null) {
-            $filteredItems = $items.filter(
-              (item) => item.company_id === this.project_data.company_id
-            );
-          } else if (projectData !== undefined && projectData !== null) {
-            $filteredItems = $items.filter(
-              (item) => item.company_id === projectData.company_id
-            );
-          }
-        } else {
-          $filteredItems = $items;
+      if (this.isAdmin) {
+        if (this.project_data !== undefined && this.project_data !== null) {
+          $filteredItems = $items.filter(
+            (item) => item.company_id === this.project_data.company_id
+          );
+        } else if (projectData !== undefined && projectData !== null) {
+          $filteredItems = $items.filter(
+            (item) => item.company_id === projectData.company_id
+          );
         }
+      } else {
+        $filteredItems = $items;
       }
       return $filteredItems;
     },

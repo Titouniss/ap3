@@ -63,7 +63,7 @@ class PermissionsRoleTableSeeder extends Seeder
 
         $role = Role::where(['name' => 'superAdmin'])->first();
         $role->givePermissionTo(Permission::all());
-        $role->is_admin = true;
+        $role->code = 'super_admin';
         $role->save();
 
         $role = Role::where(['name' => 'Administrateur'])->first();
@@ -72,12 +72,16 @@ class PermissionsRoleTableSeeder extends Seeder
         }));
         $role->givePermissionTo('read permissions');
         $role->givePermissionTo('read companies');
+        $role->code = 'admin';
+        $role->save();
 
         $role = Role::where(['name' => 'Utilisateur'])->first();
         // Give all permissions with name_fr
         $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'heures_supplémentaires'])->get());
         // Give specific permission by name
         $role->givePermissionTo(Permission::whereIn('name', ['read companies', 'read customers', 'read projects', 'read permissions', 'read ranges', 'read skills', 'read users', 'read workareas'])->get());
+        $role->code = 'user';
+        $role->save();
 
         $admin = User::where('email', 'admin@numidev.fr')->first();
         if ($admin == null) {

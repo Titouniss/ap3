@@ -44,12 +44,12 @@ class RangeController extends Controller
     /**
      * get single item api
      *
+     * @param \App\Models\Range $range
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Range $range)
     {
-        $item = Range::where('id', $id)->first();
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $range], $this->successStatus);
     }
 
     /**
@@ -87,108 +87,90 @@ class RangeController extends Controller
     /**
      * update item api
      *
+     * @param \App\Models\Range $range
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Range $range)
     {
         $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'name' => 'required'
         ]);
-        $item = Range::where('id', $id)->first();
-        if ($item != null) {
-            $item->name = $arrayRequest['name'];
-            $item->description = $arrayRequest['description'];
-            $item->save();
 
-            if (isset($arrayRequest['repetitive_tasks'])) {
-                $ids = [];
-                foreach ($arrayRequest['repetitive_tasks'] as $repetitive_task) {
-                    $task = $this->updateRepetitiveTask($item, $repetitive_task);
-                    array_push($ids, $task->id);
-                }
-                RepetitiveTask::whereNotIn('id', $ids)->where('range_id', $id)->delete();
-            } else {
-                RepetitiveTask::where('range_id', $item->id)->delete();
+        $range->update([
+            'name' => $arrayRequest['name'],
+            'description' => $arrayRequest['description'],
+        ]);
+
+        if (isset($arrayRequest['repetitive_tasks'])) {
+            $ids = [];
+            foreach ($arrayRequest['repetitive_tasks'] as $repetitive_task) {
+                $task = $this->updateRepetitiveTask($range, $repetitive_task);
+                array_push($ids, $task->id);
             }
+            RepetitiveTask::whereNotIn('id', $ids)->where('range_id', $range->id)->delete();
+        } else {
+            RepetitiveTask::where('range_id', $range->id)->delete();
         }
-        return response()->json(['success' => true, 'item' => $item], $this->successStatus);
+        return response()->json(['success' => true, 'item' => $range], $this->successStatus);
     }
 
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param \App\Models\Range $range
      * @return \Illuminate\Http\Response
      */
-    public function restore($id)
+    public function restore(Range $range)
     {
-        try {
-            $item = Range::withTrashed()->findOrFail($id);
-            $success = $item->restoreCascade();
-
-            if (!$success) {
-                throw new Exception('Impossible de restaurer la gamme');
-            }
-
-            return response()->json(['success' => $item], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$range->restoreCascade()) {
+            return response()->json(['error' => 'Erreur lors de la restauration'], 400);
         }
+
+        return response()->json(['success' => $range], $this->successStatus);
     }
 
     /**
      * Archive the specified resource from storage.
      *
-     * @param  int  $id
+     * @param \App\Models\Range $range
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Range $range)
     {
-        try {
-            $item = Range::withTrashed()->findOrFail($id);
-            $success = $item->deleteCascade();
-
-            if (!$success) {
-                throw new Exception('Impossible d\'archiver la gamme');
-            }
-
-            return response()->json(['success' => $item], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$range->deleteCascade()) {
+            return response()->json(['error' => 'Erreur lors de l\'archivage'], 400);
         }
+
+        return response()->json(['success' => $range], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param \App\Models\Range $range
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(Range $range)
     {
-        try {
-            $item = Range::withTrashed()->findOrFail($id);
-            $success = $item->forceDelete();
-
-            if (!$success) {
-                throw new Exception('Impossible de supprimer la gamme');
-            }
-
-            return response()->json(['success' => true], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$range->forceDelete()) {
+            return response()->json(['error' => 'Erreur lors de la suppression'], 400);
         }
+
+        return response()->json(['success' => true], $this->successStatus);
     }
 
-    public function getRepetitiveTasks($range_id)
+    /**
+     * Gets the repetitive tasks of a range.
+     *
+     * @param \App\Models\Range $range
+     * @return \Illuminate\Http\Response
+     */
+    public function getRepetitiveTasks(Range $range)
     {
-        if ($range_id) {
-            $items = RepetitiveTask::where('range_id', $range_id)->with('skills', 'workarea', 'documents')->get();
-            return response()->json(['success' => $items], $this->successStatus);
-        }
-        return response()->json(['error' => 'error'], 401);
+        $items = RepetitiveTask::where('range_id', $range->id)->with('skills', 'workarea', 'documents')->get();
+        return response()->json(['success' => $items], $this->successStatus);
     }
 
     private function storeDocuments(int $task_id, $token, $company)

@@ -21,7 +21,7 @@ export default {
         const index = state.roles.findIndex(r => r.id === item.id);
         Object.assign(state.roles[index], item);
     },
-    REMOVE_RECORD(state, itemId) {
+    REMOVE_ITEM(state, itemId) {
         const index = state.roles.findIndex(u => u.id === itemId);
         state.roles.splice(index, 1);
     }

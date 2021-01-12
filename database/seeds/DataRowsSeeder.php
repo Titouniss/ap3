@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Customers;
+use App\Models\Customer;
 use App\Models\DataRow;
 use App\Models\DataType;
 use App\Models\Project;
@@ -87,7 +87,7 @@ class DataRowsSeeder extends Seeder
         ])->save();
         /* #endregion */
 
-        /* #region Customers */
+        /* #region Customer */
         $type = $this->dataType('customers');
         $row = $this->dataRow($type, 'id');
         $row->fill([
@@ -253,7 +253,7 @@ class DataRowsSeeder extends Seeder
             'display_name' => 'Client',
             'required'     => 0,
             'details' => json_encode([
-                'model' => Customers::class,
+                'model' => Customer::class,
                 'label' => 'lastname'
             ])
         ])->save();

@@ -251,13 +251,13 @@ export default {
           }
         }
         if (user && user.id !== null) {
-          if (this.isAdmin > -1 || item.slug === "home") {
+          if (this.isAdmin || item.slug === "home") {
             item.show = true;
-          } else if (userPermissions.length > 0) {
-            item.show =
-              userPermissions.findIndex((p) => p.name === `show ${item.slug}`) >
-              -1;
-          } else item.show = false;
+          } else {
+            item.show = item.show = this.$store.getters.userHasPermissionTo(
+              `show ${item.slug}`
+            );
+          }
         }
       }
 

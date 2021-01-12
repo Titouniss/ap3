@@ -27,7 +27,7 @@ class Company extends Model
         'city',
         'country',
     ];
-    protected $appends = ['user_count', 'has_active_subscription', 'active_subscription', 'active_permissions'];
+    protected $appends = ['user_count', 'has_active_subscription', 'active_subscription'];
 
     public function getUserCountAttribute()
     {
@@ -42,11 +42,6 @@ class Company extends Model
     public function getHasActiveSubscriptionAttribute()
     {
         return $this->active_subscription !== null;
-    }
-
-    public function getActivePermissionsAttribute()
-    {
-        return $this->has_active_subscription ? $this->active_subscription->permissions : [];
     }
 
     public function module()
@@ -75,7 +70,7 @@ class Company extends Model
         Skill::withTrashed()->where('company_id', $this->id)->restore();
         Workarea::withTrashed()->where('company_id', $this->id)->restore();
 
-        foreach (Customers::withTrashed()->where('company_id', $this->id)->get() as $customer) {
+        foreach (Customer::withTrashed()->where('company_id', $this->id)->get() as $customer) {
             $customer->restoreCascade();
         }
         foreach (Range::withTrashed()->where('company_id', $this->id)->get() as $range) {
@@ -103,7 +98,7 @@ class Company extends Model
         foreach (Range::where('company_id', $this->id)->get() as $range) {
             $range->deleteCascade();
         }
-        foreach (Customers::where('company_id', $this->id)->get() as $customer) {
+        foreach (Customer::where('company_id', $this->id)->get() as $customer) {
             $customer->deleteCascade();
         }
 

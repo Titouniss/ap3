@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Skill;
+use App\Models\Task;
 use App\Models\TasksSkill;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -40,12 +41,12 @@ class SkillController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Skill  $skill
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Skill $skill)
     {
-        //
+        return response()->json(['success' => $skill], $this->successStatus);
     }
 
     /**
@@ -83,10 +84,10 @@ class SkillController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Skill  $skill
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Skill $skill)
     {
         $arrayRequest = $request->all();
 
@@ -95,99 +96,75 @@ class SkillController extends Controller
             'company_id' => 'required'
         ]);
 
-        $update = Skill::where('id', $id)->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']]);
-        if ($update) {
-            $item = Skill::find($id)->load('company');
-            return response()->json(['success' => $item], $this->successStatus);
-        } else {
+        if (!$skill->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']])) {
             return response()->json(['errore' => 'error'], $this->errorStatus);
         }
+
+        return response()->json(['success' => $skill->load('company')], $this->successStatus);
     }
 
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Skill  $skill
      * @return \Illuminate\Http\Response
      */
-    public function restore($id)
+    public function restore(Skill $skill)
     {
-        try {
-            $item = Skill::withTrashed()->findOrFail($id);
-            $success = $item->restore();
-
-            if ($success) {
-                return response()->json(['success' => $item->load('company')], $this->successStatus);
-            } else {
-                throw new Exception('Impossible de restaurer la compétence');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$skill->restore()) {
+            return response()->json(['success' => false, 'error' => 'Impossible de restaurer la compétence'], 400);
         }
+
+        return response()->json(['success' => $skill->load('company')], $this->successStatus);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Skill  $skill
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Skill $skill)
     {
         $controllerLog = new Logger('skill');
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('skill', ['destroy']);
 
-        try {
-            $item = Skill::findOrFail($id);
-            $success = $item->delete();
-
-            if ($success) {
-                return response()->json(['success' => $item->load('company')], $this->successStatus);
-            } else {
-                throw new Exception('Impossible d\'archiver la compétence');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$skill->delete()) {
+            return response()->json(['success' => false, 'error' => 'Impossible d\'archiver la compétence'], 400);
         }
+
+        return response()->json(['success' => $skill->load('company')], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Skill  $skill
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(Skill $skill)
     {
         $controllerLog = new Logger('skill');
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('skill', ['forceDelete']);
 
-
-        try {
-            $item = Skill::withTrashed()->findOrFail($id);
-            $success = $item->forceDelete();
-
-            if ($success) {
-                return response()->json(['success' => true], $this->successStatus);
-            } else {
-                throw new Exception('Impossible de supprimer la compétence');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$skill->forceDelete()) {
+            return response()->json(['success' => false, 'error' => 'Impossible de supprimer la compétence'], 400);
         }
+
+        return response()->json(['success' => true], $this->successStatus);
     }
 
     /**
      * getting skills by task.
      *
-     * @param  int  $id
+     * @param  \App\Models\Task  $task
      * @return \Illuminate\Http\Response
      */
-    public function getByTaskId(int $task_id)
+    public function getByTaskId(Task $task)
     {
-        $items = TasksSkill::select('skill_id')->where('task_id', $task_id)->get();
+        $items = TasksSkill::select('skill_id')->where('task_id', $task->id)->get();
 
         if ($items) {
             return response()->json(['success' => $items], $this->successStatus);

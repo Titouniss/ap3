@@ -22,6 +22,7 @@ use Monolog\Handler\StreamHandler;
 class HoursController extends Controller
 {
     public $successStatus = 200;
+
     /**
      * Display a listing of the resource.
      *
@@ -145,13 +146,12 @@ class HoursController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Hours $hours
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Hours $hours)
     {
-        $item = Hours::where('id', $id)->with('project', 'user')->first();
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $hours->load('project', 'user')], $this->successStatus);
     }
 
     /**
@@ -339,10 +339,10 @@ class HoursController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Hours $hours
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Hours $hours)
     {
 
         $arrayRequest = $request->all();
@@ -374,18 +374,17 @@ class HoursController extends Controller
         }
 
         // get old hour data
-        $old_hours = Hours::where('id', $id)->first();
+        $old_hours = $hours->replicate();
         $old_date = Carbon::parse($old_hours['start_at']);
         $old_hours['date'] = $old_date->format('Y-m-d');
 
-        $update = Hours::where('id', $id)
-            ->update([
-                'user_id' => $arrayRequest['user_id'],
-                'project_id' => $arrayRequest['project_id'],
-                'start_at' => $arrayRequest['start_at'],
-                'end_at' => $arrayRequest['end_at'],
-                'description' => $arrayRequest['description'],
-            ]);
+        $update = $hours->update([
+            'user_id' => $arrayRequest['user_id'],
+            'project_id' => $arrayRequest['project_id'],
+            'start_at' => $arrayRequest['start_at'],
+            'end_at' => $arrayRequest['end_at'],
+            'description' => $arrayRequest['description'],
+        ]);
 
         //reset old overtimes compteur
         // How many old hour worked this day
@@ -433,8 +432,7 @@ class HoursController extends Controller
         }
 
         if ($update) {
-            $item = Hours::find($id)->load('project', 'user');
-            return response()->json(['success' => $item], $this->successStatus);
+            return response()->json(['success' => $hours->load('project', 'user')], $this->successStatus);
         } else {
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
@@ -443,34 +441,31 @@ class HoursController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Hours $hours
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Hours $hours)
     {
-        $item = Hours::findOrFail($id);
-        $date = Carbon::parse($item->start_at);
+        $date = Carbon::parse($hours->start_at);
 
         // update overtimes compteur for this user and date
         // How many hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $date->format('Y-m-d'));
+        $nb_worked_hours = HoursController::getNbWorkedHours($hours->user_id, 0, $date->format('Y-m-d'));
 
         // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($item->user_id, Carbon::parse($item->date)->locale('fr_FR')->dayName);
+        $target_work_hours = HoursController::getTargetWorkHours($hours->user_id, Carbon::parse($hours->date)->locale('fr_FR')->dayName);
 
         // Check if value in dealing_hours for old date
-        $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->first();
+        $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $hours->user_id]])->first();
 
         if (empty($findDealingHour) === false && ($nb_worked_hours - $target_work_hours) >= 0) {
             // Delete dealing_hours
             $findDealingHour->delete();
         } else {
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+            DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $hours->user_id]])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
         }
 
-        $item->delete();
-
-        return '';
+        return response()->json(['success' => $hours->delete()], $this->successStatus);
     }
 }

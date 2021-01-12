@@ -43,10 +43,9 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Role $role)
     {
-        $item = Role::where('id', $id)->first()->load('permissions');
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $role->load('permissions')], $this->successStatus);
     }
 
     /**
@@ -95,14 +94,13 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Role $role)
     {
         $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'name' => 'required'
         ]);
-        $role = Role::where('id', $id)->first();
         if ($role != null) {
             $role->name = $arrayRequest['name'];
             $role->description = $arrayRequest['description'];
@@ -116,13 +114,47 @@ class RoleController extends Controller
     }
 
     /**
-     * delete item api
+     * Restore the specified resource in storage.
      *
+     * @param  \App\Models\Role  $user
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function restore(Role $role)
     {
-        $item = Role::where('id', $id)->delete();
-        return response()->json(['success' => $item], $this->successStatus);
+        if (!$role->restore()) {
+            return response()->json(['error' => 'Erreur lors de la restauration'], 400);
+        }
+
+        return response()->json(['success' => $role], $this->successStatus);
+    }
+
+    /**
+     * delete item api
+     *
+     * @param  \App\Models\Role  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Role $role)
+    {
+        if (!$role->delete()) {
+            return response()->json(['error' => 'Erreur lors de l\'archivage'], 400);
+        }
+
+        return response()->json(['success' => $role], $this->successStatus);
+    }
+
+    /**
+     * forceDelete the specified resource from storage.
+     *
+     * @param  \App\Models\Role  $role
+     * @return \Illuminate\Http\Response
+     */
+    public function forceDelete(Role $role)
+    {
+        if (!$role->forceDelete()) {
+            return response()->json(['error' => 'Erreur lors de la suppression'], 400);
+        }
+
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

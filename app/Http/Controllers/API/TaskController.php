@@ -13,7 +13,9 @@ use App\Models\TaskComment;
 use App\Models\PreviousTask;
 use App\Models\Document;
 use App\Models\ModelHasDocuments;
+use App\Models\Skill;
 use App\Models\TasksSkill;
+use App\Models\Workarea;
 use App\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -43,32 +45,35 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource by workarea.
      *
+     * @param  \App\Models\Workarea $workarea
      * @return \Illuminate\Http\Response
      */
-    public function getByWorkarea(int $workarea_id)
+    public function getByWorkarea(Workarea $workarea)
     {
-        $items = Task::where('workarea_id', $workarea_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods')->get();
+        $items = Task::where('workarea_id', $workarea->id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
     /**
      * Display a listing of the resource by bundle.
      *
+     * @param  \App\Models\TasksBundle $task_bundle
      * @return \Illuminate\Http\Response
      */
-    public function getByBundle(int $bundle_id)
+    public function getByBundle(TasksBundle $task_bundle)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods')->get();
+        $items = Task::where('tasks_bundle_id', $task_bundle->id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 
     /**
      * Display a listing of the resource by skill.
      *
+     * @param  \App\Models\Skill $skill
      * @return \Illuminate\Http\Response
      */
-    public function getBySkill(int $skill_id)
+    public function getBySkill(Skill $skill)
     {
-        $items = TasksSkill::select('task_id')->where('skill_id', $skill_id)->get();
+        $items = TasksSkill::select('task_id')->where('skill_id', $skill->id)->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 
@@ -101,6 +106,7 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource by user.
      *
+     * @param  \App\User $user
      * @return \Illuminate\Http\Response
      */
     public function getByUser(User $user)
@@ -117,13 +123,12 @@ class TaskController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Task $task)
     {
-        $item = Task::where('id', $id)->first()->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods');
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $task->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')], $this->successStatus);
     }
 
     /**
@@ -193,16 +198,15 @@ class TaskController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function addComment(Request $request, $id)
+    public function addComment(Request $request, Task $task)
     {
-        $item = Task::find($id); 
         $arrayRequest = $request->all();
-        $this->storeComment($id, $arrayRequest['comment']);
-        $item = Task::find($id)->load('comments');
+        $this->storeComment($task->id, $arrayRequest['comment']);
 
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $task->load('comments')], $this->successStatus);
     }
 
     private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null)
@@ -216,16 +220,16 @@ class TaskController extends Controller
         if (count($userTasks) > 0) {
 
             foreach ($userTasks as $task) {
-                
-                if($available){
+
+                if ($available) {
                     foreach ($task->periods as $task_period) {
 
                         $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
-    
+
                         if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
                             $available = false;
                             break;
-                        } 
+                        }
                     }
                 }
             }
@@ -244,11 +248,11 @@ class TaskController extends Controller
         if (count($workareaTasks) > 0) {
 
             foreach ($workareaTasks as $task) {
-                if($available){
+                if ($available) {
                     foreach ($task->periods as $task_period) {
 
                         $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
-    
+
                         if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
                             $available = false;
                             break;
@@ -275,9 +279,10 @@ class TaskController extends Controller
      * Update part of the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function updatePartial(Request $request, $id)
+    public function updatePartial(Request $request, Task $task)
     {
         $arrayRequest = $request->all();
 
@@ -286,19 +291,17 @@ class TaskController extends Controller
             'notify' => 'required'
         ]);
 
-        $update = Task::where('id', $id)
-            ->update([
-                'time_spent' => $arrayRequest['time_spent'],
-            ]);
+        $update = $task->update([
+            'time_spent' => $arrayRequest['time_spent'],
+        ]);
 
         if (isset($arrayRequest['comment'])) {
-            $this->storeComment((int) $id, $arrayRequest['comment'], $arrayRequest['notify']);
+            $this->storeComment((int) $task->id, $arrayRequest['comment'], $arrayRequest['notify']);
         }
 
 
         if ($update) {
-            $item = Task::find($id)->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods');
-            return response()->json(['success' => $item], $this->successStatus);
+            return response()->json(['success' => $task->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')], $this->successStatus);
         } else {
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
@@ -308,10 +311,10 @@ class TaskController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Task $task)
     {
         $arrayRequest = $request->all();
 
@@ -344,32 +347,29 @@ class TaskController extends Controller
         }
 
 
-        $update = Task::where('id', $id)
-            ->update([
-                'name' => $arrayRequest['name'],
-                'date' => $arrayRequest['date'],
-                'estimated_time' => $arrayRequest['estimated_time'],
-                'order' => $arrayRequest['order'],
-                'description' => $arrayRequest['description'],
-                'time_spent' => $arrayRequest['time_spent'],
-                'workarea_id' => $arrayRequest['workarea_id'],
-                'status' => $arrayRequest['status'],
-                'user_id' => $arrayRequest['user_id']
-            ]);
+        $update = $task->update([
+            'name' => $arrayRequest['name'],
+            'date' => $arrayRequest['date'],
+            'estimated_time' => $arrayRequest['estimated_time'],
+            'order' => $arrayRequest['order'],
+            'description' => $arrayRequest['description'],
+            'time_spent' => $arrayRequest['time_spent'],
+            'workarea_id' => $arrayRequest['workarea_id'],
+            'status' => $arrayRequest['status'],
+            'user_id' => $arrayRequest['user_id']
+        ]);
 
         if (isset($arrayRequest['skills']) && isset($arrayRequest['previousTasksIds'])) {
-            $this->updateSkills($id, $arrayRequest['skills']);
-            $this->updatePreviousTasks($id, $arrayRequest['previousTasksIds']);
+            $this->updateSkills($task->id, $arrayRequest['skills']);
+            $this->updatePreviousTasks($task->id, $arrayRequest['previousTasksIds']);
         }
 
         if (isset($arrayRequest['token'])) {
-            $this->storeDocuments($id, $arrayRequest['token'], $project->company);
+            $this->storeDocuments($task->id, $arrayRequest['token'], $project->company);
         }
 
-        $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'periods');
-
         if (isset($arrayRequest['documents'])) {
-            $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
+            $documents = $task->documents()->whereNotIn('id', array_map(function ($doc) {
                 return $doc['id'];
             }, $arrayRequest['documents']))->get();
 
@@ -378,10 +378,8 @@ class TaskController extends Controller
             }
         }
 
-        $item->load('documents');
-
         if ($update) {
-            return response()->json(['success' => $item], $this->successStatus);
+            return response()->json(['success' => $task->load('workarea', 'skills', 'comments', 'previousTasks', 'project', 'periods', 'documents')], $this->successStatus);
         } else {
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
@@ -390,14 +388,12 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Task $task)
     {
-        $item = Task::findOrFail($id);
-        $item->delete();
-        return response()->json(['success' => true], $this->successStatus);
+        return response()->json(['success' => $task->delete()], $this->successStatus);
     }
 
 

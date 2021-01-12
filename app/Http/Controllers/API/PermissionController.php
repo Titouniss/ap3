@@ -38,10 +38,9 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Permission $permission)
     {
-        $item = Permission::where('id', $id)->first();
-        return response()->json(['success' => $item], $this->successStatus);
+        return response()->json(['success' => $permission], $this->successStatus);
     }
 
     /**
@@ -56,7 +55,7 @@ class PermissionController extends Controller
             'name' => 'required'
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+            return response()->json(['error' => $validator->errors()], 400);
         }
         $item = Permission::create($arrayRequest);
         return response()->json(['success' => $item], $this->successStatus);
@@ -67,16 +66,19 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Permission $permission)
     {
         $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'name' => 'required'
         ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
 
-        $item = Permission::where('id', $id)->update(['name' => $arrayRequest['name'], 'is_public' => $arrayRequest['is_public']]);
-        return response()->json(['success' => $item], $this->successStatus);
+        $permission->update(['name' => $arrayRequest['name'], 'is_public' => $arrayRequest['is_public']]);
+        return response()->json(['success' => $permission], $this->successStatus);
     }
 
     /**
@@ -84,9 +86,12 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Permission $permission)
     {
-        $item = Permission::where('id', $id)->delete();
-        return response()->json(['success' => $item], $this->successStatus);
+        if (!$permission->delete()) {
+            return response()->json(['error' => 'Erreur lors de la suppression'], 500);
+        }
+
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

@@ -47,13 +47,12 @@ class ProjectController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Project $project
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Project $project)
     {
-        $item = Project::where('id', $id)->first();
-        return response()->json(['success' => $item->load('documents')], $this->successStatus);
+        return response()->json(['success' => $project->load('documents')], $this->successStatus);
     }
 
     /**
@@ -188,10 +187,10 @@ class ProjectController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Project $project
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Project $project)
     {
         $arrayRequest = $request->all();
 
@@ -201,27 +200,24 @@ class ProjectController extends Controller
             'company_id' => 'required'
         ]);
 
-        $update = Project::where('id', $id)
-            ->update([
-                'name' => $arrayRequest['name'],
-                'date' => $arrayRequest['date'],
-                'company_id' => $arrayRequest['company_id'],
-                'customer_id' => $arrayRequest['customer_id'],
-                'color' => $arrayRequest['color']
-            ]);
+        $update = $project->update([
+            'name' => $arrayRequest['name'],
+            'date' => $arrayRequest['date'],
+            'company_id' => $arrayRequest['company_id'],
+            'customer_id' => $arrayRequest['customer_id'],
+            'color' => $arrayRequest['color']
+        ]);
 
         if (!$update) {
             return response()->json(['error' => 'error'], $this->errorStatus);
         }
 
-        $item = Project::find($id)->load('company')->load('customer');
-
         if (isset($arrayRequest['token'])) {
-            $this->storeProjectDocuments($item, $arrayRequest['token']);
+            $this->storeProjectDocuments($project, $arrayRequest['token']);
         }
 
         if (isset($arrayRequest['documents'])) {
-            $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
+            $documents = $project->documents()->whereNotIn('id', array_map(function ($doc) {
                 return $doc['id'];
             }, $arrayRequest['documents']))->get();
 
@@ -230,73 +226,50 @@ class ProjectController extends Controller
             }
         }
 
-        return response()->json(['success' => $item->load('documents')], $this->successStatus);
+        return response()->json(['success' => $project->load('documents', 'company', 'customer')], $this->successStatus);
     }
 
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Project $project
      * @return \Illuminate\Http\Response
      */
-    public function restore($id)
+    public function restore(Project $project)
     {
-        try {
-            $item = Project::withTrashed()->findOrFail($id);
-            $success = $item->restoreCascade();
-
-            if ($success) {
-                return response()->json(['success' => $item->load('company')], $this->successStatus);
-            } else {
-                throw new Exception('Impossible de restaurer le projet');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$project->restoreCascade()) {
+            return response()->json(['success' => false, 'error' => 'Impossible de restaurer le projet'], 400);
         }
+
+        return response()->json(['success' => $project->load('company')], $this->successStatus);
     }
 
     /**
      * Archive the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Project $project
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Project $project)
     {
-        try {
-            $item = Project::findOrFail($id);
-            $success = $item->deleteCascade();
-
-            if (!$success) {
-                throw new Exception('Impossible d\'archiver le projet');
-            }
-
-            return response()->json(['success' => $item->load('company')], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$project->deleteCascade()) {
+            return response()->json(['success' => false, 'error' => 'Impossible d\'archiver le projet'], 400);
         }
+
+        return response()->json(['success' => $project->load('company')], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Project $project
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(Project $project)
     {
-        try {
-            $item = Project::withTrashed()->findOrFail($id);
-            $success = $item->forceDeleteCascade();
+        $project->forceDeleteCascade();
 
-            if (!$success) {
-                throw new Exception('Impossible de supprimer le projet');
-            }
-
-            return response()->json(['success' => true], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
+        return response()->json(['success' => true], $this->successStatus);
     }
 
     public function start(Request $request)

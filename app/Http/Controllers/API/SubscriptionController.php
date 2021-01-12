@@ -40,16 +40,12 @@ class SubscriptionController extends Controller
     /**
      * Display a listing of the resource based on the company.
      *
-     * @param  Company  $item
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function getByCompany(Company $item)
+    public function getByCompany(Company $company)
     {
-        if (!$item) {
-            return response()->json(['error' => 'Société inconnue'], 404);
-        }
-
-        $items = Subscription::withTrashed()->where('company_id', $item->id)->with('company', 'packages')->get();
+        $items = Subscription::withTrashed()->where('company_id', $company->id)->with('company', 'packages')->get();
 
         return response()->json(['success' => $items->sortBy('ends_at')->sortBy('starts_at')->sortBy('status_order')->values()], $this->successStatus);
     }
@@ -57,16 +53,12 @@ class SubscriptionController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  Subscription  $item
+     * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function show($item)
+    public function show(Subscription $subscription)
     {
-        if (!$item) {
-            return response()->json(['error' => 'Abonnement inconnu'], 404);
-        }
-
-        return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
+        return response()->json(['success' => $subscription->load('company', 'packages')], $this->successStatus);
     }
 
     /**
@@ -94,19 +86,19 @@ class SubscriptionController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  Subscription  $item
+     * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Subscription $item)
+    public function update(Request $request, Subscription $subscription)
     {
-        return $this->createOrUpdateSubscription($request->all(), $item);
+        return $this->createOrUpdateSubscription($request->all(), $subscription);
     }
 
     /**
      * Updates a subscription with new values
      *
      * @param  array  $subscriptionArray
-     * @param  Subscription  $item
+     * @param  \App\Models\Subscription  $item
      * @return \Illuminate\Http\Response
      */
     private function createOrUpdateSubscription(array $subscriptionArray, Subscription $item)
@@ -176,65 +168,45 @@ class SubscriptionController extends Controller
     /**
      * Restore the specified resource in storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function restore(int $id)
+    public function restore(Subscription $subscription)
     {
-        try {
-            $item = Subscription::withTrashed()->find($id);
-            $success = $item->restore();
-
-            if (!$success) {
-                throw new Exception('Impossible de restaurer l\'abonnement');
-            }
-
-            return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$subscription->restore()) {
+            return response()->json(['success' => false, 'error' => 'Impossible de restaurer l\'abonnement'], 400);
         }
+
+        return response()->json(['success' => $subscription->load('company', 'packages')], $this->successStatus);
     }
 
     /**
      * Archive the specified resource from storage.
      *
-     * @param  Subscription  $item
+     * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Subscription $item)
+    public function destroy(Subscription $subscription)
     {
-        try {
-            $success = $item->delete();
-
-            if (!$success) {
-                throw new Exception('Impossible d\'archiver l\'abonnement');
-            }
-
-            return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$subscription->delete()) {
+            return response()->json(['success' => false, 'error' => 'Impossible d\'archiver l\'abonnement'], 400);
         }
+
+        return response()->json(['success' => $subscription->load('company', 'packages')], $this->successStatus);
     }
 
     /**
      * Delete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete(int $id)
+    public function forceDelete(Subscription $subscription)
     {
-        try {
-            $item = Subscription::withTrashed()->find($id);
-            $success = $item->forceDelete();
-
-            if (!$success) {
-                throw new Exception('Impossible de supprimer l\'abonnement');
-            }
-
-            return response()->json(['success' => true], $this->successStatus);
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
+        if (!$subscription->forceDelete()) {
+            return response()->json(['success' => false, 'error' => 'Impossible de supprimer l\'abonnement'], 400);
         }
+
+        return response()->json(['success' => true], $this->successStatus);
     }
 }

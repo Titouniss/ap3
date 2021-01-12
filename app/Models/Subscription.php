@@ -12,16 +12,15 @@ class Subscription extends Model
 
     protected $fillable = ['company_id', 'starts_at', 'ends_at', 'state', 'is_trial'];
     protected $dates = ['starts_at', 'ends_at'];
-    protected $appends = ['permissions'];
+    protected $hidden = ['permissions'];
 
     public function getPermissionsAttribute()
     {
         $permissions = collect([]);
-        $packages = $this->belongsToMany(Package::class, 'subscription_has_packages', 'subscription_id', 'package_id')->get();
-        foreach ($packages as $package) {
+        foreach ($this->packages as $package) {
             $permissions = $permissions->merge($package->permissions);
         }
-        return $permissions;
+        return $permissions->unique();
     }
 
     public function getStatusOrderAttribute()
