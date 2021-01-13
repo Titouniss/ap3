@@ -288,7 +288,8 @@ class TaskController extends Controller
 
         $validator = Validator::make($arrayRequest, [
             'time_spent' => 'required',
-            'notify' => 'required'
+            'notify' => 'required',
+            'comment' => 'nullable'
         ]);
 
         $update = $task->update([
@@ -321,6 +322,7 @@ class TaskController extends Controller
         $validator = Validator::make($arrayRequest, [
             'name' => 'required',
             'estimated_time' => 'required',
+            'time_spent' => 'nullable',
         ]);
 
         // Pour un projet en cours, on regarde si la date et l'ilot sont dispo
@@ -332,8 +334,8 @@ class TaskController extends Controller
             $start_at = $date->format('Y-m-d H:i:s');
             $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
 
-            $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $id);
-            $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $id);
+            $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $task->id);
+            $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $task->id);
 
             if (!$userAvailable && !$workareaAvailable) {
                 return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);

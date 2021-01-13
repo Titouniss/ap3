@@ -10,8 +10,7 @@ class Task extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'order', 'description', 'date', 'date_end','estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
-
+    protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
     public function periods()
     {
