@@ -262,7 +262,7 @@
                     En cours
                   </vs-radio>
                 </li>
-                <li v-on:click="setTimeSpent">
+                <li>
                   <vs-radio
                     color="success"
                     v-model="itemLocal.status"
@@ -272,7 +272,7 @@
                   </vs-radio>
                 </li>
               </ul>
-              <div class="my-4 mt-3 mb-2">
+              <div class="my-2">
                 <small class="date-label"> Temps estimé (en h) </small>
                 <vs-input-number
                   min="1"
@@ -282,14 +282,20 @@
                   :disabled="itemLocal.project.status == 'doing'"
                 />
               </div>
-              <div class="my-4 mt-0 mb-0" v-if="itemLocal.status == 'done'">
+              <div class="my-2" v-if="itemLocal.status != 'todo'">
                 <small class="date-label"> Temps passé (en h) </small>
                 <vs-input-number
-                  min="1"
+                  min="-1000"
                   name="timeSpent"
                   class="inputNumber"
-                  v-model="itemLocal.time_spent"
+                  v-model="current_time_spent"
                 />
+              </div>
+              <div class="my-2" v-if="itemLocal.status != 'todo'">
+                <small class="date-label">
+                  Temps total passé : {{ totalTimeSpent }}h
+                </small>
+                <vs-progress :percent="progress" :color="progressColor" />
               </div>
               <div style="max-width: 250px">
                 <file-input :items="itemLocal.documents" :token="token" />
@@ -419,15 +425,28 @@ export default {
       usersDataFiltered: [],
       workareasDataFiltered: [],
       comments: [],
+      current_time_spent: 0,
 
       deleteWarning: false,
       orderDisplay: false,
       descriptionDisplay: false,
       commentDisplay: false,
-      have_setTimeSpent: false,
     };
   },
   computed: {
+    totalTimeSpent() {
+      return (this.itemLocal.time_spent || 0) + this.current_time_spent;
+    },
+    progress() {
+      return 100 * (this.totalTimeSpent / this.itemLocal.estimated_time);
+    },
+    progressColor() {
+      return this.progress < 100
+        ? "primary"
+        : this.progress === 100
+        ? "success"
+        : "danger";
+    },
     isAdmin() {
       return this.$store.state.AppActiveUser.is_admin;
     },
@@ -525,6 +544,9 @@ export default {
       }
 
       const item = JSON.parse(JSON.stringify(this.itemLocal));
+      if (this.totalTimeSpent) {
+        item.time_spent = this.totalTimeSpent;
+      }
 
       if (this.project_data != null) {
         item.project_id = this.project_data.id;
@@ -662,12 +684,6 @@ export default {
         previousTasks_local.push(task[0].name);
       });
       this.previousTasks = previousTasks_local;
-    },
-    setTimeSpent() {
-      if (!this.have_setTimeSpent) {
-        this.itemLocal.time_spent = this.itemLocal.estimated_time;
-        this.have_setTimeSpent = true;
-      }
     },
     showDescription() {
       this.descriptionDisplay = true;
