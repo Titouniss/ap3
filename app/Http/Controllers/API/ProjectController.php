@@ -129,7 +129,7 @@ class ProjectController extends Controller
             $this->storeDocuments($task->id, $repetitive_task->documents);
         }
 
-        $items = Task::where('tasks_bundle_id', $taskBundle->id)->with('workarea', 'skills', 'comments', 'previousTasks', 'documents')->get();
+        $items = Task::where('tasks_bundle_id', $taskBundle->id)->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project')->get();
         return response()->json(['success' => $items], $this->successStatus);
     }
 

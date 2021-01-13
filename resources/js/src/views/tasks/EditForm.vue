@@ -664,13 +664,11 @@ export default {
     filterItemsAdmin(items) {
       let filteredItems = items;
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          if (this.companyId) {
-            filteredItems = items.filter(
-              (item) => item.company_id === this.companyId
-            );
-          }
+      if (this.isAdmin) {
+        if (this.companyId) {
+          filteredItems = items.filter(
+            (item) => item.company_id === this.companyId
+          );
         }
       }
       return filteredItems;

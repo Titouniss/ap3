@@ -264,16 +264,14 @@ export default {
     filterItemsAdmin(items) {
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          filteredItems = items.filter(
-            (item) => item.company_id === this.itemLocal.company.id
-          );
-        } else {
-          filteredItems = items.filter(
-            (item) => item.company_id === user.company_id
-          );
-        }
+      if (this.isAdmin) {
+        filteredItems = items.filter(
+          (item) => item.company_id === this.itemLocal.company.id
+        );
+      } else {
+        filteredItems = items.filter(
+          (item) => item.company_id === user.company_id
+        );
       }
       return filteredItems;
     },

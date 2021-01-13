@@ -247,17 +247,13 @@ export default {
         this.itemLocal.workarea_id = null;
       }
     },
-    filterItemsAdmin($items) {
-      let $filteredItems = [];
+    filterItemsAdmin(items) {
+      let filteredItems = items;
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          $filteredItems = $items.filter(
-            (item) => item.company_id === this.companyId
-          );
-        } else {
-          $filteredItems = $items;
-        }
+      if (this.isAdmin) {
+        filteredItems = items.filter(
+          (item) => item.company_id === this.companyId
+        );
       }
       return $filteredItems;
     },
