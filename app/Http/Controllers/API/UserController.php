@@ -408,6 +408,10 @@ class UserController extends Controller
         $arrayRequest['isTermsConditionAccepted'] = false;
         $arrayRequest['login'] = $arrayRequest['full_login'];
         $item = User::create($arrayRequest)->load('company');
+
+        //On ajoute des heures de travail par défaut ( 35H )
+        $this->addDefaultWorkHours($item->id);
+
         $item->markEmailAsVerified();
         if ($item->email !== null) {
             $item->sendEmailAdUserNotification($item->id, $item->register_token);
@@ -682,5 +686,54 @@ class UserController extends Controller
         }
 
         return response()->json(['success' => true], $this->successStatus);
+    }
+
+    private function addDefaultWorkHours(int $user_id){
+
+        WorkHours::create([
+                'user_id' => $user_id,  
+                'is_active' => 1,
+                'day' => 'lundi',
+                'morning_starts_at' => '09:00:00',
+                'morning_ends_at' => '12:00:00',
+                'afternoon_starts_at' =>  '13:00:00',
+                'afternoon_ends_at' => '17:00:00'
+        ]);
+        WorkHours::create([
+                'user_id' => $user_id,  
+                'is_active' => 1,
+                'day' => 'mardi',
+                'morning_starts_at' => '09:00:00',
+                'morning_ends_at' => '12:00:00',
+                'afternoon_starts_at' =>  '13:00:00',
+                'afternoon_ends_at' => '17:00:00'
+        ]);
+        WorkHours::create([
+                'user_id' => $user_id,  
+                'is_active' => 1,
+                'day' => 'mercredi',
+                'morning_starts_at' => '09:00:00',
+                'morning_ends_at' => '12:00:00',
+                'afternoon_starts_at' =>  '13:00:00',
+                'afternoon_ends_at' => '17:00:00'
+        ]);
+        WorkHours::create([
+                'user_id' => $user_id,  
+                'is_active' => 1,
+                'day' => 'jeudi',
+                'morning_starts_at' => '09:00:00',
+                'morning_ends_at' => '12:00:00',
+                'afternoon_starts_at' =>  '13:00:00',
+                'afternoon_ends_at' => '17:00:00'
+        ]);
+        WorkHours::create([
+                'user_id' => $user_id,  
+                'is_active' => 1,
+                'day' => 'vendredi',
+                'morning_starts_at' => '09:00:00',
+                'morning_ends_at' => '12:00:00',
+                'afternoon_starts_at' =>  '13:00:00',
+                'afternoon_ends_at' => '17:00:00'
+        ]);
     }
 }
