@@ -63,7 +63,7 @@ class CompanyController extends Controller
      */
     public function show(Company $company)
     {
-        return response()->json(['success' => $company->with('skills', 'subscriptions', 'subscriptions.packages')], $this->successStatus);
+        return response()->json(['success' => $company->load('skills', 'subscriptions', 'subscriptions.packages')], $this->successStatus);
     }
 
     /**

@@ -91,6 +91,7 @@ export default {
             axios
                 .get(`/api/company-management/show/${id}`)
                 .then(response => {
+                    console.log(response);
                     resolve(response);
                 })
                 .catch(error => {
