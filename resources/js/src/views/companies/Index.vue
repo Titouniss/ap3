@@ -255,6 +255,12 @@ export default {
           sortable: true,
         },
         {
+          headerName: "Nombre d'utilisateurs",
+          field: "user_count",
+          filter: true,
+          sortable: true,
+        },
+        {
           headerName: "Actions",
           field: "transactions",
           type: "numericColumn",
