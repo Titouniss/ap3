@@ -152,10 +152,10 @@ export default {
         name: "",
         date: new Date(),
         customer: null,
-        company: this.isAdmin
-          ? this.$store.state.AppActiveUser.company.id
+        company: !this.isAdmin
+          ? this.$store.state.AppActiveUser.company_id
           : null,
-        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
+        company: !this.isAdmin ? this.$store.state.AppActiveUser.company : null,
         color: "",
       },
       colors: project_colors,
