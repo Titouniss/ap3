@@ -434,7 +434,6 @@ class ProjectController extends Controller
                                         }
                                         if (!$previousOk && $last_previous_task_end_time) {
 
-                                            $diffHours = Carbon::create($last_previous_task_end_time)->floatDiffInHours($period['start_time']);
                                             $total_hours = 0;
                                             foreach ($period['periods'] as $key_period => $period_temp) {
 
@@ -448,7 +447,8 @@ class ProjectController extends Controller
                                                     $total_hours += Carbon::parse($period_temp['end_time'])->floatDiffInHours(Carbon::parse($period_temp['start_time']));
                                                 } elseif ($period_period_temp->contains($last_previous_task_end_time)) { //On transforme la periode
 
-                                                    $period_temp['start_time'] = $last_previous_task_end_time;
+                                                    $period_temp['start_time'] = Carbon::parse($last_previous_task_end_time);
+                                                    $period['periods'][$key_period] = $period_temp;
                                                     $total_hours += Carbon::parse($period_temp['end_time'])->floatDiffInHours(Carbon::parse($period_temp['start_time']));
                                                 }
                                             }
