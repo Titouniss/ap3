@@ -30,7 +30,7 @@ class CustomerController extends Controller
         if ($user->is_admin) {
             $customers = Customer::withTrashed()->get()->load('company');
         } else {
-            $customers = Customer::withTrashed()->get()->load('company');
+            $customers = Customer::withTrashed()->where('company_id', $user->company_id)->get()->load('company');
             // Add link to specific company ?
         }
         return response()->json(['success' => $customers], $this->successStatus);
@@ -64,13 +64,12 @@ class CustomerController extends Controller
             'lastname' => 'nullable',
             'siret' => 'nullable',
             'professional' => 'required',
-            'company' => 'required'
+            'company_id' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 401);
         }
         if ($user != null) {
-            $arrayRequest['company_id'] = $arrayRequest['company']['id'];
             $item = Customer::create($arrayRequest)->load('company');
             return response()->json(['success' => $item], $this->successStatus);
         }

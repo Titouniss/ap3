@@ -28,8 +28,9 @@
               v-if="isAdmin"
               label="name"
               v-validate="'required'"
-              v-model="itemLocal.company"
+              v-model="itemLocal.company_id"
               :options="companiesData"
+              :reduce="(company) => company.id"
               class="w-full mb-4 mt-5"
             >
               <template #header>
@@ -206,13 +207,6 @@ export default {
             color: "danger",
           });
         });
-    },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
     },
   },
 };

@@ -283,11 +283,7 @@ export default {
       return this.$store.state.customerManagement.customer.id || 0;
     },
     customersData() {
-      return this.is_admin
-        ? this.$store.state.customerManagement.customers
-        : this.$store.state.customerManagement.customers.filter(
-            (c) => c.company.id === this.$store.state.AppActiveUser.company_id
-          );
+      return this.$store.state.customerManagement.customers;
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -420,13 +416,6 @@ export default {
         this.gridApi.sizeColumnsToFit();
       }
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
-    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -475,13 +464,15 @@ export default {
       moduleCompanyManagement.isRegistered = true;
     }
 
-    if (this.authorizedTo("read", "customers")) {
-      this.$store.dispatch("customerManagement/fetchItems");
-    }
-
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+    this.$store.dispatch("customerManagement/fetchItems").catch((err) => {
       console.error(err);
     });
+
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+        console.error(err);
+      });
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

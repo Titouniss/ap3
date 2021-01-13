@@ -297,13 +297,6 @@ export default {
       if (typeof word !== "string") return "";
       return word.charAt(0).toUpperCase() + word.slice(1);
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
-    },
   },
   mounted() {
     if (this.isAdmin) {

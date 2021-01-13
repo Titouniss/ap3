@@ -123,15 +123,12 @@ export default {
       return this.$store.state.roleManagement.permissions;
     },
     disabled() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          return false;
-        } else {
-          this.itemLocal.company_id = user.company_id;
-          return true;
-        }
-      } else return true;
+      if (this.isAdmin) {
+        return false;
+      } else {
+        this.itemLocal.company_id = this.$store.state.AppActiveUser.company_id;
+        return true;
+      }
     },
     validateForm() {
       return (

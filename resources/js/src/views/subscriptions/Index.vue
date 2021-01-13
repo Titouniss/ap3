@@ -416,13 +416,6 @@ export default {
         this.gridApi.sizeColumnsToFit();
       }
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
-    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;

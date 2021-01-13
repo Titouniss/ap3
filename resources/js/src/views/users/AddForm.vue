@@ -40,7 +40,7 @@
           <div class="vs-input--label">Identifiant</div>
           <vx-input-group>
             <template slot="prepend">
-              <div class="prepend-text bg-primary">
+              <div v-if="company_login" class="prepend-text bg-primary">
                 <span> {{ company_login }} </span>
               </div>
             </template>
@@ -67,9 +67,9 @@
             v-model="itemLocal.email"
             :color="!errors.has('email') ? 'success' : 'danger'"
           />
-          <span class="text-danger text-sm" v-show="errors.has('email')">{{
-            errors.first("email")
-          }}</span>
+          <span class="text-danger text-sm" v-show="errors.has('email')">
+            {{ errors.first("email") }}
+          </span>
         </vs-col>
         <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
           <div>
@@ -87,24 +87,20 @@
               <template #header>
                 <div style="opacity: .8 font-size: .60rem">Rôle</div>
               </template>
-              <template #option="role">
-                <span>{{ `${role.name}` }}</span>
-              </template>
             </v-select>
-            <span class="text-danger text-sm" v-show="errors.has('role')">{{
-              errors.first("role")
-            }}</span>
+            <span class="text-danger text-sm" v-show="errors.has('role')">
+              {{ errors.first("role") }}
+            </span>
           </div>
 
           <div v-if="!disabled">
             <v-select
               v-validate="'required'"
-              @input="selectCompanySkills"
               name="company"
               label="name"
               :multiple="false"
               v-model="itemLocal.company_id"
-              :reduce="(name) => name.id"
+              :reduce="(c) => c.id"
               class="w-full mt-5"
               autocomplete
               :options="companiesData"
@@ -112,15 +108,10 @@
               <template #header>
                 <div style="opacity: .8 font-size: .85rem">Société</div>
               </template>
-              <template #option="company">
-                <span>{{ `${company.name}` }}</span>
-              </template>
             </v-select>
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('company_id')"
-              >{{ errors.first("company_id") }}</span
-            >
+            <span class="text-danger text-sm" v-show="errors.has('company_id')">
+              {{ errors.first("company_id") }}
+            </span>
           </div>
 
           <div v-if="itemLocal.company_id">
@@ -129,14 +120,16 @@
                 label="Compétences"
                 v-if="companySkills.length === 0"
                 class="msgTxt mt-10"
-                >Aucune compétences trouvées.</span
               >
+                Aucune compétences trouvées.
+              </span>
               <router-link
                 v-if="companySkills.length === 0"
                 class="linkTxt"
                 :to="{ path: '/skills' }"
-                >Ajouter une compétence</router-link
               >
+                Ajouter une compétence
+              </router-link>
             </div>
             <v-select
               v-validate="'required'"
@@ -153,15 +146,10 @@
               <template #header>
                 <div style="opacity: .8 font-size: .85rem">Compétences</div>
               </template>
-              <template #option="companyskill">
-                <span>{{ `${companyskill.name}` }}</span>
-              </template>
             </v-select>
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('company_id')"
-              >{{ errors.first("company_id") }}</span
-            >
+            <span class="text-danger text-sm" v-show="errors.has('company_id')">
+              {{ errors.first("company_id") }}
+            </span>
           </div>
         </vs-col>
       </vs-row>
@@ -221,13 +209,23 @@ export default {
         login: "",
         full_login: "",
         email: "",
-        company_id: null,
+        company_id: 0,
         role_id: 0,
         skills: [],
       },
-      companySkills: [],
       company_login: "",
     };
+  },
+  watch: {
+    companySkills(val, prevVal) {
+      if (val !== prevVal) {
+        this.getCompanyName();
+
+        if (!this.rolesData.find((r) => r.id === this.itemLocal.role_id)) {
+          this.itemLocal.role_id = 0;
+        }
+      }
+    },
   },
   computed: {
     isAdmin() {
@@ -235,6 +233,15 @@ export default {
     },
     companiesData() {
       return this.$store.state.companyManagement.companies;
+    },
+    companySkills() {
+      const companyId = this.itemLocal.company_id;
+      if (companyId && this.companiesData && this.companiesData.length > 0) {
+        return this.companiesData.find((company) => company.id === companyId)
+          .skills;
+      }
+
+      return [];
     },
     rolesData() {
       return this.$store.getters["roleManagement/getItemsForCompany"](
@@ -246,14 +253,12 @@ export default {
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
-      if (user.role) {
-        if (this.isAdmin) {
-          return false;
-        } else {
-          this.itemLocal.company_id = user.company_id;
-          return true;
-        }
-      } else return true;
+      if (this.isAdmin) {
+        return false;
+      } else {
+        this.itemLocal.company_id = user.company_id;
+        return true;
+      }
     },
     validateForm() {
       return (
@@ -261,7 +266,7 @@ export default {
         this.itemLocal.lastname != "" &&
         this.itemLocal.firstname != "" &&
         this.itemLocal.login != "" &&
-        this.itemLocal.company_id != null &&
+        this.itemLocal.company_id > 0 &&
         this.itemLocal.role_id > 0
       );
     },
@@ -274,21 +279,29 @@ export default {
       Object.assign(this.itemLocal, {
         itemLocal: {
           email: "",
-          company_id: null,
-          role: 0,
+          company_id: 0,
+          role_id: 0,
         },
       });
     },
     addItem() {
       if (this.validateForm) {
         this.$vs.loading();
-        this.itemLocal.full_login = "".concat(
+        const payload = JSON.parse(JSON.stringify(this.itemLocal));
+
+        // Parse login
+        payload.full_login = "".concat(
           this.company_login,
           this.itemLocal.login
         );
 
+        // Filter skills
+        payload.skills = this.companySkills
+          .filter((skill) => payload.skills.indexOf(skill.id) > -1)
+          .map((skill) => skill.id);
+
         this.$store
-          .dispatch("userManagement/addItem", Object.assign({}, this.itemLocal))
+          .dispatch("userManagement/addItem", payload)
           .then((response) => {
             this.back();
             this.$vs.notify({
@@ -320,13 +333,6 @@ export default {
           .finally(() => this.$vs.loading.close());
       }
     },
-    selectCompanySkills(item) {
-      this.companySkills = this.companiesData.find(
-        (company) => company.id === item
-      ).skills;
-
-      this.getCompanyName();
-    },
     filterItemsAdmin($items) {
       let $filteredItems = [];
       if (this.isAdmin) {
@@ -354,7 +360,7 @@ export default {
           );
           this.company_login = this.removeAccents(this.company_login);
         } else {
-          this.company_login = "selectionner_société.";
+          this.company_login = "";
         }
       } else {
         const user = this.$store.state.AppActiveUser;
@@ -379,13 +385,6 @@ export default {
       });
       return str.join("");
     },
-  },
-  mounted() {
-    if (this.isAdmin) {
-      this.selectCompanySkills(this.$store.state.AppActiveUser.company_id);
-    }
-
-    this.getCompanyName();
   },
   created() {
     if (!moduleUserManagement.isRegistered) {

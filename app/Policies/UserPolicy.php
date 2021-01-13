@@ -20,49 +20,49 @@ class UserPolicy extends BasePolicy
     }
 
     /**
-     * Determine whether the user can view the item.
+     * Determine whether the item can view the item.
      *
-     * @param  \App\User  $currentUser
      * @param  \App\User  $user
+     * @param  \App\User  $item
      * @return boolean
      */
-    public function show(User $currentUser, User $user)
+    public function show(User $user, User $item)
     {
-        return $this->canShow($currentUser, $user) || (!$user->exists || $currentUser->id == $user->id);
+        return $this->canShow($user, $item) || (!$item->exists || $user->id == $item->id);
     }
 
     /**
-     * Determine whether the user can publish an item.
+     * Determine whether the item can publish an item.
      *
-     * @param  \App\User  $currentUser
-     * @return boolean
-     */
-    public function publish(User $currentUser)
-    {
-        return $this->canPublish($currentUser);
-    }
-
-    /**
-     * Determine whether the user can edit the item.
-     *
-     * @param  \App\User  $currentUser
      * @param  \App\User  $user
      * @return boolean
      */
-    public function edit(User $currentUser, User $user)
+    public function publish(User $user)
     {
-        return $this->canEdit($currentUser, $user) || (!$user->exists || $currentUser->id == $user->id);
+        return $this->canPublish($user);
     }
 
     /**
-     * Determine whether the user can delete the item.
+     * Determine whether the item can edit the item.
      *
-     * @param  \App\User  $currentUser
      * @param  \App\User  $user
+     * @param  \App\User  $item
      * @return boolean
      */
-    public function delete(User $currentUser, User $user)
+    public function edit(User $user, User $item)
     {
-        return $this->canDelete($currentUser, $user) || (!$user->exists || $currentUser->id != $user->id);
+        return $this->canEdit($user, $item) || (!$item->exists || $user->id == $item->id);
+    }
+
+    /**
+     * Determine whether the item can delete the item.
+     *
+     * @param  \App\User  $user
+     * @param  \App\User  $item
+     * @return boolean
+     */
+    public function delete(User $user, User $item)
+    {
+        return $this->canDelete($user, $item) || (!$item->exists || $user->id != $item->id);
     }
 }

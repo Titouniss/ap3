@@ -8,10 +8,7 @@
       <span class="ml-2">Retour aux heures</span>
     </router-link>
 
-    <div
-      v-if="isAdmin || activeUserRole() === 'Administrateur'"
-      class="vx-card p-6 mt-3 mb-5"
-    >
+    <div v-if="isAdmin || isManager" class="vx-card p-6 mt-3 mb-5">
       <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
         <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
         <h4 class="ml-3">Filtres</h4>
@@ -54,9 +51,9 @@
 
     <div class="vx-card w-full p-6" v-if="filters.user">
       <add-form
-        :activeAddPrompt="this.activeAddPrompt"
-        :clickDate="this.dateData"
-        :hours_list="this.hoursData"
+        :activeAddPrompt="activeAddPrompt"
+        :clickDate="dateData"
+        :hours_list="hoursData"
         :handleClose="handleClose"
         :user="filters.user"
       />
@@ -168,14 +165,17 @@ export default {
       maxTime: "24:00",
       // Filters
       filters: {
-        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
-        user: this.isAdmin ? this.$store.state.AppActiveUser : null,
+        company: this.isAdmin ? null : this.$store.state.AppActiveUser.company,
+        user: this.isAdmin ? null : this.$store.state.AppActiveUser,
       },
     };
   },
   computed: {
     isAdmin() {
       return this.$store.state.AppActiveUser.is_admin;
+    },
+    isManager() {
+      return this.$store.state.AppActiveUser.is_manager;
     },
     itemIdToEdit() {
       return this.$store.state.hoursManagement.hour.id || -1;
@@ -202,30 +202,31 @@ export default {
         });
       });
 
-      console.log("calendarEvents -> finalHours", finalHours);
+      //   console.log("calendarEvents -> finalHours", finalHours);
       return finalHours;
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies.sort(function (
-        a,
-        b
-      ) {
+      const companies = JSON.parse(
+        JSON.stringify(this.$store.state.companyManagement.companies)
+      );
+      return companies.sort(function (a, b) {
         var textA = a.name.toUpperCase();
         var textB = b.name.toUpperCase();
         return textA < textB ? -1 : textA > textB ? 1 : 0;
       });
     },
     usersData() {
+      const users = JSON.parse(
+        JSON.stringify(this.$store.state.userManagement.users)
+      );
       return this.filters.company
-        ? this.$store.state.userManagement.users.filter(
-            (item) => item.company_id === this.filters.company.id
-          )
+        ? users.filter((item) => item.company_id === this.filters.company.id)
         : [];
     },
     hoursData() {
       return this.$store.state.hoursManagement
         ? this.$store.state.hoursManagement.hours
-        : null;
+        : [];
     },
   },
   methods: {
@@ -264,8 +265,8 @@ export default {
         arg.dateStr = lastEvent.end;
       }
 
-      this.activeAddPrompt = true;
       this.dateData = arg;
+      this.activeAddPrompt = true;
     },
     handleEventClick(arg) {
       var targetEvent = this.calendarEvents.find(
@@ -362,11 +363,10 @@ export default {
       this.handleClose();
     },
     handleClose() {
-      this.calendarEvents = [];
-      let test = this.calendarEvents;
+      //   let test = this.calendarEvents;
 
       //this.refresh();
-      (this.activeAddPrompt = false), (this.dateData = {});
+      this.activeAddPrompt = false;
     },
     refreshDataUsers() {
       this.filters.user = null;
@@ -381,13 +381,6 @@ export default {
       }
       // get user work hours
       this.getBusinessHours();
-    },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
     },
     getBusinessHours() {
       this.$store

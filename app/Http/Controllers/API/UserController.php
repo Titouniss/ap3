@@ -71,7 +71,7 @@ class UserController extends Controller
             $module = null;
             $item = Auth::user();
 
-            if (!$item->role->is_admin) {
+            if (!$item->is_admin) {
                 $company = Company::find($item->company_id);
                 if (!$company) {
                     Auth::logout();

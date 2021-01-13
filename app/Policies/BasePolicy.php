@@ -42,9 +42,10 @@ abstract class BasePolicy
      * @param  \App\User  $currentUser
      * @return boolean
      */
-    public function read(User $currentUser)
+    public function read(User $user)
     {
-        return $currentUser->can("read {$this->model}");
+
+        return $user->can("read {$this->model}");
     }
 
     /**

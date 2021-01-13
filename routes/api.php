@@ -212,10 +212,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************    RANGES    **************************************/
     /***********************************************************************************/
     Route::prefix('range-management')->group(function () {
-        Route::group(['middleware' => ['permission:read,App\Models\Range']], function () {
+        Route::group(['middleware' => ['can:read,App\Models\Range']], function () {
             Route::get('index', 'API\RangeController@index');
         });
-        Route::group(['middleware' => ['permission:show,range']], function () {
+        Route::group(['middleware' => ['can:show,range']], function () {
             Route::get('show/{range}', 'API\RangeController@show');
         });
         Route::group(['middleware' => ['can:publish,App\Models\Range']], function () {
@@ -402,7 +402,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /***********************************************************************************/
-    /******************************** Subscription Components ************************************/
+    /********************************* Subscription ************************************/
     /***********************************************************************************/
     Route::prefix('subscription-management')->group(function () {
         Route::group(['middleware' => ['can:read,App\Models\Subscription']], function () {

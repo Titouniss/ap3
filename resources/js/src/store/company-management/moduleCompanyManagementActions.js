@@ -24,7 +24,7 @@ export default {
                         );
                         resolve(response);
                     } else {
-                        reject({message: response.data.error});
+                        reject({ message: response.data.error });
                     }
                 })
                 .catch(error => {

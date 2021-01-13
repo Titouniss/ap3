@@ -10,4 +10,14 @@ class Role extends SpatieRole
     use SoftDeletes;
 
     protected $fillable = ['name', 'code', 'guard_name', 'description', 'company_id', 'is_public'];
+
+    public function getIsAdminAttribute()
+    {
+        return $this->code === "super_admin";
+    }
+
+    public function getIsManagerAttribute()
+    {
+        return $this->code === "admin";
+    }
 }

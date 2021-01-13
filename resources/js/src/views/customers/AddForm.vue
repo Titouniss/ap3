@@ -22,8 +22,9 @@
                 v-if="isAdmin"
                 label="name"
                 v-validate="'required'"
-                v-model="itemLocal.company"
+                v-model="itemLocal.company_id"
                 :options="companiesData"
+                :reduce="(company) => company.id"
                 class="w-full mb-4 mt-5"
               >
                 <template #header>
@@ -111,7 +112,9 @@ export default {
       itemLocal: {
         name: null,
         lastname: null,
-        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
+        company_id: this.isAdmin
+          ? null
+          : this.$store.state.AppActiveUser.company_id,
         siret: null,
         professional: 0,
       },
@@ -133,7 +136,7 @@ export default {
         return (
           !this.errors.any() &&
           this.itemLocal.lastname !== null &&
-          this.itemLocal.company !== null
+          this.itemLocal.company_id !== null
         );
       }
     },
@@ -146,7 +149,9 @@ export default {
       Object.assign(this.itemLocal, {
         name: null,
         lastname: null,
-        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
+        company_id: this.isAdmin
+          ? null
+          : this.$store.state.AppActiveUser.company_id,
         siret: null,
         professional: 0,
       });
@@ -195,13 +200,6 @@ export default {
           this.clearFields();
         }
       });
-    },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
     },
   },
 };

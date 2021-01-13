@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\BaseModule;
 use App\Models\Company;
+use App\Models\Customer;
 use App\Models\DealingHours;
 use App\Models\Hours;
 use App\Models\Project;
@@ -19,6 +20,7 @@ use App\Policies\CompanyPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\DealingHoursPolicy;
 use App\Policies\HoursPolicy;
+use App\Policies\PermissionPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\RangePolicy;
 use App\Policies\RolePolicy;

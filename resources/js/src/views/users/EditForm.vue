@@ -42,7 +42,7 @@
           <div class="vs-input--label">Identifiant</div>
           <vx-input-group>
             <template slot="prepend">
-              <div class="prepend-text bg-primary">
+              <div v-if="company_login" class="prepend-text bg-primary">
                 <span> {{ company_login }} </span>
               </div>
             </template>
@@ -92,9 +92,6 @@
               <template #header>
                 <div style="opacity: .8 font-size: .60rem">Rôle</div>
               </template>
-              <template #option="role">
-                <span> {{ `${role.name}` }} </span>
-              </template>
             </v-select>
             <span class="text-danger text-sm" v-show="errors.has('role')">
               {{ errors.first("role") }}
@@ -105,21 +102,17 @@
           <div v-if="!disabled">
             <v-select
               v-validate="'required'"
-              @input="selectCompanySkills"
               name="company"
               label="name"
               :multiple="false"
               v-model="itemLocal.company_id"
-              :reduce="(name) => name.id"
+              :reduce="(c) => c.id"
               class="w-full mt-5"
               autocomplete
               :options="companiesData"
             >
               <template #header>
                 <div style="opacity: .8 font-size: .85rem">Société</div>
-              </template>
-              <template #option="company">
-                <span> {{ `${company.name}` }} </span>
               </template>
             </v-select>
             <span class="text-danger text-sm" v-show="errors.has('company_id')">
@@ -152,16 +145,13 @@
               label="name"
               :multiple="true"
               v-model="itemLocal.skills"
-              :reduce="(name) => name.id"
+              :reduce="(s) => s.id"
               class="w-full mt-5"
               autocomplete
               :options="companySkills"
             >
               <template #header>
                 <div style="opacity: .8 font-size: .85rem">Compétences</div>
-              </template>
-              <template #option="companyskill">
-                <span> {{ `${companyskill.name}` }} </span>
               </template>
             </v-select>
             <span class="text-danger text-sm" v-show="errors.has('company_id')">
@@ -181,7 +171,6 @@
           >
             <v-select
               name="user"
-              label="firstname"
               v-model="itemLocal.related_user_id"
               :reduce="(user) => user.id"
               class="w-full"
@@ -267,7 +256,7 @@ export default {
         login: "",
         full_login: "",
         email: "",
-        company_id: null,
+        company_id: 0,
         role_id: 0,
         skills: [],
         work_hours: [],
@@ -275,10 +264,20 @@ export default {
       },
       initial_company_id: null,
       company_id_temps: null,
-      companySkills: [],
       company_login: "",
       selected: [],
     };
+  },
+  watch: {
+    companySkills(val, prevVal) {
+      if (val !== prevVal) {
+        this.getCompanyName();
+
+        if (!this.rolesData.find((r) => r.id === this.itemLocal.role_id)) {
+          this.itemLocal.role_id = 0;
+        }
+      }
+    },
   },
   computed: {
     isAdmin() {
@@ -289,6 +288,15 @@ export default {
     },
     companiesData() {
       return this.$store.state.companyManagement.companies;
+    },
+    companySkills() {
+      const companyId = this.itemLocal.company_id;
+      if (companyId && this.companiesData && this.companiesData.length > 0) {
+        return this.companiesData.find((company) => company.id === companyId)
+          .skills;
+      }
+
+      return [];
     },
     rolesData() {
       return this.$store.getters["roleManagement/getItemsForCompany"](
@@ -321,19 +329,6 @@ export default {
     authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
-    selectCompanySkills(item) {
-      if (
-        this.company_id_temps &&
-        this.company_id_temps !== this.itemLocal.company_id
-      ) {
-        this.itemLocal.skills = [];
-      }
-      this.companySkills = this.companiesData.find(
-        (company) => company.id === item
-      ).skills;
-
-      this.getCompanyName();
-    },
     fetch_data(id) {
       this.$vs.loading();
 
@@ -354,7 +349,6 @@ export default {
           if (item.company_id) {
             this.initial_company_id = item.company_id;
             this.company_id_temps = item.company_id;
-            this.selectCompanySkills(item.company_id);
           }
 
           // Get login
@@ -391,10 +385,15 @@ export default {
     },
     updateItem() {
       this.$vs.loading();
-      const payload = Object.assign({}, this.itemLocal);
+      const payload = JSON.parse(JSON.stringify(this.itemLocal));
 
       // Parse login
       payload.full_login = "".concat(this.company_login, this.itemLocal.login);
+
+      // Filter skills
+      payload.skills = this.companySkills
+        .filter((skill) => payload.skills.indexOf(skill.id) > -1)
+        .map((skill) => skill.id);
 
       this.$store
         .dispatch("userManagement/updateItem", payload)
@@ -436,7 +435,7 @@ export default {
           );
           this.company_login = this.removeAccents(this.company_login);
         } else {
-          this.company_login = "selectionner_société.";
+          this.company_login = "";
         }
       } else {
         const user = this.$store.state.AppActiveUser;

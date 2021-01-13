@@ -165,13 +165,14 @@
       >
         <vs-button
           v-if="
-            (activeUserRole() !== 'Administrateur' && !isAdmin()) ||
+            (!isManager && !isAdmin) ||
             (filters.user &&
               filters.user.id === this.$store.state.AppActiveUser.id)
           "
           @click="goToUnavailabilities()"
-          >{{ "Gérer mes indisponibilités" }}</vs-button
         >
+          {{ "Gérer mes indisponibilités" }}
+        </vs-button>
       </vs-row>
     </div>
     <div class="vx-card p-6 mt-1">
@@ -185,9 +186,9 @@
             <vs-button @click="addRecord">Ajouter des heures</vs-button>
           </div>-->
           <div class="px-6 py-2" v-if="authorizedTo('publish')">
-            <vs-button @click="readRecord">{{
-              isAdmin() ? "Gérer les heures" : "Gérer mes heures"
-            }}</vs-button>
+            <vs-button @click="readRecord">
+              {{ isAdmin ? "Gérer les heures" : "Gérer mes heures" }}
+            </vs-button>
           </div>
         </div>
         <vs-button type="border" @click="onExport">
@@ -481,6 +482,12 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
+    isManager() {
+      return this.$store.state.AppActiveUser.is_manager;
+    },
     filterDate() {
       moment.locale("fr");
       if (this.filters.period_type === "week") {
@@ -584,9 +591,6 @@ export default {
         this.period_types[this.filters.period_type].symbol
       );
       this.refreshData();
-    },
-    isAdmin() {
-      return this.$store.state.AppActiveUser.is_admin;
     },
     isFullFilter() {
       return this.filters.period_type === "full";
@@ -764,13 +768,6 @@ export default {
         })
       );
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        return user.roles[0].name;
-      }
-      return false;
-    },
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -778,7 +775,7 @@ export default {
     // Hide user column ?
     this.gridOptions.columnApi.setColumnVisible(
       "user",
-      this.isAdmin || this.activeUserRole() == "Administrateur" ? true : false
+      this.isAdmin || this.isManager
     );
 
     window.addEventListener("resize", this.onResize);
