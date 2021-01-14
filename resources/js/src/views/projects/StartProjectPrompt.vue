@@ -23,7 +23,7 @@
       :active.sync="activePrompt"
     >
       <div>
-        <form autocomplete="off">
+        <form autocomplete="off" v-if="startIsPossible">
           <template>
             <div class="vs-select--label">Date de démarrage</div>
           </template>
@@ -35,18 +35,24 @@
             placeholder="Saisir une date de démarrage"
           />
         </form>
+        <div v-if="!startIsPossible">
+          <span
+            class="text-danger text-sm"
+          >Démarrage du projet impossible. Merci de modifier la date de livraison du projet. 
+          </span>
+        </div>
       </div>
     </vs-prompt>
   </div>
 </template>
 
 <script>
-import moment from "moment";
 import flatPickr from "vue-flatpickr-component";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import vSelect from "vue-select";
+
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -91,6 +97,9 @@ export default {
     validateForm() {
       return this.itemLocal.start_at != "";
     },
+    startIsPossible() { 
+      return new Date() < new Date(this.project_data.date);
+    }
   },
   methods: {
     clearFields() {
