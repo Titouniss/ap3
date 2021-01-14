@@ -4,12 +4,12 @@
     <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
 </div>
 @if (! empty($greeting))
-# {{ $greeting }}
+ {{ $greeting }}
 @else
 @if ($level === 'error')
-# @lang('Whoops!')
+ @lang('Whoops!')
 @else
-# @lang('Hello!')
+ @lang('Hello!')
 @endif
 @endif
 
@@ -46,9 +46,7 @@
 @if (! empty($salutation))
 {{ $salutation }}
 @else
-<div style="text-align: left; padding: 25px">
-    <span>Plannigo</span>
-</div>
+
 @endif
 
 
