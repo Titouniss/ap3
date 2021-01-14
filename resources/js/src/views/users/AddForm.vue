@@ -60,7 +60,7 @@
           </span>
 
           <vs-input
-            v-validate="'required|email'"
+            v-validate="'email'"
             name="email"
             class="w-full mb-4 mt-5"
             label="E-mail"
@@ -311,15 +311,17 @@ export default {
               icon: "icon-alert-circle",
               color: "success",
             });
-            // this.$vs.dialog({
-            //   color: "warning",
-            //   title: "Attention !",
-            //   text:
-            //     "le mot de passe du compte est " +
-            //     response.data.success[1] +
-            //     " notez le bien, il devra être changé lors de la première connexion",
-            //   acceptText: "OK",
-            // });
+            if(payload.email == null || payload.email == ""){
+              this.$vs.dialog({
+                color: "warning",
+                title: "Attention !",
+                text:
+                  "le mot de passe du compte est " +
+                  response.data.success[1] +
+                  " notez le bien, il devra être changé lors de la première connexion",
+                acceptText: "OK",
+              });
+            }
           })
           .catch((error) => {
             this.$vs.notify({
