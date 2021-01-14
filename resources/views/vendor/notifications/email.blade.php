@@ -1,12 +1,15 @@
 @component('mail::message')
 {{-- Greeting --}}
+<div style="text-align: center; padding: 25px">
+    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
+</div>
 @if (! empty($greeting))
-# {{ $greeting }}
+ {{ $greeting }}
 @else
 @if ($level === 'error')
-# @lang('Whoops!')
+ @lang('Whoops!')
 @else
-# @lang('Hello!')
+ @lang('Hello!')
 @endif
 @endif
 
@@ -42,14 +45,8 @@
 {{-- Salutation --}}
 @if (! empty($salutation))
 {{ $salutation }}
-<div style="text-align: center; padding: 25px">
-    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
-</div>
-
 @else
-<div style="text-align: center; padding: 25px">
-    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
-</div>
+
 @endif
 
 
