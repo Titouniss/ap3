@@ -333,16 +333,14 @@ export default {
           .finally(() => this.$vs.loading.close());
       }
     },
-    filterItemsAdmin($items) {
-      let $filteredItems = [];
+    filterItemsAdmin(items) {
+      let filteredItems = items;
       if (this.isAdmin) {
-        $filteredItems = $items.filter(
+        filteredItems = items.filter(
           (item) => item.company_id === this.itemLocal.company_id
         );
-      } else {
-        $filteredItems = $items;
       }
-      return $filteredItems;
+      return filteredItems;
     },
     back() {
       this.$router.push(`/${modelPlurial}`).catch(() => {});

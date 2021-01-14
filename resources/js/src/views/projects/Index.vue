@@ -9,7 +9,58 @@
 
 <template>
   <div id="page-projects-list">
-    <div class="vx-card p-6 mb-1">
+    <div v-show="projectsLoaded" class="vx-card p-6 mb-2">
+      <div class="w-full">
+        <div v-if="ganttProjectsData.length > 0" class="w-full">
+          <div class="flex flex-row justify-center items-center">
+            <div class="btn-group">
+              <vs-button
+                v-for="(displayName, key) in {
+                  ['Day']: 'Jour',
+                  ['Week']: 'Semaine',
+                  ['Month']: 'Mois',
+                }"
+                :key="key"
+                type="line"
+                :disabled="ganttViewMode === key"
+                @click="ganttViewMode = key"
+              >
+                {{ displayName }}
+              </vs-button>
+            </div>
+          </div>
+          <div
+            class="m-3 rounded border border-solid d-theme-border-grey-light"
+          >
+            <svg id="gantt"></svg>
+          </div>
+        </div>
+        <div
+          v-if="ganttProjectsData.length === 0"
+          class="w-full my-3 flex flex-row justify-center items-center"
+        >
+          <vx-card
+            card-background="success"
+            content-color="#fff"
+            class="max-w-sm"
+          >
+            <div class="flex flex-col items-center text-center">
+              <div
+                class="mb-3 p-3 flex justify-center items-center rounded-full bg-white"
+              >
+                <feather-icon
+                  icon="CheckIcon"
+                  svgClasses="h-10 w-10 text-success"
+                />
+              </div>
+              <p class="text-white">Pas de projets en cours à venir</p>
+            </div>
+          </vx-card>
+        </div>
+      </div>
+    </div>
+
+    <div class="vx-card p-6">
       <vs-row
         vs-type="flex"
         vs-justify="space-between"
@@ -144,57 +195,6 @@
         ></ag-grid-vue>
 
         <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
-      </div>
-    </div>
-
-    <div v-show="ganttProjectsData.length > 0" class="vx-card p-6">
-      <div class="w-full">
-        <div class="w-full">
-          <div class="flex flex-row justify-center items-center">
-            <div class="btn-group">
-              <vs-button
-                v-for="(displayName, key) in {
-                  ['Day']: 'Jour',
-                  ['Week']: 'Semaine',
-                  ['Month']: 'Mois',
-                }"
-                :key="key"
-                type="line"
-                :disabled="ganttViewMode === key"
-                @click="ganttViewMode = key"
-              >
-                {{ displayName }}
-              </vs-button>
-            </div>
-          </div>
-          <div
-            class="m-3 rounded border border-solid d-theme-border-grey-light"
-          >
-            <svg id="gantt"></svg>
-          </div>
-        </div>
-        <div
-          v-if="projectsLoaded && ganttProjectsData.length === 0"
-          class="w-full my-3 flex flex-row justify-center items-center"
-        >
-          <vx-card
-            card-background="success"
-            content-color="#fff"
-            class="max-w-sm"
-          >
-            <div class="flex flex-col items-center text-center">
-              <div
-                class="mb-3 p-3 flex justify-center items-center rounded-full bg-white"
-              >
-                <feather-icon
-                  icon="CheckIcon"
-                  svgClasses="h-10 w-10 text-success"
-                />
-              </div>
-              <p class="text-white">Pas de projets en cours à venir</p>
-            </div>
-          </vx-card>
-        </div>
       </div>
     </div>
 
@@ -482,7 +482,7 @@ export default {
         return "danger";
       }
     },
-    onResize(event) {
+    onResize(event = null) {
       if (this.ganttProjectsData.length > 0) {
         this.gantt = new Gantt("#gantt", this.ganttProjectsData, {
           view_modes: ["Day", "Week", "Month"],
@@ -595,9 +595,14 @@ export default {
     }
 
     const that = this;
+    this.$vs.loading();
     this.$store
       .dispatch("projectManagement/fetchItems")
-      .then(() => (that.projectsLoaded = true))
+      .then(() => {
+        that.projectsLoaded = true;
+        setTimeout(() => that.onResize(), 500);
+        that.$vs.loading.close();
+      })
       .catch((err) => {
         console.error(err);
       });

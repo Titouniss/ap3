@@ -148,16 +148,12 @@ export default {
         });
     },
     filterItemsAdmin(items) {
-      let filteredItems = [];
+      let filteredItems = items;
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          filteredItems = items.filter(
-            (item) => item.company.id === this.company_id
-          );
-        } else {
-          filteredItems = items;
-        }
+      if (this.isAdmin) {
+        filteredItems = items.filter(
+          (item) => item.company.id === this.company_id
+        );
       }
       return filteredItems;
     },

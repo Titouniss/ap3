@@ -152,10 +152,10 @@ export default {
         name: "",
         date: new Date(),
         customer: null,
-        company: this.isAdmin
-          ? this.$store.state.AppActiveUser.company.id
+        company: !this.isAdmin
+          ? this.$store.state.AppActiveUser.company_id
           : null,
-        company: this.isAdmin ? this.$store.state.AppActiveUser.company : null,
+        company: !this.isAdmin ? this.$store.state.AppActiveUser.company : null,
         color: "",
       },
       colors: project_colors,
@@ -192,14 +192,12 @@ export default {
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          return false;
-        } else {
-          this.itemLocal.company_id = user.company_id;
-          return true;
-        }
-      } else return true;
+      if (this.isAdmin) {
+        return false;
+      } else {
+        this.itemLocal.company_id = user.company_id;
+        return true;
+      }
     },
   },
   methods: {
@@ -264,16 +262,14 @@ export default {
     filterItemsAdmin(items) {
       let filteredItems = [];
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          filteredItems = items.filter(
-            (item) => item.company_id === this.itemLocal.company.id
-          );
-        } else {
-          filteredItems = items.filter(
-            (item) => item.company_id === user.company_id
-          );
-        }
+      if (this.isAdmin) {
+        filteredItems = items.filter(
+          (item) => item.company_id === this.itemLocal.company.id
+        );
+      } else {
+        filteredItems = items.filter(
+          (item) => item.company_id === user.company_id
+        );
       }
       return filteredItems;
     },

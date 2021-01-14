@@ -204,7 +204,7 @@ var columnDef = [
       model: "user",
       modelPlurial: "users",
       name: (data) => `l'utilisateur ${data.firstname} ${data.lastname}`,
-      disabled: (data) => data.roles && data.is_admin,
+      disabled: (data) => data.is_admin,
       footNotes: {
         archive:
           "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué.",

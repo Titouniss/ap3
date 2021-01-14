@@ -285,7 +285,7 @@
               <div class="my-2" v-if="itemLocal.status != 'todo'">
                 <small class="date-label"> Temps passé (en h) </small>
                 <vs-input-number
-                  min="-1000"
+                  :min="-(itemLocal.time_spent || 0)"
                   name="timeSpent"
                   class="inputNumber"
                   v-model="current_time_spent"
@@ -544,7 +544,7 @@ export default {
       }
 
       const item = JSON.parse(JSON.stringify(this.itemLocal));
-      if (this.totalTimeSpent) {
+      if (this.totalTimeSpent != item.time_spent) {
         item.time_spent = this.totalTimeSpent;
       }
 
@@ -664,13 +664,11 @@ export default {
     filterItemsAdmin(items) {
       let filteredItems = items;
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          if (this.companyId) {
-            filteredItems = items.filter(
-              (item) => item.company_id === this.companyId
-            );
-          }
+      if (this.isAdmin) {
+        if (this.companyId) {
+          filteredItems = items.filter(
+            (item) => item.company_id === this.companyId
+          );
         }
       }
       return filteredItems;

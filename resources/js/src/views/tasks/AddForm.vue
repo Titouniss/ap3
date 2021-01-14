@@ -590,27 +590,25 @@ export default {
         return true;
       });
     },
-    filterItemsAdmin($items) {
+    filterItemsAdmin(items) {
       let projectData = this.$store.state.projectManagement.projects.find(
         (p) => p.id === this.itemLocal.project_id
       );
 
-      let $filteredItems = [];
+      let filteredItems = items;
       const user = this.$store.state.AppActiveUser;
       if (this.isAdmin) {
         if (this.project_data !== undefined && this.project_data !== null) {
-          $filteredItems = $items.filter(
+          filteredItems = items.filter(
             (item) => item.company_id === this.project_data.company_id
           );
         } else if (projectData !== undefined && projectData !== null) {
-          $filteredItems = $items.filter(
+          filteredItems = items.filter(
             (item) => item.company_id === projectData.company_id
           );
         }
-      } else {
-        $filteredItems = $items;
       }
-      return $filteredItems;
+      return filteredItems;
     },
     showComment() {
       this.commentDisplay = true;

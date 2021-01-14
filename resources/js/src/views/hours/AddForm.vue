@@ -318,13 +318,11 @@ export default {
     addItem() {
       this.$validator.validateAll().then((result) => {
         if (result) {
-          this.itemLocal.start_at =
-            this.itemLocal.date + " " + this.itemLocal.startHour;
-          this.itemLocal.end_at =
-            this.itemLocal.date + " " + this.itemLocal.endHour;
-          console.log(this.itemLocal);
+          const payload = JSON.parse(JSON.stringify(this.itemLocal));
+          payload.start_at = payload.date + " " + payload.startHour;
+          payload.end_at = payload.date + " " + payload.endHour;
           this.$store
-            .dispatch("hoursManagement/addItem", this.itemLocal)
+            .dispatch("hoursManagement/addItem", payload)
             .then((response) => {
               if (response.data.success) {
                 this.$vs.loading.close();
