@@ -9,9 +9,12 @@
 
 <template>
   <div id="page-projects-list">
-    <div v-show="projectsLoaded" class="vx-card p-6 mb-2">
+    <div
+      v-show="projectsLoaded && ganttProjectsData.length > 0"
+      class="vx-card p-6 mb-2"
+    >
       <div class="w-full">
-        <div v-if="ganttProjectsData.length > 0" class="w-full">
+        <div class="w-full">
           <div class="flex flex-row justify-center items-center">
             <div class="btn-group">
               <vs-button
@@ -34,28 +37,6 @@
           >
             <svg id="gantt"></svg>
           </div>
-        </div>
-        <div
-          v-if="ganttProjectsData.length === 0"
-          class="w-full my-3 flex flex-row justify-center items-center"
-        >
-          <vx-card
-            card-background="success"
-            content-color="#fff"
-            class="max-w-sm"
-          >
-            <div class="flex flex-col items-center text-center">
-              <div
-                class="mb-3 p-3 flex justify-center items-center rounded-full bg-white"
-              >
-                <feather-icon
-                  icon="CheckIcon"
-                  svgClasses="h-10 w-10 text-success"
-                />
-              </div>
-              <p class="text-white">Pas de projets en cours à venir</p>
-            </div>
-          </vx-card>
         </div>
       </div>
     </div>
