@@ -144,6 +144,8 @@ export default {
       type: Number,
       required: true,
     },
+    refreshData: {
+    }
   },
   data() {
     return {
@@ -224,6 +226,7 @@ export default {
         this.$store
           .dispatch("projectManagement/updateItem", item)
           .then(() => {
+            if(this.refreshData){ this.refreshData()}
             this.$vs.loading.close();
             this.$vs.notify({
               title: "Modification d'un projet",
