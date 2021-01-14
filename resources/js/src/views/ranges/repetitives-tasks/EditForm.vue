@@ -255,7 +255,7 @@ export default {
           (item) => item.company_id === this.companyId
         );
       }
-      return $filteredItems;
+      return filteredItems;
     },
   },
 };
