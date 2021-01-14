@@ -510,7 +510,11 @@ export default {
       return this.$store.state.hoursManagement.hours.id || 0;
     },
     projects() {
-      return this.$store.state.projectManagement.projects;
+      return this.$store.state.projectManagement.projects.sort(function (a, b) {
+          var textA = a.name.toUpperCase();
+          var textB = b.name.toUpperCase();
+          return textA < textB ? -1 : textA > textB ? 1 : 0;
+        });
     },
     users() {
       return this.$store.state.userManagement.users;
