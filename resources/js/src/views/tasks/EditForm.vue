@@ -285,7 +285,7 @@
               <div class="my-2" v-if="itemLocal.status != 'todo'">
                 <small class="date-label"> Temps passé (en h) </small>
                 <vs-input-number
-                  min="-1000"
+                  :min="-(itemLocal.time_spent || 0)"
                   name="timeSpent"
                   class="inputNumber"
                   v-model="current_time_spent"
