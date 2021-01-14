@@ -198,7 +198,7 @@
                 </div>
             </div>
 
-            <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
+            <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" :refreshData="refreshData"/>
         </div>
     </div>
 </template>
@@ -389,7 +389,6 @@ export default {
             });
         },
         refreshData() {
-            console.log('Je refresh')
             this.$store
             .dispatch("projectManagement/fetchItem", this.project_data.id)
             .then(res => {

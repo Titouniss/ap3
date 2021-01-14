@@ -527,7 +527,6 @@ export default {
             });
             this.clearFields(false);
           } else {
-            console.log(response);
             this.$vs.notify({
               title: "Indisponible",
               text: response.data.error,
