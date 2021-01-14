@@ -7,12 +7,19 @@ export default {
                 .post("/api/unavailability-management/store", item)
                 .then(response => {
                     if (response.data && response.data.success) {
-                        commit(
-                            "ADD_ITEM",
-                            Object.assign(item, {
-                                id: response.data.success.id
-                            })
-                        );
+                        const data = response.data.success;
+                        if (Array.isArray(data)) {
+                            data.forEach(unavailability => {
+                                commit("ADD_ITEM", unavailability);
+                            });
+                        } else {
+                            commit(
+                                "ADD_ITEM",
+                                Object.assign(item, {
+                                    id: response.data.success.id
+                                })
+                            );
+                        }
                         resolve(response);
                     }
                     reject({ message: response.data.error });

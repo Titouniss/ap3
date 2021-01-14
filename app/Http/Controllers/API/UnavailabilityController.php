@@ -105,15 +105,15 @@ class UnavailabilityController extends Controller
                 }
             }
             // Ajouter l'indisponibilité
-            if ($arrayRequest['reason'] == 'Congés payés') {
-                return response()->json(['success' => UnavailabilityController::setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)], $this->successStatus);
+            if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés'])) {
+                return $this->setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends);
             } else {
                 return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
             }
         } else {
             // Ajouter l'indisponibilité
-            if ($arrayRequest['reason'] == 'Congés payés') {
-                return response()->json(['success' => UnavailabilityController::setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends)], $this->successStatus);
+            if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés'])) {
+                return $this->setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends);
             } else {
                 return response()->json(['success' => Unavailability::create($arrayRequest)], $this->successStatus);
             }
@@ -161,6 +161,7 @@ class UnavailabilityController extends Controller
         if (count($userWorkingDays) > 0) {
             // Pour chaques $days je regarde s'il est dans $userWorkingDays
 
+            $itemIds = [];
             // return response()->json(['error' => [$days, $userWorkingDays, $userWorkingHours]], 400);
             foreach ($days  as $key => $d) {
                 //d est il un jour ou je travaille ?
@@ -174,7 +175,7 @@ class UnavailabilityController extends Controller
                         $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->morning_starts_at;
                         $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->morning_ends_at;
 
-                        Unavailability::create($arrayRequest);
+                        array_push($itemIds, Unavailability::create($arrayRequest)->id);
                     }
 
                     // si travail l'après midi on ajoute une indispo égale au temps de travail et au même heures
@@ -182,11 +183,11 @@ class UnavailabilityController extends Controller
                         $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->afternoon_starts_at;
                         $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->afternoon_ends_at;
 
-                        Unavailability::create($arrayRequest);
+                        array_push($itemIds, Unavailability::create($arrayRequest)->id);
                     }
                 }
             }
-            return response()->json(['success' => $arrayRequest], $this->successStatus);
+            return response()->json(['success' => Unavailability::whereIn('id', $itemIds)->get()], $this->successStatus);
         } else {
             return response()->json(['error' => "vous ne travaillez pas sur cette période"], 400);
         }
