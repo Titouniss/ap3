@@ -172,12 +172,10 @@ export default {
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (this.isAdmin) {
-          return false;
-        }
-        return true;
-      } else return true;
+      if (this.isAdmin) {
+        return false;
+      }
+      return true;
     },
     permissions() {
       const permissionsStore = this.$store.state.permissionManagement
