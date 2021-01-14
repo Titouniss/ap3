@@ -19,7 +19,7 @@ class PackagesSeeder extends Seeder
                 'display_name' => 'Heures',
             ])->save();
         }
-        $package->syncPermissions(Permission::whereIn('name_fr', ['utilisateurs', 'projets', 'clients', 'heures', 'heures_supplémentaires', 'indiponibilités'])
+        $package->syncPermissions(Permission::whereIn('name_fr', ['utilisateurs', 'projets', 'tâches', 'clients', 'heures', 'heures_supplémentaires', 'indiponibilités'])
             ->orWhereIn('name', ['read roles', 'read companies', 'read skills', 'read ranges', 'read clients', 'read workareas', 'read projects', 'read schedules', 'read users'])->get());
 
         $package = $this->package('schedules');
