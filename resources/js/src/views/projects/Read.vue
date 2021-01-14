@@ -99,6 +99,7 @@
                                 <add-range-form
                                     :company_id="this.project_data.company_id"
                                     :project_id="this.project_data.id"
+                                    :refreshData="refreshData"
                                 ></add-range-form>
                             </tr>
                         </table>
