@@ -54,7 +54,7 @@ class UserController extends Controller
 
         if (Auth::attempt(['login' => $arrayRequest['login'], 'password' => $arrayRequest['password']])) {
             Auth::logout();
-            return response()->json(['success' => true, 'userData' => $item], $this->successStatus);
+            return response()->json(['success' => true, 'userData' => $item->makeVisible('register_token')], $this->successStatus);
         } else {
             return response()->json(['success' => false, 'error' => 'Unauthorised'], $this->successStatus);
         }
@@ -688,52 +688,53 @@ class UserController extends Controller
         return response()->json(['success' => true], $this->successStatus);
     }
 
-    private function addDefaultWorkHours(int $user_id){
+    private function addDefaultWorkHours(int $user_id)
+    {
 
         WorkHours::create([
-                'user_id' => $user_id,  
-                'is_active' => 1,
-                'day' => 'lundi',
-                'morning_starts_at' => '09:00:00',
-                'morning_ends_at' => '12:00:00',
-                'afternoon_starts_at' =>  '13:00:00',
-                'afternoon_ends_at' => '17:00:00'
+            'user_id' => $user_id,
+            'is_active' => 1,
+            'day' => 'lundi',
+            'morning_starts_at' => '09:00:00',
+            'morning_ends_at' => '12:00:00',
+            'afternoon_starts_at' =>  '13:00:00',
+            'afternoon_ends_at' => '17:00:00'
         ]);
         WorkHours::create([
-                'user_id' => $user_id,  
-                'is_active' => 1,
-                'day' => 'mardi',
-                'morning_starts_at' => '09:00:00',
-                'morning_ends_at' => '12:00:00',
-                'afternoon_starts_at' =>  '13:00:00',
-                'afternoon_ends_at' => '17:00:00'
+            'user_id' => $user_id,
+            'is_active' => 1,
+            'day' => 'mardi',
+            'morning_starts_at' => '09:00:00',
+            'morning_ends_at' => '12:00:00',
+            'afternoon_starts_at' =>  '13:00:00',
+            'afternoon_ends_at' => '17:00:00'
         ]);
         WorkHours::create([
-                'user_id' => $user_id,  
-                'is_active' => 1,
-                'day' => 'mercredi',
-                'morning_starts_at' => '09:00:00',
-                'morning_ends_at' => '12:00:00',
-                'afternoon_starts_at' =>  '13:00:00',
-                'afternoon_ends_at' => '17:00:00'
+            'user_id' => $user_id,
+            'is_active' => 1,
+            'day' => 'mercredi',
+            'morning_starts_at' => '09:00:00',
+            'morning_ends_at' => '12:00:00',
+            'afternoon_starts_at' =>  '13:00:00',
+            'afternoon_ends_at' => '17:00:00'
         ]);
         WorkHours::create([
-                'user_id' => $user_id,  
-                'is_active' => 1,
-                'day' => 'jeudi',
-                'morning_starts_at' => '09:00:00',
-                'morning_ends_at' => '12:00:00',
-                'afternoon_starts_at' =>  '13:00:00',
-                'afternoon_ends_at' => '17:00:00'
+            'user_id' => $user_id,
+            'is_active' => 1,
+            'day' => 'jeudi',
+            'morning_starts_at' => '09:00:00',
+            'morning_ends_at' => '12:00:00',
+            'afternoon_starts_at' =>  '13:00:00',
+            'afternoon_ends_at' => '17:00:00'
         ]);
         WorkHours::create([
-                'user_id' => $user_id,  
-                'is_active' => 1,
-                'day' => 'vendredi',
-                'morning_starts_at' => '09:00:00',
-                'morning_ends_at' => '12:00:00',
-                'afternoon_starts_at' =>  '13:00:00',
-                'afternoon_ends_at' => '17:00:00'
+            'user_id' => $user_id,
+            'is_active' => 1,
+            'day' => 'vendredi',
+            'morning_starts_at' => '09:00:00',
+            'morning_ends_at' => '12:00:00',
+            'afternoon_starts_at' =>  '13:00:00',
+            'afternoon_ends_at' => '17:00:00'
         ]);
     }
 }
