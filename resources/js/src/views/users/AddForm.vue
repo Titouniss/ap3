@@ -311,15 +311,15 @@ export default {
               icon: "icon-alert-circle",
               color: "success",
             });
-            this.$vs.dialog({
-              color: "warning",
-              title: "Attention !",
-              text:
-                "le mot de passe du compte est " +
-                response.data.success[1] +
-                " notez le bien, il devra être changé lors de la première connexion",
-              acceptText: "OK",
-            });
+            // this.$vs.dialog({
+            //   color: "warning",
+            //   title: "Attention !",
+            //   text:
+            //     "le mot de passe du compte est " +
+            //     response.data.success[1] +
+            //     " notez le bien, il devra être changé lors de la première connexion",
+            //   acceptText: "OK",
+            // });
           })
           .catch((error) => {
             this.$vs.notify({
