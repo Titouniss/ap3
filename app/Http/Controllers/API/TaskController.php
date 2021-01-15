@@ -115,7 +115,7 @@ class TaskController extends Controller
             return response()->json(['error' => "Utilisateur inconnu"], $this->successStatus);
         }
 
-        $items = Task::where('user_id', $user->id)->with('project:name,status,color', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')->get();
+        $items = Task::where('user_id', $user->id)->with('project:id,name,status,color', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')->get();
 
         return response()->json(['success' => $items], $this->successStatus);
     }
@@ -128,7 +128,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        return response()->json(['success' => $task->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')], $this->successStatus);
+        return response()->json(['success' => $task->load('project:id,name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents', 'periods')], $this->successStatus);
     }
 
     /**
