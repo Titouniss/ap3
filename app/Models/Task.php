@@ -12,6 +12,8 @@ class Task extends Model
 
     protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
+    protected $appends = ['project_id'];
+
     public function periods()
     {
         return $this->hasMany('App\Models\TaskPeriod')->orderBy('start_time');
@@ -50,5 +52,10 @@ class Task extends Model
     public function documents()
     {
         return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', Task::class);
+    }
+
+    public function getProjectIdAttribute()
+    {
+        return $this->hasOneThrough('App\Models\Project', 'App\Models\TasksBundle', 'id', 'id', 'tasks_bundle_id', 'project_id')->first()->id;
     }
 }
