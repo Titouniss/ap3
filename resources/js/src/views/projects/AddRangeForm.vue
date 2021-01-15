@@ -83,6 +83,8 @@ export default {
     project_id: {
       required: true,
     },
+    refreshData: {
+    }
   },
   data() {
     return {
@@ -127,6 +129,7 @@ export default {
           Object.assign({}, this.itemLocal)
         )
         .then(() => {
+          if(this.refreshData){ this.refreshData()}
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Ajout d'une gamme au projet",
