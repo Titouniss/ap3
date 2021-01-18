@@ -91,6 +91,7 @@ import moduleScheduleManagement from "@/store/schedule-management/moduleSchedule
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
 // Component
 import EditForm from "../tasks/EditForm.vue";
@@ -576,6 +577,14 @@ export default {
       moduleUserManagement.isRegistered = true;
     }
 
+    if (!moduleDocumentManagement.isRegistered) {
+      this.$store.registerModule(
+        "documentManagement",
+        moduleDocumentManagement
+      );
+      moduleDocumentManagement.isRegistered = true;
+    }
+
     //this.$store.state.taskManagement.tasks = [];
 
     if (this.$route.query.type === "projects") {
@@ -652,9 +661,11 @@ export default {
     moduleScheduleManagement.isRegistered = false;
     moduleTaskManagement.isRegistered = false;
     moduleSkillManagement.isRegistered = false;
+    moduleDocumentManagement.isRegistered = false;
     this.$store.unregisterModule("scheduleManagement");
     this.$store.unregisterModule("taskManagement");
     this.$store.unregisterModule("skillManagement");
+    this.$store.unregisterModule("documentManagement");
   },
 };
 </script>
