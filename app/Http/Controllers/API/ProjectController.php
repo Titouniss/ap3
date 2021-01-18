@@ -37,9 +37,9 @@ class ProjectController extends Controller
         $user = Auth::user();
         $items = [];
         if ($user->is_admin) {
-            $items = Project::withTrashed()->get()->load('company')->load('customer', 'documents');
+            $items = Project::withTrashed()->get()->load('company', 'customer', 'documents');
         } else if ($user->company_id != null) {
-            $items = Project::where('company_id', $user->company_id)->get()->load('company')->load('customer', 'documents');
+            $items = Project::where('company_id', $user->company_id)->get()->load('company', 'customer', 'documents');
         }
         return response()->json(['success' => $items], $this->successStatus);
     }
@@ -52,7 +52,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        return response()->json(['success' => $project->load('documents')], $this->successStatus);
+        return response()->json(['success' => $project->load('company', 'customer', 'documents')], $this->successStatus);
     }
 
     /**
