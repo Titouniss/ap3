@@ -16,11 +16,12 @@
         (also, click a date/time to add an event)
       </div>-->
       <add-form
+        v-if="project_data"
         :activeAddPrompt="this.activeAddPrompt"
         :handleClose="handleClose"
-        :dateData="this.dateData"
-        :project_data="this.project_data"
-        :tasks_list="this.tasksEvent"
+        :dateData="dateData"
+        :project_data="project_data"
+        :tasks_list="tasksEvent"
         :customTask="false"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
@@ -92,6 +93,7 @@ import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.j
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
+import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 
 // Component
 import EditForm from "../tasks/EditForm.vue";
@@ -122,7 +124,6 @@ export default {
         momentPlugin,
       ],
       activeAddPrompt: false,
-      scheduleTitle: "",
       dateData: {},
       taskBundle: null,
       calendarWeekends: true,
@@ -305,15 +306,11 @@ export default {
     },
     project_data() {
       if (this.$route.query.type === "projects") {
-        var project_data = this.$store.state.projectManagement.projects.find(
-          (p) => p.id === parseInt(this.$route.query.id, 10)
+        return this.$store.getters["projectManagement/getItem"](
+          parseInt(this.$route.query.id)
         );
-        if (project_data) {
-          return project_data;
-        }
-      } else {
-        return null;
       }
+      return null;
     },
     user_data() {
       var user_data = this.$store.state.userManagement.users.find(
@@ -326,6 +323,27 @@ export default {
         (w) => w.id === this.$route.query.id
       );
       return workarea_data;
+    },
+    scheduleTitle() {
+      let title;
+      if (this.$route.query.type === "projects") {
+        if (this.project_data) {
+          title = "Planning du projet : " + this.project_data.name;
+        }
+      } else if (this.$route.query.type === "users") {
+        if (this.user_data) {
+          title =
+            "Planning de l'utilisateur : " +
+            this.user_data.firstname +
+            " " +
+            this.user_data.lastname;
+        }
+      } else if (this.$route.query.type === "workarea") {
+        if (this.workarea_data) {
+          title = "Planning du pôle de produciton : " + this.workarea_data.name;
+        }
+      }
+      return title;
     },
   },
   methods: {
@@ -532,25 +550,6 @@ export default {
       return dayNumber;
     },
   },
-  mounted() {
-    if (this.$route.query.type === "projects") {
-      let project = this.$store.state.projectManagement.projects.find(
-        (p) => p.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle = "Planning du projet : " + project.name;
-    } else if (this.$route.query.type === "users") {
-      let user = this.$store.state.userManagement.users.find(
-        (u) => u.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle =
-        "Planning de l'utilisateur : " + user.firstname + " " + user.lastname;
-    } else if (this.$route.query.type === "workarea") {
-      let workarea = this.$store.state.workareaManagement.workareas.find(
-        (w) => w.id === parseInt(this.$route.query.id, 10)
-      );
-      this.scheduleTitle = "Planning du pôle de produciton : " + workarea.name;
-    }
-  },
   created() {
     if (this.$route.query.type === "users") {
       this.getBusinessHours();
@@ -567,6 +566,10 @@ export default {
     if (!moduleTaskManagement.isRegistered) {
       this.$store.registerModule("taskManagement", moduleTaskManagement);
       moduleTaskManagement.isRegistered = true;
+    }
+    if (!moduleProjectManagement.isRegistered) {
+      this.$store.registerModule("projectManagement", moduleProjectManagement);
+      moduleProjectManagement.isRegistered = true;
     }
     if (!moduleSkillManagement.isRegistered) {
       this.$store.registerModule("skillManagement", moduleSkillManagement);
@@ -588,6 +591,11 @@ export default {
     //this.$store.state.taskManagement.tasks = [];
 
     if (this.$route.query.type === "projects") {
+      if (this.authorizedTo("read", "projects")) {
+        this.$store.dispatch("projectManagement/fetchItems").catch((err) => {
+          console.error(err);
+        });
+      }
       var id_bundle = null;
 
       this.$store.state.projectManagement.projects.forEach((p) => {
@@ -662,10 +670,12 @@ export default {
     moduleTaskManagement.isRegistered = false;
     moduleSkillManagement.isRegistered = false;
     moduleDocumentManagement.isRegistered = false;
+    moduleProjectManagement.isRegistered = false;
     this.$store.unregisterModule("scheduleManagement");
     this.$store.unregisterModule("taskManagement");
     this.$store.unregisterModule("skillManagement");
     this.$store.unregisterModule("documentManagement");
+    this.$store.unregisterModule("projectManagement");
   },
 };
 </script>
