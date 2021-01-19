@@ -165,6 +165,7 @@ export default {
         rowClassRules: {
           "subscription-ending": function (params) {
             return (
+              !params.data.deleted_at &&
               params.data.has_active_subscription &&
               moment(params.data.active_subscription.ends_at).isBefore(
                 moment().add(1, "month")
@@ -441,9 +442,11 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("companyManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

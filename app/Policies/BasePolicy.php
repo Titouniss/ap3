@@ -45,7 +45,7 @@ abstract class BasePolicy
     public function read(User $user)
     {
 
-        return $user->can("read {$this->model}");
+        return $user->hasPermissionTo("read {$this->model}");
     }
 
     /**
@@ -57,7 +57,7 @@ abstract class BasePolicy
      */
     public function canShow(User $user, $item)
     {
-        $hasPermission = $user->can("read {$this->model}");
+        $hasPermission = $user->hasPermissionTo("read {$this->model}");
 
         if ($item->exists) {
             $hasPermission = $hasPermission && (!$this->companyIdField || $user->company_id == $item->{$this->companyIdField});
@@ -74,7 +74,7 @@ abstract class BasePolicy
      */
     public function canPublish(User $user)
     {
-        return $user->can("publish {$this->model}") && $this->otherRequirements($user);
+        return $user->hasPermissionTo("publish {$this->model}") && $this->otherRequirements($user);
     }
 
     /**
@@ -86,7 +86,7 @@ abstract class BasePolicy
      */
     public function canEdit(User $user, $item)
     {
-        $hasPermission = $user->can("edit {$this->model}");
+        $hasPermission = $user->hasPermissionTo("edit {$this->model}");
 
         if ($item->exists) {
             $hasPermission = $hasPermission && (!$this->companyIdField || $user->company_id == $item->{$this->companyIdField});
@@ -104,7 +104,7 @@ abstract class BasePolicy
      */
     public function canDelete(User $user, $item)
     {
-        $hasPermission = $user->can("delete {$this->model}");
+        $hasPermission = $user->hasPermissionTo("delete {$this->model}");
 
         if ($item->exists) {
             $hasPermission = $hasPermission && (!$this->companyIdField || $user->company_id == $item->{$this->companyIdField});

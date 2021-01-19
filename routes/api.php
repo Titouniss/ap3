@@ -117,23 +117,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************   COMPANIES **************************************/
     /***********************************************************************************/
     Route::prefix('company-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Company']], function () {
-            Route::get('index', 'API\CompanyController@index');
-        });
-        Route::group(['middleware' => ['can:show,company']], function () {
-            Route::get('show/{company}', 'API\CompanyController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Company']], function () {
-            Route::post('store', 'API\CompanyController@store');
-        });
-        Route::group(['middleware' => ['can:edit,company']], function () {
-            Route::post('update/{company}', 'API\CompanyController@update');
-        });
-        Route::group(['middleware' => ['can:delete,company']], function () {
-            Route::put('restore/{company}', 'API\CompanyController@restore');
-            Route::delete('destroy/{company}', 'API\CompanyController@destroy');
-            Route::delete('forceDelete/{company}', 'API\CompanyController@forceDelete');
-        });
+        Route::get('index', 'API\CompanyController@index');
+        Route::get('show/{id}', 'API\CompanyController@show');
+        Route::post('store', 'API\CompanyController@store');
+        Route::put('update/{id}', 'API\CompanyController@update');
+        Route::put('restore/{id}', 'API\CompanyController@restore');
+        Route::delete('destroy/{id}', 'API\CompanyController@destroy');
+        Route::delete('forceDelete/{id}', 'API\CompanyController@forceDelete');
     });
 
     /***********************************************************************************/

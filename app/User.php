@@ -139,9 +139,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return [];
     }
 
-    public function can($ability, $arguments = [])
+    public function hasPermissionTo($perm)
     {
-        return $this->permissions->pluck('name')->contains($ability);
+        return $this->permissions->pluck('name')->contains($perm);
     }
 
     /**

@@ -27,7 +27,7 @@ class Company extends Model
         'city',
         'country',
     ];
-    protected $appends = ['user_count', 'has_active_subscription', 'active_subscription'];
+    protected $appends = ['user_count', 'has_active_subscription'];
 
     public function getUserCountAttribute()
     {
@@ -36,7 +36,7 @@ class Company extends Model
 
     public function getActiveSubscriptionAttribute()
     {
-        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->first();
+        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages:id,display_name')->first();
     }
 
     public function getHasActiveSubscriptionAttribute()
