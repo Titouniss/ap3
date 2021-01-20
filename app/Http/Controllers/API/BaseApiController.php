@@ -154,7 +154,7 @@ abstract class BaseApiController extends Controller
             $item->append(static::$show_append);
         }
 
-        return $this->successResponse($item, 'Chargement terminé avec succès.');
+        return $this->successResponse($item);
     }
 
     /**
@@ -197,7 +197,7 @@ abstract class BaseApiController extends Controller
             $item->append(static::$show_append);
         }
 
-        return $this->successResponse($item, 'Création terminée avec succès.');
+        return $this->successResponse($item);
     }
 
     /**
@@ -300,7 +300,7 @@ abstract class BaseApiController extends Controller
     /**
      * Returns a successful response.
      */
-    protected function successResponse($payload, string $message, array $extra = null)
+    protected function successResponse($payload, string $message = 'Chargement terminé avec succès.', array $extra = null)
     {
         $response = [
             'success' => true,

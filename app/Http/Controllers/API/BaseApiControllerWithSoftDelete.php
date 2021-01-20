@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API;
 
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 abstract class BaseApiControllerWithSoftDelete extends BaseApiController

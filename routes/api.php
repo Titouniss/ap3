@@ -202,23 +202,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************    RANGES    **************************************/
     /***********************************************************************************/
     Route::prefix('range-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Range']], function () {
-            Route::get('index', 'API\RangeController@index');
-        });
-        Route::group(['middleware' => ['can:show,range']], function () {
-            Route::get('show/{range}', 'API\RangeController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Range']], function () {
-            Route::post('store', 'API\RangeController@store');
-        });
-        Route::group(['middleware' => ['can:edit,range']], function () {
-            Route::post('update/{range}', 'API\RangeController@update');
-        });
-        Route::group(['middleware' => ['can:delete,range']], function () {
-            Route::put('restore/{range}', 'API\RangeController@restore');
-            Route::delete('destroy/{range}', 'API\RangeController@destroy');
-            Route::delete('forceDelete/{range}', 'API\RangeController@forceDelete');
-        });
+        Route::get('index', 'API\RangeController@index');
+        Route::get('show/{id}', 'API\RangeController@show');
+        Route::post('store', 'API\RangeController@store');
+        Route::put('update/{id}', 'API\RangeController@update');
+        Route::put('restore/{id}', 'API\RangeController@restore');
+        Route::delete('destroy/{id}', 'API\RangeController@destroy');
+        Route::delete('forceDelete/{id}', 'API\RangeController@forceDelete');
     });
 
     /***********************************   TASK   **************************************/
@@ -251,9 +241,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*****************************   REPETITIVE - TASK   ********************************/
     /***********************************************************************************/
     Route::prefix('repetitive-task-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Task']], function () {
-            Route::get('range/{range}', 'API\RangeController@getRepetitiveTasks');
-        });
+        Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
     });
 
     /***********************************************************************************/

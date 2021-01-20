@@ -1,24 +1,19 @@
-/*=========================================================================================
-  File Name: moduleRangeManagement.js
-  Description: Calendar Module
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import crud from "../utils/crud";
 
+const slug = 'range-management';
+const model = 'range';
+const model_plurial = 'ranges';
 
-import state from './moduleRangeManagementState.js'
-import mutations from './moduleRangeManagementMutations.js'
-import actions from './moduleRangeManagementActions.js'
-import getters from './moduleRangeManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
+
+getters.getItemsForCompany = state => id => state.ranges.filter(range => range.company_id === id);
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
 }
 

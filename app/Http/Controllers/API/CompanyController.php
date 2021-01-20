@@ -2,19 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
-use App\Models\Role;
 use App\Models\Subscription;
-use App\Models\WorkareasSkill;
 use Carbon\Carbon;
 use Exception;
 use Validator;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 
 class CompanyController extends BaseApiControllerWithSoftDelete
 {
@@ -61,12 +55,8 @@ class CompanyController extends BaseApiControllerWithSoftDelete
         'country' => 'required',
     ];
 
-
     /**
      * Create a new controller instance.
-     *
-     * @param string $class Class name of the primary model
-     * @return void
      */
     public function __construct()
     {

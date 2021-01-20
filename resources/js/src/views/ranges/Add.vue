@@ -208,10 +208,10 @@ export default {
         : [];
     },
     repetitiveTasksData() {
-      let repetitivesTasks = this.$store.state.repetitiveTaskManagement
-        .repetitivesTasks;
+      let repetitive_tasks = this.$store.state.repetitiveTaskManagement
+        .repetitive_tasks;
 
-      repetitivesTasks.forEach((task) => {
+      repetitive_tasks.forEach((task) => {
         if (task.skills.length > 0) {
           let skillsNames = "";
           task.skills.forEach((skill_id) => {
@@ -227,7 +227,7 @@ export default {
         }
       });
 
-      return repetitivesTasks;
+      return repetitive_tasks;
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -242,11 +242,11 @@ export default {
       return (
         !this.errors.any() &&
         this.range_data.name != "" &&
-        this.$store.state.repetitiveTaskManagement.repetitivesTasks.length > 0
+        this.$store.state.repetitiveTaskManagement.repetitive_tasks.length > 0
       );
     },
     itemIdToEdit() {
-      return this.$store.state.repetitiveTaskManagement.repetitivesTask.id || 0;
+      return this.$store.state.repetitiveTaskManagement.repetitive_task.id || 0;
     },
   },
   methods: {
@@ -297,7 +297,7 @@ export default {
     },
   },
   mounted() {
-    if (this.isAdmin) {
+    if (!this.isAdmin) {
       this.range_data.company = this.$store.state.AppActiveUser.company;
     }
   },
@@ -345,7 +345,7 @@ export default {
     this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
       console.error(err);
     });
-    this.$store.dispatch("repetitiveTaskManagement/cleanItems").catch((err) => {
+    this.$store.dispatch("repetitiveTaskManagement/emptyItems").catch((err) => {
       console.error(err);
     });
     // this.$store.dispatch('permissionManagement/fetchItems').catch(err => { console.error(err) }) // TODO get repetitive tasks for company

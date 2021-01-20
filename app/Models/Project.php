@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Task;
+use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 class Project extends Model
 {
-    use SoftDeletes;
+    use HasDocuments, SoftDeletes;
 
 
     protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
@@ -36,11 +37,6 @@ class Project extends Model
     public function tasksBundles()
     {
         return $this->hasMany(TasksBundle::class);
-    }
-
-    public function documents()
-    {
-        return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', Project::class);
     }
 
     public function getTasksAttribute()

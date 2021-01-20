@@ -1,7 +1,5 @@
 import axios from "@/axios.js";
 
-const baseUrl = "/api";
-
 const apiRequest = (url, method = 'get', onSuccess = null, payload = null) => {
     let localMethod = method;
     let localPayload = payload ? JSON.parse(JSON.stringify(payload)) : null;
@@ -19,7 +17,7 @@ const apiRequest = (url, method = 'get', onSuccess = null, payload = null) => {
     }
 
     return new Promise((resolve, reject) => {
-        axios[method](url, localPayload)
+        axios[method](`/api/${url}`, localPayload)
             .then(response => {
                 console.log(response)
                 if (response && response.data && response.data.success) {
@@ -38,8 +36,9 @@ const apiRequest = (url, method = 'get', onSuccess = null, payload = null) => {
     });
 }
 
-export default function (slug, model, model_plurial) {
+export default function (slug, model, model_plurial, sort_items = null) {
     return {
+        apiRequest,
         state: {
             [model_plurial]: [],
             [model]: {}
@@ -52,13 +51,13 @@ export default function (slug, model, model_plurial) {
 
         actions: {
             fetchItems: ({ commit }, params = null) => {
-                return apiRequest(`${baseUrl}/${slug}/index`, 'get', (payload) => commit('SET_ITEMS', payload), params);
+                return apiRequest(`${slug}/index`, 'get', (payload) => commit('SET_ITEMS', payload), params);
             },
             fetchItem: ({ commit }, id) => {
-                return apiRequest(`${baseUrl}/${slug}/show/${id}`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEM', payload));
+                return apiRequest(`${slug}/show/${id}`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEM', payload));
             },
             addItem: ({ commit }, payload) => {
-                return apiRequest(`${baseUrl}/${slug}/store`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEM', payload), payload);
+                return apiRequest(`${slug}/store`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEM', payload), payload);
             },
             editItem: ({ commit }, payload) => {
                 const item = JSON.parse(JSON.stringify(payload));
@@ -66,13 +65,13 @@ export default function (slug, model, model_plurial) {
                 return item;
             },
             updateItem: ({ commit }, payload) => {
-                return apiRequest(`${baseUrl}/${slug}/update/${payload.id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEM', payload), payload)
+                return apiRequest(`${slug}/update/${payload.id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEM', payload), payload)
             },
             restoreItem: ({ commit }, id) => {
-                return apiRequest(`${baseUrl}/${slug}/restore/${id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEM', payload))
+                return apiRequest(`${slug}/restore/${id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEM', payload))
             },
             removeItem: ({ commit }, id) => {
-                return apiRequest(`${baseUrl}/${slug}/destroy/${id}`, 'delete', (payload) => {
+                return apiRequest(`${slug}/destroy/${id}`, 'delete', (payload) => {
                     if (typeof payload === "boolean" && payload) {
                         commit('REMOVE_ITEM', id)
                     } else {
@@ -81,7 +80,7 @@ export default function (slug, model, model_plurial) {
                 })
             },
             forceRemoveItem: ({ commit }, id) => {
-                return apiRequest(`${baseUrl}/${slug}/forceDelete/${id}`, 'delete', (payload) => commit('REMOVE_ITEM', id))
+                return apiRequest(`${slug}/forceDelete/${id}`, 'delete', (payload) => commit('REMOVE_ITEM', id))
             }
         },
 
@@ -94,6 +93,9 @@ export default function (slug, model, model_plurial) {
                 } else {
                     state[model_plurial].splice(index, 1, item)
                 }
+                if (sort_items) {
+                    state[model_plurial].sort(sort_items)
+                }
             },
             EDIT_ITEM: (state, item) => state[model] = item,
             REMOVE_ITEM: (state, id) => {
@@ -102,6 +104,9 @@ export default function (slug, model, model_plurial) {
                     state[model_plurial].splice(index, 1)
                 }
             },
+            EMPTY_ITEMS(state) {
+                state[slug] = [];
+            }
         }
 
     }
