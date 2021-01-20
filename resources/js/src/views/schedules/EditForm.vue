@@ -22,7 +22,7 @@
               name="title"
               class="w-full"
             />
-            <span class="text-danger text-sm">{{ errors.first('title') }}</span>
+            <span class="text-danger text-sm">{{ errors.first("title") }}</span>
 
             <p class="mt-4">Date de début</p>
             <flat-pickr
@@ -36,7 +36,8 @@
             <span
               class="text-danger text-sm"
               v-show="errors.has('startDate')"
-            >{{ errors.first('startDate') }}</span>
+              >{{ errors.first("startDate") }}</span
+            >
 
             <p class="mt-4">Date de fin</p>
             <flat-pickr
@@ -48,10 +49,9 @@
               v-model="itemLocal.end"
               :color="!errors.has('endDate') ? 'success' : 'danger'"
             />
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('endDate')"
-            >{{ errors.first('endDate') }}</span>
+            <span class="text-danger text-sm" v-show="errors.has('endDate')">{{
+              errors.first("endDate")
+            }}</span>
 
             <p class="mt-4">Attribuer</p>
             <vs-select
@@ -66,15 +66,19 @@
                 :key="index"
                 :value="item.id"
                 :text="item.firstname + ' ' + item.lastname"
-                v-for="(item,index) in usersData"
+                v-for="(item, index) in usersData"
               />
             </vs-select>
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('userId')"
-            >{{ errors.first('userId') }}</span>
+            <span class="text-danger text-sm" v-show="errors.has('userId')">{{
+              errors.first("userId")
+            }}</span>
 
-            <p class="mt-4" v-if="workareasSkillsData && workareasSkillsData.length > 0">Pôle de produciton</p>
+            <p
+              class="mt-4"
+              v-if="workareasSkillsData && workareasSkillsData.length > 0"
+            >
+              Pôle de produciton
+            </p>
             <vs-select
               v-if="workareasSkillsData && workareasSkillsData.length > 0"
               v-validate="'required'"
@@ -87,13 +91,14 @@
                 :key="index"
                 :value="item.id"
                 :text="item.name"
-                v-for="(item,index) in workareasSkillsData"
+                v-for="(item, index) in workareasSkillsData"
               />
             </vs-select>
             <span
               class="text-danger text-sm"
               v-show="errors.has('projectId')"
-            >{{ errors.first('projectId') }}</span>
+              >{{ errors.first("projectId") }}</span
+            >
           </div>
         </div>
       </form>
@@ -104,7 +109,8 @@
         color="danger"
         type="filled"
         size="small"
-      >Supprimer la tâche</vs-button>
+        >Supprimer la tâche</vs-button
+      >
     </vs-row>
   </vs-prompt>
 </template>
@@ -132,21 +138,21 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 export default {
   components: {
-    flatPickr
+    flatPickr,
   },
   props: {
     itemId: {
       type: Number,
-      required: true
+      required: true,
     },
     type: {
       type: String,
-      required: true
+      required: true,
     },
     idType: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
@@ -162,14 +168,13 @@ export default {
         locale: FrenchLocale,
         dateFormat: "Y-m-d H:i",
         altFormat: "j F Y, H:i",
-        altInput: true
-      })
+        altInput: true,
+      }),
     };
   },
   computed: {
     activePrompt: {
       get() {
-
         if (this.itemId && this.itemId > -1) {
           this.itemLocal = Object.assign(
             {},
@@ -185,10 +190,10 @@ export default {
         this.$store
           .dispatch("scheduleManagement/editEvent", {})
           .then(() => {})
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
-      }
+      },
     },
     validateForm() {
       return (
@@ -201,7 +206,7 @@ export default {
     },
     usersData() {
       return this.$store.state.userManagement.users;
-    }
+    },
   },
   methods: {
     init() {
@@ -220,15 +225,17 @@ export default {
       if (this.itemId) {
         // get current task skills
         await this.$store
-          .dispatch("skillManagement/fetchItemByTaskId", this.itemId)
-          .then(result => {
-            taskSkills = result.data.success;
+          .dispatch("skillManagement/fetchItemByTask", this.itemId)
+          .then((data) => {
+            taskSkills = data.payload;
             if (taskSkills !== []) {
-              allWorkareas.forEach(aW => {
+              allWorkareas.forEach((aW) => {
                 let missTask = false;
                 // keep workareas have skills task
-                taskSkills.forEach(ts => {
-                  if (aW.skills.find(s => s.id === ts.skill_id) !== undefined) {
+                taskSkills.forEach((ts) => {
+                  if (
+                    aW.skills.find((s) => s.id === ts.skill_id) !== undefined
+                  ) {
                   } else {
                     missTask = true;
                   }
@@ -239,7 +246,7 @@ export default {
               });
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
           });
         this.workareasSkillsData = workareas;
@@ -248,7 +255,6 @@ export default {
       }
     },
     submitTodo() {
-
       var itemToSave = {};
       //Parse new item to update task
       var itemToSave = {
@@ -269,14 +275,14 @@ export default {
         user_id: this.itemLocal.user_id,
         project_is: this.itemLocal.project_is,
         status: this.itemLocal.status,
-        from: "schedule"
+        from: "schedule",
       };
       this.$store
         .dispatch("taskManagement/updateItem", itemToSave)
-        .then(data => {
+        .then((data) => {
           //console.log(["data", data]);
         })
-        .catch(err => {
+        .catch((err) => {
           //console.error(err);
         });
 
@@ -293,7 +299,7 @@ export default {
         accept: this.deleteTask,
         cancel: this.keepTask,
         acceptText: "Supprimer !",
-        cancelText: "Annuler"
+        cancelText: "Annuler",
       });
     },
     keepTask() {
@@ -304,19 +310,19 @@ export default {
       this.$store
         .dispatch("scheduleManagement/removeEvent", this.idEvent)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
 
       this.$store
         .dispatch("taskManagement/removeItem", this.itemLocal.id)
         .then(() => {})
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
 
       this.init();
-    }
+    },
   },
   mounted() {},
   created() {
@@ -327,6 +333,6 @@ export default {
       );
       moduleScheduleManagement.isRegistered = true;
     }
-  }
+  },
 };
 </script>

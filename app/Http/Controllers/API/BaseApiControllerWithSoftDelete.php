@@ -15,11 +15,7 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     public function restore($id)
     {
         $item = app($this->model)->withTrashed()->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('delete', $item)) {
+        if ($result = $this->checkItemErrors($item, 'delete')) {
             return $result;
         }
 
@@ -51,11 +47,7 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     public function destroy(int $id)
     {
         $item = app($this->model)->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('delete', $item)) {
+        if ($result = $this->checkItemErrors($item, 'delete')) {
             return $result;
         }
 
@@ -66,6 +58,7 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
             }
         } catch (\Throwable $th) {
             DB::rollBack();
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
             return $this->errorResponse('Erreur lors de l\'archivage.', static::$response_codes['error_server']);
         }
         DB::commit();
@@ -87,11 +80,7 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     public function forceDelete(int $id)
     {
         $item = app($this->model)->withTrashed()->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('delete', $item)) {
+        if ($result = $this->checkItemErrors($item, 'delete')) {
             return $result;
         }
 

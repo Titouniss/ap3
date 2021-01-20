@@ -138,11 +138,7 @@ abstract class BaseApiController extends Controller
     public function show(int $id)
     {
         $item = app($this->model)->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('show', $item)) {
+        if ($result = $this->checkItemErrors($item, 'show')) {
             return $result;
         }
 
@@ -185,7 +181,7 @@ abstract class BaseApiController extends Controller
             $item = $this->storeItem($arrayRequest);
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->errorResponse($th->getMessage(), 400);
+            return $this->errorResponse($th->getMessage());
         }
         DB::commit();
 
@@ -197,7 +193,7 @@ abstract class BaseApiController extends Controller
             $item->append(static::$show_append);
         }
 
-        return $this->successResponse($item);
+        return $this->successResponse($item, 'Création terminée avec succès');
     }
 
     /**
@@ -213,11 +209,7 @@ abstract class BaseApiController extends Controller
     public function update(Request $request, int $id)
     {
         $item = app($this->model)->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('edit', $item)) {
+        if ($result = $this->checkItemErrors($item, 'edit')) {
             return $result;
         }
 
@@ -232,7 +224,7 @@ abstract class BaseApiController extends Controller
             $item = $this->updateItem($item, $arrayRequest);
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->errorResponse($th->getMessage(), 400);
+            return $this->errorResponse($th->getMessage());
         }
         DB::commit();
 
@@ -254,11 +246,7 @@ abstract class BaseApiController extends Controller
     public function destroy(int $id)
     {
         $item = app($this->model)->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('delete', $item)) {
+        if ($result = $this->checkItemErrors($item, 'delete')) {
             return $result;
         }
 
@@ -269,11 +257,24 @@ abstract class BaseApiController extends Controller
             }
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->errorResponse('Erreur lors de la suppression.', 500);
+            return $this->errorResponse('Erreur lors de la suppression.', static::$response_codes['error_server']);
         }
         DB::commit();
 
         return $this->successResponse(true, 'Suppression terminée avec succès.');
+    }
+
+    protected function checkItemErrors($item, string $perm)
+    {
+        if (!$item) {
+            return $this->notFoundResponse();
+        }
+
+        if ($result = $this->unauthorizedTo($perm, $item)) {
+            return $result;
+        }
+
+        return null;
     }
 
     /**

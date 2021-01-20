@@ -130,24 +130,14 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*********************************   SKILLS   **************************************/
     /***********************************************************************************/
     Route::prefix('skill-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Skill']], function () {
-            Route::get('index', 'API\SkillController@index');
-            Route::get('getByTaskId/{task}', 'API\SkillController@getByTaskId');
-        });
-        Route::group(['middleware' => ['can:show,skill']], function () {
-            Route::get('show/{skill}', 'API\SkillController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Skill']], function () {
-            Route::post('store', 'API\SkillController@store');
-        });
-        Route::group(['middleware' => ['can:edit,skill']], function () {
-            Route::post('update/{skill}', 'API\SkillController@update');
-        });
-        Route::group(['middleware' => ['can:delete,skill']], function () {
-            Route::put('restore/{skill}', 'API\SkillController@restore');
-            Route::delete('destroy/{skill}', 'API\SkillController@destroy');
-            Route::delete('forceDelete/{skill}', 'API\SkillController@forceDelete');
-        });
+        Route::get('index', 'API\SkillController@index');
+        Route::get('index/task/{id}', 'API\SkillController@getByTaskId');
+        Route::get('show/{id}', 'API\SkillController@show');
+        Route::post('store', 'API\SkillController@store');
+        Route::put('update/{id}', 'API\SkillController@update');
+        Route::put('restore/{id}', 'API\SkillController@restore');
+        Route::delete('destroy/{id}', 'API\SkillController@destroy');
+        Route::delete('forceDelete/{id}', 'API\SkillController@forceDelete');
     });
 
     /***********************************************************************************/

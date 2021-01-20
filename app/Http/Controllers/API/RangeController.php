@@ -82,11 +82,7 @@ class RangeController extends BaseApiControllerWithSoftDelete
     public function getRepetitiveTasks(int $id)
     {
         $item = app($this->model)->find($id);
-        if (!$item) {
-            return $this->notFoundResponse();
-        }
-
-        if ($result = $this->unauthorizedTo('read')) {
+        if ($result = $this->checkItemErrors($item, 'show')) {
             return $result;
         }
 
