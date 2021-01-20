@@ -373,25 +373,14 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************* Subscription ************************************/
     /***********************************************************************************/
     Route::prefix('subscription-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Subscription']], function () {
-            Route::get('index', 'API\SubscriptionController@index');
-            Route::get('packages', 'API\SubscriptionController@packages');
-            Route::get('company/{company}', 'API\SubscriptionController@getByCompany');
-        });
-        Route::group(['middleware' => ['can:show,subscription']], function () {
-            Route::get('show/{subscription}', 'API\SubscriptionController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Subscription']], function () {
-            Route::post('store', 'API\SubscriptionController@store');
-        });
-        Route::group(['middleware' => ['can:edit,subscription']], function () {
-            Route::post('update/{subscription}', 'API\SubscriptionController@update');
-        });
-        Route::group(['middleware' => ['can:delete,subscription']], function () {
-            Route::put('restore/{subscription}', 'API\SubscriptionController@restore');
-            Route::delete('destroy/{subscription}', 'API\SubscriptionController@destroy');
-            Route::delete('forceDelete/{subscription}', 'API\SubscriptionController@forceDelete');
-        });
+        Route::get('index', 'API\SubscriptionController@index');
+        Route::get('packages', 'API\SubscriptionController@packages');
+        Route::get('show/{id}', 'API\SubscriptionController@show');
+        Route::post('store', 'API\SubscriptionController@store');
+        Route::put('update/{id}', 'API\SubscriptionController@update');
+        Route::put('restore/{id}', 'API\SubscriptionController@restore');
+        Route::delete('destroy/{id}', 'API\SubscriptionController@destroy');
+        Route::delete('forceDelete/{id}', 'API\SubscriptionController@forceDelete');
     });
 });
 

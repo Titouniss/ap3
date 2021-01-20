@@ -134,7 +134,7 @@ export default {
       );
     },
     packagesData() {
-      return this.$store.state.subscriptionManagement.packages;
+      return this.$store.getters["subscriptionManagement/getPackages"];
     },
   },
   methods: {

@@ -12,7 +12,8 @@ class RangeController extends BaseApiControllerWithSoftDelete
     use StoresDocuments;
 
     protected static $company_id_field = 'company_id';
-    protected static $index_with = ['company:id,name'];
+    protected static $index_load = ['company:id,name'];
+    protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'repetitive_tasks'];
     protected static $show_append = null;
     protected static $cascade = true;
@@ -82,7 +83,7 @@ class RangeController extends BaseApiControllerWithSoftDelete
     public function getRepetitiveTasks(int $id)
     {
         $item = app($this->model)->find($id);
-        if ($result = $this->checkItemErrors($item, 'show')) {
+        if ($result = $this->itemErrors($item, 'show')) {
             return $result;
         }
 

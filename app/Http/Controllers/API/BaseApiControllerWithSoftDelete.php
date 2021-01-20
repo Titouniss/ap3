@@ -15,8 +15,8 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     public function restore($id)
     {
         $item = app($this->model)->withTrashed()->find($id);
-        if ($result = $this->checkItemErrors($item, 'delete')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'delete')) {
+            return $error;
         }
 
         DB::beginTransaction();
@@ -47,8 +47,8 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     public function destroy(int $id)
     {
         $item = app($this->model)->find($id);
-        if ($result = $this->checkItemErrors($item, 'delete')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'delete')) {
+            return $error;
         }
 
         DB::beginTransaction();
@@ -80,8 +80,8 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     public function forceDelete(int $id)
     {
         $item = app($this->model)->withTrashed()->find($id);
-        if ($result = $this->checkItemErrors($item, 'delete')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'delete')) {
+            return $error;
         }
 
         DB::beginTransaction();

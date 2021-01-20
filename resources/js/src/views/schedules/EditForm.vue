@@ -225,7 +225,7 @@ export default {
       if (this.itemId) {
         // get current task skills
         await this.$store
-          .dispatch("skillManagement/fetchItemByTask", this.itemId)
+          .dispatch("skillManagement/fetchItems", { task_id: this.itemId })
           .then((data) => {
             taskSkills = data.payload;
             if (taskSkills !== []) {

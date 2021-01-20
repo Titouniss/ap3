@@ -23,23 +23,6 @@ class Subscription extends Model
         return $permissions->unique();
     }
 
-    public function getStatusOrderAttribute()
-    {
-        switch ($this->state) {
-            case 'active':
-                return 0;
-            case 'pending':
-                return 1;
-            case 'cancelled':
-                return 2;
-            case 'inactive':
-                return 2;
-
-            default:
-                return 3;
-        }
-    }
-
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');

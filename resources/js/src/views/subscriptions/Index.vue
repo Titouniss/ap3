@@ -272,10 +272,12 @@ export default {
   },
   computed: {
     itemIdToEdit() {
-      return this.$store.state.subscriptionManagement.subscription.id || 0;
+      return (
+        this.$store.getters["subscriptionManagement/getSelectedItem"].id || 0
+      );
     },
     subscriptionsData() {
-      return this.$store.state.subscriptionManagement.subscriptions;
+      return this.$store.getters["subscriptionManagement/getItems"];
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -456,7 +458,9 @@ export default {
 
     if (this.companyId) {
       this.$store
-        .dispatch("subscriptionManagement/fetchItemsByCompany", this.companyId)
+        .dispatch("subscriptionManagement/fetchItems", {
+          company_id: this.companyId,
+        })
         .catch((err) => {
           console.error(err);
         });

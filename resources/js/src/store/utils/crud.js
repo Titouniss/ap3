@@ -46,7 +46,8 @@ export default function (slug, model, model_plurial, sort_items = null) {
 
         getters: {
             getItems: state => JSON.parse(JSON.stringify(state[model_plurial] || [])),
-            getItem: state => id => JSON.parse(JSON.stringify((state[model_plurial] || []).find((item) => item.id === id)))
+            getItem: state => id => JSON.parse(JSON.stringify((state[model_plurial] || []).find((item) => item.id === id))),
+            getSelectedItem: state => JSON.parse(JSON.stringify(state[model] || {})),
         },
 
         actions: {

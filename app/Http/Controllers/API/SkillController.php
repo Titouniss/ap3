@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Skill;
+use App\Models\Task;
 use App\Models\TasksSkill;
+use Exception;
+use Illuminate\Http\Request;
 
 class SkillController extends BaseApiControllerWithSoftDelete
 {
     protected static $company_id_field = 'company_id';
-    protected static $index_with = ['company:id,name'];
+    protected static $index_load = ['company:id,name'];
+    protected static $index_append = null;
     protected static $show_load = ['company:id,name'];
     protected static $show_append = null;
     protected static $cascade = false;
@@ -31,6 +35,18 @@ class SkillController extends BaseApiControllerWithSoftDelete
         parent::__construct(Skill::class);
     }
 
+    protected function filterIndexQuery($query, Request $request)
+    {
+        if ($request->has('task_id')) {
+            $item = Task::find($request->task_id);
+            if (!$item) {
+                throw new Exception("Paramètre 'task_id' n'est pas valide.");
+            }
+
+            $query->whereIn('id', $item->skills->pluck('id'));
+        }
+    }
+
     protected function storeItem(array $arrayRequest)
     {
         return Skill::create([
@@ -46,19 +62,5 @@ class SkillController extends BaseApiControllerWithSoftDelete
             'company_id' => $arrayRequest['company_id']
         ]);
         return $item;
-    }
-
-    /**
-     * getting skills by task.
-     */
-    public function getByTaskId(int $id)
-    {
-        $item = app($this->model)->find($id);
-        if ($result = $this->checkItemErrors($item, 'show')) {
-            return $result;
-        }
-
-        $items = TasksSkill::select('skill_id')->where('task_id', $id)->get();
-        return $this->successResponse($items);
     }
 }

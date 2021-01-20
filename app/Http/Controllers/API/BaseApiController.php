@@ -22,7 +22,8 @@ abstract class BaseApiController extends Controller
 
     protected $model;
     protected static $company_id_field = null;
-    protected static $index_with = null;
+    protected static $index_load = null;
+    protected static $index_append = null;
     protected static $show_load = null;
     protected static $show_append = null;
     protected static $store_validation_array = [];
@@ -37,51 +38,23 @@ abstract class BaseApiController extends Controller
     }
 
     /**
-     * Paginates the specified query based on the request.
+     * Provides custom filtering for the index query
      *
      * @throws \Exception
      */
-    protected function paginateQuery(Request $request, $query, array &$extra)
+    protected function filterIndexQuery($query, Request $request)
     {
-        if ($request->has('page')) {
-            if (!is_numeric($request->page)) {
-                throw new Exception("Paramètre 'page' doit être un nombre.");
-            }
-
-            $per_page = static::$per_page;
-            if ($request->has('per_page')) {
-                if (!is_numeric($request->per_page)) {
-                    throw new Exception("Paramètre 'per_page' doit être un nombre.");
-                }
-                $per_page = $request->per_page;
-            }
-
-            $current_page = $request->page;
-            $paginator = $query->paginate($per_page, $current_page);
-
-            $pageParameter = 'page=' . $current_page;
-            $extra['pagination'] = [
-                'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
-                'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
-                'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
-                'last_page_url' => str_replace($pageParameter, 'page=' . $paginator->lastPage(), $request->fullUrl()),
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'count' => $paginator->count(),
-                'total' => $paginator->total()
-            ];
-        }
-
-        return $query;
     }
 
     /**
-     * Gets the query for the listing of resources.
-     *
-     * @throws \Exception
+     * Display a listing of the resources.
      */
-    protected function indexItemsQuery(Request $request)
+    public function index(Request $request)
     {
+        if ($error = $this->permissionErrors('read')) {
+            return $error;
+        }
+
         $model = app($this->model);
         $query = $model->select($model->getTable() . ".*");
 
@@ -90,43 +63,63 @@ abstract class BaseApiController extends Controller
             $query->where(static::$company_id_field, $user->company_id);
         }
 
-        if ($request->has('with_trashed') && $request->with_trashed) {
-            $query->withTrashed();
-        }
-
-        if ($request->has('order_by')) {
-            try {
-                $query->orderBy($request->order_by);
-            } catch (\Throwable $th) {
-                throw new Exception("Paramètre 'order_by' n'est pas valide.");
-            }
-        }
-
-        if (static::$index_with) {
-            $query->with(static::$index_with);
-        }
-
-        return $query;
-    }
-
-    /**
-     * Display a listing of the resources.
-     */
-    public function index(Request $request)
-    {
-        if ($result = $this->unauthorizedTo('read')) {
-            return $result;
-        }
-
         $extra = [];
-        $items = [];
 
         try {
-            $itemsQuery = $this->indexItemsQuery($request);
-            $itemsQuery = $this->paginateQuery($request, $itemsQuery, $extra);
-            $items = $itemsQuery->get();
+            if ($request->has('with_trashed') && $request->with_trashed) {
+                $query->withTrashed();
+            }
+
+            if ($request->has('order_by')) {
+                try {
+                    $query->orderBy($request->order_by);
+                } catch (\Throwable $th) {
+                    throw new Exception("Paramètre 'order_by' n'est pas valide.");
+                }
+            }
+
+            $this->filterIndexQuery($query, $request);
+
+            if ($request->has('page')) {
+                if (!is_numeric($request->page)) {
+                    throw new Exception("Paramètre 'page' doit être un nombre.");
+                }
+
+                $per_page = static::$per_page;
+                if ($request->has('per_page')) {
+                    if (!is_numeric($request->per_page)) {
+                        throw new Exception("Paramètre 'per_page' doit être un nombre.");
+                    }
+                    $per_page = $request->per_page;
+                }
+
+                $current_page = $request->page;
+                $paginator = $query->paginate($per_page, $current_page);
+
+                $pageParameter = 'page=' . $current_page;
+                $extra['pagination'] = [
+                    'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
+                    'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
+                    'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
+                    'last_page_url' => str_replace($pageParameter, 'page=' . $paginator->lastPage(), $request->fullUrl()),
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'count' => $paginator->count(),
+                    'total' => $paginator->total()
+                ];
+            }
+
+            if (static::$index_load) {
+                $query->with(static::$index_load);
+            }
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage());
+        }
+
+        $items = $query->get();
+
+        if (static::$index_append) {
+            $items->each->append(static::$index_append);
         }
 
         return $this->successResponse($items, 'Chargement terminé avec succès.', $extra);
@@ -138,8 +131,8 @@ abstract class BaseApiController extends Controller
     public function show(int $id)
     {
         $item = app($this->model)->find($id);
-        if ($result = $this->checkItemErrors($item, 'show')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'show')) {
+            return $error;
         }
 
         if (static::$show_load) {
@@ -165,8 +158,8 @@ abstract class BaseApiController extends Controller
      */
     public function store(Request $request)
     {
-        if ($result = $this->unauthorizedTo('publish')) {
-            return $result;
+        if ($error = $this->permissionErrors('publish')) {
+            return $error;
         }
 
         $arrayRequest = $request->all();
@@ -209,8 +202,8 @@ abstract class BaseApiController extends Controller
     public function update(Request $request, int $id)
     {
         $item = app($this->model)->find($id);
-        if ($result = $this->checkItemErrors($item, 'edit')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'edit')) {
+            return $error;
         }
 
         $arrayRequest = $request->all();
@@ -246,8 +239,8 @@ abstract class BaseApiController extends Controller
     public function destroy(int $id)
     {
         $item = app($this->model)->find($id);
-        if ($result = $this->checkItemErrors($item, 'delete')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'delete')) {
+            return $error;
         }
 
         DB::beginTransaction();
@@ -264,13 +257,13 @@ abstract class BaseApiController extends Controller
         return $this->successResponse(true, 'Suppression terminée avec succès.');
     }
 
-    protected function checkItemErrors($item, string $perm)
+    protected function itemErrors($item, string $perm)
     {
         if (!$item) {
             return $this->notFoundResponse();
         }
 
-        if ($result = $this->unauthorizedTo($perm, $item)) {
+        if ($result = $this->permissionErrors($perm, $item)) {
             return $result;
         }
 
@@ -280,7 +273,7 @@ abstract class BaseApiController extends Controller
     /**
      * Checks whether the current user has permission to access the specified resource.
      */
-    protected function unauthorizedTo(string $perm, $item = null)
+    protected function permissionErrors(string $perm, $item = null)
     {
         $user = Auth::user();
         if ($user->cant($perm, $item ?? $this->model)) {

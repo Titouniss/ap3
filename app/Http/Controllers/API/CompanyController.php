@@ -13,7 +13,8 @@ use Validator;
 class CompanyController extends BaseApiControllerWithSoftDelete
 {
     protected static $company_id_field = 'id';
-    protected static $index_with = [];
+    protected static $index_load = [];
+    protected static $index_append = ['active_subscription'];
     protected static $show_load = ['skills:id,name,company_id', 'subscriptions', 'subscriptions.packages'];
     protected static $show_append = ['active_subscription'];
     protected static $cascade = true;
@@ -63,39 +64,16 @@ class CompanyController extends BaseApiControllerWithSoftDelete
         parent::__construct(Company::class);
     }
 
-    public function index(Request $request)
+    protected function filterIndexQuery($query, Request $request)
     {
-        if ($result = $this->unauthorizedTo('read')) {
-            return $result;
+        if (!$request->has('order_by')) {
+            $query->leftJoin('subscriptions', function ($join) {
+                $join->on('companies.id', '=', 'subscriptions.company_id')
+                    ->where('subscriptions.state', 'active');
+            })->groupBy('companies.id');
+
+            $query->orderBy('subscriptions.ends_at', 'desc');
         }
-
-        $extra = [];
-        $payload = [];
-
-        $user = Auth::user();
-        try {
-            if ($user->is_admin) {
-                $payload = $this->indexItemsQuery($request)
-                    ->leftJoin('subscriptions', function ($join) {
-                        $join->on('companies.id', '=', 'subscriptions.company_id')
-                            ->where('subscriptions.state', 'active');
-                    })->groupBy('companies.id');
-
-                if (!$request->has('order_by')) {
-                    $payload->orderBy('subscriptions.ends_at', 'desc');
-                }
-
-                $payload = $this->paginateQuery($request, $payload, $extra)->get();
-            } else {
-                $payload = collect([Company::where('id', $user->company_id)->with(static::$index_with)->first()]);
-            }
-        } catch (\Throwable $th) {
-            return $this->errorResponse($th->getMessage());
-        }
-
-        $payload->each->append(static::$show_append);
-
-        return $this->successResponse($payload, 'Chargement terminé avec succès.', $extra);
     }
 
     protected function storeItem(array $arrayRequest)
@@ -155,7 +133,6 @@ class CompanyController extends BaseApiControllerWithSoftDelete
         try {
             $subscription->packages()->sync($subscriptionArray['packages']);
         } catch (\Throwable $th) {
-            throw new Exception($th->getMessage());
             throw new Exception("Paramètre 'subscription.packages' contient des valeurs invalides.");
         }
 
