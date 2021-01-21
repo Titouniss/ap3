@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ReturnsJsonResponse;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,13 +12,8 @@ use Illuminate\Support\Facades\Validator;
 
 abstract class BaseApiController extends Controller
 {
-    protected static $response_codes = [
-        'success' => 200,
-        'error_request' => 400,
-        'error_unauthorized' => 403,
-        'error_not_found' => 404,
-        'error_server' => 500
-    ];
+    use ReturnsJsonResponse;
+
     protected static $per_page = 25;
 
     protected $model;
@@ -207,7 +203,7 @@ abstract class BaseApiController extends Controller
         }
 
         $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, BaseApiController::$update_validation_array);
+        $validator = Validator::make($arrayRequest, static::$update_validation_array);
         if ($validator->fails()) {
             return $this->errorResponse($validator->errors());
         }
@@ -241,23 +237,38 @@ abstract class BaseApiController extends Controller
     }
 
     /**
-     * Delete the specified resource from storage.
+     * Delete the specified resources from storage.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id = null)
     {
-        $item = app($this->model)->find($id);
-        if ($error = $this->itemErrors($item, 'delete')) {
-            return $error;
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
         }
 
         DB::beginTransaction();
-        try {
-            if (!$this->destroyItem($item)) {
-                throw new Exception();
+        foreach ($ids as $idToDelete) {
+            $item = app($this->model)->find($idToDelete);
+            if ($error = $this->itemErrors($item, 'delete')) {
+                DB::rollBack();
+                return $error;
             }
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->errorResponse('Erreur lors de la suppression.', static::$response_codes['error_server']);
+
+            try {
+                if (!$this->destroyItem($item)) {
+                    throw new Exception();
+                }
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse('Erreur lors de la suppression.', static::$response_codes['error_server']);
+            }
         }
         DB::commit();
 
@@ -270,8 +281,8 @@ abstract class BaseApiController extends Controller
             return $this->notFoundResponse();
         }
 
-        if ($result = $this->permissionErrors($perm, $item)) {
-            return $result;
+        if ($error = $this->permissionErrors($perm, $item)) {
+            return $error;
         }
 
         return null;
@@ -283,47 +294,10 @@ abstract class BaseApiController extends Controller
     protected function permissionErrors(string $perm, $item = null)
     {
         $user = Auth::user();
-        if ($user->cant($perm, $item ?? $this->model)) {
+        if (!$user || $user->cant($perm, $item ?? $this->model)) {
             return $this->errorResponse("Accès non autorisé.", static::$response_codes['error_unauthorized']);
         }
 
         return null;
-    }
-
-    /**
-     * Returns an item not found response.
-     */
-    protected function notFoundResponse()
-    {
-        return $this->errorResponse("Ressource introuvable.", static::$response_codes['error_not_found']);
-    }
-
-    /**
-     * Returns a successful response.
-     */
-    protected function successResponse($payload, string $message = 'Chargement terminé avec succès.', array $extra = null)
-    {
-        $response = [
-            'success' => true,
-            'message' => $message,
-            'payload' => $payload
-        ];
-        if ($extra != null) {
-            $response = array_merge($response, $extra);
-        }
-        return response()->json($response, static::$response_codes['success']);
-    }
-
-    /**
-     * Returns a successful response.
-     */
-    protected function errorResponse(string $message, int $status_code = null)
-    {
-        $response = [
-            'success' => false,
-            'message' => $message
-        ];
-
-        return response()->json($response, $status_code ?? static::$response_codes['error_request']);
     }
 }

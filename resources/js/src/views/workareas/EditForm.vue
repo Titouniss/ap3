@@ -251,7 +251,7 @@ export default {
         .map((item) => item.id);
       if (ids.length > 0) {
         this.$store
-          .dispatch("documentManagement/deleteFiles", ids)
+          .dispatch("documentManagement/removeItems", ids)
           .catch((error) => {});
       }
     },

@@ -1,16 +1,18 @@
-/*=========================================================================================
-  File Name: 
-  Description: 
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import crud from "../utils/crud";
 
-import state from "./moduleDocumentManagementState.js";
-import mutations from "./moduleDocumentManagementMutations.js";
-import actions from "./moduleDocumentManagementActions.js";
-import getters from "./moduleDocumentManagementGetters.js";
+const slug = 'document-management';
+const model = 'document';
+const model_plurial = 'documents';
+
+const { apiPostFormData, state, getters, actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
+
+const actions = {
+    addItem,
+    removeItems,
+    upload: ({ commit }, item) => {
+        return apiPostFormData(`${slug}/upload/${item.token}`, item.file, (payload) => commit('ADD_OR_UPDATE_ITEMS', payload))
+    }
+}
 
 export default {
     isRegistered: false,

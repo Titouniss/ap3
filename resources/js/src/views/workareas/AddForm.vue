@@ -266,7 +266,7 @@ export default {
       const ids = this.uploadedFiles.map((item) => item.id);
       if (ids.length > 0) {
         this.$store
-          .dispatch("documentManagement/deleteFiles", ids)
+          .dispatch("documentManagement/removeItems", ids)
           .then((response) => {
             this.uploadedFiles = [];
           })

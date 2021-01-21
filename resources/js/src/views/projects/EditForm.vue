@@ -144,8 +144,7 @@ export default {
       type: Number,
       required: true,
     },
-    refreshData: {
-    }
+    refreshData: {},
   },
   data() {
     return {
@@ -226,7 +225,9 @@ export default {
         this.$store
           .dispatch("projectManagement/updateItem", item)
           .then(() => {
-            if(this.refreshData){ this.refreshData()}
+            if (this.refreshData) {
+              this.refreshData();
+            }
             this.$vs.loading.close();
             this.$vs.notify({
               title: "Modification d'un projet",
@@ -272,7 +273,7 @@ export default {
         .map((item) => item.id);
       if (ids.length > 0) {
         this.$store
-          .dispatch("documentManagement/deleteFiles", ids)
+          .dispatch("documentManagement/removeItems", ids)
           .catch((error) => {});
       }
     },

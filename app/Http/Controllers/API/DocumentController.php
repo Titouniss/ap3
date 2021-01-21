@@ -4,21 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Traits\ReturnsJsonResponse;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
 
 class DocumentController extends Controller
 {
-    public $successStatus = 200;
+    use ReturnsJsonResponse;
 
     /**
-     * Store a newly created resource.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * Store a newly created document.
      */
     public function store(Request $request)
     {
@@ -29,70 +27,101 @@ class DocumentController extends Controller
             'token' => 'required',
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+            return $this->errorResponse($validator->errors());
         }
 
-        return response()->json(
-            ['success' =>
-            Document::create([
+        $item = null;
+        DB::beginTransaction();
+        try {
+            $item = Document::create([
                 'name' => $arrayRequest['name'],
                 'path' => $arrayRequest['path'],
                 'token' => $arrayRequest['token'],
                 'is_file' => false
-            ])],
-            $this->successStatus
-        );
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
+        DB::commit();
+
+        return $this->successResponse($item, 'Création terminée avec succès');
     }
 
-    public function getFile($path)
+    public function show($path)
     {
         $item = Document::where('path', 'LIKE', '%' . $path)->first();
         if (!$item) {
-            return response()->json(['error' => 'Fichier introuvable'], 404);
+            return $this->notFoundResponse();
         }
-
-        $controllerLog = new Logger('document');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('document item', [$item]);
 
         return response()->file(Storage::path($item->path));
     }
 
-    public function uploadFile(Request $request, $token)
+    /**
+     * Uploads a new document to the server.
+     */
+    public function upload(Request $request, string $token)
     {
         $arrayRequest = $request->all();
-
-        if ($arrayRequest['files']) {
-            $originalName = $arrayRequest['files']->getClientOriginalName();
-            $path = $arrayRequest['files']->store('documents/tmp');
-            $response = Document::create(['name' => $originalName, 'path' => $path, 'token' => $token, 'is_file' => true]);
-
-            return response()->json(['success' => $response], $this->successStatus);
+        $validator = Validator::make($arrayRequest, [
+            'file' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
         }
+
+        $item = null;
+        DB::beginTransaction();
+        try {
+            $originalName = $arrayRequest['file']->getClientOriginalName();
+            $path = $arrayRequest['file']->store('documents/tmp');
+            $item = Document::create(['name' => $originalName, 'path' => $path, 'token' => $token, 'is_file' => true]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
+        DB::commit();
+
+        return $this->successResponse($item, 'Téléchargement terminé avec succès');
     }
 
     /**
-     * Deletes the file.
-     *
-     * @param  \App\Models\Document $document
-     * @return \Illuminate\Http\Response
+     * Delete the specified documents from storage.
      */
-    public function deleteFile(Document $document)
+    public function destroy(Request $request, int $id = null)
     {
-        return response()->json(['success' => $document->deleteFile()], $this->successStatus);
-    }
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
+        }
 
-    public function deleteFiles(Request $request)
-    {
-        $arrayRequest = $request->all();
-        if ($arrayRequest) {
-            $items = Document::whereIn('id', $arrayRequest)->get();
-
-            foreach ($items as $item) {
-                $item->deleteFile();
+        DB::beginTransaction();
+        foreach ($ids as $idToDelete) {
+            $item = Document::find($idToDelete);
+            if (!$item) {
+                DB::rollBack();
+                return $this->notFoundResponse();
             }
 
-            return response()->json(['success' => true], $this->successStatus);
+            try {
+                if (!$item->deleteFile()) {
+                    throw new Exception();
+                }
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse('Erreur lors de la suppression.', static::$response_codes['error_server']);
+            }
         }
+        DB::commit();
+
+        return $this->successResponse(true, 'Suppression terminée avec succès.');
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 abstract class BaseApiControllerWithSoftDelete extends BaseApiController
 {
@@ -12,86 +14,134 @@ abstract class BaseApiControllerWithSoftDelete extends BaseApiController
     /**
      * Restore the specified resource in storage.
      */
-    public function restore($id)
+    public function restore(Request $request, int $id = null)
     {
-        $item = app($this->model)->withTrashed()->find($id);
-        if ($error = $this->itemErrors($item, 'delete')) {
-            return $error;
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
         }
 
         DB::beginTransaction();
-        try {
-            if (!(static::$cascade ? $item->restoreCascade() : $item->restore())) {
-                throw new Exception();
+        foreach ($ids as $idToRestore) {
+            $item = app($this->model)->withTrashed()->find($idToRestore);
+            if ($error = $this->itemErrors($item, 'delete')) {
+                DB::rollBack();
+                return $error;
             }
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->errorResponse('Erreur lors de la restauration.', static::$response_codes['error_server']);
+
+            try {
+                if (!(static::$cascade ? $item->restoreCascade() : $item->restore())) {
+                    throw new Exception();
+                }
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse("Erreur lors de la restauration.", static::$response_codes['error_server']);
+            }
         }
         DB::commit();
 
+        $items = app($this->model)->whereIn('id', $ids)->get();
+
         if (static::$show_load) {
-            $item->load(static::$show_load);
+            $items->load(static::$show_load);
         }
 
         if (static::$show_append) {
-            $item->append(static::$show_append);
+            $items->each->append(static::$show_append);
         }
 
-        return $this->successResponse($item, 'Restauration terminée avec succès.');
+        return $this->successResponse($items, "Restauration terminé avec succès.");
     }
 
     /**
-     * Soft delete the specified resource from storage.
+     * Soft deletes the specified resources from storage.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id = null)
     {
-        $item = app($this->model)->find($id);
-        if ($error = $this->itemErrors($item, 'delete')) {
-            return $error;
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
         }
 
         DB::beginTransaction();
-        try {
-            if (!(static::$cascade ? $item->deleteCascade() : $item->delete())) {
-                throw new Exception();
+        foreach ($ids as $idToArchive) {
+            $item = app($this->model)->find($idToArchive);
+            if ($error = $this->itemErrors($item, 'delete')) {
+                DB::rollBack();
+                return $error;
             }
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
-            return $this->errorResponse('Erreur lors de l\'archivage.', static::$response_codes['error_server']);
+
+            try {
+                if (!(static::$cascade ? $item->deleteCascade() : $item->delete())) {
+                    throw new Exception();
+                }
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse("Erreur lors de l'archivage.", static::$response_codes['error_server']);
+            }
         }
         DB::commit();
 
+        $items = app($this->model)->withTrashed()->whereIn('id', $ids)->get();
+
         if (static::$show_load) {
-            $item->load(static::$show_load);
+            $items->load(static::$show_load);
         }
 
         if (static::$show_append) {
-            $item->append(static::$show_append);
+            $items->each->append(static::$show_append);
         }
 
-        return $this->successResponse($item, 'Archivage terminé avec succès.');
+        return $this->successResponse($items, "Archivage terminé avec succès.");
     }
 
     /**
-     * Delete the specified resource from storage.
+     * Deletes the specified resources from storage.
      */
-    public function forceDelete(int $id)
+    public function forceDestroy(Request $request, int $id = null)
     {
-        $item = app($this->model)->withTrashed()->find($id);
-        if ($error = $this->itemErrors($item, 'delete')) {
-            return $error;
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
         }
 
         DB::beginTransaction();
-        try {
-            if (!$item->forceDelete()) {
-                throw new Exception();
+        foreach ($ids as $idToDelete) {
+            $item = app($this->model)->withTrashed()->find($idToDelete);
+            if ($error = $this->itemErrors($item, 'delete')) {
+                DB::rollBack();
+                return $error;
             }
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->errorResponse('Erreur lors de la suppression.', static::$response_codes['error_server']);
+
+            try {
+                if (!$item->forceDelete()) {
+                    throw new Exception();
+                }
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse("Erreur lors de la suppression.", static::$response_codes['error_server']);
+            }
         }
         DB::commit();
 

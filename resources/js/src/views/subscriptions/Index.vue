@@ -363,7 +363,7 @@ export default {
 
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("customerManagement/forceRemoveItem", selectRow.id)
+          .dispatch("customerManagement/forceRemoveItems", [selectRow.id])
           .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
@@ -381,7 +381,7 @@ export default {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("subscriptionManagement/removeItem", selectRow.id)
+          .dispatch("subscriptionManagement/removeItems", [selectRow.id])
           .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);

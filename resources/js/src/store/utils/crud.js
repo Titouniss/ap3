@@ -36,9 +36,31 @@ const apiRequest = (url, method = 'get', onSuccess = null, payload = null) => {
     });
 }
 
+const apiPostFormData = (url, payload, onSuccess = null) => {
+    return new Promise((resolve, reject) => {
+        axios.post(`/api/${url}`, payload)
+            .then(response => {
+                if (response && response.data && response.data.success) {
+                    if (onSuccess) {
+                        onSuccess(JSON.parse(JSON.stringify(response.data.payload)));
+                    }
+                    resolve(response.data);
+                } else {
+                    reject(response.data);
+                }
+            })
+            .catch(error => {
+                console.log(error)
+                reject(error);
+            });
+    });
+}
+
 export default function (slug, model, model_plurial, sort_items = null) {
     return {
         apiRequest,
+        apiPostFormData,
+
         state: {
             [model_plurial]: [],
             [model]: {}
@@ -55,55 +77,59 @@ export default function (slug, model, model_plurial, sort_items = null) {
                 return apiRequest(`${slug}/index`, 'get', (payload) => commit('SET_ITEMS', payload), params);
             },
             fetchItem: ({ commit }, id) => {
-                return apiRequest(`${slug}/show/${id}`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEM', payload));
+                return apiRequest(`${slug}/show/${id}`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload));
             },
-            addItem: ({ commit }, payload) => {
-                return apiRequest(`${slug}/store`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEM', payload), payload);
+            addItem: ({ commit }, item) => {
+                return apiRequest(`${slug}/store`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
             },
-            editItem: ({ commit }, payload) => {
-                const item = JSON.parse(JSON.stringify(payload));
-                commit("EDIT_ITEM", item);
-                return item;
+            editItem: ({ commit }, item) => {
+                const itemToEdit = JSON.parse(JSON.stringify(item));
+                commit("EDIT_ITEM", itemToEdit);
+                return itemToEdit;
             },
-            updateItem: ({ commit }, payload) => {
-                return apiRequest(`${slug}/update/${payload.id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEM', payload), payload)
+            updateItem: ({ commit }, item) => {
+                return apiRequest(`${slug}/update/${item.id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item)
             },
-            restoreItem: ({ commit }, id) => {
-                return apiRequest(`${slug}/restore/${id}`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEM', payload))
+            restoreItems: ({ commit }, ids) => {
+                return apiRequest(`${slug}/restore`, 'put', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), { ids })
             },
-            removeItem: ({ commit }, id) => {
-                return apiRequest(`${slug}/destroy/${id}`, 'delete', (payload) => {
+            removeItems: ({ commit }, ids) => {
+                return apiRequest(`${slug}/destroy`, 'put', (payload) => {
                     if (typeof payload === "boolean" && payload) {
-                        commit('REMOVE_ITEM', id)
+                        commit('REMOVE_ITEMS', ids)
                     } else {
-                        commit('ADD_OR_UPDATE_ITEM', payload)
+                        commit('ADD_OR_UPDATE_ITEMS', payload)
                     }
-                })
+                }, { ids })
             },
-            forceRemoveItem: ({ commit }, id) => {
-                return apiRequest(`${slug}/forceDelete/${id}`, 'delete', (payload) => commit('REMOVE_ITEM', id))
-            }
+            forceRemoveItems: ({ commit }, ids) => {
+                return apiRequest(`${slug}/force-destroy`, 'put', (payload) => commit('REMOVE_ITEMS', ids), { ids })
+            },
         },
 
         mutations: {
             SET_ITEMS: (state, items) => state[model_plurial] = items,
-            ADD_OR_UPDATE_ITEM: (state, item) => {
-                const index = state[model_plurial].findIndex((i) => i.id === item.id);
-                if (index === -1) {
-                    state[model_plurial].unshift(item)
-                } else {
-                    state[model_plurial].splice(index, 1, item)
-                }
+            ADD_OR_UPDATE_ITEMS: (state, items) => {
+                (Array.isArray(items) ? items : [items]).forEach(new_item => {
+                    const index = state[model_plurial].findIndex((item) => item.id === new_item.id);
+                    if (index === -1) {
+                        state[model_plurial].unshift(new_item)
+                    } else {
+                        state[model_plurial].splice(index, 1, new_item)
+                    }
+                });
                 if (sort_items) {
                     state[model_plurial].sort(sort_items)
                 }
             },
             EDIT_ITEM: (state, item) => state[model] = item,
-            REMOVE_ITEM: (state, id) => {
-                const index = state[model_plurial].findIndex((i) => i.id === id);
-                if (index > -1) {
-                    state[model_plurial].splice(index, 1)
-                }
+            REMOVE_ITEMS: (state, ids) => {
+                (Array.isArray(ids) ? ids : [ids]).forEach(id => {
+                    const index = state[model_plurial].findIndex((item) => item.id === id);
+                    if (index > -1) {
+                        state[model_plurial].splice(index, 1)
+                    }
+                });
             },
             EMPTY_ITEMS(state) {
                 state[slug] = [];

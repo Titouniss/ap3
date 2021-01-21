@@ -83,8 +83,8 @@ class RangeController extends BaseApiControllerWithSoftDelete
     public function getRepetitiveTasks(int $id)
     {
         $item = app($this->model)->find($id);
-        if ($result = $this->itemErrors($item, 'show')) {
-            return $result;
+        if ($error = $this->itemErrors($item, 'show')) {
+            return $error;
         }
 
         $items = RepetitiveTask::where('range_id', $item->id)->with('skills', 'workarea', 'documents')->get();

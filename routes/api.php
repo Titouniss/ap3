@@ -121,9 +121,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('show/{id}', 'API\CompanyController@show');
         Route::post('store', 'API\CompanyController@store');
         Route::put('update/{id}', 'API\CompanyController@update');
-        Route::put('restore/{id}', 'API\CompanyController@restore');
-        Route::delete('destroy/{id}', 'API\CompanyController@destroy');
-        Route::delete('forceDelete/{id}', 'API\CompanyController@forceDelete');
+        Route::put('restore/{id?}', 'API\CompanyController@restore');
+        Route::put('destroy/{id?}', 'API\CompanyController@destroy');
+        Route::put('force-destroy/{id?}', 'API\CompanyController@forceDestroy');
     });
 
     /***********************************************************************************/
@@ -135,9 +135,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('show/{id}', 'API\SkillController@show');
         Route::post('store', 'API\SkillController@store');
         Route::put('update/{id}', 'API\SkillController@update');
-        Route::put('restore/{id}', 'API\SkillController@restore');
-        Route::delete('destroy/{id}', 'API\SkillController@destroy');
-        Route::delete('forceDelete/{id}', 'API\SkillController@forceDelete');
+        Route::put('restore/{id?}', 'API\SkillController@restore');
+        Route::put('destroy/{id?}', 'API\SkillController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SkillController@forceDestroy');
     });
 
     /***********************************************************************************/
@@ -196,9 +196,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('show/{id}', 'API\RangeController@show');
         Route::post('store', 'API\RangeController@store');
         Route::put('update/{id}', 'API\RangeController@update');
-        Route::put('restore/{id}', 'API\RangeController@restore');
-        Route::delete('destroy/{id}', 'API\RangeController@destroy');
-        Route::delete('forceDelete/{id}', 'API\RangeController@forceDelete');
+        Route::put('restore/{id?}', 'API\RangeController@restore');
+        Route::put('destroy/{id?}', 'API\RangeController@destroy');
+        Route::put('force-destroy/{id?}', 'API\RangeController@forceDestroy');
     });
 
     /***********************************   TASK   **************************************/
@@ -336,19 +336,16 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('update/{id}', 'API\ModuleController@update');
         Route::put('update-connection/{id}', 'API\ModuleController@updateConnection');
         Route::put('update-data-types/{id}', 'API\ModuleController@updateDataTypes');
-        Route::delete('destroy/{id}', 'API\ModuleController@destroy');
+        Route::put('destroy/{id?}', 'API\ModuleController@destroy');
     });
 
     /***********************************************************************************/
     /********************************** Documents **************************************/
     /***********************************************************************************/
     Route::prefix('document-management')->group(function () {
-        Route::group(['middleware' => ['can:publish tasks']], function () {
-            Route::post('store', 'API\DocumentController@store');
-            Route::post('upload-file/{token}', 'API\DocumentController@uploadFile');
-            Route::delete('delete-file/{document}', 'API\DocumentController@deleteFile');
-            Route::post('delete-files', 'API\DocumentController@deleteFiles');
-        });
+        Route::post('store', 'API\DocumentController@store');
+        Route::post('upload/{token}', 'API\DocumentController@upload');
+        Route::put('destroy/{id?}', 'API\DocumentController@destroy');
     });
 
     /***********************************************************************************/
@@ -360,9 +357,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('show/{id}', 'API\SubscriptionController@show');
         Route::post('store', 'API\SubscriptionController@store');
         Route::put('update/{id}', 'API\SubscriptionController@update');
-        Route::put('restore/{id}', 'API\SubscriptionController@restore');
-        Route::delete('destroy/{id}', 'API\SubscriptionController@destroy');
-        Route::delete('forceDelete/{id}', 'API\SubscriptionController@forceDelete');
+        Route::put('restore/{id?}', 'API\SubscriptionController@restore');
+        Route::put('destroy/{id?}', 'API\SubscriptionController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SubscriptionController@forceDestroy');
     });
 });
 
@@ -370,4 +367,4 @@ Route::group(['middleware' => 'auth:api'], function () {
 /***************************** NOT AUTHENTICATED ***********************************/
 /***********************************************************************************/
 
-Route::get('document-management/get-file/{path}', 'API\DocumentController@getFile');
+Route::get('document-management/show/{path}', 'API\DocumentController@show');

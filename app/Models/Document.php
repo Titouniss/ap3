@@ -16,7 +16,7 @@ class Document extends Model
     public function getUrlAttribute()
     {
         $pathArray = explode('/', $this->path);
-        return $this->is_file ? URL::to('/api/document-management/get-file') . '/' . array_pop($pathArray) : $this->path;
+        return $this->is_file ? URL::to('/api/document-management/show') . '/' . array_pop($pathArray) : $this->path;
     }
 
     public function getHasModelsAttribute()
@@ -39,6 +39,6 @@ class Document extends Model
         if ($this->is_file) {
             Storage::delete($this->path);
         }
-        $this->delete();
+        return $this->delete();
     }
 }

@@ -21,16 +21,16 @@ const actions = {
     },
     addItem({ commit }, payload) {
         payload.id = "TEMPORARY_ID_" + Math.floor(100000 + Math.random() * 900000);
-        return commit('ADD_OR_UPDATE_ITEM', payload)
+        return commit('ADD_OR_UPDATE_ITEMS', payload)
     },
     editItem({ commit }, payload) {
         return commit('EDIT_ITEM', payload)
     },
     updateItem({ commit }, payload) {
-        commit('ADD_OR_UPDATE_ITEM', payload)
+        commit('ADD_OR_UPDATE_ITEMS', payload)
     },
     removeItem({ commit }, id) {
-        commit('REMOVE_ITEM', id)
+        commit('REMOVE_ITEMS', id)
     },
     emptyItems({ commit }) {
         commit('EMPTY_ITEMS')
