@@ -3,95 +3,74 @@
 namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-
-use App\User;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-
 use Illuminate\Support\Facades\Auth;
-use Validator;
 
-class PermissionController extends Controller
+class PermissionController extends BaseApiController
 {
-    public $successStatus = 200;
+    protected static $company_id_field = null;
+    protected static $index_load = null;
+    protected static $index_append = null;
+    protected static $show_load = null;
+    protected static $show_append = null;
+    protected static $cascade = false;
+
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'name_fr' => 'required',
+        'is_public' => 'required'
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'name_fr' => 'required',
+        'is_public' => 'required'
+    ];
 
     /**
-     * list of items api
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
+    {
+        parent::__construct(Permission::class);
+    }
+
+    protected function filterIndexQuery($query, Request $request)
     {
         $user = Auth::user();
-        $listObject = [];
-        if ($user->is_admin) {
-            $listObject = Permission::orderBy('name', 'desc')->get(); // order important because vuejs have fixed array
-        } else {
-            $listObject = Permission::where('is_public', true)->orderBy('name', 'desc')->get();
+        if (!$user->is_admin) {
+            $query->where('is_public', true);
         }
-        return response()->json(['success' => $listObject], $this->successStatus);
+        if (!$request->has('order_by')) {
+            $query->orderBy('name', 'desc');
+        }
     }
 
-    /**
-     * get single item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Permission $permission)
+    protected function storeItem(array $arrayRequest)
     {
-        return response()->json(['success' => $permission], $this->successStatus);
-    }
+        $user = Auth::user();
 
-    /**
-     * create item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required'
+        $item = Permission::create([
+            'name' => $arrayRequest['name'],
+            'name_fr' => $arrayRequest['name_fr'],
+            'is_public' => $arrayRequest['is_public'] && $user->is_admin,
+            'guard_name' => 'web'
         ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
-        $item = Permission::create($arrayRequest);
-        return response()->json(['success' => $item], $this->successStatus);
+
+        return $item;
     }
 
-    /**
-     * update item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Permission $permission)
+    protected function updateItem($item, array $arrayRequest)
     {
-        $arrayRequest = $request->all();
+        $user = Auth::user();
 
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required'
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'name_fr' => $arrayRequest['name_fr'],
+            'is_public' => $arrayRequest['is_public'] && $user->is_admin,
+            'guard_name' => 'web'
         ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
 
-        $permission->update(['name' => $arrayRequest['name'], 'is_public' => $arrayRequest['is_public']]);
-        return response()->json(['success' => $permission], $this->successStatus);
-    }
-
-    /**
-     * delete item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Permission $permission)
-    {
-        if (!$permission->delete()) {
-            return response()->json(['error' => 'Erreur lors de la suppression'], 500);
-        }
-
-        return response()->json(['success' => true], $this->successStatus);
+        return $item;
     }
 }

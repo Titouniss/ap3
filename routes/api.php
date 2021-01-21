@@ -73,44 +73,24 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************    ROLES    **************************************/
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Role']], function () {
-            Route::get('index', 'API\RoleController@index');
-        });
-        Route::group(['middleware' => ['can:show,role']], function () {
-            Route::get('show/{role}', 'API\RoleController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Role']], function () {
-            Route::post('store', 'API\RoleController@store');
-        });
-        Route::group(['middleware' => ['can:edit,role']], function () {
-            Route::post('update/{role}', 'API\RoleController@update');
-        });
-        Route::group(['middleware' => ['can:delete,role']], function () {
-            Route::put('restore/{role}', 'API\RoleController@restore');
-            Route::delete('destroy/{role}', 'API\RoleController@destroy');
-            Route::delete('forceDelete/{role}', 'API\RoleController@forceDelete');
-        });
+        Route::get('index', 'API\RoleController@index');
+        Route::get('show/{id}', 'API\RoleController@show');
+        Route::post('store', 'API\RoleController@store');
+        Route::put('update/{id}', 'API\RoleController@update');
+        Route::put('restore/{id?}', 'API\RoleController@restore');
+        Route::put('destroy/{id?}', 'API\RoleController@destroy');
+        Route::put('force-destroy/{id?}', 'API\RoleController@forceDestroy');
     });
 
     /***********************************************************************************/
     /********************************    PERMISSIONS  **********************************/
     /***********************************************************************************/
     Route::prefix('permission-management')->group(function () {
-        Route::group(['middleware' => ['can:read,Spatie\Permission\Models\Permission']], function () {
-            Route::get('index', 'API\PermissionController@index');
-        });
-        Route::group(['middleware' => ['can:show,permission']], function () {
-            Route::get('show/{permission}', 'API\PermissionController@show');
-        });
-        Route::group(['middleware' => ['can:publish,Spatie\Permission\Models\Permission']], function () {
-            Route::post('store', 'API\PermissionController@store');
-        });
-        Route::group(['middleware' => ['can:edit,permission']], function () {
-            Route::post('update/{permission}', 'API\PermissionController@update');
-        });
-        Route::group(['middleware' => ['can:delete,permission']], function () {
-            Route::delete('destroy/{permission}', 'API\PermissionController@destroy');
-        });
+        Route::get('index', 'API\PermissionController@index');
+        Route::get('show/{id}', 'API\PermissionController@show');
+        Route::post('store', 'API\PermissionController@store');
+        Route::post('update/{id}', 'API\PermissionController@update');
+        Route::delete('destroy/{id}', 'API\PermissionController@destroy');
     });
 
     /***********************************************************************************/

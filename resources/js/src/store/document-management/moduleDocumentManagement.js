@@ -4,7 +4,11 @@ const slug = 'document-management';
 const model = 'document';
 const model_plurial = 'documents';
 
-const { apiPostFormData, state, getters, actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
+const { apiPostFormData, actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
+
+const state = {};
+
+const getters = {};
 
 const actions = {
     addItem,

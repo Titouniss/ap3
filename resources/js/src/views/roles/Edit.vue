@@ -178,8 +178,9 @@ export default {
       return true;
     },
     permissions() {
-      const permissionsStore = this.$store.state.permissionManagement
-        .permissions;
+      const permissionsStore = this.$store.getters[
+        "permissionManagement/getItems"
+      ];
       let permissions = [];
       if (permissionsStore && permissionsStore.length > 0) {
         permissions = permissionsStore.reduce(function (acc, valeurCourante) {
@@ -207,8 +208,8 @@ export default {
     fetch_data(id) {
       this.$store
         .dispatch("roleManagement/fetchItem", id)
-        .then((res) => {
-          this.role_data = res.data.success;
+        .then((data) => {
+          this.role_data = data.payload;
           if (this.role_data && this.role_data.permissions.length) {
             this.role_data.permissions.forEach((permission) => {
               this.selected[permission.id] = true;
@@ -236,7 +237,6 @@ export default {
       this.$store
         .dispatch("roleManagement/updateItem", payload)
         .then((response) => {
-          console.log("save_changes -> response", response);
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Modification",

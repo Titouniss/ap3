@@ -168,8 +168,9 @@ export default {
       return true;
     },
     permissions() {
-      const permissionsStore = this.$store.state.permissionManagement
-        .permissions;
+      const permissionsStore = this.$store.getters[
+        "permissionManagement/getItems"
+      ];
       let permissions = [];
       if (permissionsStore && permissionsStore.length > 0) {
         permissions = permissionsStore.reduce(function (acc, valeurCourante) {
