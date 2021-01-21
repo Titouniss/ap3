@@ -63,13 +63,13 @@ class SubscriptionController extends BaseApiControllerWithSoftDelete
      */
     public function packages()
     {
-        if ($result = $this->permissionErrors('read')) {
-            return $result;
+        if ($error = $this->permissionErrors('read')) {
+            return $error;
         }
 
-        $items = Package::select("id", "name", "display_name");
+        $items = Package::select("id", "name", "display_name")->get();
 
-        return $this->successResponse($items->get());
+        return $this->successResponse($items);
     }
 
     protected function storeItem(array $arrayRequest)

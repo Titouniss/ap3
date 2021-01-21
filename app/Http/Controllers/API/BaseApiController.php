@@ -232,6 +232,13 @@ abstract class BaseApiController extends Controller
         return $this->successResponse($item, 'Mise à jour terminée avec succès.');
     }
 
+    /**
+     * Deletes the item from storage.
+     */
+    protected function destroyItem($item)
+    {
+        return $item->delete();
+    }
 
     /**
      * Delete the specified resource from storage.
@@ -245,7 +252,7 @@ abstract class BaseApiController extends Controller
 
         DB::beginTransaction();
         try {
-            if (!$item->delete()) {
+            if (!$this->destroyItem($item)) {
                 throw new Exception();
             }
         } catch (\Throwable $th) {
@@ -316,6 +323,7 @@ abstract class BaseApiController extends Controller
             'success' => false,
             'message' => $message
         ];
+
         return response()->json($response, $status_code ?? static::$response_codes['error_request']);
     }
 }

@@ -327,34 +327,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************   Modules   *************************************/
     /***********************************************************************************/
     Route::prefix('module-management')->group(function () {
-        Route::get('sync/{module}', 'API\ModuleController@sync');
-        Route::group(['middleware' => ['can:read,App\Models\BaseModule']], function () {
-            Route::get('index', 'API\ModuleController@index');
-            Route::post('test-connection', 'API\ModuleController@testConnection');
-        });
-        Route::group(['middleware' => ['can:show,module']], function () {
-            Route::get('show/{module}', 'API\ModuleController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\BaseModule']], function () {
-            Route::post('store', 'API\ModuleController@store');
-            Route::post('module-update/{id}', 'API\ModuleController@updateModule');
-        });
-        Route::group(['middleware' => ['can:edit,module']], function () {
-            Route::post('update/{module}', 'API\ModuleController@update');
-            Route::post('module-data-types-update/{module}', 'API\ModuleController@updateModuleDataTypes');
-        });
-        Route::group(['middleware' => ['can:delete,module']], function () {
-            Route::delete('destroy/{module}', 'API\ModuleController@destroy');
-        });
-    });
-
-    /***********************************************************************************/
-    /***********************************   DataTypes   *************************************/
-    /***********************************************************************************/
-    Route::prefix('data-type-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\BaseModule']], function () {
-            Route::get('index', 'API\DataTypeController@index');
-        });
+        Route::get('index', 'API\ModuleController@index');
+        Route::get('data-types', 'API\ModuleController@dataTypes');
+        Route::post('test', 'API\ModuleController@testConnection');
+        Route::get('show/{id}', 'API\ModuleController@show');
+        Route::post('store', 'API\ModuleController@store');
+        Route::get('sync/{id}', 'API\ModuleController@sync');
+        Route::put('update/{id}', 'API\ModuleController@update');
+        Route::put('update-connection/{id}', 'API\ModuleController@updateConnection');
+        Route::put('update-data-types/{id}', 'API\ModuleController@updateDataTypes');
+        Route::delete('destroy/{id}', 'API\ModuleController@destroy');
     });
 
     /***********************************************************************************/

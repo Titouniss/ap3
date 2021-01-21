@@ -18,6 +18,11 @@ class BaseModule extends Model
         return $this->modulable_type === SqlModule::class ? "sql" : "api";
     }
 
+    public function getConnectionAttribute()
+    {
+        return $this->modulable->connection_data;
+    }
+
     public function modulable()
     {
         return $this->morphTo();

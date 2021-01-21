@@ -36,7 +36,6 @@ class Document extends Model
 
     public function deleteFile()
     {
-        ModelHasDocuments::where('document_id', $this->id)->delete();
         if ($this->is_file) {
             Storage::delete($this->path);
         }

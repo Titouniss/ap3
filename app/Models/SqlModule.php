@@ -12,6 +12,7 @@ use stdClass;
 class SqlModule extends BaseModule
 {
     protected $fillable = ['driver', 'host', 'port', 'charset', 'database', 'username', 'password'];
+    protected $hidden = ['connection'];
 
     public $timestamps = false;
 
@@ -20,22 +21,18 @@ class SqlModule extends BaseModule
         return $this->morphOne(BaseModule::class, 'modulable');
     }
 
-    public function connectionData()
+    public function getConnectionDataAttribute()
     {
-        $data = [
-            'driver' => $this->driver,
-            'host' => $this->host,
-            'charset' => $this->charset,
-            'database' => $this->database,
-            'username' => $this->username,
-            'password' => $this->password,
+        return [
+            'id' => $this->id,
+            'driver' => $this->driver ?? "",
+            'host' => $this->host ?? "",
+            'port' => $this->port ?? "",
+            'charset' => $this->charset ?? "",
+            'database' => $this->database ?? "",
+            'username' => $this->username ?? "",
+            'has_password' => $this->password !== null,
         ];
-
-        if ($this->driver !== 'sqlite') {
-            $data['port'] = $this->port;
-        }
-
-        return $data;
     }
 
     public function getRows(ModuleDataType $mdt)
@@ -43,7 +40,7 @@ class SqlModule extends BaseModule
         $rows = [];
         $lowestUniqueId = 0;
         try {
-            Config::set('database.connections.' . $this->module->name, $this->connectionData());
+            Config::set('database.connections.' . $this->module->name, $this->connection_data);
             DB::purge($this->module->name);
 
             $query = DB::connection($this->module->name)->table($mdt->source);

@@ -111,6 +111,4 @@ export default function (slug, model, model_plurial, sort_items = null) {
         }
 
     }
-
-
 }
