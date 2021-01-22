@@ -9,6 +9,7 @@ trait ReturnsJsonResponse
         'error_request' => 400,
         'error_unauthorized' => 403,
         'error_not_found' => 404,
+        'error_conflict' => 409,
         'error_server' => 500
     ];
 
@@ -18,6 +19,14 @@ trait ReturnsJsonResponse
     protected function notFoundResponse()
     {
         return $this->errorResponse("Ressource introuvable.", static::$response_codes['error_not_found']);
+    }
+
+    /**
+     * Returns an unauthorized response.
+     */
+    protected function unauthorizedResponse()
+    {
+        return $this->errorResponse("Accès non authorisé.", static::$response_codes['error_unauthorized']);
     }
 
     /**
@@ -33,17 +42,19 @@ trait ReturnsJsonResponse
         if ($extra != null) {
             $response = array_merge($response, $extra);
         }
+
         return response()->json($response, static::$response_codes['success']);
     }
 
     /**
-     * Returns a successful response.
+     * Returns an error response.
      */
-    protected function errorResponse(string $message, int $status_code = null)
+    protected function errorResponse(string $message, int $status_code = null, $payload = null)
     {
         $response = [
             'success' => false,
-            'message' => $message
+            'message' => $message,
+            'payload' => $payload
         ];
 
         return response()->json($response, $status_code ?? static::$response_codes['error_request']);

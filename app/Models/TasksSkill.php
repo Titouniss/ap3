@@ -2,11 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class TasksSkill extends Model
+class TasksSkill extends BaseModel
 {
     public $timestamps = false;
-    
     protected $fillable = ['task_id', 'skill_id'];
 }

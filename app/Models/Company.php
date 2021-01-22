@@ -3,10 +3,9 @@
 namespace App\Models;
 
 use App\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Company extends Model
+class Company extends BaseModel
 {
     use SoftDeletes;
 
@@ -46,7 +45,7 @@ class Company extends Model
 
     public function module()
     {
-        return $this->hasOne(BaseModule::class, 'company_id', 'id');
+        return $this->hasOne(BaseModule::class, 'company_id', 'id')->where('is_active', true);
     }
 
     public function skills()

@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
-class Document extends Model
+class Document extends BaseModel
 {
     protected $fillable = ['id', 'name', 'path', 'token', 'is_file'];
     protected $appends = ['url'];

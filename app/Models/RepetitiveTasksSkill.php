@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class RepetitiveTasksSkill extends Model
+class RepetitiveTasksSkill extends BaseModel
 {
     public $timestamps = false;
-    
+
     protected $fillable = ['repetitive_task_id', 'skill_id'];
 }

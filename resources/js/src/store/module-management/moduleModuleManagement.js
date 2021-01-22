@@ -1,10 +1,11 @@
-import crud from "../utils/crud";
+import { apiRequest } from "@/http/requests";
+import { crud } from "../utils";
 
 const slug = 'module-management';
 const model = 'module';
 const model_plurial = 'modules';
 
-const { apiRequest, state, getters, actions, mutations } = crud(slug, model, model_plurial);
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
 
 state.data_types = [];
 

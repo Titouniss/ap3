@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class ModuleDataType extends Model
+class ModuleDataType extends BaseModel
 {
     protected $fillable = ['source', 'data_type_id', 'module_id'];
     protected $hidden = ['created_at', 'updated_at'];

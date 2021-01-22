@@ -371,15 +371,15 @@ const router = new Router({
                         rule: "editor"
                     }
                 },
-                {
-                    path: "/pages/register/:token/:email",
-                    name: "page-register",
-                    component: () =>
-                        import("@/views/pages/register/RegisterWithToken.vue"),
-                    meta: {
-                        rule: "editor"
-                    }
-                },
+                // {
+                //     path: "/pages/register/:token/:email",
+                //     name: "page-register",
+                //     component: () =>
+                //         import("@/views/pages/register/RegisterWithToken.vue"),
+                //     meta: {
+                //         rule: "editor"
+                //     }
+                // },
                 {
                     path: "/pages/forgot-password",
                     name: "page-forgot-password",
@@ -391,7 +391,7 @@ const router = new Router({
                 {
                     path: "/pages/reset-password/:token/:email",
                     name: "page-reset-password",
-                    component: () => import("@/views/pages/RPassword.vue"),
+                    component: () => import("@/views/pages/ResetPassword.vue"),
                     meta: {
                         rule: "editor"
                     }
@@ -466,14 +466,14 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
     let isAuthenticated = false;
-    const expiresAt = localStorage.getItem("tokenExpires");
+    const expiresAt = localStorage.getItem("token_expires_at");
     if (expiresAt && expiresAt !== null) {
         axios.defaults.headers.common[
             "Authorization"
         ] = `Bearer ${localStorage.getItem("token")}`;
         isAuthenticated =
             moment().unix() < expiresAt &&
-            localStorage.getItem("loggedIn") === "true";
+            localStorage.getItem("logged_in");
     }
 
     if (
@@ -489,14 +489,14 @@ router.beforeEach((to, from, next) => {
     // If auth required, check login. If login fails redirect to login page
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
-            localStorage.setItem("loggedIn", false);
+            localStorage.setItem("logged_in", false);
             router.push({ path: "/pages/login", query: { to: to.path } });
         } else {
             // Update expireAt
             let newExpireAt = moment()
                 .add(2, "hours")
                 .unix();
-            localStorage.setItem("tokenExpires", newExpireAt);
+            localStorage.setItem("token_expires_at", newExpireAt);
         }
     }
 

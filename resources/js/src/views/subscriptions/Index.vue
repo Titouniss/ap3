@@ -465,9 +465,11 @@ export default {
           console.error(err);
         });
     } else {
-      this.$store.dispatch("subscriptionManagement/fetchItems").catch((err) => {
-        console.error(err);
-      });
+      this.$store
+        .dispatch("subscriptionManagement/fetchItems", { with_trashed: true })
+        .catch((err) => {
+          console.error(err);
+        });
     }
     this.$store
       .dispatch("subscriptionManagement/fetchPackages")

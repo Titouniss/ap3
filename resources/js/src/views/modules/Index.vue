@@ -305,9 +305,11 @@ export default {
       moduleCompanyManagement.isRegistered = true;
     }
 
-    this.$store.dispatch("moduleManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("moduleManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
     if (this.$store.getters.userHasPermissionTo(`read companies`)) {
       this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
         console.error(err);

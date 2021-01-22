@@ -2,16 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Task;
+use App\Traits\HasCompany;
 use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
-class Project extends Model
+class Project extends BaseModel
 {
-    use HasDocuments, SoftDeletes;
-
+    use HasDocuments, SoftDeletes, HasCompany;
 
     protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
@@ -22,11 +20,6 @@ class Project extends Model
         return floor(100 * ($this->tasks->isNotEmpty() ? $this->tasks->filter(function ($task) {
             return $task->status === "done";
         })->count() / $this->tasks->count() : 0));
-    }
-
-    public function company()
-    {
-        return $this->belongsTo(Company::class, 'company_id', 'id')->withTrashed();
     }
 
     public function customer()

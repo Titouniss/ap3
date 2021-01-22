@@ -443,9 +443,11 @@ export default {
       moduleTaskManagement.isRegistered = true;
     }
 
-    this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("skillManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
     if (this.authorizedTo("read", "companies")) {
       this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
         console.error(err);

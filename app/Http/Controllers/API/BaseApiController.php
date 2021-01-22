@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Traits\ReturnsJsonResponse;
 use Exception;
 use Illuminate\Http\Request;
@@ -17,13 +19,13 @@ abstract class BaseApiController extends Controller
     protected static $per_page = 25;
 
     protected $model;
-    protected static $company_id_field = null;
     protected static $index_load = null;
     protected static $index_append = null;
     protected static $show_load = null;
     protected static $show_append = null;
     protected static $store_validation_array = [];
     protected static $update_validation_array = [];
+    protected static $cascade = false;
 
     /**
      * Create a new controller instance.
@@ -36,6 +38,7 @@ abstract class BaseApiController extends Controller
     /**
      * Provides custom filtering for the index query
      *
+     * @throws \App\Exceptions\ApiException
      * @throws \Exception
      */
     protected function filterIndexQuery($query, Request $request)
@@ -55,14 +58,18 @@ abstract class BaseApiController extends Controller
         $query = $model->select($model->getTable() . ".*");
 
         $user = Auth::user();
-        if (!$user->is_admin && static::$company_id_field !== null) {
-            $query->where(static::$company_id_field, $user->company_id);
+        if (!$user->is_admin) {
+            if ($model->hasCompany()) {
+                $query->where('company_id', $user->company_id);
+            } else if ($this->model == Company::class) {
+                $query->where('companies.id', $user->company_id);
+            }
         }
 
         $extra = [];
 
         try {
-            if ($request->has('with_trashed') && $request->with_trashed) {
+            if ($model->usesSoftDelete() && $request->has('with_trashed') && $request->with_trashed) {
                 $query->withTrashed();
             }
 
@@ -108,6 +115,8 @@ abstract class BaseApiController extends Controller
             if (static::$index_load) {
                 $query->with(static::$index_load);
             }
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -145,6 +154,7 @@ abstract class BaseApiController extends Controller
     /**
      * Stores a new resource in storage based off of a request.
      *
+     * @throws \App\Exceptions\ApiException
      * @throws \Exception
      */
     protected abstract function storeItem(array $arrayRequest);
@@ -168,6 +178,9 @@ abstract class BaseApiController extends Controller
         DB::beginTransaction();
         try {
             $item = $this->storeItem($arrayRequest);
+        } catch (ApiException $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
         } catch (\Throwable $th) {
             DB::rollBack();
             return $this->errorResponse($th->getMessage());
@@ -188,6 +201,7 @@ abstract class BaseApiController extends Controller
     /**
      * Updates the specified resource in storage based off of a request.
      *
+     * @throws \App\Exceptions\ApiException
      * @throws \Exception
      */
     protected abstract function updateItem($item, array $arrayRequest);
@@ -211,6 +225,9 @@ abstract class BaseApiController extends Controller
         DB::beginTransaction();
         try {
             $item = $this->updateItem($item, $arrayRequest);
+        } catch (ApiException $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
         } catch (\Throwable $th) {
             DB::rollBack();
             return $this->errorResponse($th->getMessage());
@@ -229,18 +246,161 @@ abstract class BaseApiController extends Controller
     }
 
     /**
-     * Deletes the item from storage.
+     * Restores the item in storage.
+     *
+     * @throws \App\Exceptions\ApiException
+     * @throws \Exception
      */
-    protected function destroyItem($item)
+    protected function restoreItem($item)
     {
-        return $item->delete();
+        return static::$cascade ? $item->restoreCascade() : $item->restore();
     }
 
     /**
-     * Delete the specified resources from storage.
+     * Restore the specified resource in storage.
+     */
+    public function restore(Request $request, int $id = null)
+    {
+        if (!app($this->model)->usesSoftDelete()) {
+            return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
+        }
+
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
+        }
+
+        DB::beginTransaction();
+        foreach ($ids as $idToRestore) {
+            $item = app($this->model)->withTrashed()->find($idToRestore);
+            if ($error = $this->itemErrors($item, 'delete')) {
+                DB::rollBack();
+                return $error;
+            }
+
+            try {
+                if (!$this->restoreItem($item)) {
+                    throw new Exception();
+                }
+            } catch (ApiException $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse("Erreur lors de la restauration.", static::$response_codes['error_server']);
+            }
+        }
+        DB::commit();
+
+        $items = app($this->model)->whereIn('id', $ids)->get();
+
+        if (static::$show_load) {
+            $items->load(static::$show_load);
+        }
+
+        if (static::$show_append) {
+            $items->each->append(static::$show_append);
+        }
+
+        return $this->successResponse($items, "Restauration terminé avec succès.");
+    }
+
+    /**
+     * Soft deletes the item from storage.
+     *
+     * @throws \App\Exceptions\ApiException
+     * @throws \Exception
+     */
+    protected function destroyItem($item)
+    {
+        return static::$cascade ? $item->deleteCascade() : $item->delete();
+    }
+
+    /**
+     * Soft deletes the specified resources from storage.
      */
     public function destroy(Request $request, int $id = null)
     {
+        $usesSoftDelete = app($this->model)->usesSoftDelete();
+
+        $ids = collect($id ? [$id] : []);
+        if ($ids->isEmpty()) {
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, [
+                'ids' => 'required|array'
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+            $ids = collect($arrayRequest['ids']);
+        }
+
+        DB::beginTransaction();
+        foreach ($ids as $idToArchive) {
+            $item = app($this->model)->find($idToArchive);
+            if ($error = $this->itemErrors($item, 'delete')) {
+                DB::rollBack();
+                return $error;
+            }
+
+            try {
+                if (!$this->destroyItem($item)) {
+                    throw new Exception();
+                }
+            } catch (ApiException $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse("Erreur lors de " . $usesSoftDelete ? "l'archivage." : "la suppression.", static::$response_codes['error_server']);
+            }
+        }
+        DB::commit();
+
+        if ($usesSoftDelete) {
+            $items = app($this->model)->withTrashed()->whereIn('id', $ids)->get();
+
+            if (static::$show_load) {
+                $items->load(static::$show_load);
+            }
+
+            if (static::$show_append) {
+                $items->each->append(static::$show_append);
+            }
+
+            return $this->successResponse($items, "Archivage terminé avec succès.");
+        }
+
+        return $this->successResponse(true, 'Suppression terminée avec succès.');
+    }
+
+    /**
+     * Deletes the item from storage.
+     *
+     * @throws \App\Exceptions\ApiException
+     * @throws \Exception
+     */
+    protected function forceDestroyItem($item)
+    {
+        return $item->forceDelete();
+    }
+
+    /**
+     * Deletes the specified resources from storage.
+     */
+    public function forceDestroy(Request $request, int $id = null)
+    {
+        if (!app($this->model)->usesSoftDelete()) {
+            return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
+        }
+
         $ids = collect($id ? [$id] : []);
         if ($ids->isEmpty()) {
             $arrayRequest = $request->all();
@@ -255,19 +415,23 @@ abstract class BaseApiController extends Controller
 
         DB::beginTransaction();
         foreach ($ids as $idToDelete) {
-            $item = app($this->model)->find($idToDelete);
+            $item = app($this->model)->withTrashed()->find($idToDelete);
             if ($error = $this->itemErrors($item, 'delete')) {
                 DB::rollBack();
                 return $error;
             }
 
             try {
-                if (!$this->destroyItem($item)) {
+                if (!$this->forceDestroyItem($item)) {
                     throw new Exception();
                 }
+            } catch (ApiException $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
             } catch (\Throwable $th) {
                 DB::rollBack();
-                return $this->errorResponse('Erreur lors de la suppression.', static::$response_codes['error_server']);
+                return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+                return $this->errorResponse("Erreur lors de la suppression.", static::$response_codes['error_server']);
             }
         }
         DB::commit();
@@ -295,7 +459,7 @@ abstract class BaseApiController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->cant($perm, $item ?? $this->model)) {
-            return $this->errorResponse("Accès non autorisé.", static::$response_codes['error_unauthorized']);
+            return $this->unauthorizedResponse();
         }
 
         return null;

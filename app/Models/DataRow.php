@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class DataRow extends Model
+class DataRow extends BaseModel
 {
     protected $fillable = ['name', 'field', 'required', 'type', 'details'];
     public $timestamps = false;

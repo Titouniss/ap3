@@ -1,12 +1,10 @@
-import crud from "../utils/crud";
+import { crud } from "../utils";
 
 const slug = 'range-management';
 const model = 'range';
 const model_plurial = 'ranges';
 
 const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
-
-getters.getItemsForCompany = state => id => state.ranges.filter(range => range.company_id === id);
 
 export default {
     isRegistered: false,

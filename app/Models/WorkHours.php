@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class WorkHours extends Model
+class WorkHours extends BaseModel
 {
     protected $table = 'user_work_hours';
     protected $fillable = ['day', 'morning_starts_at', 'morning_ends_at', 'afternoon_starts_at', 'afternoon_ends_at', 'is_active', 'user_id'];
+    protected $hidden = ['created_at', 'updated_at'];
 
     public static $days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 

@@ -4,13 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Skill;
 use App\Models\Task;
-use App\Models\TasksSkill;
 use Exception;
 use Illuminate\Http\Request;
 
-class SkillController extends BaseApiControllerWithSoftDelete
+class SkillController extends BaseApiController
 {
-    protected static $company_id_field = 'company_id';
     protected static $index_load = ['company:id,name'];
     protected static $index_append = null;
     protected static $show_load = ['company:id,name'];

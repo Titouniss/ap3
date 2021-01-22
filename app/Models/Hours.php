@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
-class Hours extends Model
+class Hours extends BaseModel
 {
-
     protected $fillable = ['start_at', 'end_at', 'description', 'user_id', 'project_id'];
-
     protected $appends = ['duration', 'durationInFloatHour'];
 
     public function getDurationAttribute()

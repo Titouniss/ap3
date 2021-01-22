@@ -18,23 +18,27 @@ Route::prefix('auth')->group(function () {
     /***********************************************************************************/
     /********************************    USER     **************************************/
     /***********************************************************************************/
-    Route::post('checkUsernamePwdBeforeLogin', 'API\UserController@checkUsernamePwdBeforeLogin');
-    Route::post('login', 'API\UserController@login');
-    Route::get('user', 'API\UserController@getUserByToken');
-    Route::get('user/registration/{token}', 'API\UserController@getUserForRegistration');
+    // Route::post('checkUsernamePwdBeforeLogin', 'API\UserController@checkUsernamePwdBeforeLogin');
+    // Route::get('user', 'API\UserController@getUserByToken');
+    // Route::get('user/registration/{token}', 'API\UserController@getUserForRegistration');
+    // Route::post('register/{token}', 'API\UserController@registerWithToken');
 
+    Route::post('login', 'API\UserController@login');
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
-    Route::post('register/{token}', 'API\UserController@registerWithToken');
 
     // handle reset password form process
-    Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
-    Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
-    Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
-    Route::post('updatePasswordBeforeLogin', 'API\UserController@updatePasswordBeforeLogin');
+    Route::prefix('password')->group(function () {
+        Route::post('forgot', 'Auth\ForgotPasswordController@getResetToken');
+        Route::get('reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
+        Route::post('reset', 'Auth\ResetPasswordController@callResetPassword');
+        Route::post('update', 'API\UserController@updatePasswordBeforeLogin');
+    });
 
-    Route::get('email/verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
-    Route::post('email/resend', 'API\UserController@resendVerification');
+    Route::prefix('email')->group(function () {
+        Route::get('verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
+        Route::post('resend', 'API\UserController@resendVerification');
+    });
 });
 
 /***********************************************************************************/
@@ -46,26 +50,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************    USERS    **************************************/
     /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
-        Route::group(['middleware' => ["can:read,App\User"]], function () {
-            Route::get('index', 'API\UserController@index');
-        });
-        Route::group(['middleware' => ["can:show,user"]], function () {
-            Route::get('show/{user}', 'API\UserController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\User']], function () {
-            Route::post('store', 'API\UserController@store');
-        });
-        Route::group(['middleware' => ['can:edit,user']], function () {
-            Route::post('update/{user}', 'API\UserController@update');
-            Route::post('updateAccount/{user}', 'API\UserController@updateAccount');
-            Route::post('updatePassword/{user}', 'API\UserController@updatePassword');
-            Route::post('updateWorkHours/{user}', 'API\UserController@updateWorkHours');
-        });
-        Route::group(['middleware' => ['can:delete,user']], function () {
-            Route::put('restore/{user}', 'API\UserController@restore');
-            Route::delete('destroy/{user}', 'API\UserController@destroy');
-            Route::delete('forceDelete/{user}', 'API\UserController@forceDelete');
-        });
+        Route::get('index', 'API\UserController@index');
+        Route::get('show/{id}', 'API\UserController@show');
+        Route::post('store', 'API\UserController@store');
+        Route::put('update-account', 'API\UserController@updateAccount');
+        Route::put('update-password', 'API\UserController@updatePassword');
+        Route::put('update/{id}/work-hours', 'API\UserController@updateWorkHours');
+        Route::put('update/{id}', 'API\UserController@update');
+        Route::put('restore/{id?}', 'API\UserController@restore');
+        Route::put('destroy/{id?}', 'API\UserController@destroy');
+        Route::put('force-destroy/{id?}', 'API\UserController@forceDestroy');
     });
 
 

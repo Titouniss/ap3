@@ -1,10 +1,11 @@
-import crud from "../utils/crud";
+import { apiRequest } from "@/http/requests";
+import { crud } from "../utils";
 
 const slug = 'repetitive-task-management';
 const model = 'repetitive_task'
 const model_plurial = 'repetitive_tasks'
 
-const { apiRequest, state, getters, mutations } = crud(slug, model, model_plurial, (a, b) => a.order - b.order);
+const { state, getters, mutations } = crud(slug, model, model_plurial, (a, b) => a.order - b.order);
 
 const actions = {
     fetchItemsByRange({ commit }, id) {

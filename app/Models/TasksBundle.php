@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasCompany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TasksBundle extends Model
+class TasksBundle extends BaseModel
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCompany;
 
     protected $fillable = ['id', 'company_id', 'project_id'];
 }

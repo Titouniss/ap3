@@ -287,24 +287,19 @@ export default {
       return this.itemLocal.related_users;
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     companySkills() {
-      const companyId = this.itemLocal.company_id;
-      if (companyId && this.companiesData && this.companiesData.length > 0) {
-        return this.companiesData.find((company) => company.id === companyId)
-          .skills;
-      }
-
-      return [];
+      return this.itemLocal.company_id
+        ? this.$store.getters["skillManagement/getItemsByCompany"](
+            this.itemLocal.company_id
+          )
+        : [];
     },
     rolesData() {
-      return this.$store.getters["roleManagement/getItemsForCompany"](
+      return this.$store.getters["roleManagement/getItemsByCompany"](
         this.itemLocal.company_id
       );
-    },
-    skillsData() {
-      return this.$store.state.skillManagement.skills;
     },
     disabled() {
       if (this.isAdmin) {
@@ -334,8 +329,8 @@ export default {
 
       this.$store
         .dispatch("userManagement/fetchItem", id)
-        .then((res) => {
-          let item = res.data.success;
+        .then((data) => {
+          let item = data.payload;
           // Get skills
           let skill_ids = [];
           if (item.skills.length > 0) {
@@ -359,7 +354,6 @@ export default {
             this.itemLocal.login = "";
             //this.getCompanyName();
           }
-
           this.$vs.loading.close();
         })
         .catch((err) => {
@@ -388,7 +382,7 @@ export default {
       const payload = JSON.parse(JSON.stringify(this.itemLocal));
 
       // Parse login
-      payload.full_login = "".concat(this.company_login, this.itemLocal.login);
+      payload.login = "".concat(this.company_login, this.itemLocal.login);
 
       // Filter skills
       payload.skills = this.companySkills

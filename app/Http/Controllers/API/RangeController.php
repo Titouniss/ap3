@@ -7,11 +7,10 @@ use App\Models\RepetitiveTask;
 use App\Models\RepetitiveTasksSkill;
 use App\Traits\StoresDocuments;
 
-class RangeController extends BaseApiControllerWithSoftDelete
+class RangeController extends BaseApiController
 {
     use StoresDocuments;
 
-    protected static $company_id_field = 'company_id';
     protected static $index_load = ['company:id,name'];
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'repetitive_tasks'];

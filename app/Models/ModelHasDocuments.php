@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class ModelHasDocuments extends Model
+class ModelHasDocuments extends BaseModel
 {
     protected $fillable = ['document_id', 'model_id', 'model'];
     protected $table = "model_has_documents";

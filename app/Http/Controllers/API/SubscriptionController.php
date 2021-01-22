@@ -9,9 +9,8 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 
-class SubscriptionController extends BaseApiControllerWithSoftDelete
+class SubscriptionController extends BaseApiController
 {
-    protected static $company_id_field = 'company_id';
     protected static $index_load = ['company:id,name', 'packages:id,name,display_name'];
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'packages:id,name,display_name'];

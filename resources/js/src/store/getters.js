@@ -37,11 +37,11 @@ const getters = {
             ) > -1
         );
     },
-    module: state => state.module,
+    module: state => state.AppActiveUser.module,
     moduleUsesSlug: state => slug =>
-        state.module &&
-        state.module.module_data_types &&
-        state.module.module_data_types.findIndex(
+        state.AppActiveUser.module &&
+        state.AppActiveUser.module.module_data_types &&
+        state.AppActiveUser.module.module_data_types.findIndex(
             mdt => mdt.data_type.slug === slug
         ) > -1
 };

@@ -2,19 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasCompany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Workarea extends Model
+class Workarea extends BaseModel
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCompany;
 
     protected $fillable = ['name', 'max_users', 'company_id'];
-
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
-    }
 
     public function skills()
     {

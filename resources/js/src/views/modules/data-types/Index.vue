@@ -183,9 +183,6 @@
 import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 
-// Store Module
-import moduleDataTypeManagement from "@/store/data-type-management/moduleDataTypeManagement.js";
-
 import errorMessage from "./errorValidForm";
 Validator.localize("fr", errorMessage);
 

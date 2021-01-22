@@ -2,7 +2,7 @@
   <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo">
     <div class="text-right leading-tight hidden sm:block">
       <p class="font-semibold">{{ displayName }}</p>
-      <small>{{company}}</small>
+      <small>{{ company }}</small>
     </div>
 
     <vs-dropdown vs-custom-content vs-trigger-click class="cursor-pointer">
@@ -16,7 +16,11 @@
           height="40"
           class="rounded-full shadow-md cursor-pointer block"
         />
-        <vs-avatar v-if="!activeUserInfo.photoURL" size="large" :text="displayName" />
+        <vs-avatar
+          v-if="!activeUserInfo.photoURL"
+          size="large"
+          :text="displayName"
+        />
       </div>
 
       <vs-dropdown-menu class="vx-navbar-dropdown">
@@ -50,7 +54,7 @@ export default {
     return {
       company: null,
       userId: null,
-      displayName: ""
+      displayName: "",
     };
   },
   computed: {
@@ -76,34 +80,34 @@ export default {
         }
       } else {
         this.$store
-          .dispatch("auth/logoutJWT", localStorage.getItem("token"))
+          .dispatch("auth/logout")
           .then(() => {
             this.$router.push("/pages/login").catch(() => {});
           })
-          .catch(error => {
+          .catch((error) => {
             this.$router.push("/pages/login").catch(() => {});
           });
       }
       return user;
-    }
+    },
   },
   methods: {
     logout() {
       this.$vs.loading();
       this.$store
-        .dispatch("auth/logoutJWT", localStorage.getItem("token"))
+        .dispatch("auth/logout")
         .then(() => {
           this.$vs.loading.close();
           this.$router.push("/pages/login").catch(() => {});
         })
-        .catch(error => {
+        .catch((error) => {
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
         });
     },
@@ -111,7 +115,7 @@ export default {
       this.$router
         .push("/users/user-profil-edit/" + this.userId)
         .catch(() => {});
-    }
-  }
+    },
+  },
 };
 </script>

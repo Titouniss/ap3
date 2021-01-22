@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends BaseApiController
 {
-    protected static $company_id_field = null;
     protected static $index_load = null;
     protected static $index_append = null;
     protected static $show_load = null;

@@ -107,7 +107,7 @@ const mutations = {
     UPDATE_USER_INFO(state, payload) {
         // Get Data localStorage
         const userInfo =
-            JSON.parse(localStorage.getItem("userInfo")) || state.AppActiveUser;
+            JSON.parse(localStorage.getItem("user_info")) || state.AppActiveUser;
         for (const property of Object.keys(payload)) {
             if (payload[property] !== null) {
                 // If some of user property is null - user default property defined in state.AppActiveUser
@@ -118,7 +118,7 @@ const mutations = {
             }
         }
         // Store data in localStorage
-        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+        localStorage.setItem("user_info", JSON.stringify(userInfo));
     },
     CLEAN_USER_INFO(state) {
         state.AppActiveUser = {
@@ -127,11 +127,8 @@ const mutations = {
             lastname: null
         };
         // Store data in localStorage
-        localStorage.setItem("userInfo", JSON.stringify(state.AppActiveUser));
+        localStorage.setItem("user_info", JSON.stringify(state.AppActiveUser));
     },
-    SET_MODULE(state, payload) {
-        state.module = payload;
-    }
 };
 
 export default mutations;

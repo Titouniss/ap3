@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use App\Models\Company;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasCompany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Subscription extends Model
+class Subscription extends BaseModel
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCompany;
 
     protected $fillable = ['company_id', 'starts_at', 'ends_at', 'state', 'is_trial'];
     protected $dates = ['starts_at', 'ends_at'];
@@ -21,11 +20,6 @@ class Subscription extends Model
             $permissions = $permissions->merge($package->permissions);
         }
         return $permissions->unique();
-    }
-
-    public function company()
-    {
-        return $this->belongsTo(Company::class, 'company_id');
     }
 
     public function packages()

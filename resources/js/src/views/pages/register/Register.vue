@@ -136,7 +136,7 @@
               <vs-button
                 color="primary"
                 text-color="white"
-                @click="registerUserJWt"
+                @click="register"
                 :disabled="!validateForm"
                 >S'inscrire</vs-button
               >
@@ -192,7 +192,7 @@ export default {
   methods: {
     checkLogin() {
       // If user is already logged in notify
-      if (this.$store.state.auth.isUserLoggedIn()) {
+      if (this.$store.getters["auth.isUserLoggedIn"]) {
         // Close animation if passed as payload
         // this.$vs.loading.close()
 
@@ -208,27 +208,24 @@ export default {
       }
       return true;
     },
-    registerUserJWt() {
+    register() {
       this.$vs.loading();
       // If form is not validated or user is already login return
       if (!this.validateForm || !this.checkLogin()) return;
 
       const payload = {
-        userDetails: {
-          firstname: this.firstname,
-          lastname: this.lastname,
-          companyName: this.company,
-          contact_function: this.contact_function,
-          email: this.email,
-          contact_tel1: this.contact_tel1,
-          password: this.password,
-          confirmPassword: this.confirm_password,
-          isTermsConditionAccepted: this.isTermsConditionAccepted,
-        },
-        notify: this.$vs.notify,
+        firstname: this.firstname,
+        lastname: this.lastname,
+        company_name: this.company,
+        contact_function: this.contact_function,
+        email: this.email,
+        contact_tel1: this.contact_tel1,
+        password: this.password,
+        c_password: this.confirm_password,
+        terms_accepted: this.isTermsConditionAccepted,
       };
       this.$store
-        .dispatch("auth/registerUserJWT", payload)
+        .dispatch("auth/register", payload)
         .then(() => {
           this.$vs.notify({
             title: "Inscription réussi !",

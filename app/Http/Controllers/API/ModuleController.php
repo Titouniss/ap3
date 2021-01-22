@@ -2,24 +2,20 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Models\ApiModule;
 use App\Models\BaseModule;
-use App\Models\Company;
 use App\Models\DataType;
 use App\Models\ModuleDataRow;
 use App\Models\ModuleDataType;
 use App\Models\SqlModule;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ModuleController extends BaseApiController
 {
-    protected static $company_id_field = 'company_id';
     protected static $index_load = ['company:id,name'];
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'moduleDataTypes', 'moduleDataTypes.moduleDataRows'];

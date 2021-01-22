@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class DataType extends Model
+class DataType extends BaseModel
 {
     protected $fillable = ['slug', 'display_name_singular', 'display_name_plurial', 'model', 'order'];
     public $timestamps = false;

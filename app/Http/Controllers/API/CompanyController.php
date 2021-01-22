@@ -10,9 +10,8 @@ use Carbon\Carbon;
 use Exception;
 use Validator;
 
-class CompanyController extends BaseApiControllerWithSoftDelete
+class CompanyController extends BaseApiController
 {
-    protected static $company_id_field = 'id';
     protected static $index_load = [];
     protected static $index_append = ['active_subscription'];
     protected static $show_load = ['skills:id,name,company_id', 'subscriptions', 'subscriptions.packages'];

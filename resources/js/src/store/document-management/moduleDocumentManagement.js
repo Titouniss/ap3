@@ -1,10 +1,11 @@
-import crud from "../utils/crud";
+import { apiPostFormData } from "@/http/requests";
+import { crud } from "../utils";
 
 const slug = 'document-management';
 const model = 'document';
 const model_plurial = 'documents';
 
-const { apiPostFormData, actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
+const { actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
 
 const state = {};
 

@@ -2,14 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class UsersSkill extends Model
+class UsersSkill extends BaseModel
 {
     public $timestamps = false;
 
-    protected $fillable = [ 'user_id', 'skill_id'];
-    
+    protected $fillable = ['user_id', 'skill_id'];
+
     protected $casts = [];
 
     public function user()
@@ -20,5 +18,4 @@ class UsersSkill extends Model
     {
         return $this->belongsTo('App\Models\Skill', 'skill_id');
     }
-
 }

@@ -1,4 +1,4 @@
-import crud from "../utils/crud";
+import { crud } from "../utils";
 
 const slug = 'company-management';
 const model = 'company';

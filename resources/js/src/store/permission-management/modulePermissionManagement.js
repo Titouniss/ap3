@@ -1,4 +1,4 @@
-import crud from "../utils/crud";
+import { crud } from "../utils";
 
 const slug = 'permission-management';
 const model = 'permission';

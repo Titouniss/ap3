@@ -8,9 +8,8 @@ use App\Models\Role;
 use Exception;
 use Spatie\Permission\Models\Permission;
 
-class RoleController extends BaseApiControllerWithSoftDelete
+class RoleController extends BaseApiController
 {
-    protected static $company_id_field = 'company_id';
     protected static $index_load = ['company:id,name'];
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'permissions'];
@@ -83,6 +82,9 @@ class RoleController extends BaseApiControllerWithSoftDelete
         return $item;
     }
 
+    /**
+     * Sets the permissions of the role.
+     */
     protected function setPermissions(Role $item, array $permissionIds)
     {
         $user = Auth::user();
