@@ -1,24 +1,17 @@
-/*=========================================================================================
-  File Name: 
-  Description: 
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import { crud } from "../utils";
 
+const slug = 'customer-management';
+const model = 'customer';
+const model_plurial = 'customers';
 
-import state from './moduleCustomerManagementState.js'
-import mutations from './moduleCustomerManagementMutations.js'
-import actions from './moduleCustomerManagementActions.js'
-import getters from './moduleCustomerManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
 }
 

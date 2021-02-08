@@ -278,23 +278,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************   Customers   *************************************/
     /***********************************************************************************/
     Route::prefix('customer-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Customer']], function () {
-            Route::get('index', 'API\CustomerController@index');
-        });
-        Route::group(['middleware' => ['can:show,customer']], function () {
-            Route::get('show/{customer}', 'API\CustomerController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Customer']], function () {
-            Route::post('store', 'API\CustomerController@store');
-        });
-        Route::group(['middleware' => ['can:edit,customer']], function () {
-            Route::post('update/{customer}', 'API\CustomerController@update');
-        });
-        Route::group(['middleware' => ['can:delete,customer']], function () {
-            Route::put('restore/{customer}', 'API\CustomerController@restore');
-            Route::delete('destroy/{customer}', 'API\CustomerController@destroy');
-            Route::delete('forceDelete/{customer}', 'API\CustomerController@forceDelete');
-        });
+        Route::get('index', 'API\CustomerController@index');
+        Route::get('show/{id}', 'API\CustomerController@show');
+        Route::post('store', 'API\CustomerController@store');
+        Route::put('update/{id}', 'API\CustomerController@update');
+        Route::put('restore/{id?}', 'API\CustomerController@restore');
+        Route::put('destroy/{id?}', 'API\CustomerController@destroy');
+        Route::put('force-destroy/{id?}', 'API\CustomerController@forceDestroy');
     });
 
     /***********************************************************************************/

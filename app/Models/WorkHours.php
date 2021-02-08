@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 class WorkHours extends Model
 {
     protected $table = 'user_work_hours';

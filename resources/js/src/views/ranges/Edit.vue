@@ -175,31 +175,32 @@ export default {
   },
   computed: {
     repetitiveTasksData() {
-      let repetitive_tasks = this.$store.state.repetitiveTaskManagement
-        .repetitive_tasks;
-
-      repetitive_tasks.forEach((task) => {
-        if (task.skills.length > 0) {
-          let skillsNames = "";
-          task.skills.forEach((skill_id) => {
-            const skills = this.$store.state.skillManagement.skills;
-            let skill = skills.find((s) => s.id == parseInt(skill_id)).name;
-            skillsNames = skill
-              ? skillsNames == ""
-                ? skill
-                : skillsNames + " | " + skill
-              : skillsNames;
-          });
-          task.skillsNames = skillsNames;
+      return this.$store.getters["repetitiveTaskManagement/getItems"].map(
+        (task) => {
+          if (task.skills.length > 0) {
+            let skillsNames = "";
+            task.skills.forEach((skill_id) => {
+              const skills = this.$store.state.skillManagement.skills;
+              let skill = skills.find((s) => s.id == parseInt(skill_id)).name;
+              skillsNames = skill
+                ? skillsNames == ""
+                  ? skill
+                  : skillsNames + " | " + skill
+                : skillsNames;
+            });
+            task.skillsNames = skillsNames;
+          }
+          return task;
         }
-      });
-      return repetitive_tasks;
+      );
     },
     validateForm() {
       return !this.errors.any();
     },
     itemIdToEdit() {
-      return this.$store.state.repetitiveTaskManagement.repetitive_task.id || 0;
+      return (
+        this.$store.getters["repetitiveTaskManagement/getSelectedItem"].id || 0
+      );
     },
   },
   methods: {

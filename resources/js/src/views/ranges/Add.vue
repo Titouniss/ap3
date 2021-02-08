@@ -204,30 +204,28 @@ export default {
     },
     companiesData() {
       return this.$store.state.companyManagement
-        ? this.$store.state.companyManagement.companies
+        ? this.$store.getters["companyManagement/getItems"]
         : [];
     },
     repetitiveTasksData() {
-      let repetitive_tasks = this.$store.state.repetitiveTaskManagement
-        .repetitive_tasks;
-
-      repetitive_tasks.forEach((task) => {
-        if (task.skills.length > 0) {
-          let skillsNames = "";
-          task.skills.forEach((skill_id) => {
-            const skills = this.$store.state.skillManagement.skills;
-            let skill = skills.find((s) => s.id == parseInt(skill_id)).name;
-            skillsNames = skill
-              ? skillsNames == ""
-                ? skill
-                : skillsNames + " | " + skill
-              : skillsNames;
-          });
-          task.skillsNames = skillsNames;
+      return this.$store.getters["repetitiveTaskManagement/getItems"].map(
+        (task) => {
+          if (task.skills.length > 0) {
+            let skillsNames = "";
+            task.skills.forEach((skill_id) => {
+              const skills = this.$store.state.skillManagement.skills;
+              let skill = skills.find((s) => s.id == parseInt(skill_id)).name;
+              skillsNames = skill
+                ? skillsNames == ""
+                  ? skill
+                  : skillsNames + " | " + skill
+                : skillsNames;
+            });
+            task.skillsNames = skillsNames;
+          }
+          return task;
         }
-      });
-
-      return repetitive_tasks;
+      );
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;

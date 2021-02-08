@@ -178,9 +178,6 @@ export default {
     companiesData() {
       return this.$store.state.companyManagement.companies;
     },
-    permissions() {
-      return this.$store.state.roleManagement.permissions;
-    },
     customersData() {
       let customers = this.filterItemsAdmin(
         JSON.parse(

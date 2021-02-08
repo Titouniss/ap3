@@ -73,7 +73,7 @@ export default function (slug, model, model_plurial, sort_items = null) {
                 });
             },
             EMPTY_ITEMS(state) {
-                state[slug] = [];
+                state[model_plurial] = [];
             }
         }
 
