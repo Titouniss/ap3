@@ -75,8 +75,8 @@
                 Liste des étapes de la gamme
               </span>
               <add-form
-                v-if="range_data.company != null"
-                :company_id="range_data.company.id"
+                v-if="range_data.company_id != null"
+                :company_id="range_data.company_id"
               ></add-form>
             </div>
             <vs-divider />
@@ -258,7 +258,7 @@ export default {
 
       let payload = { ...this.range_data };
       payload.repetitive_tasks = this.repetitiveTasksData;
-      payload.company_id = payload.company.id;
+      payload.company_id = payload.company_id;
 
       this.$store
         .dispatch("rangeManagement/addItem", payload)
