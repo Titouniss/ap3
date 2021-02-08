@@ -36,9 +36,9 @@
           />
         </form>
         <div v-if="!startIsPossible">
-          <span
-            class="text-danger text-sm"
-          >Démarrage du projet impossible. Merci de modifier la date de livraison du projet. 
+          <span class="text-danger text-sm"
+            >Démarrage du projet impossible. Merci de modifier la date de
+            livraison du projet.
           </span>
         </div>
       </div>
@@ -52,7 +52,6 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import vSelect from "vue-select";
-
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -97,9 +96,9 @@ export default {
     validateForm() {
       return this.itemLocal.start_at != "";
     },
-    startIsPossible() { 
+    startIsPossible() {
       return new Date() < new Date(this.project_data.date);
-    }
+    },
   },
   methods: {
     clearFields() {

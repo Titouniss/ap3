@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\Document;
-use App\Models\ModelHasDocuments;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\User;
@@ -15,92 +12,104 @@ use App\Models\TaskPeriod;
 use App\Models\Workarea;
 use App\Models\PreviousTask;
 use App\Models\TasksBundle;
+use App\Traits\StoresDocuments;
 use Illuminate\Support\Facades\Auth;
-use Validator;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
 
-class ProjectController extends Controller
+class ProjectController extends BaseApiController
 {
-    use SoftDeletes;
+    use StoresDocuments;
 
-    public $successStatus = 200;
+    protected static $index_load = ['company:id,name', 'customer:id,name', 'documents'];
+    protected static $index_append = null;
+    protected static $show_load = ['company:id,name', 'customer:id,name', 'documents'];
+    protected static $show_append = null;
+
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'date' => 'required',
+        'company_id' => 'required',
+        'customer_id' => 'nullable',
+        'color' => 'nullable',
+        'token' => 'nullable'
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'date' => 'required',
+        'company_id' => 'required',
+        'customer_id' => 'nullable',
+        'color' => 'nullable',
+        'documents' => 'nullable|array',
+        'token' => 'nullable'
+    ];
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        $user = Auth::user();
-        $items = [];
-        if ($user->is_admin) {
-            $items = Project::withTrashed()->get()->load('company', 'customer', 'documents');
-        } else if ($user->company_id != null) {
-            $items = Project::where('company_id', $user->company_id)->get()->load('company', 'customer', 'documents');
-        }
-        return response()->json(['success' => $items], $this->successStatus);
+        parent::__construct(Project::class);
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  \App\Models\Project $project
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Project $project)
+    protected function storeItem(array $arrayRequest)
     {
-        return response()->json(['success' => $project->load('company', 'customer', 'documents')], $this->successStatus);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $arrayRequest['company_id'] = $arrayRequest['company']['id'];
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'date' => 'required',
-            'company_id' => 'required',
+        $item = Project::create([
+            'name' => $arrayRequest['name'],
+            'date' => $arrayRequest['date'],
+            'company_id' => $arrayRequest['company_id'],
         ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+
+        if (isset($arrayRequest['customer_id'])) {
+            $item->customer_id = $arrayRequest['customer_id'];
         }
-        $item = Project::create($arrayRequest)->load('company');
-        ProjectController::checkIfTaskBundleExist($item->id);
+        if (isset($arrayRequest['color'])) {
+            $item->color = $arrayRequest['color'];
+        }
         if (isset($arrayRequest['token'])) {
-            $this->storeProjectDocuments($item, $arrayRequest['token']);
+            $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
         }
-        return response()->json(['success' => $item->load('documents')], $this->successStatus);
+        $item->save();
+
+        $this->checkIfTaskBundleExist($item->id);
+
+        return $item;
     }
 
-    private function storeProjectDocuments($project, $token)
+    protected function updateItem($item, array $arrayRequest)
     {
-        if ($token && $project) {
-            $documents = Document::where('token', $token)->get();
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'date' => $arrayRequest['date'],
+            'company_id' => $arrayRequest['company_id'],
+            'customer_id' => $arrayRequest['customer_id'],
+            'color' => $arrayRequest['color'],
+        ]);
 
-            foreach ($documents as $doc) {
-                ModelHasDocuments::firstOrCreate(['model' => Project::class, 'model_id' => $project->id, 'document_id' => $doc->id]);
-                $doc->moveFile($project->company->name);
-                $doc->token = null;
-                $doc->save();
-            }
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
         }
+
+        if (isset($arrayRequest['documents'])) {
+            $this->deleteUnusedDocuments($item, $arrayRequest['documents']);
+        }
+
+        return $item;
     }
 
-    public function addRange(Request $request, $id)
+    public function addRange(Request $request, int $id)
     {
+        $item = Range::find($id)->load('repetitive_tasks');
+        if ($error = $this->itemErrors($item, 'edit')) {
+            return $error;
+        }
+
+
         $arrayRequest = $request->all();
         $prefix = $arrayRequest['prefix'];
         $project_id = $arrayRequest['project_id'];
-        $item = Range::find($id)->load('repetitive_tasks');
         $user = Auth::user();
         $taskBundle = $this->checkIfTaskBundleExist($project_id);
         $tasksArrayByOrder = [];
@@ -126,11 +135,11 @@ class ProjectController extends Controller
             $key > 0 ? $this->attributePreviousTask($tasksArrayByOrder, $key, $task->id) : '';
 
             $this->storeSkills($task->id, $repetitive_task->skills);
-            $this->storeDocuments($task->id, $repetitive_task->documents);
+            $this->storeDocuments($task, $repetitive_task->documents->pluck('id'));
         }
 
         $items = Task::where('tasks_bundle_id', $taskBundle->id)->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project')->get();
-        return response()->json(['success' => $items], $this->successStatus);
+        return $this->successResponse($items, 'Ajout de gamme terminé avec succès.');
     }
 
     private function storeSkills(int $task_id, $skills)
@@ -138,15 +147,6 @@ class ProjectController extends Controller
         if (count($skills) > 0 && $task_id) {
             foreach ($skills as $skill) {
                 TasksSkill::create(['task_id' => $task_id, 'skill_id' => $skill->id]);
-            }
-        }
-    }
-
-    private function storeDocuments(int $task_id, $documents)
-    {
-        if ($documents && $task_id) {
-            foreach ($documents as $doc) {
-                ModelHasDocuments::firstOrCreate(['model' => Task::class, 'model_id' => $task_id, 'document_id' => $doc->id]);
             }
         }
     }
@@ -172,147 +172,44 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    public function start(Request $request, int $id)
     {
-        //
-    }
+        $project = Project::find($id);
+        if ($error = $this->itemErrors($project, 'edit')) {
+            return $error;
+        }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Project $project
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Project $project)
-    {
         $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'date' => 'required',
-            'company_id' => 'required'
-        ]);
-
-        $update = $project->update([
-            'name' => $arrayRequest['name'],
-            'date' => $arrayRequest['date'],
-            'company_id' => $arrayRequest['company_id'],
-            'customer_id' => $arrayRequest['customer_id'],
-            'color' => $arrayRequest['color']
-        ]);
-
-        if (!$update) {
-            return response()->json(['error' => 'error'], $this->errorStatus);
-        }
-
-        if (isset($arrayRequest['token'])) {
-            $this->storeProjectDocuments($project, $arrayRequest['token']);
-        }
-
-        if (isset($arrayRequest['documents'])) {
-            $documents = $project->documents()->whereNotIn('id', array_map(function ($doc) {
-                return $doc['id'];
-            }, $arrayRequest['documents']))->get();
-
-            foreach ($documents as $doc) {
-                $doc->deleteFile();
-            }
-        }
-
-        return response()->json(['success' => $project->load('documents', 'company', 'customer')], $this->successStatus);
-    }
-
-    /**
-     * Restore the specified resource in storage.
-     *
-     * @param  \App\Models\Project $project
-     * @return \Illuminate\Http\Response
-     */
-    public function restore(Project $project)
-    {
-        if (!$project->restoreCascade()) {
-            return response()->json(['success' => false, 'error' => 'Impossible de restaurer le projet'], 400);
-        }
-
-        return response()->json(['success' => $project->load('company')], $this->successStatus);
-    }
-
-    /**
-     * Archive the specified resource from storage.
-     *
-     * @param  \App\Models\Project $project
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Project $project)
-    {
-        if (!$project->deleteCascade()) {
-            return response()->json(['success' => false, 'error' => 'Impossible d\'archiver le projet'], 400);
-        }
-
-        return response()->json(['success' => $project->load('company')], $this->successStatus);
-    }
-
-    /**
-     * forceDelete the specified resource from storage.
-     *
-     * @param  \App\Models\Project $project
-     * @return \Illuminate\Http\Response
-     */
-    public function forceDelete(Project $project)
-    {
-        $project->forceDeleteCascade();
-
-        return response()->json(['success' => true], $this->successStatus);
-    }
-
-    public function start(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $project = Project::find($arrayRequest['id']);
         $project->start_date = $arrayRequest['start_date'];
         $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
         $workareas = Workarea::where('company_id', $project->company_id)->with('skills')->get();
 
         // Alertes pour l'utilisateur
-        $alerts = $this->checkIfStartIsPossible($project, $users, $workareas);
-
-        if (!$alerts) {
-
-            $nbHoursRequired = 0;
-            $nbHoursAvailable = 0;
-            $nbHoursUnvailable = 0;
-
-            foreach ($project->tasks as $task) {
-                // Hours required
-                $nbHoursRequired += $task->estimated_time;
-            }
-
-            // Hours Available & Hours Unavailable
-            $TimeData = $this->calculTimeAvailable($users, $project, $users);
-
-            if ($TimeData['total_hours_available'] >= $nbHoursRequired) {
-
-                $response = $this->setDateToTasks($project->tasks, $TimeData, $users, $project);
-                return response()->json($response);
-            } else {
-
-                return $TimeData['total_hours_available'] < $nbHoursRequired ? response()->json(['error_time' => 'time_less'], $this->successStatus) : response()->json(['error' => 'user_time_less'], $this->successStatus);
-            }
-        } else {
-            return response()->json(['error_alerts' => $alerts], $this->successStatus);
+        if ($error = $this->checkForStartErrors($project, $users, $workareas)) {
+            return $error;
         }
+
+        $nbHoursRequired = 0;
+        $nbHoursAvailable = 0;
+        $nbHoursUnvailable = 0;
+
+        foreach ($project->tasks as $task) {
+            // Hours required
+            $nbHoursRequired += $task->estimated_time;
+        }
+
+        // Hours Available & Hours Unavailable
+        $timeData = $this->calculTimeAvailable($users, $project, $users);
+
+        if ($timeData['total_hours_available'] < $nbHoursRequired) {
+            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet.");
+        }
+
+        return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
     }
 
-    private function checkIfStartIsPossible($project, $users, $workareas)
+    private function checkForStartErrors($project, $users, $workareas)
     {
-
         //check if workers have hours
         $haveHours = false;
         foreach ($users as $user) {
@@ -376,7 +273,11 @@ class ProjectController extends Controller
         $workersHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un utilisateur";
         $workareasHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un pôle de produciton";
 
-        return count($alerts) > 0 ? $alerts : null;
+        if (count($alerts) > 0) {
+            return $this->errorResponse($alerts[0]);
+        }
+
+        return null;
     }
 
     private function setDateToTasks($tasks, $TimeData, $users, $project)
@@ -533,17 +434,14 @@ class ProjectController extends Controller
                 }
             }
 
-
-            //Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
-            if ($allPlanified) {
-                Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => $start_date_project]);
-
-                return $response = ['success' => 'All good'];
-            } else { // Si non, on reboot les taches planifiés et on retourne les alertes a l'utilisateur
-
+            // En cas d'erreur, on annule les changements et on retourne une erreur
+            if (!$allPlanified) {
                 Task::whereIn('id', $taskIds)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
-                return $response = ['error_time' => 'time_less'];
+                throw new Exception('Erreur lors de la plannification.');
             }
+
+            // Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
+            Project::findOrFail($project->id)->update(['status' => 'doing', 'start_date' => $start_date_project]);
         } catch (\Throwable $th) {
             //On déprogramme toutes les taches du projet
             $ids = [];
@@ -554,8 +452,10 @@ class ProjectController extends Controller
             Task::whereIn('id', $ids)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
             TaskPeriod::whereIn('task_id', $ids)->delete();
 
-            return $response = ['error_algo' => $th->getMessage()];
+            return $this->errorResponse($th->getMessage());
         }
+
+        return $this->successResponse(true, 'Projet démarré avec succès.');
     }
 
     private function planTask($task, $globalPeriod, $workarea_id)

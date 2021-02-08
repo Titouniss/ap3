@@ -15,7 +15,6 @@ class SubscriptionController extends BaseApiController
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'packages:id,name,display_name'];
     protected static $show_append = null;
-    protected static $cascade = false;
 
     protected static $store_validation_array = [
         'starts_at' => 'required',

@@ -16,7 +16,6 @@ class CompanyController extends BaseApiController
     protected static $index_append = ['active_subscription'];
     protected static $show_load = ['skills:id,name,company_id', 'subscriptions', 'subscriptions.packages'];
     protected static $show_append = ['active_subscription'];
-    protected static $cascade = true;
 
     protected static $store_validation_array = [
         'name' => 'required',

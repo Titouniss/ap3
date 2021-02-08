@@ -36,7 +36,6 @@ class UserController extends BaseApiController
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'skills:id,name', 'workHours', 'unavailabilities'];
     protected static $show_append = ['related_users'];
-    protected static $cascade = false;
 
     protected static $store_validation_array = [
         'lastname' => 'required',

@@ -6,6 +6,13 @@ use App\Models\Document;
 
 trait StoresDocuments
 {
+    protected function storeDocuments($item, $documentIds)
+    {
+        if ($documentIds && $item) {
+            $item->documents()->attach($documentIds, ['model' => get_class($item)]);
+        }
+    }
+
     /**
      * Associates all documents with a given token to a model.
      */

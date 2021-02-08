@@ -25,7 +25,6 @@ abstract class BaseApiController extends Controller
     protected static $show_append = null;
     protected static $store_validation_array = [];
     protected static $update_validation_array = [];
-    protected static $cascade = false;
 
     /**
      * Create a new controller instance.
@@ -253,7 +252,7 @@ abstract class BaseApiController extends Controller
      */
     protected function restoreItem($item)
     {
-        return static::$cascade ? $item->restoreCascade() : $item->restore();
+        return $this->modelDeleteCascades() ? $item->restoreCascade() : $item->restore();
     }
 
     /**
@@ -320,7 +319,7 @@ abstract class BaseApiController extends Controller
      */
     protected function destroyItem($item)
     {
-        return static::$cascade ? $item->deleteCascade() : $item->delete();
+        return $this->modelDeleteCascades() ? $item->deleteCascade() : $item->delete();
     }
 
     /**
@@ -465,14 +464,27 @@ abstract class BaseApiController extends Controller
         return null;
     }
 
-
+    /**
+     * Checks if the model uses soft delete
+     */
     private function modelUsesSoftDelete()
     {
         return in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this->model));
     }
 
+    /**
+     * Checks if the model belongs to a company
+     */
     private function modelHasCompany()
     {
         return in_array('App\Traits\HasCompany', class_uses($this->model));
+    }
+
+    /**
+     * Checks if the model delete cascades
+     */
+    private function modelDeleteCascades()
+    {
+        return in_array('App\Traits\DeleteCascades', class_uses($this->model));
     }
 }

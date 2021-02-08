@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Task;
+use App\Traits\DeleteCascades;
 use App\Traits\HasCompany;
 use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasDocuments, SoftDeletes, HasCompany;
+    use HasDocuments, SoftDeletes, HasCompany, DeleteCascades;
 
     protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
@@ -60,15 +61,5 @@ class Project extends Model
         }
         TasksBundle::where('project_id', $this->id)->delete();
         return $this->delete();
-    }
-
-    public function forceDeleteCascade()
-    {
-        foreach ($this->documents as $doc) {
-            if ($doc->models()->count() == 1) {
-                $doc->deleteFile();
-            }
-        }
-        $this->forceDelete();
     }
 }

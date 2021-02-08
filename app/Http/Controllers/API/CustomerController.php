@@ -10,7 +10,6 @@ class CustomerController extends BaseApiController
     protected static $index_append = null;
     protected static $show_load = ['company:id,name'];
     protected static $show_append = null;
-    protected static $cascade = true;
 
     protected static $store_validation_array = [
         'name' => 'nullable',

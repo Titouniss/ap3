@@ -47,7 +47,7 @@
                 >{{ errors.first("max_users") }}</span
               >
 
-              <div v-if="itemLocal.company_id && disabled" class="mt-5">
+              <div v-if="itemLocal.company_id" class="mt-5">
                 <span v-if="skillsData.length == 0" class="msgTxt"
                   >Aucune compétences trouvées.</span
                 >
@@ -85,7 +85,6 @@
                   <div>
                     <v-select
                       v-validate="'required'"
-                      @input="selectCompanySkills"
                       name="company"
                       label="name"
                       :multiple="false"
@@ -108,7 +107,7 @@
                       >{{ errors.first("company_id") }}</span
                     >
                   </div>
-                  <div v-if="itemLocal.company_id" class="mt-5">
+                  <!-- <div v-if="itemLocal.company_id" class="mt-5">
                     <span v-if="companySkills.length == 0" class="msgTxt"
                       >Aucune compétences trouvées.</span
                     >
@@ -116,8 +115,9 @@
                       v-if="companySkills.length > 0"
                       class="linkTxt"
                       :to="{ path: '/skills' }"
-                      >Ajouter une compétence</router-link
                     >
+                      Ajouter une compétence
+                    </router-link>
                     <v-select
                       v-validate="'required'"
                       v-if="companySkills.length !== 0"
@@ -144,7 +144,7 @@
                       v-show="errors.has('company_id')"
                       >{{ errors.first("company_id") }}</span
                     >
-                  </div>
+                  </div> -->
                 </div>
               </div>
 
@@ -183,7 +183,6 @@ export default {
         company_id: null,
         skills: [],
       },
-      companySkills: [],
 
       token: "token_" + Math.random().toString(36).substring(2, 15),
       uploadedFiles: [],
@@ -197,7 +196,11 @@ export default {
       return this.$store.getters["companyManagement/getItems"];
     },
     skillsData() {
-      return this.$store.getters["skillManagement/getItems"];
+      return this.itemLocal.company_id
+        ? this.$store.getters["skillManagement/getItemsByCompany"](
+            this.itemLocal.company_id
+          )
+        : [];
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -227,11 +230,6 @@ export default {
         company_id: null,
         skills: [],
       };
-    },
-    selectCompanySkills(item) {
-      this.companySkills = this.companiesData.find(
-        (company) => company.id === item
-      ).skills;
     },
     addItem() {
       this.$validator.validateAll().then((result) => {

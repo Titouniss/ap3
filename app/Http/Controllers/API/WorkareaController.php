@@ -2,15 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\Document;
-use App\Models\ModelHasDocuments;
-use Illuminate\Http\Request;
 use App\Models\Workarea;
-use App\Models\WorkareasSkill;
 use App\Traits\StoresDocuments;
-use Illuminate\Support\Facades\Auth;
-use Validator;
 
 class WorkareaController extends BaseApiController
 {
@@ -20,7 +13,6 @@ class WorkareaController extends BaseApiController
     protected static $index_append = null;
     protected static $show_load = ['company:id,name', 'skills:id,name,company_id', 'documents'];
     protected static $show_append = null;
-    protected static $cascade = false;
 
     protected static $store_validation_array = [
         'name' => 'required',
@@ -36,7 +28,7 @@ class WorkareaController extends BaseApiController
         'max_users' => 'nullable',
         'skills' => 'required|array',
         'token' => 'nullable',
-        'documents' => 'required|array'
+        'documents' => 'nullable|array'
     ];
 
     /**
@@ -79,13 +71,7 @@ class WorkareaController extends BaseApiController
         }
 
         if (isset($arrayRequest['documents'])) {
-            $documents = $item->documents()->whereNotIn('id', array_map(function ($doc) {
-                return $doc['id'];
-            }, $arrayRequest['documents']))->get();
-
-            foreach ($documents as $doc) {
-                $doc->deleteFile();
-            }
+            $this->deleteUnusedDocuments($item, $arrayRequest['documents']);
         }
 
         return $item;

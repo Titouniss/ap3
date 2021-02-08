@@ -13,7 +13,6 @@ class SkillController extends BaseApiController
     protected static $index_append = null;
     protected static $show_load = ['company:id,name'];
     protected static $show_append = null;
-    protected static $cascade = false;
 
     protected static $store_validation_array = [
         'name' => 'required',

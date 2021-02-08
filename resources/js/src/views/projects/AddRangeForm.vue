@@ -83,8 +83,7 @@ export default {
     project_id: {
       required: true,
     },
-    refreshData: {
-    }
+    refreshData: {},
   },
   data() {
     return {
@@ -108,7 +107,9 @@ export default {
       );
     },
     rangesData() {
-      return this.filterItemsAdmin(this.$store.state.rangeManagement.ranges);
+      return this.filterItemsAdmin(
+        this.$store.getters["rangeManagement/getItems"]
+      );
     },
   },
   methods: {
@@ -129,7 +130,9 @@ export default {
           Object.assign({}, this.itemLocal)
         )
         .then(() => {
-          if(this.refreshData){ this.refreshData()}
+          if (this.refreshData) {
+            this.refreshData();
+          }
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Ajout d'une gamme au projet",

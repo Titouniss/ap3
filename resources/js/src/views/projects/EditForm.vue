@@ -37,7 +37,8 @@
                 <v-select
                   label="name"
                   @input="cleanCustomerInput"
-                  v-model="itemLocal.company"
+                  :reduce="(company) => company.id"
+                  v-model="itemLocal.company_id"
                   :options="companiesData"
                   class="w-full"
                 >
@@ -89,7 +90,8 @@
             <div class="my-4" v-if="itemLocal.company != null">
               <v-select
                 label="name"
-                v-model="itemLocal.customer"
+                :reduce="(customer) => customer.id"
+                v-model="itemLocal.customer_id"
                 :options="customersData"
                 class="w-full"
               >
@@ -176,13 +178,11 @@ export default {
       },
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     customersData() {
       let customers = this.filterItemsAdmin(
-        JSON.parse(
-          JSON.stringify(this.$store.state.customerManagement.customers)
-        )
+        this.$store.getters["customerManagement/getItems"]
       );
 
       // Parse label
@@ -196,7 +196,7 @@ export default {
       return (
         !this.errors.any() &&
         this.itemLocal.name != "" &&
-        this.itemLocal.company != null
+        this.itemLocal.company_id != null
       );
     },
   },
@@ -213,10 +213,6 @@ export default {
         const item = JSON.parse(JSON.stringify(this.itemLocal));
 
         item.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
-        item.company_id = this.itemLocal.company.id;
-        if (this.itemLocal.customer) {
-          item.customer_id = this.itemLocal.customer.id;
-        }
         item.token = this.token;
 
         this.$store

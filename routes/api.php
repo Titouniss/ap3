@@ -131,25 +131,15 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************   PROJETCS   *************************************/
     /***********************************************************************************/
     Route::prefix('project-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Project']], function () {
-            Route::get('index', 'API\ProjectController@index');
-        });
-        Route::group(['middleware' => ['can:show,project']], function () {
-            Route::get('show/{project}', 'API\ProjectController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Project']], function () {
-            Route::post('store', 'API\ProjectController@store');
-            Route::post('start', 'API\ProjectController@start');
-            Route::post('store-range/{id}', 'API\ProjectController@addRange');
-        });
-        Route::group(['middleware' => ['can:edit,project']], function () {
-            Route::post('update/{project}', 'API\ProjectController@update');
-        });
-        Route::group(['middleware' => ['can:delete,project']], function () {
-            Route::put('restore/{project}', 'API\ProjectController@restore');
-            Route::delete('destroy/{project}', 'API\ProjectController@destroy');
-            Route::delete('forceDelete/{project}', 'API\ProjectController@forceDelete');
-        });
+        Route::get('index', 'API\ProjectController@index');
+        Route::get('show/{id}', 'API\ProjectController@show');
+        Route::post('store', 'API\ProjectController@store');
+        Route::post('start/{id}', 'API\ProjectController@start');
+        Route::post('store-range/{id}', 'API\ProjectController@addRange');
+        Route::put('update/{id}', 'API\ProjectController@update');
+        Route::put('restore/{id?}', 'API\ProjectController@restore');
+        Route::put('destroy/{id?}', 'API\ProjectController@destroy');
+        Route::put('force-destroy/{id?}', 'API\ProjectController@forceDestroy');
     });
 
     /***********************************************************************************/

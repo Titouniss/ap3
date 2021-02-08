@@ -33,7 +33,8 @@
                     label="name"
                     @input="cleanCustomerInput"
                     v-validate="'required'"
-                    v-model="itemLocal.company"
+                    v-model="itemLocal.company_id"
+                    :reduce="(company) => company.id"
                     :options="companiesData"
                     class="w-full"
                   >
@@ -86,8 +87,9 @@
               </div>
               <div class="my-4" v-if="itemLocal.company != null">
                 <v-select
-                  v-model="itemLocal.customer"
                   label="name"
+                  v-model="itemLocal.customer_id"
+                  :reduce="(customer) => customer.id"
                   :options="customersData"
                   :multiple="false"
                   class="w-full"
@@ -141,9 +143,6 @@ export default {
     FileInput,
   },
   data() {
-    const selectedCompany = this.isAdmin
-      ? this.$store.state.AppActiveUser.company
-      : null;
     return {
       activePrompt: false,
       langFr: fr,
@@ -172,15 +171,15 @@ export default {
       return (
         !this.errors.any() &&
         this.itemLocal.name != "" &&
-        this.itemLocal.company != null
+        this.itemLocal.company_id != null
       );
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     customersData() {
       let customers = this.filterItemsAdmin(
-        this.$store.state.customerManagement.customers
+        this.$store.getters["customerManagement/getItems"]
       );
 
       // Parse label
@@ -218,12 +217,6 @@ export default {
       this.$validator.validateAll().then((result) => {
         const item = JSON.parse(JSON.stringify(this.itemLocal));
         item.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
-        item.company
-          ? (this.itemLocal.company_id = this.itemLocal.company.id)
-          : null;
-        item.customer
-          ? (this.itemLocal.customer_id = this.itemLocal.customer.id)
-          : null;
         if (this.uploadedFiles.length > 0) {
           item.token = this.token;
         }
@@ -231,12 +224,12 @@ export default {
         if (result) {
           this.$store
             .dispatch("projectManagement/addItem", item)
-            .then((response) => {
+            .then((data) => {
               this.clearFields(false);
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Ajout d'un projet",
-                text: `"${response.data.success.name}" ajouté avec succès`,
+                text: `"${data.payload.name}" ajouté avec succès`,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
                 color: "success",

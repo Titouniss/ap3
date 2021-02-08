@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\DeleteCascades;
 use App\Traits\HasCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Range extends Model
 {
-    use SoftDeletes, HasCompany;
+    use SoftDeletes, HasCompany, DeleteCascades;
 
     protected $fillable = ['name', 'description', 'company_id'];
 

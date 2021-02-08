@@ -44,6 +44,32 @@
               >{{ errors.first("max_users") }}</span
             >
 
+            <div v-if="itemLocal.company_id">
+              <v-select
+                v-validate="'required'"
+                name="skill"
+                label="name"
+                :multiple="true"
+                v-model="itemLocal.skills"
+                :reduce="(skill) => skill.id"
+                class="w-full mt-5"
+                autocomplete
+                :options="skillsData"
+              >
+                <template #header>
+                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
+                </template>
+                <template #option="skill">
+                  <span>{{ `${skill.name}` }}</span>
+                </template>
+              </v-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+                >{{ errors.first("company_id") }}</span
+              >
+            </div>
+
             <div class="vx-row mt-4" v-if="!disabled">
               <div class="vx-col w-full">
                 <div class="flex items-end px-3">
@@ -82,32 +108,6 @@
                   >
                 </div>
               </div>
-            </div>
-
-            <div v-if="itemLocal.company_id">
-              <v-select
-                v-validate="'required'"
-                name="skill"
-                label="name"
-                :multiple="true"
-                v-model="itemLocal.skills"
-                :reduce="(skill) => skill.id"
-                class="w-full mt-5"
-                autocomplete
-                :options="skillsData"
-              >
-                <template #header>
-                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
-                </template>
-                <template #option="skill">
-                  <span>{{ `${skill.name}` }}</span>
-                </template>
-              </v-select>
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('company_id')"
-                >{{ errors.first("company_id") }}</span
-              >
             </div>
 
             <div class="mt-4">
@@ -175,9 +175,11 @@ export default {
       return this.$store.getters["companyManagement/getItems"];
     },
     skillsData() {
-      return this.filterItemsAdmin(
-        this.$store.getters["skillManagement/getItems"]
-      );
+      return this.itemLocal.company_id
+        ? this.$store.getters["skillManagement/getItemsByCompany"](
+            this.itemLocal.company_id
+          )
+        : [];
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -229,20 +231,6 @@ export default {
     },
     cleanSkillsInput() {
       this.itemLocal.skills = [];
-    },
-    filterItemsAdmin(items) {
-      let filteredItems = [];
-      const user = this.$store.state.AppActiveUser;
-      if (this.isAdmin) {
-        filteredItems = items.filter(
-          (item) => item.company_id === this.itemLocal.company_id
-        );
-      } else {
-        filteredItems = items.filter(
-          (item) => item.company_id === user.company_id
-        );
-      }
-      return filteredItems;
     },
     deleteFiles() {
       const ids = this.itemLocal.documents
