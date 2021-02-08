@@ -96,7 +96,7 @@ class UserController extends BaseApiController
 
         $item->markEmailAsVerified();
         if ($item->email !== null) {
-            $item->sendEmailAdUserNotification($item->id, $item->register_token);
+            $item->sendEmailAddUserNotification($item->id, $item->register_token);
         } else {
             $item->clear_password = $password;
             $item->append('clear_password');
