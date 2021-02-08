@@ -22,14 +22,4 @@ class Role extends SpatieRole
     {
         return $this->code === "admin";
     }
-
-    public static function usesSoftDelete()
-    {
-        return true;
-    }
-
-    public static function hasCompany()
-    {
-        return true;
-    }
 }

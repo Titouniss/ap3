@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 
-class ModuleDataRow extends BaseModel
+class ModuleDataRow extends Model
 {
     protected $fillable = ['source', 'default_value', 'details', 'data_row_id', 'module_data_type_id'];
     protected $hidden = ['created_at', 'updated_at'];

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class RepetitiveTasksSkill extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class RepetitiveTasksSkill extends Model
 {
     public $timestamps = false;
 

@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use App\Traits\HasCompany;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Subscription extends BaseModel
+class Subscription extends Model
 {
     use SoftDeletes, HasCompany;
 

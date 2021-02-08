@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class Unavailability extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class Unavailability extends Model
 {
     protected $table = 'user_unavailabilities';
     protected $fillable = ['reason', 'starts_at', 'ends_at', 'user_id'];

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class DealingHours extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class DealingHours extends Model
 {
 
     protected $fillable = ['user_id', 'date', 'overtimes', 'used_hours', 'used_type'];

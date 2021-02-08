@@ -4,11 +4,12 @@ namespace App\Models;
 
 use App\Traits\HasCompany;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
-class BaseModule extends BaseModel
+class BaseModule extends Model
 {
     use HasCompany;
 

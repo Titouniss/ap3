@@ -5,9 +5,10 @@ namespace App\Models;
 use App\Models\Task;
 use App\Traits\HasCompany;
 use App\Traits\HasDocuments;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Project extends BaseModel
+class Project extends Model
 {
     use HasDocuments, SoftDeletes, HasCompany;
 

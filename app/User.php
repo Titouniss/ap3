@@ -177,14 +177,4 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\MailAddUserNotification($id, $register_token));
     }
-
-    public static function usesSoftDelete()
-    {
-        return true;
-    }
-
-    public static function hasCompany()
-    {
-        return true;
-    }
 }

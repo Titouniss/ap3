@@ -59,7 +59,7 @@ abstract class BaseApiController extends Controller
 
         $user = Auth::user();
         if (!$user->is_admin) {
-            if ($model->hasCompany()) {
+            if ($this->modelHasCompany()) {
                 $query->where('company_id', $user->company_id);
             } else if ($this->model == Company::class) {
                 $query->where('companies.id', $user->company_id);
@@ -69,7 +69,7 @@ abstract class BaseApiController extends Controller
         $extra = [];
 
         try {
-            if ($model->usesSoftDelete() && $request->has('with_trashed') && $request->with_trashed) {
+            if ($this->modelUsesSoftDelete() && $request->has('with_trashed') && $request->with_trashed) {
                 $query->withTrashed();
             }
 
@@ -261,7 +261,7 @@ abstract class BaseApiController extends Controller
      */
     public function restore(Request $request, int $id = null)
     {
-        if (!app($this->model)->usesSoftDelete()) {
+        if (!$this->modelUsesSoftDelete()) {
             return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
         }
 
@@ -328,7 +328,7 @@ abstract class BaseApiController extends Controller
      */
     public function destroy(Request $request, int $id = null)
     {
-        $usesSoftDelete = app($this->model)->usesSoftDelete();
+        $modelUsesSoftDelete = $this->modelUsesSoftDelete();
 
         $ids = collect($id ? [$id] : []);
         if ($ids->isEmpty()) {
@@ -359,12 +359,12 @@ abstract class BaseApiController extends Controller
                 return $this->errorResponse($th->getMessage(), $th->getHttpCode());
             } catch (\Throwable $th) {
                 DB::rollBack();
-                return $this->errorResponse("Erreur lors de " . $usesSoftDelete ? "l'archivage." : "la suppression.", static::$response_codes['error_server']);
+                return $this->errorResponse("Erreur lors de " . $modelUsesSoftDelete ? "l'archivage." : "la suppression.", static::$response_codes['error_server']);
             }
         }
         DB::commit();
 
-        if ($usesSoftDelete) {
+        if ($modelUsesSoftDelete) {
             $items = app($this->model)->withTrashed()->whereIn('id', $ids)->get();
 
             if (static::$show_load) {
@@ -397,7 +397,7 @@ abstract class BaseApiController extends Controller
      */
     public function forceDestroy(Request $request, int $id = null)
     {
-        if (!app($this->model)->usesSoftDelete()) {
+        if (!$this->modelUsesSoftDelete()) {
             return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
         }
 
@@ -463,5 +463,16 @@ abstract class BaseApiController extends Controller
         }
 
         return null;
+    }
+
+
+    private function modelUsesSoftDelete()
+    {
+        return in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this->model));
+    }
+
+    private function modelHasCompany()
+    {
+        return in_array('App\Traits\HasCompany', class_uses($this->model));
     }
 }

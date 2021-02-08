@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
-class Hours extends BaseModel
+class Hours extends Model
 {
     protected $fillable = ['start_at', 'end_at', 'description', 'user_id', 'project_id'];
     protected $appends = ['duration', 'durationInFloatHour'];

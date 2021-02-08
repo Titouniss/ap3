@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class UsersSkill extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class UsersSkill extends Model
 {
     public $timestamps = false;
 

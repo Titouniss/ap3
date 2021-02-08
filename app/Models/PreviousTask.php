@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class PreviousTask extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class PreviousTask extends Model
 {
     public $timestamps = false;
 

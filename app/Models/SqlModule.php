@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use stdClass;
 
-class SqlModule extends BaseModule
+class SqlModule extends Model
 {
     protected $fillable = ['driver', 'host', 'port', 'charset', 'database', 'username', 'password'];
     protected $hidden = ['connection'];
