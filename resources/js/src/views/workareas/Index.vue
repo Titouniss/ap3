@@ -265,7 +265,7 @@ export default {
   },
   computed: {
     workareasData() {
-      return this.$store.state.workareaManagement.workareas;
+      return this.$store.getters["workareaManagement/getItems"];
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -276,7 +276,7 @@ export default {
       else return 0;
     },
     itemIdToEdit() {
-      return this.$store.state.workareaManagement.workarea.id || 0;
+      return this.$store.getters["workareaManagement/getSelectedItem"].id || 0;
     },
     currentPage: {
       get() {
@@ -429,9 +429,11 @@ export default {
       );
       moduleDocumentManagement.isRegistered = true;
     }
-    this.$store.dispatch("workareaManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("workareaManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
     this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
       console.error(err);
     });

@@ -5,9 +5,7 @@ const slug = 'document-management';
 const model = 'document';
 const model_plurial = 'documents';
 
-const { actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
-
-const state = {};
+const { state, actions: { addItem, removeItems }, mutations } = crud(slug, model, model_plurial);
 
 const getters = {};
 

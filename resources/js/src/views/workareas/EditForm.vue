@@ -1,6 +1,6 @@
 <template>
   <vs-prompt
-    title="Editer un pôle de produciton"
+    title="Editer un pôle de production"
     accept-text="Modifier"
     cancel-text="Annuler"
     button-cancel="border"
@@ -91,7 +91,7 @@
                 label="name"
                 :multiple="true"
                 v-model="itemLocal.skills"
-                :reduce="(name) => name.id"
+                :reduce="(skill) => skill.id"
                 class="w-full mt-5"
                 autocomplete
                 :options="skillsData"
@@ -141,16 +141,17 @@ export default {
     FileInput,
   },
   data() {
+    const item = JSON.parse(
+      JSON.stringify(
+        this.$store.getters["workareaManagement/getItem"](this.itemId)
+      )
+    );
+    item.skills = item.skills.map((skill) => skill.id);
     return {
-      itemLocal: JSON.parse(
-        JSON.stringify(
-          this.$store.getters["workareaManagement/getItem"](this.itemId)
-        )
-      ),
+      itemLocal: item,
 
       token: "token_" + Math.random().toString(36).substring(2, 15),
       company_id_temps: null,
-      companySkills: [],
     };
   },
   computed: {
@@ -171,13 +172,12 @@ export default {
       },
     },
     companiesData() {
-      this.companySkills = this.$store.state.companyManagement.companies.find(
-        (company) => company.id === this.itemLocal.company_id
-      ).skills;
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     skillsData() {
-      return this.filterItemsAdmin(this.$store.state.skillManagement.skills);
+      return this.filterItemsAdmin(
+        this.$store.getters["skillManagement/getItems"]
+      );
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -196,7 +196,6 @@ export default {
     init() {
       this.deleteFiles();
       this.itemLocal = {};
-      this.companySkills = [];
     },
     submitItem() {
       this.$validator.validateAll().then((result) => {

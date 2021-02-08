@@ -118,23 +118,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*******************************   WORKAREAS   *************************************/
     /***********************************************************************************/
     Route::prefix('workarea-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Workarea']], function () {
-            Route::get('index', 'API\WorkareaController@index');
-        });
-        Route::group(['middleware' => ['can:show,workarea']], function () {
-            Route::get('show/{workarea}', 'API\WorkareaController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Workarea']], function () {
-            Route::post('store', 'API\WorkareaController@store');
-        });
-        Route::group(['middleware' => ['can:edit,workarea']], function () {
-            Route::post('update/{workarea}', 'API\WorkareaController@update');
-        });
-        Route::group(['middleware' => ['can:delete,workarea']], function () {
-            Route::put('restore/{workarea}', 'API\WorkareaController@restore');
-            Route::delete('destroy/{workarea}', 'API\WorkareaController@destroy');
-            Route::delete('forceDelete/{workarea}', 'API\WorkareaController@forceDelete');
-        });
+        Route::get('index', 'API\WorkareaController@index');
+        Route::get('show/{id}', 'API\WorkareaController@show');
+        Route::post('store', 'API\WorkareaController@store');
+        Route::put('update/{id}', 'API\WorkareaController@update');
+        Route::put('restore/{id?}', 'API\WorkareaController@restore');
+        Route::put('destroy/{id?}', 'API\WorkareaController@destroy');
+        Route::put('force-destroy/{id?}', 'API\WorkareaController@forceDestroy');
     });
 
     /***********************************************************************************/

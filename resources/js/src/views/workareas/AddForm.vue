@@ -4,7 +4,7 @@
       >Ajouter un pôle de produciton</vs-button
     >
     <vs-prompt
-      title="Ajouter un pôle de produciton"
+      title="Ajouter un pôle de production"
       accept-text="Ajouter"
       cancel-text="Annuler"
       button-cancel="border"
@@ -194,12 +194,13 @@ export default {
       return this.$store.state.AppActiveUser.is_admin;
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     skillsData() {
-      return this.$store.state.skillManagement.skills;
+      return this.$store.getters["skillManagement/getItems"];
     },
     disabled() {
+      const user = this.$store.state.AppActiveUser;
       if (this.isAdmin) {
         return false;
       } else {
@@ -208,7 +209,11 @@ export default {
       }
     },
     validateForm() {
-      return !this.errors.any() && this.itemLocal.name != "";
+      return (
+        !this.errors.any() &&
+        this.itemLocal.name != "" &&
+        this.itemLocal.company_id != null
+      );
     },
   },
   methods: {

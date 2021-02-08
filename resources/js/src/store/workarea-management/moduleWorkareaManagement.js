@@ -1,24 +1,17 @@
-/*=========================================================================================
-  File Name: 
-  Description: 
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import { crud } from "../utils";
 
+const slug = 'workarea-management';
+const model = 'workarea';
+const model_plurial = 'workareas';
 
-import state from './moduleWorkareaManagementState.js'
-import mutations from './moduleWorkareaManagementMutations.js'
-import actions from './moduleWorkareaManagementActions.js'
-import getters from './moduleWorkareaManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
 }
 
