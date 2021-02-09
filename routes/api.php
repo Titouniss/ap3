@@ -158,28 +158,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************   TASK   **************************************/
     /***********************************************************************************/
     Route::prefix('task-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Task']], function () {
-            Route::get('index', 'API\TaskController@index');
-            Route::get('workarea/{workarea}', 'API\TaskController@getByWorkarea');
-            Route::get('bundle/{task_bundle}', 'API\TaskController@getByBundle');
-            Route::get('skill/{skill}', 'API\TaskController@getBySkill');
-            Route::get('user/{user}', 'API\TaskController@getByUser');
-            Route::post('skills', 'API\TaskController@getBySkills');
-        });
-        Route::group(['middleware' => ['can:show,task']], function () {
-            Route::get('show/{task}', 'API\TaskController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Task']], function () {
-            Route::post('store', 'API\TaskController@store');
-        });
-        Route::group(['middleware' => ['can:edit,task']], function () {
-            Route::post('store-comment/{task}', 'API\TaskController@addComment');
-            Route::post('update-partial/{task}', 'API\TaskController@updatePartial');
-            Route::post('update/{task}', 'API\TaskController@update');
-        });
-        Route::group(['middleware' => ['can:delete,task']], function () {
-            Route::delete('{task}', 'API\TaskController@destroy');
-        });
+        Route::get('index', 'API\TaskController@index');
+        Route::get('show/{id}', 'API\TaskController@show');
+        Route::post('store', 'API\TaskController@store');
+        Route::post('store-comment/{id}', 'API\TaskController@addComment');
+        Route::put('update/{id}', 'API\TaskController@update');
+        Route::put('update-partial/{id}', 'API\TaskController@updatePartial');
+        Route::put('destroy/{id?}', 'API\TaskController@destroy');
     });
 
     /*****************************   REPETITIVE - TASK   ********************************/

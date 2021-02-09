@@ -158,7 +158,7 @@ export default {
     return {
       itemLocal: Object.assign(
         {},
-        this.$store.getters["scheduleManagement/getEvent"](this.itemId)
+        this.$store.getters["scheduleManagement/getItem"](this.itemId)
       ),
       workareasSkillsData: {},
       deleteWarning: false,
@@ -178,7 +178,7 @@ export default {
         if (this.itemId && this.itemId > -1) {
           this.itemLocal = Object.assign(
             {},
-            this.$store.getters["scheduleManagement/getEvent"](this.itemId)
+            this.$store.getters["scheduleManagement/getItem"](this.itemId)
           );
         }
         this.getWorkareasData();
@@ -188,7 +188,7 @@ export default {
       },
       set(value) {
         this.$store
-          .dispatch("scheduleManagement/editEvent", {})
+          .dispatch("scheduleManagement/editItem", {})
           .then(() => {})
           .catch((err) => {
             console.error(err);
@@ -212,7 +212,7 @@ export default {
     init() {
       this.itemLocal = Object.assign(
         {},
-        this.$store.getters["scheduleManagement/getEvent"](this.itemId)
+        this.$store.getters["scheduleManagement/getItem"](this.itemId)
       );
     },
     async getWorkareasData() {
@@ -286,8 +286,8 @@ export default {
           //console.error(err);
         });
 
-      this.$store.dispatch("scheduleManagement/updateEvent", this.itemLocal);
-      this.$store.dispatch("scheduleManagement/editEvent", {});
+      this.$store.dispatch("scheduleManagement/updateItem", this.itemLocal);
+      this.$store.dispatch("scheduleManagement/editItem", {});
     },
     confirmDeleteTask(idEvent) {
       this.deleteWarning = true;
@@ -308,7 +308,7 @@ export default {
     deleteTask() {
       this.deleteWarning = false;
       this.$store
-        .dispatch("scheduleManagement/removeEvent", this.idEvent)
+        .dispatch("scheduleManagement/removeItem", this.idEvent)
         .then(() => {})
         .catch((err) => {
           console.error(err);

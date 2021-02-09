@@ -87,6 +87,7 @@
                 <vs-select
                   v-on:change="updateUsersAndWorkareasList"
                   v-model="itemLocal.skills"
+                  :reduce="(skill) => skill.id"
                   class="w-full"
                   multiple
                   autocomplete
@@ -205,10 +206,10 @@
                     itemLocal.project.status == 'doing' ? 'disabled-div' : ''
                   "
                 >
-                  <add-previous-task
+                  <add-previous-tasks
                     :addPreviousTask="addPreviousTask"
                     :tasks_list="tasks_list"
-                    :previousTasksIds="itemLocal.previousTasksIds"
+                    :previous_task_ids="itemLocal.previous_task_ids"
                     :current_task_id="this.itemId"
                 /></span>
                 <div
@@ -383,7 +384,7 @@ import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
-import AddPreviousTask from "./AddPreviousTasks.vue";
+import AddPreviousTasks from "./AddPreviousTasks.vue";
 import FileInput from "@/components/inputs/FileInput.vue";
 
 // register custom messages
@@ -393,7 +394,7 @@ export default {
   components: {
     vSelect,
     flatPickr,
-    AddPreviousTask,
+    AddPreviousTasks,
     FileInput,
   },
   props: {
@@ -411,6 +412,7 @@ export default {
     const item = JSON.parse(
       JSON.stringify(this.$store.getters["taskManagement/getItem"](this.itemId))
     );
+    item.skills = item.skills.map((skill) => skill.id);
     return {
       configdateTimePicker: {
         disableMobile: "true",
@@ -427,6 +429,7 @@ export default {
       comments: [],
       current_time_spent: 0,
 
+      previousTasks: [],
       deleteWarning: false,
       orderDisplay: false,
       descriptionDisplay: false,
@@ -462,7 +465,9 @@ export default {
     activePrompt: {
       get() {
         this.itemLocal.previous_tasks
-          ? this.addPreviousTask(this.itemLocal.previous_tasks)
+          ? this.addPreviousTask(
+              this.itemLocal.previous_tasks.map((pt) => pt.previous_task_id)
+            )
           : null;
 
         return this.itemId && this.itemId > -1 && this.deleteWarning === false
@@ -479,22 +484,23 @@ export default {
       },
     },
     workareasData() {
-      let $workareasData = this.$store.state.workareaManagement.workareas;
-      let $filteredItems = this.filterItemsAdmin($workareasData);
-      return $filteredItems;
+      return this.filterItemsAdmin(
+        this.$store.getters["workareaManagement/getItems"]
+      );
     },
     usersData() {
-      let usersDate = this.$store.state.userManagement.users;
-      return this.filterItemsAdmin(usersDate);
+      return this.filterItemsAdmin(
+        this.$store.getters["userManagement/getItems"]
+      );
     },
     skillsData() {
-      let skillsData = this.$store.state.skillManagement.skills;
+      let skillsData = this.$store.getters["skillManagement/getItems"];
       this.updateWorkareasList(this.itemLocal.skills);
       this.updateUsersList(this.itemLocal.skills);
       return this.filterItemsAdmin(skillsData);
     },
     projectsData() {
-      return this.$store.state.projectManagement.projects;
+      return this.$store.getters["projectManagement/getItems"];
     },
     checkProjectStatus() {
       if (this.project_data != null) {
@@ -564,29 +570,19 @@ export default {
       item.token = this.token;
       this.$store
         .dispatch("taskManagement/updateItem", item)
-        .then((response) => {
-          if (response.data.success) {
-            this.refreshData ? this.refreshData() : null;
-            this.$vs.notify({
-              title: "Modification d'une tâche",
-              text: `"${this.itemLocal.name}" modifiée avec succès`,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "success",
-            });
-          } else {
-            this.$vs.notify({
-              title: "Indisponible",
-              text: response.data.error,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger",
-            });
-          }
+        .then((data) => {
+          this.refreshData ? this.refreshData() : null;
+          this.$vs.notify({
+            title: "Modification d'une tâche",
+            text: `"${this.itemLocal.name}" modifiée avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
+          });
         })
         .catch((error) => {
           this.$vs.notify({
-            title: "Error",
+            title: "Erreur",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
@@ -619,8 +615,8 @@ export default {
           "taskManagement/addComment",
           Object.assign({}, this.itemLocal)
         )
-        .then((response) => {
-          this.itemLocal.comments = response;
+        .then((data) => {
+          this.itemLocal.comments = data.payload.comments;
           this.$vs.loading.close("#button-with-loading > .con-vs-loading");
           this.itemLocal.comment = "";
         });
@@ -674,8 +670,9 @@ export default {
       return filteredItems;
     },
     addPreviousTask(taskIds) {
-      this.itemLocal.previousTasksIds = taskIds;
+      this.itemLocal.previous_task_ids = taskIds;
       let previousTasks_local = [];
+      console.log(taskIds);
 
       taskIds.forEach((id) => {
         let task = this.tasks_list.filter((t) => t.id == id);
@@ -704,14 +701,14 @@ export default {
     },
     deleteTask() {
       this.$store
-        .dispatch("scheduleManagement/removeEvent", this.idEvent)
+        .dispatch("scheduleManagement/removeItem", this.idEvent)
         .catch((err) => {
           console.error(err);
         });
 
       this.$store
-        .dispatch("taskManagement/removeItem", this.itemLocal.id)
-        .then((response) => {
+        .dispatch("taskManagement/removeItems", [this.itemLocal.id])
+        .then((data) => {
           this.$vs.notify({
             color: "success",
             title: "Succès",

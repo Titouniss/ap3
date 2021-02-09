@@ -292,7 +292,7 @@ export default {
           : "24:00";
 
       this.$store
-        .dispatch("scheduleManagement/addEvents", eventsParse)
+        .dispatch("scheduleManagement/addItems", eventsParse)
         .catch((err) => {
           this.manageErrors(err);
         });
@@ -450,8 +450,8 @@ export default {
       if (this.$route.query.type === "users") {
         this.$store
           .dispatch("userManagement/fetchItem", this.$route.query.id)
-          .then((res) => {
-            let item = res.data.success;
+          .then((data) => {
+            let item = data.payload;
             if (item.work_hours.length > 0) {
               let businessHours = [];
               item.work_hours.forEach((wH) => {
@@ -607,20 +607,24 @@ export default {
       });
       if (id_bundle != null) {
         this.$store
-          .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+          .dispatch("taskManagement/fetchItems", { tasks_bundle_id: id_bundle })
           .catch((err) => {
             this.manageErrors(err);
           });
       }
     } else if (this.$route.query.type === "users") {
       this.$store
-        .dispatch("taskManagement/fetchItemsByUser", this.$route.query.id)
+        .dispatch("taskManagement/fetchItems", {
+          user_id: this.$route.query.id,
+        })
         .catch((err) => {
           this.manageErrors(err);
         });
     } else if (this.$route.query.type === "workarea") {
       this.$store
-        .dispatch("taskManagement/fetchItemsByWorkarea", this.$route.query.id)
+        .dispatch("taskManagement/fetchItems", {
+          workarea: this.$route.query.id,
+        })
         .catch((err) => {
           this.manageErrors(err);
         });
@@ -647,7 +651,7 @@ export default {
     //   });
     //   if (id_bundle != null) {
     //     this.$store
-    //       .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+    //       .dispatch("taskManagement/fetchItems", {tasks_bundle_id: id_bundle})
     //       .catch(err => {
     //         this.manageErrors(err);
     //       });

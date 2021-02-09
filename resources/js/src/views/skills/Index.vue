@@ -300,7 +300,9 @@ export default {
 
       // Check if the skills are in an task
       this.$store
-        .dispatch("taskManagement/fetchItemsBySkills", selected_skills_id)
+        .dispatch("taskManagement/fetchItems", {
+          skill_ids: selected_skills_id,
+        })
         .then((data) => {
           if (data && data.success) {
             let tasks = data.payload;

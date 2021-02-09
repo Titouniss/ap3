@@ -60,6 +60,7 @@ class ProjectController extends BaseApiController
             'name' => $arrayRequest['name'],
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
+            'created_by' => Auth::id()
         ]);
 
         if (isset($arrayRequest['customer_id'])) {

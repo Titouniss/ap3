@@ -1,5 +1,5 @@
 <template>
-  <div :style="{'direction': $vs.rtl ? 'rtl' : 'ltr'}">
+  <div :style="{ direction: $vs.rtl ? 'rtl' : 'ltr' }">
     <feather-icon
       icon="Edit3Icon"
       svgClasses="h-5 w-5 mr-4 hover:text-primary cursor-pointer"
@@ -44,10 +44,12 @@ export default {
 
       let tasks = [];
       this.$store
-        .dispatch("taskManagement/fetchItemsBySkill", this.params.data.id)
+        .dispatch("taskManagement/fetchItems", {
+          skill_id: this.params.data.id,
+        })
         .then((data) => {
-          if (data && data.data.success) {
-            tasks = data.data.success;
+          if (data && data.success) {
+            tasks = data.payload;
 
             let message = "";
             if (haveSkill.length > 0 && tasks.length > 0) {

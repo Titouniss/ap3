@@ -31,7 +31,7 @@ class Task extends Model
 
     public function skills()
     {
-        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id');
+        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id', 'skill_id');
     }
 
     public function comments()
