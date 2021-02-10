@@ -1,15 +1,17 @@
 <template>
   <div class="mb-1">
     <span
-      v-if="previousTasksIds.length > 0"
+      v-if="previous_task_ids.length > 0"
       v-on:click="activePromptPrevious = true"
       class="linkTxtWarning"
-    >- Modifier prédécesseur</span>
+      >- Modifier prédécesseur</span
+    >
     <span
-      v-if="previousTasksIds.length == 0"
+      v-if="previous_task_ids.length == 0"
       v-on:click="activePromptPrevious = true"
       class="linkTxt"
-    >+ Ajouter un prédécesseur</span>
+      >+ Ajouter un prédécesseur</span
+    >
 
     <vs-prompt
       title="Ajouter un ordre"
@@ -32,7 +34,7 @@
             :key="index"
             :value="item.id"
             :text="item.name"
-            v-for="(item,index) in TasksData"
+            v-for="(item, index) in TasksData"
           />
         </vs-select>
       </div>
@@ -46,32 +48,32 @@ export default {
   props: {
     current_task_id: { type: Number },
     tasks_list: { required: true },
-    previousTasksIds: { required: true },
-    addPreviousTask: { type: Function }
+    previous_task_ids: { required: true },
+    addPreviousTask: { type: Function },
   },
   data() {
     return {
       activePromptPrevious: false,
-      previousTasksIds_local: this.previousTasksIds
+      previousTasksIds_local: this.previous_task_ids,
     };
   },
   computed: {
     TasksData() {
       let list = [];
       if (this.current_task_id) {
-        this.tasks_list.forEach(element => {
+        this.tasks_list.forEach((element) => {
           element.id != this.current_task_id ? list.push(element) : "";
         });
       } else {
         list = this.tasks_list;
       }
       return list;
-    }
+    },
   },
   methods: {
     clearFields() {
       this.previousTasksIds_local = [];
-    }
+    },
   },
 };
 </script>
@@ -101,7 +103,7 @@ export default {
   cursor: pointer;
   background-color: #efefef;
 }
-.linkTxtWarning:hover{
+.linkTxtWarning:hover {
   cursor: pointer;
   background-color: #efefef;
 }

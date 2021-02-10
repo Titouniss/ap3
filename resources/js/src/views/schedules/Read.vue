@@ -292,7 +292,7 @@ export default {
           : "24:00";
 
       this.$store
-        .dispatch("scheduleManagement/addEvents", eventsParse)
+        .dispatch("scheduleManagement/addItems", eventsParse)
         .catch((err) => {
           this.manageErrors(err);
         });
@@ -450,8 +450,8 @@ export default {
       if (this.$route.query.type === "users") {
         this.$store
           .dispatch("userManagement/fetchItem", this.$route.query.id)
-          .then((res) => {
-            let item = res.data.success;
+          .then((data) => {
+            let item = data.payload;
             if (item.work_hours.length > 0) {
               let businessHours = [];
               item.work_hours.forEach((wH) => {
@@ -592,35 +592,44 @@ export default {
 
     if (this.$route.query.type === "projects") {
       if (this.authorizedTo("read", "projects")) {
-        this.$store.dispatch("projectManagement/fetchItems").catch((err) => {
-          console.error(err);
-        });
-      }
-      var id_bundle = null;
-
-      this.$store.state.projectManagement.projects.forEach((p) => {
-        p.tasks_bundles.forEach((t) => {
-          if (t.project_id === parseInt(this.$route.query.id, 10)) {
-            id_bundle = t.id;
-          }
-        });
-      });
-      if (id_bundle != null) {
         this.$store
-          .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+          .dispatch("projectManagement/fetchItems")
+          .then((data) => {
+            var id_bundle = null;
+            this.$store.getters["projectManagement/getItems"].forEach((p) => {
+              p.tasks_bundles.forEach((t) => {
+                if (t.project_id === parseInt(this.$route.query.id)) {
+                  id_bundle = t.id;
+                }
+              });
+            });
+            if (id_bundle != null) {
+              this.$store
+                .dispatch("taskManagement/fetchItems", {
+                  tasks_bundle_id: id_bundle,
+                })
+                .catch((err) => {
+                  this.manageErrors(err);
+                });
+            }
+          })
           .catch((err) => {
-            this.manageErrors(err);
+            console.error(err);
           });
       }
     } else if (this.$route.query.type === "users") {
       this.$store
-        .dispatch("taskManagement/fetchItemsByUser", this.$route.query.id)
+        .dispatch("taskManagement/fetchItems", {
+          user_id: this.$route.query.id,
+        })
         .catch((err) => {
           this.manageErrors(err);
         });
     } else if (this.$route.query.type === "workarea") {
       this.$store
-        .dispatch("taskManagement/fetchItemsByWorkarea", this.$route.query.id)
+        .dispatch("taskManagement/fetchItems", {
+          workarea: this.$route.query.id,
+        })
         .catch((err) => {
           this.manageErrors(err);
         });
@@ -647,7 +656,7 @@ export default {
     //   });
     //   if (id_bundle != null) {
     //     this.$store
-    //       .dispatch("taskManagement/fetchItemsByBundle", id_bundle)
+    //       .dispatch("taskManagement/fetchItems", {tasks_bundle_id: id_bundle})
     //       .catch(err => {
     //         this.manageErrors(err);
     //       });

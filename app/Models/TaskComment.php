@@ -2,14 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\User;
+use Illuminate\Database\Eloquent\Model;
 
 class TaskComment extends Model
 {
-
     protected $fillable = ['description', 'confirmed', 'task_id', 'created_by', 'created_at'];
-
     protected $appends = ['creator'];
 
     public function getCreatorAttribute()

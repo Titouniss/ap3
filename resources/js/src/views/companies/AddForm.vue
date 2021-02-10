@@ -402,8 +402,8 @@ export default {
         this.itemLocal.contact_firstname !== "" &&
         this.itemLocal.contact_lastname !== "" &&
         this.itemLocal.contact_function !== "" &&
-        this.itemLocal.contact_tel1 !== "" &&
-        this.itemLocal.contact_tel2 !== "" &&
+        (this.itemLocal.contact_tel1 !== "" ||
+          this.itemLocal.contact_tel2 !== "") &&
         this.itemLocal.contact_email !== "" &&
         this.itemLocal.street_number !== "" &&
         this.itemLocal.street_name !== "" &&

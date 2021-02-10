@@ -280,10 +280,10 @@ export default {
       return this.$store.state.AppActiveUser.is_admin;
     },
     itemIdToEdit() {
-      return this.$store.state.customerManagement.customer.id || 0;
+      return this.$store.getters["customerManagement/getSelectedItem"].id || 0;
     },
     customersData() {
-      return this.$store.state.customerManagement.customers;
+      return this.$store.getters["customerManagement/getItems"];
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -464,9 +464,11 @@ export default {
       moduleCompanyManagement.isRegistered = true;
     }
 
-    this.$store.dispatch("customerManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("customerManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
 
     if (this.authorizedTo("read", "companies")) {
       this.$store.dispatch("companyManagement/fetchItems").catch((err) => {

@@ -203,7 +203,7 @@ export default {
     },
     archiveRecord() {
       this.$store
-        .dispatch(`${this.model}Management/removeItem`, this.params.data.id)
+        .dispatch(`${this.model}Management/removeItems`, [this.params.data.id])
         .then((response) => {
           this.showActionSuccess("archive");
         })
@@ -214,7 +214,7 @@ export default {
     },
     restoreRecord() {
       this.$store
-        .dispatch(`${this.model}Management/restoreItem`, this.params.data.id)
+        .dispatch(`${this.model}Management/restoreItems`, [this.params.data.id])
         .then((response) => {
           this.showActionSuccess("restore");
         })
@@ -227,9 +227,9 @@ export default {
       this.$store
         .dispatch(
           `${this.model}Management/${
-            this.usesSoftDelete ? "forceRemoveItem" : "removeItem"
+            this.usesSoftDelete ? "forceRemoveItems" : "removeItems"
           }`,
-          this.params.data.id
+          [this.params.data.id]
         )
         .then((response) => {
           this.showActionSuccess("delete");

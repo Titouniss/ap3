@@ -203,7 +203,7 @@ export default {
       // You can get data in "this.data_local"
 
       this.$store
-        .dispatch("userManagement/updateAccountItem", this.data_local)
+        .dispatch("userManagement/updateAccount", this.data_local)
         .then(() => {
           this.$vs.loading.close();
           this.$vs.notify({

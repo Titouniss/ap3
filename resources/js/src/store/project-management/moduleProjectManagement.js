@@ -1,24 +1,22 @@
-/*=========================================================================================
-  File Name: 
-  Description: 
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import { apiRequest } from "@/http/requests";
+import { crud } from "../utils";
 
+const slug = 'project-management';
+const model = 'project';
+const model_plurial = 'projects';
 
-import state from './moduleProjectManagementState.js'
-import mutations from './moduleProjectManagementMutations.js'
-import actions from './moduleProjectManagementActions.js'
-import getters from './moduleProjectManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
+
+actions.start = ({ commit }, item) => {
+    return apiRequest(`${slug}/start/${item.id}`, 'post', null, item);
+}
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
 }
 

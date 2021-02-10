@@ -326,7 +326,9 @@ export default {
         return [];
       }
 
-      return this.sortProjects(this.$store.state.projectManagement.projects);
+      return this.sortProjects(
+        this.$store.getters["projectManagement/getItems"]
+      );
     },
     ganttProjectsData() {
       if (!this.projectsData || this.projectsData.length <= 0) {
@@ -578,7 +580,7 @@ export default {
     const that = this;
     this.$vs.loading();
     this.$store
-      .dispatch("projectManagement/fetchItems")
+      .dispatch("projectManagement/fetchItems", { with_trashed: true })
       .then(() => {
         that.projectsLoaded = true;
         setTimeout(() => that.onResize(), 500);

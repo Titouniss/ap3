@@ -2,81 +2,94 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
+use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
 use App\Models\Hours;
 use App\Models\Unavailability;
 use App\Models\DealingHours;
 use App\Models\Project;
 use App\Models\WorkHours;
+use App\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Carbon\CarbonPeriod;
-use DatePeriod;
 use Illuminate\Support\Facades\Auth;
-use Validator;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-class HoursController extends Controller
+class HoursController extends BaseApiController
 {
-    public $successStatus = 200;
+    protected static $index_load = ['project:id,name', 'user:id,firstname,lastname,email'];
+    protected static $index_append = null;
+    protected static $show_load = ['project:id,name', 'user:id,firstname,lastname,email'];
+    protected static $show_append = null;
+
+    protected static $store_validation_array = [
+        'user_id' => 'required',
+        'project_id' => 'required',
+        'start_at' => 'required',
+        'end_at' => 'required',
+        'date' => 'required',
+        'description' => 'nullable'
+    ];
+
+    protected static $update_validation_array = [
+        'user_id' => 'required',
+        'project_id' => 'required',
+        'start_at' => 'required',
+        'end_at' => 'required',
+        'description' => 'nullable'
+    ];
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index(Request $request)
+    public function __construct()
     {
-        $user = Auth::user();
-        $items = $user->is_admin ? Hours::select('*') : Hours::where('user_id', $user->id);
-        $paidHolidays = $user->is_admin ? Unavailability::select('*')->where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
+        parent::__construct(Hours::class);
+    }
 
-        if ($user->hasRole('Administrateur')) {
-            $items = Hours::select('hours.*')->join('users', 'hours.user_id', '=', 'users.id')->where('users.company_id', $user->company_id);
-        }
-        if ($request->user_id) {
-            $items->where('user_id', $request->user_id);
+    protected function extraIndexData(Request $request, $items)
+    {
+        $stats = [];
+
+        $user = Auth::user();
+        $paidHolidays = $user->is_admin ? Unavailability::where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
+
+        if ($request->has('user_id')) {
+            if (User::where('id', $request->user_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'user_id' n'est pas valide.");
+            }
             $paidHolidays->where('user_id', $request->user_id);
         }
-        if ($request->project_id) {
-            $items->where('project_id', $request->project_id);
-        }
 
-        if ($request->date) {
-            switch ($request->period_type) {
-                case 'week':
-                    $items->whereBetween('start_at', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
-                    $paidHolidays->whereBetween('starts_at', [Carbon::createFromFormat('d-m-Y', $request->date)->startOfWeek(), Carbon::createFromFormat('d-m-Y', $request->date)->endOfWeek()]);
-                    break;
-                case 'month':
-                    $items->whereMonth('start_at', Carbon::createFromFormat('d-m-Y', $request->date)->month);
-                    $paidHolidays->whereMonth('starts_at', Carbon::createFromFormat('d-m-Y', $request->date)->month);
-                    break;
-                case 'year':
-                    $items->whereYear('start_at', Carbon::createFromFormat('d-m-Y', $request->date)->year);
-                    $paidHolidays->whereYear('starts_at', Carbon::createFromFormat('d-m-Y', $request->date)->year);
-                    break;
+        if ($request->has('date')) {
+            try {
+                $date = Carbon::createFromFormat('d-m-Y', $request->date);
+                switch ($request->period_type) {
+                    case 'week':
+                        $paidHolidays->whereBetween('starts_at', [$date->startOfWeek(), $date->endOfWeek()]);
+                        break;
+                    case 'month':
+                        $paidHolidays->whereBetween('starts_at', [$date->startOfMonth(), $date->endOfMonth()]);
+                        break;
+                    case 'year':
+                        $paidHolidays->whereBetween('starts_at', [$date->startOfYear(), $date->endOfYear()]);
+                        break;
 
-                default:
-                    $items->whereDate('start_at', Carbon::createFromFormat('d-m-Y', $request->date));
-                    $paidHolidays->whereDate('starts_at', Carbon::createFromFormat('d-m-Y', $request->date));
-                    break;
+                    default:
+                        $paidHolidays->whereDate('starts_at', $date);
+                        break;
+                }
+            } catch (\Throwable $th) {
+                throw new ApiException("Paramètre 'date' n'est pas valide.");
             }
         }
 
-        $items = $items->with('project', 'user')->orderBy('start_at')->get();
         $paidHolidays = $paidHolidays->get();
-
-        // Stats
-        $stats = [];
 
         // // Ajout des congés payés au nombre d'heures
         if (!$paidHolidays->isEmpty()) {
             $stats['total'] = CarbonInterval::hours(0);
-            foreach ($paidHolidays as $key => $pH) {
+            foreach ($paidHolidays as $pH) {
                 $hours = Carbon::create($pH->ends_at)->diffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::createFromFormat('H', $hours));
             }
@@ -140,40 +153,63 @@ class HoursController extends Controller
             }
         }
 
-        return response()->json(['success' => $items, 'stats' => $stats], $this->successStatus);
+        return collect(['stats' => $stats]);
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  \App\Models\Hours $hours
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Hours $hours)
+    protected function filterIndexQuery(Request $request, $query)
     {
-        return response()->json(['success' => $hours->load('project', 'user')], $this->successStatus);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'user_id' => 'required',
-            'project_id' => 'required',
-            'start_at' => 'required',
-            'end_at' => 'required',
-            'date' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], $this->successStatus);
+        $user = Auth::user();
+        if ($user->is_manager) {
+            $query->join('users', function ($join) use ($user) {
+                $join->on('hours.user_id', '=', 'users.id')
+                    ->where('users.company_id', $user->company_id);
+            });
         }
 
+        if ($request->has('user_id')) {
+            if (User::where('id', $request->user_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'user_id' n'est pas valide.");
+            }
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->has('project_id')) {
+            if (Project::where('id', $request->project_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'project_id' n'est pas valide.");
+            }
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->has('date')) {
+            try {
+                $date = Carbon::createFromFormat('d-m-Y', $request->date);
+                switch ($request->period_type) {
+                    case 'week':
+                        $query->whereBetween('start_at', [$date->startOfWeek(), $date->endOfWeek()]);
+                        break;
+                    case 'month':
+                        $query->whereMonth('start_at', $date->month)->whereYear('start_at', $date->year);
+                        break;
+                    case 'year':
+                        $query->whereYear('start_at', $date->year);
+                        break;
+
+                    default:
+                        $query->whereDate('start_at', $date);
+                        break;
+                }
+            } catch (\Throwable $th) {
+                throw new ApiException("Paramètre 'date' n'est pas valide.");
+            }
+        }
+
+        if (!$request->has('order_by')) {
+            $query->orderBy('start_at');
+        }
+    }
+
+    protected function storeItem(array $arrayRequest)
+    {
         //Set duration
         $start_at = Carbon::parse($arrayRequest['start_at']);
         $end_at = Carbon::parse($arrayRequest['end_at']);
@@ -181,7 +217,7 @@ class HoursController extends Controller
         $parseDuration = $start_at->floatDiffInHours($end_at);
 
         if ($parseDuration === 0) {
-            return response()->json(['error' => "Veuillez inserer une durée"], $this->successStatus);
+            throw new ApiException("Veuillez inserer une durée.");
         }
 
         // How many hour user worked this day
@@ -191,44 +227,121 @@ class HoursController extends Controller
         $target_day = $start_at->locale('fr_FR')->dayName;
         $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
         if ($target_work_hours === 0) {
-            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day], $this->successStatus);
+            throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day . ".");
         }
 
         // Check if user have already hour on this new entry period
-        $noLayering = $this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at);
-
-        if (!$noLayering) {
-            return response()->json(['error' => "Attention, vous ne pouvez pas superposer deux horaires"],  $this->successStatus);
+        if (!$this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at)) {
+            throw new ApiException("Attention, vous ne pouvez pas superposer deux horaires.");
         }
-
-
 
         // Check if value in dealing_hours for this date
         $findDealingHour = DealingHours::where('user_id', $arrayRequest['user_id'])->where('date', $arrayRequest['date'])->first();
 
+        $item = Hours::create([
+            'user_id' => $arrayRequest['user_id'],
+            'project_id' => $arrayRequest['project_id'],
+            'start_at' => $arrayRequest['start_at'],
+            'end_at' => $arrayRequest['end_at'],
+            'date' => $arrayRequest['date'],
+        ]);
+        if (isset($arrayRequest['description'])) {
+            $item->update(['description' => $arrayRequest['description']]);
+        }
         if (empty($findDealingHour) === false) {
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            $item = Hours::create($arrayRequest);
             $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
         }
         // Else add new tuple in dealing_hours for this date
         else {
             //Create new tuple in dealing_hours with user_id, date and overtimes
-            $item = Hours::create($arrayRequest);
             $deallingHourItem = DealingHours::create(
                 ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]
             );
         }
 
-        // else {
-        //     $arrayRequest['start_at'] = $start_at->ToDateTimeString();
-        //     $arrayRequest['end_at'] = $end_at->ToDateTimeString();
-        //     $item = Hours::create($arrayRequest);
-        // }
+        return $item;
+    }
 
-        $item = Hours::where('id', $item->id)->with('project', 'user')->first();
+    protected function updateItem($item, array $arrayRequest)
+    {
+        $start_at = Carbon::parse($arrayRequest['start_at']);
+        $end_at = Carbon::parse($arrayRequest['end_at']);
 
-        return response()->json(['success' => $item], $this->successStatus);
+        // Update user hour have worke_hour for this day ?
+        $target_day = $start_at->locale('fr_FR')->dayName;
+        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
+        if ($target_work_hours === 0) {
+            throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day . ".");
+        }
+
+        // Check if user have already hour on this new entry period
+        if (!$this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at, $arrayRequest['id'])) {
+            throw new ApiException("Attention, vous ne pouvez pas superposer deux horaires.");
+        }
+
+        // get old hour data
+        $old_hours = $item->replicate();
+        $old_date = Carbon::parse($old_hours['start_at']);
+        $old_hours['date'] = $old_date->format('Y-m-d');
+
+        $item->update([
+            'user_id' => $arrayRequest['user_id'],
+            'project_id' => $arrayRequest['project_id'],
+            'start_at' => $arrayRequest['start_at'],
+            'end_at' => $arrayRequest['end_at'],
+        ]);
+
+        if (isset($arrayRequest['description'])) {
+            $item->update(['description' => $arrayRequest['description']]);
+        }
+
+        //reset old overtimes compteur
+        // How many old hour worked this day
+        $nb_worked_hours = HoursController::getNbWorkedHours($old_hours['user_id'], 0, $old_hours['date']);
+
+        // Expected hours for old day
+        $target_work_hours = HoursController::getTargetWorkHours($old_hours['user_id'], $old_date->locale('fr_FR')->dayName);
+
+        // Check if value in dealing_hours for old date
+        $findDealingHour = DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->first();
+
+        if ($nb_worked_hours > $target_work_hours) {
+            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
+            DealingHours::where('date', $old_hours['date'])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+        } else if ($findDealingHour) {
+            // Not empty and no used_hour ? Delete dealing_hour tuple
+            if ($findDealingHour['used_hours'] === 0) {
+                $item = DealingHours::findOrFail($findDealingHour['id']);
+                $item->delete();
+            } else {
+                DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->update(['overtimes' => 0]);
+            }
+        }
+
+        //reset new overtimes compteur
+        // How many new hour worked this day
+        $nb_worked_hours = HoursController::getNbWorkedHours($arrayRequest['user_id'], 0, $arrayRequest['date']);
+
+        // Expected hours for this day
+        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
+
+        // Check if value in dealing_hours for this date
+        $findDealingHour = DealingHours::where([['date', $arrayRequest['date']], ['user_id', $arrayRequest['user_id']]])->first();
+
+        if ($nb_worked_hours > $target_work_hours) {
+            if (!empty($findDealingHour)) {
+                // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
+                $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+            } else {
+                //Create new tuple in dealing_hours with user_id, date and overtimes
+                $deallingHourItem = DealingHours::create(
+                    ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]
+                );
+            }
+        }
+
+        return $item;
     }
 
     private function checkIfNewEntryLayeringOtherHours($user_id, $start_at, $end_at, $hour_id = null)
@@ -324,148 +437,28 @@ class HoursController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    protected function destroyItem($item)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Hours $hours
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Hours $hours)
-    {
-
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'user_id' => 'required',
-            'project_id' => 'required',
-            'start_at' => 'required',
-            'end_at' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-
-        $start_at = Carbon::parse($arrayRequest['start_at']);
-        $end_at = Carbon::parse($arrayRequest['end_at']);
-
-        // Update user hour have worke_hour for this day ?
-        $target_day = $start_at->locale('fr_FR')->dayName;
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
-        if ($target_work_hours === 0) {
-            return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day], $this->successStatus);
-        }
-
-        // Check if user have already hour on this new entry period
-        $noLayering = $this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at, $arrayRequest['id']);
-        if (!$noLayering) {
-            return response()->json(['error' => "Attention, vous ne pouvez pas superposer deux horaires"], $this->successStatus);
-        }
-
-        // get old hour data
-        $old_hours = $hours->replicate();
-        $old_date = Carbon::parse($old_hours['start_at']);
-        $old_hours['date'] = $old_date->format('Y-m-d');
-
-        $update = $hours->update([
-            'user_id' => $arrayRequest['user_id'],
-            'project_id' => $arrayRequest['project_id'],
-            'start_at' => $arrayRequest['start_at'],
-            'end_at' => $arrayRequest['end_at'],
-            'description' => $arrayRequest['description'],
-        ]);
-
-        //reset old overtimes compteur
-        // How many old hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($old_hours['user_id'], 0, $old_hours['date']);
-
-        // Expected hours for old day
-        $target_work_hours = HoursController::getTargetWorkHours($old_hours['user_id'], $old_date->locale('fr_FR')->dayName);
-
-        // Check if value in dealing_hours for old date
-        $findDealingHour = DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->first();
-
-        if ($nb_worked_hours > $target_work_hours) {
-            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            DealingHours::where('date', $old_hours['date'])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-        } else if ($findDealingHour) {
-            // Not empty and no used_hour ? Delete dealing_hour tuple
-            if ($findDealingHour['used_hours'] === 0) {
-                $item = DealingHours::findOrFail($findDealingHour['id']);
-                $item->delete();
-            } else {
-                DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->update(['overtimes' => 0]);
-            }
-        }
-
-        //reset new overtimes compteur
-        // How many new hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($arrayRequest['user_id'], 0, $arrayRequest['date']);
-
-        // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
-
-        // Check if value in dealing_hours for this date
-        $findDealingHour = DealingHours::where([['date', $arrayRequest['date']], ['user_id', $arrayRequest['user_id']]])->first();
-
-        if ($nb_worked_hours > $target_work_hours) {
-            if (!empty($findDealingHour)) {
-                // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-                $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-            } else {
-                //Create new tuple in dealing_hours with user_id, date and overtimes
-                $deallingHourItem = DealingHours::create(
-                    ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]
-                );
-            }
-        }
-
-        if ($update) {
-            return response()->json(['success' => $hours->load('project', 'user')], $this->successStatus);
-        } else {
-            return response()->json(['error' => 'error'], $this->errorStatus);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Hours $hours
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Hours $hours)
-    {
-        $date = Carbon::parse($hours->start_at);
+        $date = Carbon::parse($item->start_at);
 
         // update overtimes compteur for this user and date
         // How many hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($hours->user_id, 0, $date->format('Y-m-d'));
+        $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $date->format('Y-m-d'));
 
         // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($hours->user_id, Carbon::parse($hours->date)->locale('fr_FR')->dayName);
+        $target_work_hours = HoursController::getTargetWorkHours($item->user_id, Carbon::parse($item->date)->locale('fr_FR')->dayName);
 
         // Check if value in dealing_hours for old date
-        $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $hours->user_id]])->first();
+        $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->first();
 
         if (empty($findDealingHour) === false && ($nb_worked_hours - $target_work_hours) >= 0) {
             // Delete dealing_hours
             $findDealingHour->delete();
         } else {
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $hours->user_id]])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+            DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
         }
 
-        return response()->json(['success' => $hours->delete()], $this->successStatus);
+        return parent::destroyItem($item);
     }
 }

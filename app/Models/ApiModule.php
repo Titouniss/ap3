@@ -5,8 +5,18 @@ namespace App\Models;
 class ApiModule extends BaseModule
 {
     protected $fillable = ['url', 'auth_headers'];
+    protected $hidden = ['connection'];
 
     public $timestamps = false;
+
+    public function getConnectionAttribute()
+    {
+        return [
+            'id' => $this->id,
+            'url' => $this->url ?? "",
+            'auth_headers' => $this->auth_headers ?? "",
+        ];
+    }
 
     public function module()
     {

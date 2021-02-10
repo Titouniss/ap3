@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +11,8 @@ use Monolog\Logger;
 
 class BaseModule extends Model
 {
+    use HasCompany;
+
     protected $fillable = ['name', 'modulable_id', 'modulable_type', 'last_synced_at', 'is_active', 'company_id'];
     protected $appends = ['type'];
 
@@ -18,14 +21,14 @@ class BaseModule extends Model
         return $this->modulable_type === SqlModule::class ? "sql" : "api";
     }
 
+    public function getConnectionAttribute()
+    {
+        return $this->modulable->connection_data;
+    }
+
     public function modulable()
     {
         return $this->morphTo();
-    }
-
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
     }
 
     public function moduleDataTypes()

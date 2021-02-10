@@ -1,19 +1,17 @@
-/*=========================================================================================
-  Description: Module 
-==========================================================================================*/
+import { crud } from "../utils";
 
+const slug = 'permission-management';
+const model = 'permission';
+const model_plurial = 'permissions';
 
-import state from './modulePermissionManagementState.js'
-import mutations from './modulePermissionManagementMutations.js'
-import actions from './modulePermissionManagementActions.js'
-import getters from './modulePermissionManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
 }
 

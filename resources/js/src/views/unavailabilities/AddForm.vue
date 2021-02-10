@@ -4,8 +4,9 @@
       type="border"
       class="items-center p-3 w-full"
       @click="activePrompt = true"
-      >Ajouter une indisponibilité</vs-button
     >
+      Ajouter une indisponibilité
+    </vs-button>
     <vs-prompt
       title="Ajouter une indisponibilité"
       accept-text="Ajouter"
@@ -201,19 +202,15 @@ export default {
           this.$store
             .dispatch("unavailabilityManagement/addItem", item)
             .then((data) => {
-              if (!data.error) {
-                this.$vs.loading.close();
-                this.$vs.notify({
-                  title: "Ajout d'une indisponibilité",
-                  text: `Indisponibilité ajoutée avec succès`,
-                  iconPack: "feather",
-                  icon: "icon-alert-circle",
-                  color: "success",
-                });
-              }
+              this.$vs.notify({
+                title: "Ajout d'une indisponibilité",
+                text: `Indisponibilité ajoutée avec succès`,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success",
+              });
             })
             .catch((error) => {
-              this.$vs.loading.close();
               this.$vs.notify({
                 title: "Erreur",
                 text: error.message,
@@ -222,8 +219,11 @@ export default {
                 color: "danger",
                 time: 10000,
               });
+            })
+            .finally(() => {
+              this.$vs.loading.close();
+              this.clearFields();
             });
-          this.clearFields();
         }
       });
     },

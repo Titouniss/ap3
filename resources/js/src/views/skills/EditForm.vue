@@ -119,9 +119,6 @@ export default {
     companiesData() {
       return this.$store.state.companyManagement.companies;
     },
-    permissions() {
-      return this.$store.state.roleManagement.permissions;
-    },
     disabled() {
       if (this.isAdmin) {
         return false;

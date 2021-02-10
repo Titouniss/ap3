@@ -16,7 +16,11 @@
   >
     <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
       <vx-card>
-        <img src="@assets/images/pages/reset-password.png" alt="graphic-500" class="mx-auto mb-4" />
+        <img
+          src="@assets/images/pages/reset-password.png"
+          alt="graphic-500"
+          class="mx-auto mb-4"
+        />
         <h4 class="mb-4 text-center">Changement de mot de passe</h4>
 
         <vs-input
@@ -27,10 +31,9 @@
           v-validate="'required'"
           name="password"
         />
-        <span
-          class="text-danger text-sm"
-          v-show="errors.has('password')"
-        >{{ errors.first('password') }}</span>
+        <span class="text-danger text-sm" v-show="errors.has('password')">{{
+          errors.first("password")
+        }}</span>
 
         <vs-input
           type="password"
@@ -39,19 +42,21 @@
           v-model="confirm_new_password"
           v-validate="'required'"
           name="password_confirm"
-          v-on:keyup.enter="change_password"
+          v-on:keyup.enter="changePassword"
         />
         <span
           class="text-danger text-sm"
           v-show="errors.has('password_confirm')"
-        >{{ errors.first('password_confirm') }}</span>
+          >{{ errors.first("password_confirm") }}</span
+        >
 
         <div class="flex justify-center my-3 ml-auto mr-auto">
           <vs-button
             class="ml-auto mt-2"
-            @click="change_password"
+            @click="changePassword"
             :disabled="!validateForm"
-          >Sauvegarder</vs-button>
+            >Sauvegarder</vs-button
+          >
         </div>
       </vx-card>
     </div>
@@ -89,8 +94,8 @@ export default {
     goLoginPage() {
       this.$router.push("/pages/login").catch(() => {});
     },
-    change_password() {
-      const register_token = this.$route.query.token
+    changePassword() {
+      const register_token = this.$route.query.token;
 
       if (
         this.new_password !== "" &&
@@ -99,24 +104,20 @@ export default {
       ) {
         this.$vs.loading();
         const payload = {
-          register_token: register_token,
+          register_token,
           new_password: this.new_password,
         };
         this.$store
-          .dispatch("auth/updatePasswordJWT", payload)
-          .then((response) => {
-            if(response.status === 200) {
-              this.$vs.notify({
-                title: "Modification du mot de passe",
-                text: "Votre mot de passe a bien été changé.",
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success",
-              });
-              this.goLoginPage();
-            } else {
-              throw new Error(response.data);
-            }
+          .dispatch("auth/updatePassword", payload)
+          .then((data) => {
+            this.$vs.notify({
+              title: "Modification du mot de passe",
+              text: "Votre mot de passe a bien été changé.",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success",
+            });
+            this.goLoginPage();
           })
           .catch((error) => {
             // Wrong format message

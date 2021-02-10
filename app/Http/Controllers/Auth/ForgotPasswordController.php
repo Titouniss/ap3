@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ReturnsJsonResponse;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -20,7 +21,7 @@ class ForgotPasswordController extends Controller
     |
     */
 
-    use SendsPasswordResetEmails;
+    use SendsPasswordResetEmails, ReturnsJsonResponse;
 
     /**
      * Create a new controller instance.
@@ -35,12 +36,11 @@ class ForgotPasswordController extends Controller
     public function getResetToken(Request $request)
     {
         $this->validate($request, ['email' => 'required|email']);
-        $sent = $this->sendResetLinkEmail($request);
+        if (!$this->sendResetLinkEmail($request)) {
+            return $this->errorResponse(("Impossible d'envoyer le mail, veuillez contacter votre administrateur."));
+        }
 
-        return ($sent) 
-            ? response()->json(['message'=>'Success'])
-            : response()->json(['message'=>'Failed']);
-
+        return $this->successResponse(true, "Émail envoyé avec succès.");
     }
 
     public function sendResetLinkEmail(Request $request)

@@ -507,20 +507,23 @@ export default {
       );
     },
     itemIdToEdit() {
-      return this.$store.state.hoursManagement.hours.id || 0;
+      return this.$store.getters["hoursManagement/getSelectedItem"].id || 0;
     },
     projects() {
-      return this.$store.state.projectManagement.projects.sort(function (a, b) {
-          var textA = a.name.toUpperCase();
-          var textB = b.name.toUpperCase();
-          return textA < textB ? -1 : textA > textB ? 1 : 0;
-        });
+      return this.$store.getters["projectManagement/getItems"].sort(function (
+        a,
+        b
+      ) {
+        var textA = a.name.toUpperCase();
+        var textB = b.name.toUpperCase();
+        return textA < textB ? -1 : textA > textB ? 1 : 0;
+      });
     },
     users() {
-      return this.$store.state.userManagement.users;
+      return this.$store.getters["userManagement/getItems"];
     },
     hoursData() {
-      return this.$store.state.hoursManagement.hours;
+      return this.$store.getters["hoursManagement/getItems"];
     },
     showSummary() {
       if (
@@ -631,8 +634,8 @@ export default {
         // refresh Hours
         this.$store
           .dispatch("hoursManagement/fetchItems", filter)
-          .then((response) => {
-            this.stats = response.data.stats;
+          .then((data) => {
+            this.stats = data.stats;
           })
           .catch((error) => {
             this.$vs.notify({
@@ -701,7 +704,7 @@ export default {
     deleteRecord() {
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("hoursManagement/removeItem", selectRow.id)
+          .dispatch("hoursManagement/removeItems", [selectRow.id])
           .then((data) => {
             this.showDeleteSuccess();
           })
@@ -820,7 +823,7 @@ export default {
         date: moment().format("DD-MM-YYYY"),
         period_type: "month",
       })
-      .then((response) => (this.stats = response.data.stats));
+      .then((data) => (this.stats = data.stats));
     this.$store.dispatch("projectManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
       this.$store.dispatch("userManagement/fetchItems");

@@ -1,8 +1,8 @@
 <template>
   <div class="p-3 mb-4 mr-4">
-    <vs-button @click="activePrompt = true" class="w-full"
-      >Saisie des temps</vs-button
-    >
+    <vs-button @click="activePrompt = true" class="w-full">
+      Saisie des temps
+    </vs-button>
     <vs-prompt
       title="Saisies des temps"
       accept-text="Ajouter"
@@ -136,9 +136,6 @@
 </template>
 
 <script>
-// Store Module
-import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
-
 import moment from "moment";
 import vSelect from "vue-select";
 
@@ -293,7 +290,7 @@ export default {
       );
     },
     projectsData() {
-      return this.$store.state.projectManagement.projects
+      return this.$store.getters["projectManagement/getItems"]
         .filter((p) => p.company_id === this.company_id)
         .sort(function (a, b) {
           var textA = a.name.toUpperCase();
@@ -323,38 +320,28 @@ export default {
           payload.end_at = payload.date + " " + payload.endHour;
           this.$store
             .dispatch("hoursManagement/addItem", payload)
-            .then((response) => {
-              if (response.data.success) {
-                this.$vs.loading.close();
-                this.$vs.notify({
-                  title: "Ajout d'un horaire",
-                  text: `Horaire ajouté avec succès`,
-                  iconPack: "feather",
-                  icon: "icon-alert-circle",
-                  color: "success",
-                });
-              } else {
-                this.$vs.loading.close();
-                this.$vs.notify({
-                  title: "Une erreur est survenue",
-                  text: response.data.error,
-                  iconPack: "feather",
-                  icon: "icon-alert-circle",
-                  color: "danger",
-                });
-              }
+            .then((data) => {
+              this.$vs.notify({
+                title: "Ajout d'un horaire",
+                text: `Horaire ajouté avec succès`,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success",
+              });
             })
             .catch((error) => {
-              this.$vs.loading.close();
               this.$vs.notify({
-                title: "Une erreur est survenue",
+                title: "Erreur",
                 text: error.message,
                 iconPack: "feather",
                 icon: "icon-alert-circle",
                 color: "danger",
               });
+            })
+            .finally(() => {
+              this.$vs.loading.close();
+              this.clearFields();
             });
-          this.clearFields();
         }
       });
       this.handleClose();

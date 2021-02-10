@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\DeleteCascades;
 use App\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Company extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, DeleteCascades;
 
     protected $fillable = [
         'name',
@@ -27,7 +28,7 @@ class Company extends Model
         'city',
         'country',
     ];
-    protected $appends = ['user_count', 'has_active_subscription', 'active_subscription'];
+    protected $appends = ['user_count', 'has_active_subscription'];
 
     public function getUserCountAttribute()
     {
@@ -36,7 +37,7 @@ class Company extends Model
 
     public function getActiveSubscriptionAttribute()
     {
-        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages')->first();
+        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages:id,display_name')->first();
     }
 
     public function getHasActiveSubscriptionAttribute()
@@ -46,7 +47,7 @@ class Company extends Model
 
     public function module()
     {
-        return $this->hasOne(BaseModule::class, 'company_id', 'id');
+        return $this->hasOne(BaseModule::class, 'company_id', 'id')->where('is_active', true);
     }
 
     public function skills()

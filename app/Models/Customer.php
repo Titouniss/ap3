@@ -2,19 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\DeleteCascades;
+use App\Traits\HasCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCompany, DeleteCascades;
 
     protected $fillable = ['name', 'lastname', 'siret', 'professional', 'company_id'];
-
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
-    }
 
     public function projects()
     {

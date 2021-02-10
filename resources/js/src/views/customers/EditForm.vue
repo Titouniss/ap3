@@ -138,11 +138,8 @@ export default {
           });
       },
     },
-    permissions() {
-      return this.$store.state.roleManagement.permissions;
-    },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     validateForm() {
       if (this.itemLocal.professional || this.itemLocal.professional === 1) {

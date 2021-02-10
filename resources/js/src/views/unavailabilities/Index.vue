@@ -236,7 +236,7 @@ export default {
   },
   computed: {
     unavailabilitiesData() {
-      return this.$store.state.unavailabilityManagement.unavailabilities;
+      return this.$store.getters["unavailabilityManagement/getItems"];
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -247,7 +247,9 @@ export default {
       else return 0;
     },
     itemIdToEdit() {
-      return this.$store.state.unavailabilityManagement.unavailability.id || 0;
+      return (
+        this.$store.getters["unavailabilityManagement/getSelectedItem"].id || 0
+      );
     },
     currentPage: {
       get() {
@@ -320,7 +322,7 @@ export default {
     deleteRecord() {
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("unavailabilityManagement/removeItem", selectRow.id)
+          .dispatch("unavailabilityManagement/removeItems", [selectRow.id])
           .then(() => {
             this.showDeleteSuccess();
           })

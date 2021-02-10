@@ -141,7 +141,7 @@ export default {
       }
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
   },
   methods: {

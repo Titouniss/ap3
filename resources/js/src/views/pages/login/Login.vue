@@ -48,7 +48,7 @@
               placeholder="Mot de passe"
               v-model="password"
               class="w-full mt-6"
-              v-on:keyup.enter="checkUsernamePwdBeforeLogin"
+              v-on:keyup.enter="executeLogin"
             />
 
             <div class="flex justify-center my-5 ml-auto mr-auto">
@@ -67,7 +67,7 @@
                 color="primary"
                 text-color="white"
                 :disabled="!validateForm"
-                @click="checkUsernamePwdBeforeLogin"
+                @click="executeLogin"
                 >Connexion</vs-button
               >
             </vs-row>
@@ -103,7 +103,7 @@ export default {
   methods: {
     checkLogin() {
       // If user is already logged in notify
-      if (this.$store.state.auth.isUserLoggedIn()) {
+      if (this.$store.getters["auth.isUserLoggedIn"]) {
         this.$vs.notify({
           title: "Connexion",
           text: "Vous êtes déjà connecté!",
@@ -116,76 +116,19 @@ export default {
       }
       return true;
     },
-    checkUsernamePwdBeforeLogin() {
-      if (!this.checkLogin()) return;
-
-      // Loading
-      this.$vs.loading();
-
-      const payload = {
-        userDetails: {
-          login: this.login,
-          password: this.password,
-        },
-      };
-
-      this.$store
-        .dispatch("auth/checkUsernamePwdBeforeLoginJWT", payload)
-        .then((r) => {
-          if (r.userData.is_password_change === 1) {
-            this.loginJWT();
-          } else {
-            this.$vs.loading.close();
-            this.$router.push({
-              name: "page-change-password",
-              params: { user_id: r.userData.id },
-              query: { token: r.userData.register_token },
-            });
-          }
-        })
-        .catch((error) => {
-          this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Echec",
-            text: error.message,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "danger",
-          });
-          if (error.activeResend) {
-            this.$router.push("/pages/verify").catch(() => {});
-          }
-        });
-    },
-    loginJWT() {
+    executeLogin() {
       if (!this.checkLogin()) return;
 
       const payload = {
         checkbox_remember_me: this.checkbox_remember_me,
-        userDetails: {
-          login: this.login,
-          email: this.email,
-          password: this.password,
-        },
+        login: this.login,
+        password: this.password,
       };
 
+      this.$vs.loading();
       this.$store
-        .dispatch("auth/loginJWT", payload)
-        .then((r) => {
-          this.$vs.loading.close();
-          if (r.activeResend) {
-            this.$vs.notify({
-              title: "Echec",
-              text: r.message,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger",
-            });
-            this.$router.push("/pages/verify").catch(() => {});
-          }
-        })
+        .dispatch("auth/login", payload)
         .catch((error) => {
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",
             text: error.message,
@@ -193,10 +136,8 @@ export default {
             icon: "icon-alert-circle",
             color: "danger",
           });
-          if (error.activeResend) {
-            this.$router.push("/pages/verify").catch(() => {});
-          }
-        });
+        })
+        .finally(() => this.$vs.loading.close());
     },
     registerUser() {
       if (!this.checkLogin()) return;

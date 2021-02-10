@@ -165,6 +165,7 @@ export default {
         rowClassRules: {
           "subscription-ending": function (params) {
             return (
+              !params.data.deleted_at &&
               params.data.has_active_subscription &&
               moment(params.data.active_subscription.ends_at).isBefore(
                 moment().add(1, "month")
@@ -352,7 +353,7 @@ export default {
 
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("companyManagement/forceRemoveItem", selectRow.id)
+          .dispatch("companyManagement/forceRemoveItems", [selectRow.id])
           .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
@@ -370,7 +371,7 @@ export default {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("companyManagement/removeItem", selectRow.id)
+          .dispatch("companyManagement/removeItems", [selectRow.id])
           .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
@@ -441,9 +442,11 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("companyManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

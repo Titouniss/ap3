@@ -394,9 +394,11 @@ export default {
       this.$store.registerModule("rangeManagement", moduleRangeManagement);
       moduleRangeManagement.isRegistered = true;
     }
-    this.$store.dispatch("rangeManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("rangeManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

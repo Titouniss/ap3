@@ -272,10 +272,12 @@ export default {
   },
   computed: {
     itemIdToEdit() {
-      return this.$store.state.subscriptionManagement.subscription.id || 0;
+      return (
+        this.$store.getters["subscriptionManagement/getSelectedItem"].id || 0
+      );
     },
     subscriptionsData() {
-      return this.$store.state.subscriptionManagement.subscriptions;
+      return this.$store.getters["subscriptionManagement/getItems"];
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -361,7 +363,7 @@ export default {
 
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("customerManagement/forceRemoveItem", selectRow.id)
+          .dispatch("customerManagement/forceRemoveItems", [selectRow.id])
           .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("delete", selectedRowLength);
@@ -379,7 +381,7 @@ export default {
       const selectedRowLength = this.gridApi.getSelectedRows().length;
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("subscriptionManagement/removeItem", selectRow.id)
+          .dispatch("subscriptionManagement/removeItems", [selectRow.id])
           .then((data) => {
             if (selectedRowLength === 1) {
               this.showDeleteSuccess("archive", selectedRowLength);
@@ -456,14 +458,18 @@ export default {
 
     if (this.companyId) {
       this.$store
-        .dispatch("subscriptionManagement/fetchItemsByCompany", this.companyId)
+        .dispatch("subscriptionManagement/fetchItems", {
+          company_id: this.companyId,
+        })
         .catch((err) => {
           console.error(err);
         });
     } else {
-      this.$store.dispatch("subscriptionManagement/fetchItems").catch((err) => {
-        console.error(err);
-      });
+      this.$store
+        .dispatch("subscriptionManagement/fetchItems", { with_trashed: true })
+        .catch((err) => {
+          console.error(err);
+        });
     }
     this.$store
       .dispatch("subscriptionManagement/fetchPackages")

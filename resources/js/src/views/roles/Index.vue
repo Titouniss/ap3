@@ -344,9 +344,11 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    this.$store.dispatch("roleManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+    this.$store
+      .dispatch("roleManagement/fetchItems", { with_trashed: true })
+      .catch((err) => {
+        console.error(err);
+      });
     this.$store.dispatch("userManagement/fetchItems").catch((err) => {
       console.error(err);
     });

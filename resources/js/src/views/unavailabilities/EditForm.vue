@@ -101,9 +101,8 @@ export default {
     },
   },
   data() {
-    const itemLocal = Object.assign(
-      {},
-      this.$store.getters["unavailabilityManagement/getItem"](this.itemId)
+    const itemLocal = this.$store.getters["unavailabilityManagement/getItem"](
+      this.itemId
     );
     return {
       itemLocal: itemLocal,
@@ -169,9 +168,8 @@ export default {
   },
   methods: {
     init() {
-      this.itemLocal = Object.assign(
-        {},
-        this.$store.getters["unavailabilityManagement/getItem"](this.itemId)
+      this.itemLocal = this.$store.getters["unavailabilityManagement/getItem"](
+        this.itemId
       );
 
       this.configStartsAtDateTimePicker = {
@@ -201,7 +199,6 @@ export default {
       this.$store
         .dispatch("unavailabilityManagement/updateItem", item)
         .then(() => {
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Modification d'une indisponibilité",
             text: `Indisponibilité modifiée avec succès`,
@@ -211,7 +208,6 @@ export default {
           });
         })
         .catch((error) => {
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Error",
             text: error.message,
@@ -219,6 +215,9 @@ export default {
             icon: "icon-alert-circle",
             color: "danger",
           });
+        })
+        .finally(() => {
+          this.$vs.loading.close();
         });
     },
   },

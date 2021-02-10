@@ -1,24 +1,32 @@
-/*=========================================================================================
-  File Name: 
-  Description: 
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import { apiRequest } from "@/http/requests";
+import { crud } from "../utils";
 
+const slug = 'task-management';
+const model = 'task';
+const model_plurial = 'tasks';
 
-import state from './moduleTaskManagementState.js'
-import mutations from './moduleTaskManagementMutations.js'
-import actions from './moduleTaskManagementActions.js'
-import getters from './moduleTaskManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
+
+const actionsCopy = Object.assign({}, actions);
+
+actions.removeItems = ({ commit }, ids) => {
+    actionsCopy.removeItems({ commit }, ids).then(() => commit('REMOVE_ITEMS', ids));
+}
+
+actions.addComment = ({ commit }, item) => {
+    return apiRequest(`${slug}/store-comment/${item.id}`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
+}
+
+actions.addItemRange = ({ commit }, item) => {
+    return apiRequest(`project-management/store-range/${item.range_id}`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
+}
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
 }
 

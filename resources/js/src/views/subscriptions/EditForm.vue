@@ -143,16 +143,15 @@ export default {
       },
     },
     packagesData() {
-      return this.$store.state.subscriptionManagement.packages;
+      return this.$store.getters["subscriptionManagement/getPackages"];
     },
   },
   methods: {
     init() {
-      const item = JSON.parse(
-        JSON.stringify(
-          this.$store.getters["subscriptionManagement/getItem"](this.itemId)
-        )
-      );
+      const item = this.$store.getters[
+        "subscriptionManagement/getSelectedItem"
+      ];
+
       item.packages = item.packages.map((p) => p.id);
       item.is_cancelled = item.state === "cancelled";
       this.itemLocal = item;
