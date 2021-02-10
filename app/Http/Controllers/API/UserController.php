@@ -391,9 +391,9 @@ class UserController extends BaseApiController
 
         $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
-        $item->load(['company:id,name']);
+        $item->load(['company:companies.id,name']);
         if ($item->is_manager) {
-            $item->load(['company.users:id,firstname,lastname,company_id']);
+            $item->load(['company.users:users.id,firstname,lastname,company_id']);
         }
         $item->append('permissions');
 
@@ -613,9 +613,9 @@ class UserController extends BaseApiController
 
         $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
-        $item->load(['company:id,name']);
+        $item->load(['company:companies.id,name']);
         if ($item->is_manager) {
-            $item->load(['company.users:id,firstname,lastname,company_id']);
+            $item->load(['company.users:users.id,firstname,lastname,company_id']);
         }
         $item->append('permissions');
 

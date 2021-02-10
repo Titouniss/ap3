@@ -15,7 +15,7 @@ class Range extends Model
 
     public function repetitive_tasks()
     {
-        return $this->hasMany('App\Models\RepetitiveTask', 'range_id')->orderBy('order')->with('workarea:id,name,max_users', 'skills:id,name', 'documents');
+        return $this->hasMany('App\Models\RepetitiveTask', 'range_id')->orderBy('order')->with('workarea:workareas.id,name,max_users', 'skills:skills.id,name', 'documents');
     }
 
     public function restoreCascade()

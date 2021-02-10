@@ -37,7 +37,7 @@ class Company extends Model
 
     public function getActiveSubscriptionAttribute()
     {
-        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages:id,display_name')->first();
+        return Subscription::where('company_id', $this->id)->where('state', 'active')->with('packages:packages.id,display_name')->first();
     }
 
     public function getHasActiveSubscriptionAttribute()
