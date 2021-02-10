@@ -71,7 +71,7 @@ class TaskController extends BaseApiController
         parent::__construct(Task::class);
     }
 
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
         if ($request->has('workarea_id')) {
             if (Workarea::where('id', $request->workarea_id)->doesntExist()) {

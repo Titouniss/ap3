@@ -35,12 +35,20 @@ abstract class BaseApiController extends Controller
     }
 
     /**
-     * Provides custom filtering for the index query
+     * Provides custom extra data to be returned by the indexx function.
+     */
+    protected function extraIndexData(Request $request, $items)
+    {
+        return [];
+    }
+
+    /**
+     * Provides custom filtering for the index query.
      *
      * @throws \App\Exceptions\ApiException
      * @throws \Exception
      */
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
     }
 
@@ -60,12 +68,10 @@ abstract class BaseApiController extends Controller
         if (!$user->is_admin) {
             if ($this->modelHasCompany()) {
                 $query->where('company_id', $user->company_id);
-            } else if ($this->model == Company::class) {
-                $query->where('companies.id', $user->company_id);
             }
         }
 
-        $extra = [];
+        $extra = collect([]);
 
         try {
             if ($this->modelUsesSoftDelete() && $request->has('with_trashed') && $request->with_trashed) {
@@ -80,7 +86,7 @@ abstract class BaseApiController extends Controller
                 }
             }
 
-            $this->filterIndexQuery($query, $request);
+            $this->filterIndexQuery($request, $query);
 
             if ($request->has('page')) {
                 if (!is_numeric($request->page)) {
@@ -99,7 +105,7 @@ abstract class BaseApiController extends Controller
                 $paginator = $query->paginate($per_page, $current_page);
 
                 $pageParameter = 'page=' . $current_page;
-                $extra['pagination'] = [
+                $extra->put('pagination', [
                     'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
                     'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
                     'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
@@ -108,7 +114,7 @@ abstract class BaseApiController extends Controller
                     'last_page' => $paginator->lastPage(),
                     'count' => $paginator->count(),
                     'total' => $paginator->total()
-                ];
+                ]);
             }
 
             if (static::$index_load) {
@@ -126,7 +132,13 @@ abstract class BaseApiController extends Controller
             $items->each->append(static::$index_append);
         }
 
-        return $this->successResponse($items, 'Chargement terminé avec succès.', $extra);
+        try {
+            $extra = $extra->merge($this->extraIndexData($request, $items));
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        }
+
+        return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
     }
 
     /**
@@ -314,6 +326,7 @@ abstract class BaseApiController extends Controller
     /**
      * Soft deletes the item from storage.
      *
+     * @return boolean
      * @throws \App\Exceptions\ApiException
      * @throws \Exception
      */

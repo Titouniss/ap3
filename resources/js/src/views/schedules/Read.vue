@@ -592,24 +592,29 @@ export default {
 
     if (this.$route.query.type === "projects") {
       if (this.authorizedTo("read", "projects")) {
-        this.$store.dispatch("projectManagement/fetchItems").catch((err) => {
-          console.error(err);
-        });
-      }
-      var id_bundle = null;
-
-      this.$store.state.projectManagement.projects.forEach((p) => {
-        p.tasks_bundles.forEach((t) => {
-          if (t.project_id === parseInt(this.$route.query.id, 10)) {
-            id_bundle = t.id;
-          }
-        });
-      });
-      if (id_bundle != null) {
         this.$store
-          .dispatch("taskManagement/fetchItems", { tasks_bundle_id: id_bundle })
+          .dispatch("projectManagement/fetchItems")
+          .then((data) => {
+            var id_bundle = null;
+            this.$store.getters["projectManagement/getItems"].forEach((p) => {
+              p.tasks_bundles.forEach((t) => {
+                if (t.project_id === parseInt(this.$route.query.id)) {
+                  id_bundle = t.id;
+                }
+              });
+            });
+            if (id_bundle != null) {
+              this.$store
+                .dispatch("taskManagement/fetchItems", {
+                  tasks_bundle_id: id_bundle,
+                })
+                .catch((err) => {
+                  this.manageErrors(err);
+                });
+            }
+          })
           .catch((err) => {
-            this.manageErrors(err);
+            console.error(err);
           });
       }
     } else if (this.$route.query.type === "users") {

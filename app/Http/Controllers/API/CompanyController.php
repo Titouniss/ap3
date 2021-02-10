@@ -62,8 +62,12 @@ class CompanyController extends BaseApiController
         parent::__construct(Company::class);
     }
 
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
+        $user = Auth::user();
+        if (!$user->is_admin) {
+            $query->where('companies.id', $user->company_id);
+        }
         if (!$request->has('order_by')) {
             $query->leftJoin('subscriptions', function ($join) {
                 $join->on('companies.id', '=', 'subscriptions.company_id')

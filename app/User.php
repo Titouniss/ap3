@@ -5,6 +5,7 @@ namespace App;
 use App\Models\Company;
 use App\Models\ModelHasOldId;
 use App\Models\Role;
+use App\Traits\HasCompany;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +16,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasRoles, HasApiTokens, Notifiable, SoftDeletes;
+    use HasCompany, HasRoles, HasApiTokens, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -50,11 +51,6 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id')->withTrashed();
-    }
 
     public function workHours()
     {

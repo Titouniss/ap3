@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
 use App\Models\Skill;
 use App\Models\Task;
-use Exception;
 use Illuminate\Http\Request;
 
 class SkillController extends BaseApiController
@@ -32,12 +32,12 @@ class SkillController extends BaseApiController
         parent::__construct(Skill::class);
     }
 
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
         if ($request->has('task_id')) {
             $item = Task::find($request->task_id);
             if (!$item) {
-                throw new Exception("Paramètre 'task_id' n'est pas valide.");
+                throw new ApiException("Paramètre 'task_id' n'est pas valide.");
             }
 
             $query->whereIn('id', $item->skills->pluck('id'));

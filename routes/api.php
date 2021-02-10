@@ -177,42 +177,22 @@ Route::group(['middleware' => 'auth:api'], function () {
     /*****************************   UNAVAILABILITIES   ********************************/
     /***********************************************************************************/
     Route::prefix('unavailability-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Unavailability']], function () {
-            Route::get('index', 'API\UnavailabilityController@index');
-        });
-        Route::group(['middleware' => ['can:show,unavailability']], function () {
-            Route::get('show/{unavailability}', 'API\UnavailabilityController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Unavailability']], function () {
-            Route::post('store', 'API\UnavailabilityController@store');
-        });
-        Route::group(['middleware' => ['can:edit,unavailability']], function () {
-            Route::post('update/{unavailability}', 'API\UnavailabilityController@update');
-        });
-        Route::group(['middleware' => ['can:delete,unavailability']], function () {
-            Route::delete('destroy/{unavailability}', 'API\UnavailabilityController@destroy');
-        });
+        Route::get('index', 'API\UnavailabilityController@index');
+        Route::get('show/{id}', 'API\UnavailabilityController@show');
+        Route::post('store', 'API\UnavailabilityController@store');
+        Route::put('update/{id}', 'API\UnavailabilityController@update');
+        Route::put('destroy/{id?}', 'API\UnavailabilityController@destroy');
     });
 
     /***********************************************************************************/
     /***********************************   Hours   *************************************/
     /***********************************************************************************/
     Route::prefix('hours-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Hours']], function () {
-            Route::get('index', 'API\HoursController@index');
-        });
-        Route::group(['middleware' => ['can:show,hours']], function () {
-            Route::get('show/{hours}', 'API\HoursController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Hours']], function () {
-            Route::post('store', 'API\HoursController@store');
-        });
-        Route::group(['middleware' => ['can:edit,hours']], function () {
-            Route::post('update/{hours}', 'API\HoursController@update');
-        });
-        Route::group(['middleware' => ['can:delete,hours']], function () {
-            Route::delete('destroy/{hours}', 'API\HoursController@destroy');
-        });
+        Route::get('index', 'API\HoursController@index');
+        Route::get('show/{id}', 'API\HoursController@show');
+        Route::post('store', 'API\HoursController@store');
+        Route::put('update/{id}', 'API\HoursController@update');
+        Route::put('destroy/{id?}', 'API\HoursController@destroy');
     });
 
     /***********************************************************************************/

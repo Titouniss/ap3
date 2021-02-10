@@ -178,20 +178,21 @@ export default {
       return this.$store.state.AppActiveUser.is_manager;
     },
     itemIdToEdit() {
-      return this.$store.state.hoursManagement.hour.id || -1;
+      const item = this.$store.getters["hoursManagement/getSelectedItem"];
+      return item ? item.id : -1;
     },
     calendarEvents() {
       let finalHours = [];
       let hours = this.filters.user
-        ? this.$store.state.hoursManagement.hoursCalendar.filter(
+        ? this.$store.getters["hoursManagement/getCalendarItems"].filter(
             (item) => item.user_id === this.filters.user.id
           )
         : [];
       finalHours = hours;
 
-      let paidHolidays = this.$store.state.unavailabilityManagement.unavailabilities.filter(
-        (item) => item.reason === "Congés payés"
-      );
+      let paidHolidays = this.$store.getters[
+        "unavailabilityManagement/getItems"
+      ].filter((item) => item.reason === "Congés payés");
       paidHolidays.forEach((pH) => {
         finalHours.push({
           color: "#AEAEAE ",
@@ -207,7 +208,7 @@ export default {
     },
     companiesData() {
       const companies = JSON.parse(
-        JSON.stringify(this.$store.state.companyManagement.companies)
+        JSON.stringify(this.$store.getters["companyManagement/getItems"])
       );
       return companies.sort(function (a, b) {
         var textA = a.name.toUpperCase();
@@ -217,16 +218,14 @@ export default {
     },
     usersData() {
       const users = JSON.parse(
-        JSON.stringify(this.$store.state.userManagement.users)
+        JSON.stringify(this.$store.getters["userManagement/getItems"])
       );
       return this.filters.company
         ? users.filter((item) => item.company_id === this.filters.company.id)
         : [];
     },
     hoursData() {
-      return this.$store.state.hoursManagement
-        ? this.$store.state.hoursManagement.hours
-        : [];
+      return this.$store.getters["hoursManagement/getItems"];
     },
   },
   methods: {
@@ -297,15 +296,13 @@ export default {
       this.$store
         .dispatch("hoursManagement/updateItem", itemToSave)
         .then((data) => {
-          if (data && data.status === 200) {
-            //this.refresh();
-            this.$vs.loading.close();
-          } else {
-            this.$vs.loading.close();
-          }
+          //this.refresh();
         })
         .catch((err) => {
           console.error(err);
+        })
+        .finally(() => {
+          this.$vs.loading.close();
         });
     },
     handleEventDrop(arg) {
@@ -327,29 +324,16 @@ export default {
 
       this.$store
         .dispatch("hoursManagement/addItem", itemToSave)
-        .then((response) => {
-          if (response.data.success) {
-            this.$vs.loading.close();
-            this.$vs.notify({
-              title: "Ajout d'un horaire",
-              text: `Horaire ajouté avec succès`,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "success",
-            });
-          } else {
-            this.$vs.loading.close();
-            this.$vs.notify({
-              title: "Une erreur est survenue",
-              text: response.data.error,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger",
-            });
-          }
+        .then((data) => {
+          this.$vs.notify({
+            title: "Ajout d'un horaire",
+            text: `Horaire ajouté avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
+          });
         })
         .catch((error) => {
-          this.$vs.loading.close();
           this.$vs.notify({
             title: "Une erreur est survenue",
             text: error.message,
@@ -357,9 +341,10 @@ export default {
             icon: "icon-alert-circle",
             color: "danger",
           });
+        })
+        .finally(() => {
+          this.$vs.loading.close();
         });
-      this.clearFields();
-
       this.handleClose();
     },
     handleClose() {
@@ -385,8 +370,8 @@ export default {
     getBusinessHours() {
       this.$store
         .dispatch("userManagement/fetchItem", this.filters.user.id)
-        .then((res) => {
-          let item = res.data.success;
+        .then((data) => {
+          let item = data.payload;
           if (item.work_hours.length > 0) {
             let businessHours = [];
             item.work_hours.forEach((wH) => {

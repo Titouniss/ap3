@@ -38,7 +38,7 @@ class SubscriptionController extends BaseApiController
         parent::__construct(Subscription::class);
     }
 
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
         if ($request->has('company_id')) {
             $item = Company::find($request->company_id);

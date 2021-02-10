@@ -39,7 +39,7 @@ class RoleController extends BaseApiController
         parent::__construct(Role::class);
     }
 
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
         $user = Auth::user();
         if (!$user->is_admin) {

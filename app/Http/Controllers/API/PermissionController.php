@@ -33,7 +33,7 @@ class PermissionController extends BaseApiController
         parent::__construct(Permission::class);
     }
 
-    protected function filterIndexQuery($query, Request $request)
+    protected function filterIndexQuery(Request $request, $query)
     {
         $user = Auth::user();
         if (!$user->is_admin) {
