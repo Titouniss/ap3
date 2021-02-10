@@ -207,7 +207,7 @@ export default {
       if (this.isAdmin) {
         return false;
       } else {
-        this.itemLocal.company_id = user.company_id;
+        this.itemLocal.company_id = this.$store.state.AppActiveUser.company_id;
         return true;
       }
     },
