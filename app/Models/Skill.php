@@ -2,19 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\HasCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Skill extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCompany;
 
     public $timestamps = false;
 
     protected $fillable = ['name', 'company_id'];
-
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
-    }
 }

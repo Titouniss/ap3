@@ -2,29 +2,56 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Package;
 use App\Models\Subscription;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
-class SubscriptionController extends Controller
+class SubscriptionController extends BaseApiController
 {
-    public $successStatus = 200;
+    protected static $index_load = ['company:id,name', 'packages:id,name,display_name'];
+    protected static $index_append = null;
+    protected static $show_load = ['company:id,name', 'packages:id,name,display_name'];
+    protected static $show_append = null;
+
+    protected static $store_validation_array = [
+        'starts_at' => 'required',
+        'ends_at' => 'required',
+        'packages' => 'required',
+        'is_trial' => 'required'
+    ];
+
+    protected static $update_validation_array = [
+        'starts_at' => 'required',
+        'ends_at' => 'required',
+        'packages' => 'required',
+        'is_trial' => 'required'
+    ];
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        $items = Subscription::withTrashed()->with('company')->get();
+        parent::__construct(Subscription::class);
+    }
 
-        return response()->json(['success' => $items->sortBy('ends_at')->sortBy('starts_at')->sortBy('status_order')->values()], $this->successStatus);
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new Exception("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->whereIn('id', $item->subscriptions->pluck('id'));
+        }
+
+        if (!$request->has('order_by')) {
+            $query->orderByRaw("FIELD(state , 'active', 'pending', 'cancelled', 'inactive') ASC")->orderBy('ends_at', 'desc')->orderBy('starts_at', 'desc');
+        }
     }
 
     /**
@@ -34,179 +61,88 @@ class SubscriptionController extends Controller
      */
     public function packages()
     {
-        return response()->json(['success' => Package::all()], $this->successStatus);
-    }
-
-    /**
-     * Display a listing of the resource based on the company.
-     *
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function getByCompany(Company $company)
-    {
-        $items = Subscription::withTrashed()->where('company_id', $company->id)->with('company', 'packages')->get();
-
-        return response()->json(['success' => $items->sortBy('ends_at')->sortBy('starts_at')->sortBy('status_order')->values()], $this->successStatus);
-    }
-
-    /**
-     * Show the specified resource.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Subscription $subscription)
-    {
-        return response()->json(['success' => $subscription->load('company', 'packages')], $this->successStatus);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'company_id' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+        if ($error = $this->permissionErrors('read')) {
+            return $error;
         }
 
+        $items = Package::select("id", "name", "display_name")->get();
+
+        return $this->successResponse($items);
+    }
+
+    protected function storeItem(array $arrayRequest)
+    {
         $item = new Subscription;
         $item->company_id = $arrayRequest['company_id'];
         return $this->createOrUpdateSubscription($arrayRequest, $item);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Subscription $subscription)
+    protected function updateItem($item, array $arrayRequest)
     {
-        return $this->createOrUpdateSubscription($request->all(), $subscription);
+        return $this->createOrUpdateSubscription($arrayRequest, $item);
     }
 
     /**
-     * Updates a subscription with new values
-     *
-     * @param  array  $subscriptionArray
-     * @param  \App\Models\Subscription  $item
-     * @return \Illuminate\Http\Response
+     * Creates or updates a subscription with new values
      */
     private function createOrUpdateSubscription(array $subscriptionArray, Subscription $item)
     {
-        if (!$item) {
-            return response()->json(['error' => 'Abonnement inconnu'], 404);
-        }
-
-        $validator = Validator::make($subscriptionArray, [
-            'starts_at' => 'required',
-            'ends_at' => 'required',
-            'packages' => 'required',
-            'is_trial' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
-
         try {
             $item->starts_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['starts_at'] . ' 00:00:00');
-            $item->ends_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
-            $item->is_trial = $subscriptionArray['is_trial'];
-
-            $conflicts = Subscription::where('company_id', $item->company_id);
-            if ($item->exists) {
-                $conflicts = $conflicts->where('id', '!=', $item->id);
-            }
-            $conflicts = $conflicts->where(function ($query) use ($item) {
-                $query->whereBetween('starts_at', [$item->starts_at, $item->ends_at])
-                    ->orWhereBetween('ends_at', [$item->starts_at, $item->ends_at])
-                    ->orWhere(function ($query) use ($item) {
-                        $query->where('starts_at', '<', $item->starts_at)
-                            ->where('ends_at', '>', $item->starts_at);
-                    })
-                    ->orWhere(function ($query) use ($item) {
-                        $query->where('starts_at', '<', $item->ends_at)
-                            ->where('ends_at', '>', $item->ends_at);
-                    });
-            });
-            if ($conflicts->exists()) {
-                return response()->json(['error' => 'Impossible d\'avoir deux abonnements sur une même période'], 400);
-            }
-
-            $item->save();
-            $item->packages()->sync($subscriptionArray['packages']);
-            if ($item->starts_at->isFuture()) {
-                $item->state = 'pending';
-            } else if ($item->ends_at->isFuture()) {
-                $item->state = 'active';
-            } else {
-                $item->state = 'inactive';
-            }
-            if (isset($subscriptionArray['is_cancelled'])) {
-                if ($subscriptionArray['is_cancelled']) {
-                    $item->state = 'cancelled';
-                }
-            }
-            $item->save();
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 400);
+            throw new Exception("Paramètre 'subscription.starts_at' doit être du format 'd/m/Y'.");
+        }
+        try {
+            $item->ends_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
+        } catch (\Throwable $th) {
+            throw new Exception("Paramètre 'subscription.ends_at' doit être du format 'd/m/Y'.");
         }
 
-
-        return response()->json(['success' => $item->load('company', 'packages')], $this->successStatus);
-    }
-
-    /**
-     * Restore the specified resource in storage.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function restore(Subscription $subscription)
-    {
-        if (!$subscription->restore()) {
-            return response()->json(['success' => false, 'error' => 'Impossible de restaurer l\'abonnement'], 400);
+        $conflicts = Subscription::where('company_id', $item->company_id);
+        if ($item->exists) {
+            $conflicts = $conflicts->where('id', '!=', $item->id);
+        }
+        $conflicts = $conflicts->where(function ($query) use ($item) {
+            $query->whereBetween('starts_at', [$item->starts_at, $item->ends_at])
+                ->orWhereBetween('ends_at', [$item->starts_at, $item->ends_at])
+                ->orWhere(function ($query) use ($item) {
+                    $query->where('starts_at', '<', $item->starts_at)
+                        ->where('ends_at', '>', $item->starts_at);
+                })
+                ->orWhere(function ($query) use ($item) {
+                    $query->where('starts_at', '<', $item->ends_at)
+                        ->where('ends_at', '>', $item->ends_at);
+                });
+        });
+        if ($conflicts->exists()) {
+            throw new Exception("Impossible d'avoir deux abonnements sur une même période");
         }
 
-        return response()->json(['success' => $subscription->load('company', 'packages')], $this->successStatus);
-    }
+        $item->is_trial = $subscriptionArray['is_trial'];
+        $item->save();
 
-    /**
-     * Archive the specified resource from storage.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Subscription $subscription)
-    {
-        if (!$subscription->delete()) {
-            return response()->json(['success' => false, 'error' => 'Impossible d\'archiver l\'abonnement'], 400);
+        try {
+            $item->packages()->sync($subscriptionArray['packages']);
+        } catch (\Throwable $th) {
+            throw new Exception("Paramètre 'subscription.packages' contient des valeurs invalides.");
         }
 
-        return response()->json(['success' => $subscription->load('company', 'packages')], $this->successStatus);
-    }
-
-    /**
-     * Delete the specified resource from storage.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-    public function forceDelete(Subscription $subscription)
-    {
-        if (!$subscription->forceDelete()) {
-            return response()->json(['success' => false, 'error' => 'Impossible de supprimer l\'abonnement'], 400);
+        if ($item->starts_at->isFuture()) {
+            $item->state = 'pending';
+        } else if ($item->ends_at->isFuture()) {
+            $item->state = 'active';
+        } else {
+            $item->state = 'inactive';
         }
 
-        return response()->json(['success' => true], $this->successStatus);
+        if (isset($subscriptionArray['is_cancelled'])) {
+            if ($subscriptionArray['is_cancelled']) {
+                $item->state = 'cancelled';
+            }
+        }
+
+        $item->save();
+
+        return $item;
     }
 }

@@ -337,8 +337,8 @@ export default {
         this.itemLocal.contact_firstname !== "" &&
         this.itemLocal.contact_lastname !== "" &&
         this.itemLocal.contact_function !== "" &&
-        this.itemLocal.contact_tel1 !== "" &&
-        this.itemLocal.contact_tel2 !== "" &&
+        (this.itemLocal.contact_tel1 !== "" ||
+          this.itemLocal.contact_tel2 !== "") &&
         this.itemLocal.contact_email !== "" &&
         this.itemLocal.street_number !== "" &&
         this.itemLocal.street_name !== "" &&
@@ -357,8 +357,8 @@ export default {
 
       this.$store
         .dispatch("companyManagement/fetchItem", id)
-        .then((res) => {
-          const item = JSON.parse(JSON.stringify(res.data.success));
+        .then((data) => {
+          const item = data.payload;
           if (item.subscription != null) {
             this.subscription = this.itemLocal.subscription;
             item.subscription = null;
@@ -410,9 +410,7 @@ export default {
       this.$store.registerModule("companyManagement", moduleCompanyManagement);
       moduleCompanyManagement.isRegistered = true;
     }
-    this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
-      console.error(err);
-    });
+
     this.init();
   },
   beforeDestroy() {

@@ -232,7 +232,7 @@ export default {
   },
   computed: {
     itemIdToEdit() {
-      return this.$store.state.projectManagement.project.id || 0;
+      return this.$store.getters["projectManagement/getSelectedItem"].id || 0;
     },
     estimatedTimeData() {
       let time = 0;
@@ -285,65 +285,28 @@ export default {
       this.$store
         .dispatch("projectManagement/start", this.project_data)
         .then((response) => {
-          console.log(response);
-          if (response.data.success) {
-            this.$vs.notify({
-              title: "Planification",
-              text: "Projet planifié avec succès",
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "success",
-            });
+          this.$vs.notify({
+            title: "Planification",
+            text: "Projet planifié avec succès",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
+          });
 
-            // this.$router.push({
-            //   path: `/schedules/schedules-read`,
-            //   query: { id: this.project_data.id, type: "projects" }
-            // })
-            this.$router
-              .push({
-                path: `/schedules`,
-              })
-              .catch(() => {});
-          } else if (response.data.error_time) {
-            let message =
-              "Le nombre d'heure de travail disponible est insuffisant";
-
-            this.$vs.notify({
-              title: "Planification",
-              text: message,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger",
-              time: 4000,
-            });
-          } else if (response.data.error_algo) {
-            let message = response.data.error_algo;
-
-            this.$vs.notify({
-              title: "Planification",
-              text: message,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger",
-              time: 4000,
-            });
-          } else {
-            response.data.error_alerts.map((alert) => {
-              this.$vs.notify({
-                title: "Planification",
-                text: alert,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "danger",
-                time: 8000,
-              });
-            });
-          }
+          // this.$router.push({
+          //   path: `/schedules/schedules-read`,
+          //   query: { id: this.project_data.id, type: "projects" }
+          // })
+          this.$router
+            .push({
+              path: `/schedules`,
+            })
+            .catch(() => {});
         })
         .catch((err) => {
           this.$vs.notify({
             title: "Planification",
-            text: "Une erreur c'est produite",
+            text: err.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
             color: "danger",
@@ -354,7 +317,6 @@ export default {
     editRecord() {
       this.$store
         .dispatch("projectManagement/editItem", this.project_data)
-        .then(() => {})
         .catch((err) => {
           console.error(err);
         });
@@ -390,8 +352,8 @@ export default {
     refreshData() {
       this.$store
         .dispatch("projectManagement/fetchItem", this.project_data.id)
-        .then((res) => {
-          this.project_data = res.data.success;
+        .then((data) => {
+          this.project_data = data.payload;
           this.project_data.date_string = moment(this.project_data.date).format(
             "DD MMMM YYYY"
           );
@@ -402,10 +364,6 @@ export default {
           }
         })
         .catch((err) => {
-          if (err.response.status === 404) {
-            this.project_not_found = true;
-            return;
-          }
           console.error(err);
         });
     },
@@ -462,8 +420,8 @@ export default {
     const projectId = this.$route.params.id;
     this.$store
       .dispatch("projectManagement/fetchItem", projectId)
-      .then((res) => {
-        this.project_data = res.data.success;
+      .then((data) => {
+        this.project_data = data.payload;
         this.project_data.date_string = moment(this.project_data.date).format(
           "DD MMMM YYYY"
         );
@@ -474,10 +432,6 @@ export default {
         }
       })
       .catch((err) => {
-        if (err.response.status === 404) {
-          this.project_not_found = true;
-          return;
-        }
         console.error(err);
       });
     if (this.authorizedTo("read", "ranges")) {

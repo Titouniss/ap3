@@ -2,23 +2,21 @@
 
 namespace App;
 
-use App\Models\BaseModule;
 use App\Models\Company;
 use App\Models\ModelHasOldId;
 use App\Models\Role;
+use App\Traits\HasCompany;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
 use Laravel\Passport\HasApiTokens;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasRoles, HasApiTokens, Notifiable, SoftDeletes;
+    use HasCompany, HasRoles, HasApiTokens, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -54,11 +52,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id')->withTrashed();
-    }
-
     public function workHours()
     {
         return $this->hasMany('App\Models\WorkHours');
@@ -71,7 +64,22 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function skills()
     {
-        return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id');
+        return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id', 'skill_id');
+    }
+
+    public function getModuleAttribute()
+    {
+        return $this->company && $this->company->module ? $this->company->module->load('module_data_types:id,data_type_id', 'module_data_types.data_type:id,slug') : null;
+    }
+
+    public function getClearPasswordAttribute()
+    {
+        return $this->clear_password;
+    }
+
+    public function setClearPasswordAttribute(string $password)
+    {
+        $this->clear_password = $password;
     }
 
     public function getRoleAttribute()
@@ -139,9 +147,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return [];
     }
 
-    public function can($ability, $arguments = [])
+    public function hasPermissionTo($perm)
     {
-        return $this->permissions->pluck('name')->contains($ability);
+        return $this->permissions->pluck('name')->contains($perm);
     }
 
     /**
@@ -161,7 +169,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Override the mail body for add user email notification mail.
      */
-    public function sendEmailAdUserNotification($id, $register_token)
+    public function sendEmailAddUserNotification($id, $register_token)
     {
         $this->notify(new \App\Notifications\MailAddUserNotification($id, $register_token));
     }

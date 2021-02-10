@@ -115,6 +115,7 @@
                 <vs-select
                   v-on:change="updateUsersAndWorkareasList"
                   v-model="itemLocal.skills"
+                  :reduce="(skill) => skill.id"
                   class="w-full"
                   multiple
                   name="skills"
@@ -224,7 +225,7 @@
                   v-if="!checkProjectStatus"
                   :addPreviousTask="addPreviousTask"
                   :tasks_list="tasks_list"
-                  :previousTasksIds="itemLocal.previousTasksIds"
+                  :previous_task_ids="itemLocal.previous_task_ids"
                 />
                 <div v-if="!commentDisplay">
                   <span v-on:click="showComment" class="linkTxt">
@@ -349,7 +350,7 @@ export default {
         project_id: this.project_data != null ? this.project_data.id : null,
         comment: "",
         skills: [],
-        previousTasksIds: [],
+        previous_task_ids: [],
         workarea_id: this.type === "workarea" ? this.idType : null,
         workarea: this.type === "workarea" ? this.idType : null,
         user_id: this.type === "users" ? this.idType : null,
@@ -383,13 +384,13 @@ export default {
       );
     },
     workareasData() {
-      let $workareasData = this.$store.state.workareaManagement.workareas;
-      let $filteredItems = this.filterItemsAdmin($workareasData);
-      return $filteredItems;
+      return this.filterItemsAdmin(
+        this.$store.getters["workareaManagement/getItems"]
+      );
     },
     skillsData() {
       if (this.type === "workarea") {
-        let workarea = this.$store.state.workareaManagement.workareas.find(
+        let workarea = this.workareasData.find(
           (w) => w.id === this.idType || w.id === this.idType.toString()
         );
         if (workarea.skills !== []) {
@@ -401,22 +402,22 @@ export default {
           return this.filterItemsAdmin($skillsData);
         }
       } else {
-        let $skillsData = this.$store.state.skillManagement.skills;
-        return this.filterItemsAdmin($skillsData);
+        return this.filterItemsAdmin(
+          this.$store.getters["skillManagement/getItems"]
+        );
       }
     },
     usersData() {
-      let usersDate = this.$store.state.userManagement.users;
-      return this.filterItemsAdmin(usersDate);
+      return this.filterItemsAdmin(
+        this.$store.getters["userManagement/getItems"]
+      );
     },
     projectsData() {
-      if (this.project_data == null) {
-        return this.$store.state.projectManagement.projects.filter(
-          (p) => p.status === "doing"
-        );
-      } else {
-        return this.$store.state.projectManagement.projects;
-      }
+      const projects = this.$store.getters["projectManagement/getItems"];
+
+      return this.project_data === null
+        ? projects.filter((p) => p.status === "doing")
+        : projects;
     },
     showPrompt: {
       get() {
@@ -475,7 +476,7 @@ export default {
             ? this.idType
             : null,
         comment: "",
-        previousTasksIds: [],
+        previous_task_ids: [],
         user_id: this.type === "users" ? this.idType : null,
       });
       if (this.activeAddPrompt) {
@@ -498,6 +499,7 @@ export default {
 
       this.isSubmiting = true;
       const item = JSON.parse(JSON.stringify(this.itemLocal));
+      console.log(item);
       if (this.project_data != null) {
         item.project_id = this.project_data.id;
       } else if (this.type && this.type === "projects") {
@@ -515,30 +517,20 @@ export default {
 
       this.$store
         .dispatch("taskManagement/addItem", item)
-        .then((response) => {
-          if (response.data.success) {
-            this.refreshData ? this.refreshData() : null;
-            this.$vs.notify({
-              title: "Ajout d'une tâche",
-              text: `"${this.itemLocal.name}" ajouté avec succès`,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "success",
-            });
-            this.clearFields(false);
-          } else {
-            this.$vs.notify({
-              title: "Indisponible",
-              text: response.data.error,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger",
-            });
-          }
+        .then((data) => {
+          this.refreshData ? this.refreshData() : null;
+          this.$vs.notify({
+            title: "Ajout d'une tâche",
+            text: `"${this.itemLocal.name}" ajouté avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
+          });
+          this.clearFields(false);
         })
         .catch((error) => {
           this.$vs.notify({
-            title: "Error",
+            title: "Erreur",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
@@ -554,7 +546,7 @@ export default {
       const ids = this.uploadedFiles.map((item) => item.id);
       if (ids.length > 0) {
         this.$store
-          .dispatch("documentManagement/deleteFiles", ids)
+          .dispatch("documentManagement/removeItems", ids)
           .then((response) => {
             this.uploadedFiles = [];
           })
@@ -590,8 +582,8 @@ export default {
       });
     },
     filterItemsAdmin(items) {
-      let projectData = this.$store.state.projectManagement.projects.find(
-        (p) => p.id === this.itemLocal.project_id
+      let projectData = this.$store.getters["projectManagement/getItem"](
+        this.itemLocal.project_id
       );
 
       let filteredItems = items;
@@ -613,7 +605,7 @@ export default {
       this.commentDisplay = true;
     },
     addPreviousTask(taskIds) {
-      this.itemLocal.previousTasksIds = taskIds;
+      this.itemLocal.previous_task_ids = taskIds;
       let previousTasks_local = [];
 
       taskIds.forEach((id) => {

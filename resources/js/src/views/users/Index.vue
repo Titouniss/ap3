@@ -436,17 +436,13 @@ export default {
     if (this.authorizedTo("read", "skills")) {
       this.$store.dispatch("skillManagement/fetchItems");
     }
-    this.$store.dispatch("userManagement/fetchItems");
-    if (this.authorizedTo("read", "users")) {
-      this.$store.dispatch("userManagement/fetchItems");
-    }
-    this.$store.dispatch("userManagement/fetchItems");
     if (this.authorizedTo("read", "companies")) {
       this.$store.dispatch("companyManagement/fetchItems");
     }
     if (this.authorizedTo("read", "roles")) {
       this.$store.dispatch("roleManagement/fetchItems");
     }
+    this.$store.dispatch("userManagement/fetchItems", { with_trashed: true });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

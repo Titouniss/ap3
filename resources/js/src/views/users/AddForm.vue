@@ -116,18 +116,10 @@
 
           <div v-if="itemLocal.company_id">
             <div v-if="companySkills.length === 0" class="mt-12 mb-2">
-              <span
-                label="Compétences"
-                v-if="companySkills.length === 0"
-                class="msgTxt mt-10"
-              >
+              <span label="Compétences" class="msgTxt mt-10">
                 Aucune compétences trouvées.
               </span>
-              <router-link
-                v-if="companySkills.length === 0"
-                class="linkTxt"
-                :to="{ path: '/skills' }"
-              >
+              <router-link class="linkTxt" :to="{ path: '/skills' }">
                 Ajouter une compétence
               </router-link>
             </div>
@@ -232,24 +224,19 @@ export default {
       return this.$store.state.AppActiveUser.is_admin;
     },
     companiesData() {
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     companySkills() {
-      const companyId = this.itemLocal.company_id;
-      if (companyId && this.companiesData && this.companiesData.length > 0) {
-        return this.companiesData.find((company) => company.id === companyId)
-          .skills;
-      }
-
-      return [];
+      return this.itemLocal.company_id
+        ? this.$store.getters["skillManagement/getItemsByCompany"](
+            this.itemLocal.company_id
+          )
+        : [];
     },
     rolesData() {
-      return this.$store.getters["roleManagement/getItemsForCompany"](
+      return this.$store.getters["roleManagement/getItemsByCompany"](
         this.itemLocal.company_id
       );
-    },
-    skillsData() {
-      return this.$store.state.skillManagement.skills;
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -290,10 +277,7 @@ export default {
         const payload = JSON.parse(JSON.stringify(this.itemLocal));
 
         // Parse login
-        payload.full_login = "".concat(
-          this.company_login,
-          this.itemLocal.login
-        );
+        payload.login = "".concat(this.company_login, this.itemLocal.login);
 
         // Filter skills
         payload.skills = this.companySkills
@@ -302,7 +286,7 @@ export default {
 
         this.$store
           .dispatch("userManagement/addItem", payload)
-          .then((response) => {
+          .then((data) => {
             this.back();
             this.$vs.notify({
               title: "Ajout d'un utilisateur",
@@ -311,13 +295,13 @@ export default {
               icon: "icon-alert-circle",
               color: "success",
             });
-            if(payload.email == null || payload.email == ""){
+            if (payload.email == null || payload.email == "") {
               this.$vs.dialog({
                 color: "warning",
                 title: "Attention !",
                 text:
                   "le mot de passe du compte est " +
-                  response.data.success[1] +
+                  data.payload.clear_password +
                   " notez le bien, il devra être changé lors de la première connexion",
                 acceptText: "OK",
               });

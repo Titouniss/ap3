@@ -17,28 +17,30 @@
     <div class="vx-col sm:w-1/2 md:w-1/2 lg:w-1/3 xl:w-1/4 sm:m-0 m-4">
       <vx-card class="flex-col">
         <div class="vx-card__title mb-8">
-          <h4 class="mb-4 text-center">Votre adresse e-mail n'est pas vérifiée</h4>
+          <h4 class="mb-4 text-center">
+            Votre adresse e-mail n'est pas vérifiée
+          </h4>
         </div>
         <vs-input
           icon-no-border
           icon="icon icon-mail"
           icon-pack="feather"
           placeholder="e-mail"
-          v-model="value1"
+          v-model="email"
           class="w-full mb-6"
         />
         <div class="flex justify-center my-3 ml-auto mr-auto">
-          <router-link
-            to="/pages/login"
-            class="mb-2 text-center"
-          >Vous avez déjà un lien de vérification?</router-link>
+          <router-link to="/pages/login" class="mb-2 text-center"
+            >Vous avez déjà un lien de vérification?</router-link
+          >
         </div>
         <div class="flex justify-center my-3 ml-auto mr-auto">
           <vs-button
             color="primary"
             text-color="white"
             @click="sendVerificationEmail"
-          >Renvoyer un e-mail de vérification</vs-button>
+            >Renvoyer un e-mail de vérification</vs-button
+          >
         </div>
       </vx-card>
     </div>
@@ -49,12 +51,12 @@
 export default {
   data() {
     return {
-      value1: "",
+      email: "",
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
-        backgroundSize: "cover"
-      }
+        backgroundSize: "cover",
+      },
     };
   },
   methods: {
@@ -63,21 +65,18 @@ export default {
       this.$vs.loading();
 
       this.$store
-        .dispatch("auth/verify", { email: this.value1 })
-        .then(() => {
-          this.$vs.loading.close();
-        })
-        .catch(error => {
-          this.$vs.loading.close();
+        .dispatch("auth/verify", { email: this.email })
+        .catch((error) => {
           this.$vs.notify({
             title: "Echec",
             text: error.message,
             iconPack: "feather",
             icon: "icon-alert-circle",
-            color: "danger"
+            color: "danger",
           });
-        });
-    }
-  }
+        })
+        .finally(() => this.$vs.loading.close());
+    },
+  },
 };
 </script>

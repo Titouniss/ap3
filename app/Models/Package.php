@@ -10,6 +10,7 @@ class Package extends Model
     use HasPermissions;
 
     protected $fillable = ['name', 'display_name', 'guard_name'];
+    protected $hidden = ['guard_name'];
 
     public function subscriptions()
     {

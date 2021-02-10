@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDocuments;
 
     protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
@@ -31,7 +31,7 @@ class Task extends Model
 
     public function skills()
     {
-        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id');
+        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id', 'skill_id');
     }
 
     public function comments()
@@ -47,11 +47,6 @@ class Task extends Model
     public function project()
     {
         return $this->hasOneThrough('App\Models\Project', 'App\Models\TasksBundle', 'id', 'id', 'tasks_bundle_id', 'project_id');
-    }
-
-    public function documents()
-    {
-        return $this->belongsToMany(Document::class, ModelHasDocuments::class, 'model_id', 'document_id')->where('model', Task::class);
     }
 
     public function getProjectIdAttribute()

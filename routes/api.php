@@ -18,23 +18,27 @@ Route::prefix('auth')->group(function () {
     /***********************************************************************************/
     /********************************    USER     **************************************/
     /***********************************************************************************/
-    Route::post('checkUsernamePwdBeforeLogin', 'API\UserController@checkUsernamePwdBeforeLogin');
-    Route::post('login', 'API\UserController@login');
-    Route::get('user', 'API\UserController@getUserByToken');
-    Route::get('user/registration/{token}', 'API\UserController@getUserForRegistration');
+    // Route::post('checkUsernamePwdBeforeLogin', 'API\UserController@checkUsernamePwdBeforeLogin');
+    // Route::get('user', 'API\UserController@getUserByToken');
+    // Route::get('user/registration/{token}', 'API\UserController@getUserForRegistration');
+    // Route::post('register/{token}', 'API\UserController@registerWithToken');
 
+    Route::post('login', 'API\UserController@login');
     Route::post('logout', 'API\UserController@logout');
     Route::post('register', 'API\UserController@register');
-    Route::post('register/{token}', 'API\UserController@registerWithToken');
 
     // handle reset password form process
-    Route::post('forget', 'Auth\ForgotPasswordController@getResetToken');
-    Route::get('password/reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
-    Route::post('reset/password', 'Auth\ResetPasswordController@callResetPassword');
-    Route::post('updatePasswordBeforeLogin', 'API\UserController@updatePasswordBeforeLogin');
+    Route::prefix('password')->group(function () {
+        Route::post('forgot', 'Auth\ForgotPasswordController@getResetToken');
+        Route::get('reset/{token}/{email}', 'Auth\ResetPasswordController@reset')->name('password.reset')->middleware('signed');
+        Route::post('reset', 'Auth\ResetPasswordController@callResetPassword');
+        Route::post('update', 'API\UserController@updatePasswordBeforeLogin');
+    });
 
-    Route::get('email/verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
-    Route::post('email/resend', 'API\UserController@resendVerification');
+    Route::prefix('email')->group(function () {
+        Route::get('verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
+        Route::post('resend', 'API\UserController@resendVerification');
+    });
 });
 
 /***********************************************************************************/
@@ -46,26 +50,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************    USERS    **************************************/
     /***********************************************************************************/
     Route::prefix('user-management')->group(function () {
-        Route::group(['middleware' => ["can:read,App\User"]], function () {
-            Route::get('index', 'API\UserController@index');
-        });
-        Route::group(['middleware' => ["can:show,user"]], function () {
-            Route::get('show/{user}', 'API\UserController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\User']], function () {
-            Route::post('store', 'API\UserController@store');
-        });
-        Route::group(['middleware' => ['can:edit,user']], function () {
-            Route::post('update/{user}', 'API\UserController@update');
-            Route::post('updateAccount/{user}', 'API\UserController@updateAccount');
-            Route::post('updatePassword/{user}', 'API\UserController@updatePassword');
-            Route::post('updateWorkHours/{user}', 'API\UserController@updateWorkHours');
-        });
-        Route::group(['middleware' => ['can:delete,user']], function () {
-            Route::put('restore/{user}', 'API\UserController@restore');
-            Route::delete('destroy/{user}', 'API\UserController@destroy');
-            Route::delete('forceDelete/{user}', 'API\UserController@forceDelete');
-        });
+        Route::get('index', 'API\UserController@index');
+        Route::get('show/{id}', 'API\UserController@show');
+        Route::post('store', 'API\UserController@store');
+        Route::put('update-account', 'API\UserController@updateAccount');
+        Route::put('update-password', 'API\UserController@updatePassword');
+        Route::put('update/{id}/work-hours', 'API\UserController@updateWorkHours');
+        Route::put('update/{id}', 'API\UserController@update');
+        Route::put('restore/{id?}', 'API\UserController@restore');
+        Route::put('destroy/{id?}', 'API\UserController@destroy');
+        Route::put('force-destroy/{id?}', 'API\UserController@forceDestroy');
     });
 
 
@@ -73,239 +67,132 @@ Route::group(['middleware' => 'auth:api'], function () {
     /********************************    ROLES    **************************************/
     /***********************************************************************************/
     Route::prefix('role-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Role']], function () {
-            Route::get('index', 'API\RoleController@index');
-        });
-        Route::group(['middleware' => ['can:show,role']], function () {
-            Route::get('show/{role}', 'API\RoleController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Role']], function () {
-            Route::post('store', 'API\RoleController@store');
-        });
-        Route::group(['middleware' => ['can:edit,role']], function () {
-            Route::post('update/{role}', 'API\RoleController@update');
-        });
-        Route::group(['middleware' => ['can:delete,role']], function () {
-            Route::put('restore/{role}', 'API\RoleController@restore');
-            Route::delete('destroy/{role}', 'API\RoleController@destroy');
-            Route::delete('forceDelete/{role}', 'API\RoleController@forceDelete');
-        });
+        Route::get('index', 'API\RoleController@index');
+        Route::get('show/{id}', 'API\RoleController@show');
+        Route::post('store', 'API\RoleController@store');
+        Route::put('update/{id}', 'API\RoleController@update');
+        Route::put('restore/{id?}', 'API\RoleController@restore');
+        Route::put('destroy/{id?}', 'API\RoleController@destroy');
+        Route::put('force-destroy/{id?}', 'API\RoleController@forceDestroy');
     });
 
     /***********************************************************************************/
     /********************************    PERMISSIONS  **********************************/
     /***********************************************************************************/
     Route::prefix('permission-management')->group(function () {
-        Route::group(['middleware' => ['can:read,Spatie\Permission\Models\Permission']], function () {
-            Route::get('index', 'API\PermissionController@index');
-        });
-        Route::group(['middleware' => ['can:show,permission']], function () {
-            Route::get('show/{permission}', 'API\PermissionController@show');
-        });
-        Route::group(['middleware' => ['can:publish,Spatie\Permission\Models\Permission']], function () {
-            Route::post('store', 'API\PermissionController@store');
-        });
-        Route::group(['middleware' => ['can:edit,permission']], function () {
-            Route::post('update/{permission}', 'API\PermissionController@update');
-        });
-        Route::group(['middleware' => ['can:delete,permission']], function () {
-            Route::delete('destroy/{permission}', 'API\PermissionController@destroy');
-        });
+        Route::get('index', 'API\PermissionController@index');
+        Route::get('show/{id}', 'API\PermissionController@show');
+        Route::post('store', 'API\PermissionController@store');
+        Route::post('update/{id}', 'API\PermissionController@update');
+        Route::delete('destroy/{id}', 'API\PermissionController@destroy');
     });
 
     /***********************************************************************************/
     /********************************   COMPANIES **************************************/
     /***********************************************************************************/
     Route::prefix('company-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Company']], function () {
-            Route::get('index', 'API\CompanyController@index');
-        });
-        Route::group(['middleware' => ['can:show,company']], function () {
-            Route::get('show/{company}', 'API\CompanyController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Company']], function () {
-            Route::post('store', 'API\CompanyController@store');
-        });
-        Route::group(['middleware' => ['can:edit,company']], function () {
-            Route::post('update/{company}', 'API\CompanyController@update');
-        });
-        Route::group(['middleware' => ['can:delete,company']], function () {
-            Route::put('restore/{company}', 'API\CompanyController@restore');
-            Route::delete('destroy/{company}', 'API\CompanyController@destroy');
-            Route::delete('forceDelete/{company}', 'API\CompanyController@forceDelete');
-        });
+        Route::get('index', 'API\CompanyController@index');
+        Route::get('show/{id}', 'API\CompanyController@show');
+        Route::post('store', 'API\CompanyController@store');
+        Route::put('update/{id}', 'API\CompanyController@update');
+        Route::put('restore/{id?}', 'API\CompanyController@restore');
+        Route::put('destroy/{id?}', 'API\CompanyController@destroy');
+        Route::put('force-destroy/{id?}', 'API\CompanyController@forceDestroy');
     });
 
     /***********************************************************************************/
     /*********************************   SKILLS   **************************************/
     /***********************************************************************************/
     Route::prefix('skill-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Skill']], function () {
-            Route::get('index', 'API\SkillController@index');
-            Route::get('getByTaskId/{task}', 'API\SkillController@getByTaskId');
-        });
-        Route::group(['middleware' => ['can:show,skill']], function () {
-            Route::get('show/{skill}', 'API\SkillController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Skill']], function () {
-            Route::post('store', 'API\SkillController@store');
-        });
-        Route::group(['middleware' => ['can:edit,skill']], function () {
-            Route::post('update/{skill}', 'API\SkillController@update');
-        });
-        Route::group(['middleware' => ['can:delete,skill']], function () {
-            Route::put('restore/{skill}', 'API\SkillController@restore');
-            Route::delete('destroy/{skill}', 'API\SkillController@destroy');
-            Route::delete('forceDelete/{skill}', 'API\SkillController@forceDelete');
-        });
+        Route::get('index', 'API\SkillController@index');
+        Route::get('index/task/{id}', 'API\SkillController@getByTaskId');
+        Route::get('show/{id}', 'API\SkillController@show');
+        Route::post('store', 'API\SkillController@store');
+        Route::put('update/{id}', 'API\SkillController@update');
+        Route::put('restore/{id?}', 'API\SkillController@restore');
+        Route::put('destroy/{id?}', 'API\SkillController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SkillController@forceDestroy');
     });
 
     /***********************************************************************************/
     /*******************************   WORKAREAS   *************************************/
     /***********************************************************************************/
     Route::prefix('workarea-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Workarea']], function () {
-            Route::get('index', 'API\WorkareaController@index');
-        });
-        Route::group(['middleware' => ['can:show,workarea']], function () {
-            Route::get('show/{workarea}', 'API\WorkareaController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Workarea']], function () {
-            Route::post('store', 'API\WorkareaController@store');
-        });
-        Route::group(['middleware' => ['can:edit,workarea']], function () {
-            Route::post('update/{workarea}', 'API\WorkareaController@update');
-        });
-        Route::group(['middleware' => ['can:delete,workarea']], function () {
-            Route::put('restore/{workarea}', 'API\WorkareaController@restore');
-            Route::delete('destroy/{workarea}', 'API\WorkareaController@destroy');
-            Route::delete('forceDelete/{workarea}', 'API\WorkareaController@forceDelete');
-        });
+        Route::get('index', 'API\WorkareaController@index');
+        Route::get('show/{id}', 'API\WorkareaController@show');
+        Route::post('store', 'API\WorkareaController@store');
+        Route::put('update/{id}', 'API\WorkareaController@update');
+        Route::put('restore/{id?}', 'API\WorkareaController@restore');
+        Route::put('destroy/{id?}', 'API\WorkareaController@destroy');
+        Route::put('force-destroy/{id?}', 'API\WorkareaController@forceDestroy');
     });
 
     /***********************************************************************************/
     /********************************   PROJETCS   *************************************/
     /***********************************************************************************/
     Route::prefix('project-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Project']], function () {
-            Route::get('index', 'API\ProjectController@index');
-        });
-        Route::group(['middleware' => ['can:show,project']], function () {
-            Route::get('show/{project}', 'API\ProjectController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Project']], function () {
-            Route::post('store', 'API\ProjectController@store');
-            Route::post('start', 'API\ProjectController@start');
-            Route::post('store-range/{id}', 'API\ProjectController@addRange');
-        });
-        Route::group(['middleware' => ['can:edit,project']], function () {
-            Route::post('update/{project}', 'API\ProjectController@update');
-        });
-        Route::group(['middleware' => ['can:delete,project']], function () {
-            Route::put('restore/{project}', 'API\ProjectController@restore');
-            Route::delete('destroy/{project}', 'API\ProjectController@destroy');
-            Route::delete('forceDelete/{project}', 'API\ProjectController@forceDelete');
-        });
+        Route::get('index', 'API\ProjectController@index');
+        Route::get('show/{id}', 'API\ProjectController@show');
+        Route::post('store', 'API\ProjectController@store');
+        Route::post('start/{id}', 'API\ProjectController@start');
+        Route::post('store-range/{id}', 'API\ProjectController@addRange');
+        Route::put('update/{id}', 'API\ProjectController@update');
+        Route::put('restore/{id?}', 'API\ProjectController@restore');
+        Route::put('destroy/{id?}', 'API\ProjectController@destroy');
+        Route::put('force-destroy/{id?}', 'API\ProjectController@forceDestroy');
     });
 
     /***********************************************************************************/
     /********************************    RANGES    **************************************/
     /***********************************************************************************/
     Route::prefix('range-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Range']], function () {
-            Route::get('index', 'API\RangeController@index');
-        });
-        Route::group(['middleware' => ['can:show,range']], function () {
-            Route::get('show/{range}', 'API\RangeController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Range']], function () {
-            Route::post('store', 'API\RangeController@store');
-        });
-        Route::group(['middleware' => ['can:edit,range']], function () {
-            Route::post('update/{range}', 'API\RangeController@update');
-        });
-        Route::group(['middleware' => ['can:delete,range']], function () {
-            Route::put('restore/{range}', 'API\RangeController@restore');
-            Route::delete('destroy/{range}', 'API\RangeController@destroy');
-            Route::delete('forceDelete/{range}', 'API\RangeController@forceDelete');
-        });
+        Route::get('index', 'API\RangeController@index');
+        Route::get('show/{id}', 'API\RangeController@show');
+        Route::post('store', 'API\RangeController@store');
+        Route::put('update/{id}', 'API\RangeController@update');
+        Route::put('restore/{id?}', 'API\RangeController@restore');
+        Route::put('destroy/{id?}', 'API\RangeController@destroy');
+        Route::put('force-destroy/{id?}', 'API\RangeController@forceDestroy');
     });
 
     /***********************************   TASK   **************************************/
     /***********************************************************************************/
     Route::prefix('task-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Task']], function () {
-            Route::get('index', 'API\TaskController@index');
-            Route::get('workarea/{workarea}', 'API\TaskController@getByWorkarea');
-            Route::get('bundle/{task_bundle}', 'API\TaskController@getByBundle');
-            Route::get('skill/{skill}', 'API\TaskController@getBySkill');
-            Route::get('user/{user}', 'API\TaskController@getByUser');
-            Route::post('skills', 'API\TaskController@getBySkills');
-        });
-        Route::group(['middleware' => ['can:show,task']], function () {
-            Route::get('show/{task}', 'API\TaskController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Task']], function () {
-            Route::post('store', 'API\TaskController@store');
-        });
-        Route::group(['middleware' => ['can:edit,task']], function () {
-            Route::post('store-comment/{task}', 'API\TaskController@addComment');
-            Route::post('update-partial/{task}', 'API\TaskController@updatePartial');
-            Route::post('update/{task}', 'API\TaskController@update');
-        });
-        Route::group(['middleware' => ['can:delete,task']], function () {
-            Route::delete('{task}', 'API\TaskController@destroy');
-        });
+        Route::get('index', 'API\TaskController@index');
+        Route::get('show/{id}', 'API\TaskController@show');
+        Route::post('store', 'API\TaskController@store');
+        Route::post('store-comment/{id}', 'API\TaskController@addComment');
+        Route::put('update/{id}', 'API\TaskController@update');
+        Route::put('update-partial/{id}', 'API\TaskController@updatePartial');
+        Route::put('destroy/{id?}', 'API\TaskController@destroy');
     });
 
     /*****************************   REPETITIVE - TASK   ********************************/
     /***********************************************************************************/
     Route::prefix('repetitive-task-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Task']], function () {
-            Route::get('range/{range}', 'API\RangeController@getRepetitiveTasks');
-        });
+        Route::get('range/{id}', 'API\RangeController@getRepetitiveTasks');
     });
 
     /***********************************************************************************/
     /*****************************   UNAVAILABILITIES   ********************************/
     /***********************************************************************************/
     Route::prefix('unavailability-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Unavailability']], function () {
-            Route::get('index', 'API\UnavailabilityController@index');
-        });
-        Route::group(['middleware' => ['can:show,unavailability']], function () {
-            Route::get('show/{unavailability}', 'API\UnavailabilityController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Unavailability']], function () {
-            Route::post('store', 'API\UnavailabilityController@store');
-        });
-        Route::group(['middleware' => ['can:edit,unavailability']], function () {
-            Route::post('update/{unavailability}', 'API\UnavailabilityController@update');
-        });
-        Route::group(['middleware' => ['can:delete,unavailability']], function () {
-            Route::delete('destroy/{unavailability}', 'API\UnavailabilityController@destroy');
-        });
+        Route::get('index', 'API\UnavailabilityController@index');
+        Route::get('show/{id}', 'API\UnavailabilityController@show');
+        Route::post('store', 'API\UnavailabilityController@store');
+        Route::put('update/{id}', 'API\UnavailabilityController@update');
+        Route::put('destroy/{id?}', 'API\UnavailabilityController@destroy');
     });
 
     /***********************************************************************************/
     /***********************************   Hours   *************************************/
     /***********************************************************************************/
     Route::prefix('hours-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Hours']], function () {
-            Route::get('index', 'API\HoursController@index');
-        });
-        Route::group(['middleware' => ['can:show,hours']], function () {
-            Route::get('show/{hours}', 'API\HoursController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Hours']], function () {
-            Route::post('store', 'API\HoursController@store');
-        });
-        Route::group(['middleware' => ['can:edit,hours']], function () {
-            Route::post('update/{hours}', 'API\HoursController@update');
-        });
-        Route::group(['middleware' => ['can:delete,hours']], function () {
-            Route::delete('destroy/{hours}', 'API\HoursController@destroy');
-        });
+        Route::get('index', 'API\HoursController@index');
+        Route::get('show/{id}', 'API\HoursController@show');
+        Route::post('store', 'API\HoursController@store');
+        Route::put('update/{id}', 'API\HoursController@update');
+        Route::put('destroy/{id?}', 'API\HoursController@destroy');
     });
 
     /***********************************************************************************/
@@ -336,94 +223,52 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************   Customers   *************************************/
     /***********************************************************************************/
     Route::prefix('customer-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Customer']], function () {
-            Route::get('index', 'API\CustomerController@index');
-        });
-        Route::group(['middleware' => ['can:show,customer']], function () {
-            Route::get('show/{customer}', 'API\CustomerController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Customer']], function () {
-            Route::post('store', 'API\CustomerController@store');
-        });
-        Route::group(['middleware' => ['can:edit,customer']], function () {
-            Route::post('update/{customer}', 'API\CustomerController@update');
-        });
-        Route::group(['middleware' => ['can:delete,customer']], function () {
-            Route::put('restore/{customer}', 'API\CustomerController@restore');
-            Route::delete('destroy/{customer}', 'API\CustomerController@destroy');
-            Route::delete('forceDelete/{customer}', 'API\CustomerController@forceDelete');
-        });
+        Route::get('index', 'API\CustomerController@index');
+        Route::get('show/{id}', 'API\CustomerController@show');
+        Route::post('store', 'API\CustomerController@store');
+        Route::put('update/{id}', 'API\CustomerController@update');
+        Route::put('restore/{id?}', 'API\CustomerController@restore');
+        Route::put('destroy/{id?}', 'API\CustomerController@destroy');
+        Route::put('force-destroy/{id?}', 'API\CustomerController@forceDestroy');
     });
 
     /***********************************************************************************/
     /***********************************   Modules   *************************************/
     /***********************************************************************************/
     Route::prefix('module-management')->group(function () {
-        Route::get('sync/{module}', 'API\ModuleController@sync');
-        Route::group(['middleware' => ['can:read,App\Models\BaseModule']], function () {
-            Route::get('index', 'API\ModuleController@index');
-            Route::post('test-connection', 'API\ModuleController@testConnection');
-        });
-        Route::group(['middleware' => ['can:show,module']], function () {
-            Route::get('show/{module}', 'API\ModuleController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\BaseModule']], function () {
-            Route::post('store', 'API\ModuleController@store');
-            Route::post('module-update/{id}', 'API\ModuleController@updateModule');
-        });
-        Route::group(['middleware' => ['can:edit,module']], function () {
-            Route::post('update/{module}', 'API\ModuleController@update');
-            Route::post('module-data-types-update/{module}', 'API\ModuleController@updateModuleDataTypes');
-        });
-        Route::group(['middleware' => ['can:delete,module']], function () {
-            Route::delete('destroy/{module}', 'API\ModuleController@destroy');
-        });
-    });
-
-    /***********************************************************************************/
-    /***********************************   DataTypes   *************************************/
-    /***********************************************************************************/
-    Route::prefix('data-type-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\BaseModule']], function () {
-            Route::get('index', 'API\DataTypeController@index');
-        });
+        Route::get('index', 'API\ModuleController@index');
+        Route::get('data-types', 'API\ModuleController@dataTypes');
+        Route::post('test', 'API\ModuleController@testConnection');
+        Route::get('show/{id}', 'API\ModuleController@show');
+        Route::post('store', 'API\ModuleController@store');
+        Route::get('sync/{id}', 'API\ModuleController@sync');
+        Route::put('update/{id}', 'API\ModuleController@update');
+        Route::put('update-connection/{id}', 'API\ModuleController@updateConnection');
+        Route::put('update-data-types/{id}', 'API\ModuleController@updateDataTypes');
+        Route::put('destroy/{id?}', 'API\ModuleController@destroy');
     });
 
     /***********************************************************************************/
     /********************************** Documents **************************************/
     /***********************************************************************************/
     Route::prefix('document-management')->group(function () {
-        Route::group(['middleware' => ['can:publish tasks']], function () {
-            Route::post('store', 'API\DocumentController@store');
-            Route::post('upload-file/{token}', 'API\DocumentController@uploadFile');
-            Route::delete('delete-file/{document}', 'API\DocumentController@deleteFile');
-            Route::post('delete-files', 'API\DocumentController@deleteFiles');
-        });
+        Route::post('store', 'API\DocumentController@store');
+        Route::post('upload/{token}', 'API\DocumentController@upload');
+        Route::put('destroy/{id?}', 'API\DocumentController@destroy');
     });
 
     /***********************************************************************************/
     /********************************* Subscription ************************************/
     /***********************************************************************************/
     Route::prefix('subscription-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\Subscription']], function () {
-            Route::get('index', 'API\SubscriptionController@index');
-            Route::get('packages', 'API\SubscriptionController@packages');
-            Route::get('company/{company}', 'API\SubscriptionController@getByCompany');
-        });
-        Route::group(['middleware' => ['can:show,subscription']], function () {
-            Route::get('show/{subscription}', 'API\SubscriptionController@show');
-        });
-        Route::group(['middleware' => ['can:publish,App\Models\Subscription']], function () {
-            Route::post('store', 'API\SubscriptionController@store');
-        });
-        Route::group(['middleware' => ['can:edit,subscription']], function () {
-            Route::post('update/{subscription}', 'API\SubscriptionController@update');
-        });
-        Route::group(['middleware' => ['can:delete,subscription']], function () {
-            Route::put('restore/{subscription}', 'API\SubscriptionController@restore');
-            Route::delete('destroy/{subscription}', 'API\SubscriptionController@destroy');
-            Route::delete('forceDelete/{subscription}', 'API\SubscriptionController@forceDelete');
-        });
+        Route::get('index', 'API\SubscriptionController@index');
+        Route::get('packages', 'API\SubscriptionController@packages');
+        Route::get('show/{id}', 'API\SubscriptionController@show');
+        Route::post('store', 'API\SubscriptionController@store');
+        Route::put('update/{id}', 'API\SubscriptionController@update');
+        Route::put('restore/{id?}', 'API\SubscriptionController@restore');
+        Route::put('destroy/{id?}', 'API\SubscriptionController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SubscriptionController@forceDestroy');
     });
 });
 
@@ -431,4 +276,4 @@ Route::group(['middleware' => 'auth:api'], function () {
 /***************************** NOT AUTHENTICATED ***********************************/
 /***********************************************************************************/
 
-Route::get('document-management/get-file/{path}', 'API\DocumentController@getFile');
+Route::get('document-management/show/{path}', 'API\DocumentController@show');

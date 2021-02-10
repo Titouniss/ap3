@@ -61,21 +61,20 @@ class PermissionsRoleTableSeeder extends Seeder
             }
         }
 
-        $role = Role::where(['name' => 'superAdmin'])->first();
+        $role = Role::firstOrCreate(['code' => 'super_admin', 'name' => 'superAdmin']);
         $role->givePermissionTo(Permission::all());
         $role->code = 'super_admin';
         $role->save();
 
-        $role = Role::where(['name' => 'Administrateur'])->first();
+        $role = Role::firstOrCreate(['code' => 'admin', 'name' => 'Administrateur']);
         $role->givePermissionTo(Permission::all()->filter(function ($perm) {
-            return !in_array($perm->name_fr, ['permissions', 'entreprises', 'modules', 'abonnements']);
+            return !in_array($perm->name_fr, ['permissions', 'modules', 'abonnements']);
         }));
         $role->givePermissionTo('read permissions');
-        $role->givePermissionTo('read companies');
         $role->code = 'admin';
         $role->save();
 
-        $role = Role::where(['name' => 'Utilisateur'])->first();
+        $role = Role::firstOrCreate(['code' => 'user', 'name' => 'Utilisateur']);
         // Give all permissions with name_fr
         $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'heures_supplémentaires'])->get());
         // Give specific permission by name
@@ -92,7 +91,6 @@ class PermissionsRoleTableSeeder extends Seeder
                 'password' => Hash::make('password'),
                 //'email_verified_at' => '2020-01-01 00:00:00.000000',
                 'isTermsConditionAccepted' => true,
-                'is_admin' => true
             ]);
             $admin->syncRoles('superAdmin');
         } else {

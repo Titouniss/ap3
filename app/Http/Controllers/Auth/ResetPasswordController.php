@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ReturnsJsonResponse;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use App\Transformers\Json;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class ResetPasswordController extends Controller
     |
     */
 
-    use ResetsPasswords;
+    use ResetsPasswords, ReturnsJsonResponse;
 
     /**
      * Where to redirect users after resetting their password.
@@ -44,7 +45,7 @@ class ResetPasswordController extends Controller
     }
 
     /**
-     * Handle reset password 
+     * Handle reset password
      */
     public function callResetPassword(Request $request)
     {
@@ -55,23 +56,24 @@ class ResetPasswordController extends Controller
     {
         $this->validate($request, $this->rules(), $this->validationErrorMessages());
         $response = $this->broker()->reset(
-            $this->credentials($request), function ($user, $password) {
+            $this->credentials($request),
+            function ($user, $password) {
                 $this->resetPassword($user, $password);
             }
         );
         if ($request->wantsJson()) {
-            if ($response == Password::PASSWORD_RESET) {
-                return response()->json(['data'=>trans('passwords.reset')]);
-            } else {
-                return response()->json(['email' => $request->input('email'), 'data'=>trans($response)]);
+            if ($response != Password::PASSWORD_RESET) {
+                return $this->errorResponse("Ce lien de réinitialisation n'est plus valide.");
             }
+
+            return $this->successResponse(true, "Votre mot de passe a été réinitialisé.");
         }
+
         $response == Password::PASSWORD_RESET
-        ? $this->sendResetResponse($response)
-        : $this->sendResetFailedResponse($request, $response);
+            ? $this->sendResetResponse($request, $response)
+            : $this->sendResetFailedResponse($request, $response);
 
-        return  new RedirectResponse(env('APP_URL')+"?verified=$response");
-
+        return  new RedirectResponse(env('APP_URL') + "?verified=$response");
     }
 
 

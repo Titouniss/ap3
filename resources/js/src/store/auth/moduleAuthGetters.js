@@ -1,15 +1,10 @@
-/*=========================================================================================
-  File Name: moduleAuthGetters.js
-  Description: Auth Module Getters
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
-
+import moment from 'moment';
 
 export default {
-  GET_BEARER () {    
-    return axios.defaults.headers.common['Authorization']
-  }
+    isUserLoggedIn: state => {
+        let isAuthenticated = false
+        let expiresAt = localStorage.getItem('token_expires_at')
+        if (expiresAt && expiresAt > moment().unix()) isAuthenticated = true
+        return localStorage.getItem("user_info") && isAuthenticated
+    }
 }

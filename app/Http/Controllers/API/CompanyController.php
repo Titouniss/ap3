@@ -2,105 +2,90 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
-use App\Models\Role;
 use App\Models\Subscription;
-use App\Models\WorkareasSkill;
 use Carbon\Carbon;
 use Exception;
 use Validator;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-class CompanyController extends Controller
+class CompanyController extends BaseApiController
 {
-    use SoftDeletes;
+    protected static $index_load = [];
+    protected static $index_append = ['active_subscription'];
+    protected static $show_load = ['skills:id,name,company_id', 'subscriptions', 'subscriptions.packages'];
+    protected static $show_append = ['active_subscription'];
 
-    public $successStatus = 200;
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'siret' => 'required',
+        'code' => 'required',
+        'type' => 'required',
+        'contact_firstname' => 'required',
+        'contact_lastname' => 'required',
+        'contact_function' => 'required',
+        'contact_email' => 'required|email',
+        'contact_tel1' => 'nullable',
+        'contact_tel2' => 'nullable',
+        'street_number' => 'required',
+        'street_name' => 'required',
+        'postal_code' => 'required',
+        'city' => 'required',
+        'country' => 'required',
+        'subscription' => 'required',
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'siret' => 'required',
+        'code' => 'required',
+        'type' => 'required',
+        'contact_firstname' => 'required',
+        'contact_lastname' => 'required',
+        'contact_function' => 'required',
+        'contact_email' => 'required|email',
+        'contact_tel1' => 'nullable',
+        'contact_tel2' => 'nullable',
+        'street_number' => 'required',
+        'street_name' => 'required',
+        'postal_code' => 'required',
+        'city' => 'required',
+        'country' => 'required',
+    ];
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
+    {
+        parent::__construct(Company::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
     {
         $user = Auth::user();
-        $items = [];
-        if ($user->is_admin) {
-            //$items = Company::all()->load('skills');
-            $items = Company::withTrashed()->get()->load('skills')->sort(function ($a, $b) {
-                $val = 0;
-
-                if ($a->has_active_subscription && $b->has_active_subscription) {
-                    $val = $a->active_subscription->ends_at->isBefore($b->active_subscription->ends_at) ? -1 : 1;
-                } else {
-                    if ($a->has_active_subscription) {
-                        $val = -1;
-                    } else if ($b->has_active_subscription) {
-                        $val = 1;
-                    }
-                }
-
-                return $val;
-            })->values();
-        } else if ($user->company_id != null) {
-            $items = Company::where('id', $user->company_id)->get()->load('skills');
+        if (!$user->is_admin) {
+            $query->where('companies.id', $user->company_id);
         }
+        if (!$request->has('order_by')) {
+            $query->leftJoin('subscriptions', function ($join) {
+                $join->on('companies.id', '=', 'subscriptions.company_id')
+                    ->where('subscriptions.state', 'active');
+            })->groupBy('companies.id');
 
-        return response()->json(['success' => $items], $this->successStatus);
+            $query->orderBy('subscriptions.ends_at', 'desc');
+        }
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Company $company)
+    protected function storeItem(array $arrayRequest)
     {
-        return response()->json(['success' => $company->load('skills', 'subscriptions', 'subscriptions.packages')], $this->successStatus);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'siret' => 'required',
-            'code' => 'required',
-            'type' => 'required',
-            'contact_firstname' => 'required',
-            'contact_lastname' => 'required',
-            'contact_function' => 'required',
-            'contact_email' => 'required|email',
-            'street_number' => 'required',
-            'street_name' => 'required',
-            'postal_code' => 'required',
-            'city' => 'required',
-            'country' => 'required',
-            'subscription' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
-
         if (!isset($arrayRequest['contact_tel1']) && !isset($arrayRequest['contact_tel2'])) {
-            return response()->json(['error' => 'Au moins un numéro de téléphone est obligatoire'], 400);
+            throw new Exception('Au moins un numéro de téléphone est obligatoire');
         }
 
-        if (Company::where('siret', $arrayRequest['siret'])->exists()) {
-            return response()->json(['error' => 'Siret déjà utilisé par une autre sociéte'], 400);
+        if (Company::withTrashed()->where('siret', $arrayRequest['siret'])->exists()) {
+            throw new Exception('Siret déjà utilisé par une autre sociéte');
         }
 
         $item = Company::create([
@@ -112,19 +97,14 @@ class CompanyController extends Controller
             'contact_lastname' => $arrayRequest['contact_lastname'],
             'contact_function' => $arrayRequest['contact_function'],
             'contact_email' => $arrayRequest['contact_email'],
+            'contact_tel1' => $arrayRequest['contact_tel1'],
+            'contact_tel2' => $arrayRequest['contact_tel2'],
             'street_number' => $arrayRequest['street_number'],
             'street_name' => $arrayRequest['street_name'],
             'postal_code' => $arrayRequest['postal_code'],
             'city' => $arrayRequest['city'],
             'country' => $arrayRequest['country'],
         ]);
-        if (isset($arrayRequest['contact_tel1'])) {
-            $item->contact_tel1 = $arrayRequest['contact_tel1'];
-        }
-        if (isset($arrayRequest['contact_tel2'])) {
-            $item->contact_tel2 = $arrayRequest['contact_tel2'];
-        }
-        $item->save();
 
         $subscriptionArray = $arrayRequest['subscription'];
         $validator = Validator::make($subscriptionArray, [
@@ -134,72 +114,50 @@ class CompanyController extends Controller
             'is_trial' => 'required'
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+            throw new Exception($validator->errors());
         }
 
-        $subscription = Subscription::create(['company_id' => $item->id]);
+        $subscription = Subscription::create([
+            'company_id' => $item->id,
+            'is_trial' => $subscriptionArray['is_trial']
+        ]);
 
         try {
             $subscription->starts_at = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['starts_at'] . ' 00:00:00');
-            $subscription->ends_at = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
-            $item->is_trial = $subscriptionArray['is_trial'];
-            $subscription->packages()->sync($subscriptionArray['packages']);
-            if ($subscription->starts_at->isFuture()) {
-                $subscription->state = 'pending';
-            } else if ($subscription->ends_at->isFuture()) {
-                $subscription->state = 'active';
-            } else {
-                $subscription->state = 'inactive';
-            }
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 400);
+            throw new Exception("Paramètre 'subscription.starts_at' doit être du format 'd/m/Y'.");
+        }
+        try {
+            $subscription->ends_at = Carbon::createFromFormat('d/m/Y H:i:s', $subscriptionArray['ends_at'] . ' 23:59:59');
+        } catch (\Throwable $th) {
+            throw new Exception("Paramètre 'subscription.ends_at' doit être du format 'd/m/Y'.");
+        }
+        try {
+            $subscription->packages()->sync($subscriptionArray['packages']);
+        } catch (\Throwable $th) {
+            throw new Exception("Paramètre 'subscription.packages' contient des valeurs invalides.");
+        }
+
+        if ($subscription->starts_at->isFuture()) {
+            $subscription->state = 'pending';
+        } else if ($subscription->ends_at->isFuture()) {
+            $subscription->state = 'active';
+        } else {
+            $subscription->state = 'inactive';
         }
 
         $subscription->save();
 
-        return response()->json(['success' => $item], $this->successStatus);
+        return $item;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    protected function updateItem($item, array $arrayRequest)
     {
-        //
-    }
+        if (!isset($arrayRequest['contact_tel1']) && !isset($arrayRequest['contact_tel2'])) {
+            throw new Exception('Au moins un numéro de téléphone est obligatoire');
+        }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Company $company)
-    {
-        $user = Auth::user();
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'siret' => 'required',
-            'code' => 'required',
-            'type' => 'required',
-            'contact_firstname' => 'required',
-            'contact_lastname' => 'required',
-            'contact_function' => 'required',
-            'contact_email' => 'required|email',
-            'street_number' => 'required',
-            'street_name' => 'required',
-            'postal_code' => 'required',
-            'city' => 'required',
-            'country' => 'required',
-        ]);
-
-        $company->update([
+        $item->update([
             'name' => $arrayRequest['name'],
             'siret' => $arrayRequest['siret'],
             'code' => $arrayRequest['code'],
@@ -208,6 +166,8 @@ class CompanyController extends Controller
             'contact_lastname' => $arrayRequest['contact_lastname'],
             'contact_function' => $arrayRequest['contact_function'],
             'contact_email' => $arrayRequest['contact_email'],
+            'contact_tel1' => $arrayRequest['contact_tel1'],
+            'contact_tel2' => $arrayRequest['contact_tel2'],
             'street_number' => $arrayRequest['street_number'],
             'street_name' => $arrayRequest['street_name'],
             'postal_code' => $arrayRequest['postal_code'],
@@ -215,67 +175,6 @@ class CompanyController extends Controller
             'country' => $arrayRequest['country'],
         ]);
 
-        return response()->json(['success' => $company], $this->successStatus);
-    }
-
-    /**
-     * Restore the specified resource in storage.
-     *
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function restore(Company $company)
-    {
-        try {
-            if (!$company->restoreCascade()) {
-                throw new Exception('Erreur lors de la restauration');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
-
-        return response()->json(['success' => $company], $this->successStatus);
-    }
-
-    /**
-     * Archive the specified resource from storage.
-     *
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Company $company)
-    {
-        try {
-            if (!$company->deleteCascade()) {
-                throw new Exception('Erreur lors de l\'archivage');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
-
-        return response()->json(['success' => $company], $this->successStatus);
-    }
-
-    /**
-     * forceDelete the specified resource from storage.
-     *
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function forceDelete(Company $company)
-    {
-        $controllerLog = new Logger('company');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('company', ['forceDelete']);
-
-        try {
-            if (!$company->deleteCascade()) {
-                throw new Exception('Erreur lors de la suppression');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
-
-        return response()->json(['success' => true], $this->successStatus);
+        return $item;
     }
 }

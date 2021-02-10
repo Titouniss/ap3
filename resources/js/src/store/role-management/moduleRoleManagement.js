@@ -1,24 +1,23 @@
-/*=========================================================================================
-  File Name: moduleRoleManagement.js
-  Description: Calendar Module
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import { crud } from "../utils";
 
+const slug = "role-management";
+const model = "role";
+const model_plurial = "roles";
 
-import state from './moduleRoleManagementState.js'
-import mutations from './moduleRoleManagementMutations.js'
-import actions from './moduleRoleManagementActions.js'
-import getters from './moduleRoleManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
+
+getters.getItemsByCompany = currentState => id =>
+    currentState.roles.filter(
+        r =>
+            (r.is_public && r.company_id === null) ||
+            (id !== null && r.company_id === id)
+    );
 
 export default {
-  isRegistered: false,
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  getters
-}
-
+    isRegistered: false,
+    namespaced: true,
+    state,
+    mutations,
+    actions,
+    getters
+};

@@ -215,6 +215,16 @@ export default {
           this.$store
             .dispatch("repetitiveTaskManagement/addItem", item)
             .then(() => {
+              Object.assign(this.itemLocal, {
+                name: "",
+                order: 1,
+                estimated_time: 1,
+                description: "",
+                //workarea_id: null,
+                skills: [],
+                documents: [],
+              });
+              Object.assign(this.workareasDataFiltered, []);
               this.$vs.loading.close();
               this.$vs.notify({
                 title: "Ajout d'une étape",
@@ -241,7 +251,7 @@ export default {
       const ids = this.itemLocal.documents.map((item) => item.id);
       if (ids.length > 0) {
         this.$store
-          .dispatch("documentManagement/deleteFiles", ids)
+          .dispatch("documentManagement/removeItems", ids)
           .then((response) => {
             this.itemLocal.documents = [];
           })

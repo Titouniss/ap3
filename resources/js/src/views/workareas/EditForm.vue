@@ -1,6 +1,6 @@
 <template>
   <vs-prompt
-    title="Editer un pôle de produciton"
+    title="Editer un pôle de production"
     accept-text="Modifier"
     cancel-text="Annuler"
     button-cancel="border"
@@ -44,6 +44,32 @@
               >{{ errors.first("max_users") }}</span
             >
 
+            <div v-if="itemLocal.company_id">
+              <v-select
+                v-validate="'required'"
+                name="skill"
+                label="name"
+                :multiple="true"
+                v-model="itemLocal.skills"
+                :reduce="(skill) => skill.id"
+                class="w-full mt-5"
+                autocomplete
+                :options="skillsData"
+              >
+                <template #header>
+                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
+                </template>
+                <template #option="skill">
+                  <span>{{ `${skill.name}` }}</span>
+                </template>
+              </v-select>
+              <span
+                class="text-danger text-sm"
+                v-show="errors.has('company_id')"
+                >{{ errors.first("company_id") }}</span
+              >
+            </div>
+
             <div class="vx-row mt-4" v-if="!disabled">
               <div class="vx-col w-full">
                 <div class="flex items-end px-3">
@@ -84,32 +110,6 @@
               </div>
             </div>
 
-            <div v-if="itemLocal.company_id">
-              <v-select
-                v-validate="'required'"
-                name="skill"
-                label="name"
-                :multiple="true"
-                v-model="itemLocal.skills"
-                :reduce="(name) => name.id"
-                class="w-full mt-5"
-                autocomplete
-                :options="skillsData"
-              >
-                <template #header>
-                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
-                </template>
-                <template #option="skill">
-                  <span>{{ `${skill.name}` }}</span>
-                </template>
-              </v-select>
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('company_id')"
-                >{{ errors.first("company_id") }}</span
-              >
-            </div>
-
             <div class="mt-4">
               <file-input :items="itemLocal.documents" :token="token" />
             </div>
@@ -141,16 +141,17 @@ export default {
     FileInput,
   },
   data() {
+    const item = JSON.parse(
+      JSON.stringify(
+        this.$store.getters["workareaManagement/getItem"](this.itemId)
+      )
+    );
+    item.skills = item.skills.map((skill) => skill.id);
     return {
-      itemLocal: JSON.parse(
-        JSON.stringify(
-          this.$store.getters["workareaManagement/getItem"](this.itemId)
-        )
-      ),
+      itemLocal: item,
 
       token: "token_" + Math.random().toString(36).substring(2, 15),
       company_id_temps: null,
-      companySkills: [],
     };
   },
   computed: {
@@ -171,13 +172,14 @@ export default {
       },
     },
     companiesData() {
-      this.companySkills = this.$store.state.companyManagement.companies.find(
-        (company) => company.id === this.itemLocal.company_id
-      ).skills;
-      return this.$store.state.companyManagement.companies;
+      return this.$store.getters["companyManagement/getItems"];
     },
     skillsData() {
-      return this.filterItemsAdmin(this.$store.state.skillManagement.skills);
+      return this.itemLocal.company_id
+        ? this.$store.getters["skillManagement/getItemsByCompany"](
+            this.itemLocal.company_id
+          )
+        : [];
     },
     disabled() {
       const user = this.$store.state.AppActiveUser;
@@ -196,7 +198,6 @@ export default {
     init() {
       this.deleteFiles();
       this.itemLocal = {};
-      this.companySkills = [];
     },
     submitItem() {
       this.$validator.validateAll().then((result) => {
@@ -231,27 +232,13 @@ export default {
     cleanSkillsInput() {
       this.itemLocal.skills = [];
     },
-    filterItemsAdmin(items) {
-      let filteredItems = [];
-      const user = this.$store.state.AppActiveUser;
-      if (this.isAdmin) {
-        filteredItems = items.filter(
-          (item) => item.company_id === this.itemLocal.company_id
-        );
-      } else {
-        filteredItems = items.filter(
-          (item) => item.company_id === user.company_id
-        );
-      }
-      return filteredItems;
-    },
     deleteFiles() {
       const ids = this.itemLocal.documents
         .filter((item) => item.token)
         .map((item) => item.id);
       if (ids.length > 0) {
         this.$store
-          .dispatch("documentManagement/deleteFiles", ids)
+          .dispatch("documentManagement/removeItems", ids)
           .catch((error) => {});
       }
     },
