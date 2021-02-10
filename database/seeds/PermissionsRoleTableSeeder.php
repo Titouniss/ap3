@@ -91,7 +91,6 @@ class PermissionsRoleTableSeeder extends Seeder
                 'password' => Hash::make('password'),
                 //'email_verified_at' => '2020-01-01 00:00:00.000000',
                 'isTermsConditionAccepted' => true,
-                'is_admin' => true
             ]);
             $admin->syncRoles('superAdmin');
         } else {
