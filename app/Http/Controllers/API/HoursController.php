@@ -159,11 +159,15 @@ class HoursController extends BaseApiController
     protected function filterIndexQuery(Request $request, $query)
     {
         $user = Auth::user();
-        if ($user->is_manager) {
-            $query->join('users', function ($join) use ($user) {
-                $join->on('hours.user_id', '=', 'users.id')
-                    ->where('users.company_id', $user->company_id);
-            });
+        if (!$user->is_admin) {
+            if ($user->is_manager) {
+                $query->join('users', function ($join) use ($user) {
+                    $join->on('hours.user_id', '=', 'users.id')
+                        ->where('users.company_id', $user->company_id);
+                });
+            } else {
+                $query->where('user_id', $user->id);
+            }
         }
 
         if ($request->has('user_id')) {
