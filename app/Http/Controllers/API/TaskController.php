@@ -94,7 +94,10 @@ class TaskController extends BaseApiController
                 throw new ApiException("Paramètre 'skill_id' n'est pas valide.");
             }
 
-            $query->where('user_id', $request->skill_id);
+            $query->join('tasks_skills', function ($join) use ($request) {
+                $join->on('tasks_skills.task_id', '=', 'task.id')
+                    ->where('tasks_skills.skill_id', $request->skill_id);
+            });
         }
 
         if ($request->has('skill_ids')) {
