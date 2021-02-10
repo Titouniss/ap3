@@ -58,6 +58,7 @@ abstract class BaseApiController extends Controller
     public function index(Request $request)
     {
         try {
+
             if ($error = $this->permissionErrors('read')) {
                 return $error;
             }
@@ -150,20 +151,24 @@ abstract class BaseApiController extends Controller
      */
     public function show(int $id)
     {
-        $item = app($this->model)->find($id);
-        if ($error = $this->itemErrors($item, 'show')) {
-            return $error;
-        }
+        try {
+            $item = app($this->model)->find($id);
+            if ($error = $this->itemErrors($item, 'show')) {
+                return $error;
+            }
 
-        if (static::$show_load) {
-            $item->load(static::$show_load);
-        }
+            if (static::$show_load) {
+                $item->load(static::$show_load);
+            }
 
-        if (static::$show_append) {
-            $item->append(static::$show_append);
-        }
+            if (static::$show_append) {
+                $item->append(static::$show_append);
+            }
 
-        return $this->successResponse($item);
+            return $this->successResponse($item);
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 
     /**
@@ -179,38 +184,42 @@ abstract class BaseApiController extends Controller
      */
     public function store(Request $request)
     {
-        if ($error = $this->permissionErrors('publish')) {
-            return $error;
-        }
-
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, static::$store_validation_array);
-        if ($validator->fails()) {
-            return $this->errorResponse($validator->errors());
-        }
-
-        $item = null;
-        DB::beginTransaction();
         try {
-            $item = $this->storeItem($arrayRequest);
-        } catch (ApiException $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+            if ($error = $this->permissionErrors('publish')) {
+                return $error;
+            }
+
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, static::$store_validation_array);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+
+            $item = null;
+            DB::beginTransaction();
+            try {
+                $item = $this->storeItem($arrayRequest);
+            } catch (ApiException $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage());
+            }
+            DB::commit();
+
+            if (static::$show_load) {
+                $item->load(static::$show_load);
+            }
+
+            if (static::$show_append) {
+                $item->append(static::$show_append);
+            }
+
+            return $this->successResponse($item, 'Création terminée avec succès');
         } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
-        DB::commit();
-
-        if (static::$show_load) {
-            $item->load(static::$show_load);
-        }
-
-        if (static::$show_append) {
-            $item->append(static::$show_append);
-        }
-
-        return $this->successResponse($item, 'Création terminée avec succès');
     }
 
     /**
@@ -226,38 +235,42 @@ abstract class BaseApiController extends Controller
      */
     public function update(Request $request, int $id)
     {
-        $item = app($this->model)->find($id);
-        if ($error = $this->itemErrors($item, 'edit')) {
-            return $error;
-        }
-
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, static::$update_validation_array);
-        if ($validator->fails()) {
-            return $this->errorResponse($validator->errors());
-        }
-
-        DB::beginTransaction();
         try {
-            $item = $this->updateItem($item, $arrayRequest);
-        } catch (ApiException $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+            $item = app($this->model)->find($id);
+            if ($error = $this->itemErrors($item, 'edit')) {
+                return $error;
+            }
+
+            $arrayRequest = $request->all();
+            $validator = Validator::make($arrayRequest, static::$update_validation_array);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+
+            DB::beginTransaction();
+            try {
+                $item = $this->updateItem($item, $arrayRequest);
+            } catch (ApiException $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                return $this->errorResponse($th->getMessage());
+            }
+            DB::commit();
+
+            if (static::$show_load) {
+                $item->load(static::$show_load);
+            }
+
+            if (static::$show_append) {
+                $item->append(static::$show_append);
+            }
+
+            return $this->successResponse($item, 'Mise à jour terminée avec succès.');
         } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
-        DB::commit();
-
-        if (static::$show_load) {
-            $item->load(static::$show_load);
-        }
-
-        if (static::$show_append) {
-            $item->append(static::$show_append);
-        }
-
-        return $this->successResponse($item, 'Mise à jour terminée avec succès.');
     }
 
     /**
@@ -276,55 +289,59 @@ abstract class BaseApiController extends Controller
      */
     public function restore(Request $request, int $id = null)
     {
-        if (!$this->modelUsesSoftDelete()) {
-            return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
-        }
-
-        $ids = collect($id ? [$id] : []);
-        if ($ids->isEmpty()) {
-            $arrayRequest = $request->all();
-            $validator = Validator::make($arrayRequest, [
-                'ids' => 'required|array'
-            ]);
-            if ($validator->fails()) {
-                return $this->errorResponse($validator->errors());
-            }
-            $ids = collect($arrayRequest['ids']);
-        }
-
-        DB::beginTransaction();
-        foreach ($ids as $idToRestore) {
-            $item = app($this->model)->withTrashed()->find($idToRestore);
-            if ($error = $this->itemErrors($item, 'delete')) {
-                DB::rollBack();
-                return $error;
+        try {
+            if (!$this->modelUsesSoftDelete()) {
+                return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
             }
 
-            try {
-                if (!$this->restoreItem($item)) {
-                    throw new Exception();
+            $ids = collect($id ? [$id] : []);
+            if ($ids->isEmpty()) {
+                $arrayRequest = $request->all();
+                $validator = Validator::make($arrayRequest, [
+                    'ids' => 'required|array'
+                ]);
+                if ($validator->fails()) {
+                    return $this->errorResponse($validator->errors());
                 }
-            } catch (ApiException $th) {
-                DB::rollBack();
-                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                return $this->errorResponse("Erreur lors de la restauration.", static::$response_codes['error_server']);
+                $ids = collect($arrayRequest['ids']);
             }
+
+            DB::beginTransaction();
+            foreach ($ids as $idToRestore) {
+                $item = app($this->model)->withTrashed()->find($idToRestore);
+                if ($error = $this->itemErrors($item, 'delete')) {
+                    DB::rollBack();
+                    return $error;
+                }
+
+                try {
+                    if (!$this->restoreItem($item)) {
+                        throw new Exception();
+                    }
+                } catch (ApiException $th) {
+                    DB::rollBack();
+                    return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return $this->errorResponse("Erreur lors de la restauration.", static::$response_codes['error_server']);
+                }
+            }
+            DB::commit();
+
+            $items = app($this->model)->whereIn('id', $ids)->get();
+
+            if (static::$show_load) {
+                $items->load(static::$show_load);
+            }
+
+            if (static::$show_append) {
+                $items->each->append(static::$show_append);
+            }
+
+            return $this->successResponse($items, "Restauration terminé avec succès.");
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
-        DB::commit();
-
-        $items = app($this->model)->whereIn('id', $ids)->get();
-
-        if (static::$show_load) {
-            $items->load(static::$show_load);
-        }
-
-        if (static::$show_append) {
-            $items->each->append(static::$show_append);
-        }
-
-        return $this->successResponse($items, "Restauration terminé avec succès.");
     }
 
     /**
@@ -344,57 +361,61 @@ abstract class BaseApiController extends Controller
      */
     public function destroy(Request $request, int $id = null)
     {
-        $modelUsesSoftDelete = $this->modelUsesSoftDelete();
+        try {
+            $modelUsesSoftDelete = $this->modelUsesSoftDelete();
 
-        $ids = collect($id ? [$id] : []);
-        if ($ids->isEmpty()) {
-            $arrayRequest = $request->all();
-            $validator = Validator::make($arrayRequest, [
-                'ids' => 'required|array'
-            ]);
-            if ($validator->fails()) {
-                return $this->errorResponse($validator->errors());
-            }
-            $ids = collect($arrayRequest['ids']);
-        }
-
-        DB::beginTransaction();
-        foreach ($ids as $idToArchive) {
-            $item = app($this->model)->find($idToArchive);
-            if ($error = $this->itemErrors($item, 'delete')) {
-                DB::rollBack();
-                return $error;
-            }
-
-            try {
-                if (!$this->destroyItem($item)) {
-                    throw new Exception();
+            $ids = collect($id ? [$id] : []);
+            if ($ids->isEmpty()) {
+                $arrayRequest = $request->all();
+                $validator = Validator::make($arrayRequest, [
+                    'ids' => 'required|array'
+                ]);
+                if ($validator->fails()) {
+                    return $this->errorResponse($validator->errors());
                 }
-            } catch (ApiException $th) {
-                DB::rollBack();
-                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                return $this->errorResponse("Erreur lors de " . $modelUsesSoftDelete ? "l'archivage." : "la suppression.", static::$response_codes['error_server']);
+                $ids = collect($arrayRequest['ids']);
             }
+
+            DB::beginTransaction();
+            foreach ($ids as $idToArchive) {
+                $item = app($this->model)->find($idToArchive);
+                if ($error = $this->itemErrors($item, 'delete')) {
+                    DB::rollBack();
+                    return $error;
+                }
+
+                try {
+                    if (!$this->destroyItem($item)) {
+                        throw new Exception();
+                    }
+                } catch (ApiException $th) {
+                    DB::rollBack();
+                    return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return $this->errorResponse("Erreur lors de " . $modelUsesSoftDelete ? "l'archivage." : "la suppression.", static::$response_codes['error_server']);
+                }
+            }
+            DB::commit();
+
+            if ($modelUsesSoftDelete) {
+                $items = app($this->model)->withTrashed()->whereIn('id', $ids)->get();
+
+                if (static::$show_load) {
+                    $items->load(static::$show_load);
+                }
+
+                if (static::$show_append) {
+                    $items->each->append(static::$show_append);
+                }
+
+                return $this->successResponse($items, "Archivage terminé avec succès.");
+            }
+
+            return $this->successResponse(true, 'Suppression terminée avec succès.');
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
-        DB::commit();
-
-        if ($modelUsesSoftDelete) {
-            $items = app($this->model)->withTrashed()->whereIn('id', $ids)->get();
-
-            if (static::$show_load) {
-                $items->load(static::$show_load);
-            }
-
-            if (static::$show_append) {
-                $items->each->append(static::$show_append);
-            }
-
-            return $this->successResponse($items, "Archivage terminé avec succès.");
-        }
-
-        return $this->successResponse(true, 'Suppression terminée avec succès.');
     }
 
     /**
@@ -413,46 +434,50 @@ abstract class BaseApiController extends Controller
      */
     public function forceDestroy(Request $request, int $id = null)
     {
-        if (!$this->modelUsesSoftDelete()) {
-            return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
-        }
-
-        $ids = collect($id ? [$id] : []);
-        if ($ids->isEmpty()) {
-            $arrayRequest = $request->all();
-            $validator = Validator::make($arrayRequest, [
-                'ids' => 'required|array'
-            ]);
-            if ($validator->fails()) {
-                return $this->errorResponse($validator->errors());
-            }
-            $ids = collect($arrayRequest['ids']);
-        }
-
-        DB::beginTransaction();
-        foreach ($ids as $idToDelete) {
-            $item = app($this->model)->withTrashed()->find($idToDelete);
-            if ($error = $this->itemErrors($item, 'delete')) {
-                DB::rollBack();
-                return $error;
+        try {
+            if (!$this->modelUsesSoftDelete()) {
+                return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);
             }
 
-            try {
-                if (!$this->forceDestroyItem($item)) {
-                    throw new Exception();
+            $ids = collect($id ? [$id] : []);
+            if ($ids->isEmpty()) {
+                $arrayRequest = $request->all();
+                $validator = Validator::make($arrayRequest, [
+                    'ids' => 'required|array'
+                ]);
+                if ($validator->fails()) {
+                    return $this->errorResponse($validator->errors());
                 }
-            } catch (ApiException $th) {
-                DB::rollBack();
-                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
-                return $this->errorResponse("Erreur lors de la suppression.", static::$response_codes['error_server']);
+                $ids = collect($arrayRequest['ids']);
             }
-        }
-        DB::commit();
 
-        return $this->successResponse(true, 'Suppression terminée avec succès.');
+            DB::beginTransaction();
+            foreach ($ids as $idToDelete) {
+                $item = app($this->model)->withTrashed()->find($idToDelete);
+                if ($error = $this->itemErrors($item, 'delete')) {
+                    DB::rollBack();
+                    return $error;
+                }
+
+                try {
+                    if (!$this->forceDestroyItem($item)) {
+                        throw new Exception();
+                    }
+                } catch (ApiException $th) {
+                    DB::rollBack();
+                    return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+                    return $this->errorResponse("Erreur lors de la suppression.", static::$response_codes['error_server']);
+                }
+            }
+            DB::commit();
+
+            return $this->successResponse(true, 'Suppression terminée avec succès.');
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 
     protected function itemErrors($item, string $perm)
