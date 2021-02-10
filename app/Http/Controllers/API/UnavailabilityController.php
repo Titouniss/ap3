@@ -11,9 +11,9 @@ use Carbon\Carbon;
 
 class UnavailabilityController extends BaseApiController
 {
-    protected static $index_load = ['user:id,firstname,lastname,email'];
+    protected static $index_load = ['user:users.id,firstname,lastname,email'];
     protected static $index_append = null;
-    protected static $show_load = ['user:id,firstname,lastname,email'];
+    protected static $show_load = ['user:users.id,firstname,lastname,email'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
