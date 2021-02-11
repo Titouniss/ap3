@@ -291,11 +291,7 @@ export default {
           ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
           : "24:00";
 
-      this.$store
-        .dispatch("scheduleManagement/addItems", eventsParse)
-        .catch((err) => {
-          this.manageErrors(err);
-        });
+      this.$store.dispatch("scheduleManagement/addItems", eventsParse);
 
       return eventsParse;
     },
@@ -604,13 +600,9 @@ export default {
               });
             });
             if (id_bundle != null) {
-              this.$store
-                .dispatch("taskManagement/fetchItems", {
-                  tasks_bundle_id: id_bundle,
-                })
-                .catch((err) => {
-                  this.manageErrors(err);
-                });
+              this.$store.dispatch("taskManagement/fetchItems", {
+                tasks_bundle_id: id_bundle,
+              });
             }
           })
           .catch((err) => {
@@ -618,30 +610,18 @@ export default {
           });
       }
     } else if (this.$route.query.type === "users") {
-      this.$store
-        .dispatch("taskManagement/fetchItems", {
-          user_id: this.$route.query.id,
-        })
-        .catch((err) => {
-          this.manageErrors(err);
-        });
+      this.$store.dispatch("taskManagement/fetchItems", {
+        user_id: this.$route.query.id,
+      });
     } else if (this.$route.query.type === "workarea") {
-      this.$store
-        .dispatch("taskManagement/fetchItems", {
-          workarea: this.$route.query.id,
-        })
-        .catch((err) => {
-          this.manageErrors(err);
-        });
+      this.$store.dispatch("taskManagement/fetchItems", {
+        workarea: this.$route.query.id,
+      });
     }
 
-    this.$store.dispatch("skillManagement/fetchItems").catch((err) => {
-      this.manageErrors(err);
-    });
+    this.$store.dispatch("skillManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
-      this.$store.dispatch("userManagement/fetchItems").catch((err) => {
-        this.manageErrors(err);
-      });
+      this.$store.dispatch("userManagement/fetchItems");
     }
   },
   updated() {

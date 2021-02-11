@@ -32,9 +32,9 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends BaseApiController
 {
-    protected static $index_load = ['company:id,name', 'skills:id,name'];
+    protected static $index_load = ['company:companies.id,name', 'skills:skills.id,name'];
     protected static $index_append = null;
-    protected static $show_load = ['company:id,name', 'skills:id,name', 'workHours', 'unavailabilities'];
+    protected static $show_load = ['company:companies.id,name', 'skills:skills.id,name', 'workHours', 'unavailabilities'];
     protected static $show_append = ['related_users'];
 
     protected static $store_validation_array = [
@@ -391,9 +391,9 @@ class UserController extends BaseApiController
 
         $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
-        $item->load(['company:id,name']);
+        $item->load(['company:companies.id,name']);
         if ($item->is_manager) {
-            $item->load(['company.users:id,firstname,lastname,company_id']);
+            $item->load(['company.users:users.id,firstname,lastname,company_id']);
         }
         $item->append('permissions');
 
@@ -613,9 +613,9 @@ class UserController extends BaseApiController
 
         $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
-        $item->load(['company:id,name']);
+        $item->load(['company:companies.id,name']);
         if ($item->is_manager) {
-            $item->load(['company.users:id,firstname,lastname,company_id']);
+            $item->load(['company.users:users.id,firstname,lastname,company_id']);
         }
         $item->append('permissions');
 

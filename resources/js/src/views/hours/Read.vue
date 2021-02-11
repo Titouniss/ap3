@@ -497,9 +497,7 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
-    this.$store.dispatch("hoursManagement/fetchItems").catch((err) => {
-      this.manageErrors(err);
-    });
+    this.$store.dispatch("hoursManagement/fetchItems");
 
     if (this.authorizedTo("read", "companies")) {
       this.$store.dispatch("companyManagement/fetchItems").catch((err) => {

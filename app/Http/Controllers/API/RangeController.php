@@ -11,9 +11,9 @@ class RangeController extends BaseApiController
 {
     use StoresDocuments;
 
-    protected static $index_load = ['company:id,name'];
+    protected static $index_load = ['company:companies.id,name'];
     protected static $index_append = null;
-    protected static $show_load = ['company:id,name', 'repetitive_tasks'];
+    protected static $show_load = ['company:companies.id,name', 'repetitive_tasks'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
