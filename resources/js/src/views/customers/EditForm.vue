@@ -1,210 +1,229 @@
 <!-- =========================================================================================
-    File Name: TodoEdit.vue
-    Description: Edit todo component
-    ----------------------------------------------------------------------------------------
-    Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-      Author: Pixinvent
-    Author URL: http://www.themeforest.net/user/pixinvent
+  File Name: CompanyEdit.vue
+  Description: company Edit Page
+  ----------------------------------------------------------------------------------------
+  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+  Author: Pixinvent
+  Author URL: http://www.themeforest.net/role/pixinvent
 ========================================================================================== -->
-
-
 <template>
-  <vs-prompt
-    title="Edition d'un client"
-    accept-text="Modifier"
-    cancel-text="Annuler"
-    button-cancel="border"
-    @cancel="init"
-    @accept="submitItem"
-    @close="init"
-    :is-valid="validateForm"
-    :active.sync="activePrompt"
-  >
-    <div>
-      <form autocomplete="off">
-        <div class="vx-row">
-          <div class="vx-col w-full">
-            <v-select
-              v-if="isAdmin"
-              label="name"
-              v-validate="'required'"
-              v-model="itemLocal.company_id"
-              :options="companiesData"
-              :reduce="(company) => company.id"
-              class="w-full mb-4 mt-5"
+  <div class="w-full">
+    <vx-card class="py-3 px-6">
+      <company-details :itemLocal="itemLocal" />
+      <div v-if="isAdmin" class="w-full">
+        <div class="pt-6 px-3 flex items-end">
+          <feather-icon svgClasses="w-6 h-6" icon="LockIcon" class="mr-2" />
+          <span class="font-medium text-lg leading-none"> Admin </span>
+        </div>
+        <vs-divider />
+        <div class="w-full px-3">
+          <v-select
+            label="name"
+            v-validate="'required'"
+            v-model="itemLocal.company_id"
+            :options="companiesData"
+            :reduce="(company) => company.id"
+            class="w-full mb-4 mt-5"
+          >
+            <template #header>
+              <div class="vs-select--label">Société</div>
+            </template>
+          </v-select>
+        </div>
+      </div>
+      <!-- Save & Reset Button -->
+      <div class="vx-row">
+        <div class="vx-col w-full">
+          <div class="mt-8 flex flex-wrap items-center justify-end">
+            <vs-button
+              class="ml-auto mt-2"
+              @click="submitItem"
+              :disabled="!validateForm"
             >
-              <template #header>
-                <div class="vs-select--label">Société</div>
-              </template>
-            </v-select>
-
-            <div>
-              <small class="ml-1" for>Professionnel</small>
-              <vs-switch v-model="itemLocal.professional" />
-            </div>
-            <vs-input
-              v-if="itemLocal.professional"
-              v-validate="itemLocal.professional ? 'required|max:50' : ''"
-              name="name"
-              class="w-full mb-4 mt-5"
-              label="Nom de la société"
-              placeholder="société..."
-              v-model="itemLocal.name"
-              :color="!errors.has('name') ? 'success' : 'danger'"
-            />
-            <span
-              v-if="itemLocal.professional"
-              class="text-danger text-sm"
-              v-show="errors.has('name')"
-              >{{ errors.first("name") }}</span
+              Modifier
+            </vs-button>
+            <vs-button
+              class="ml-4 mt-2"
+              type="border"
+              color="warning"
+              @click="back"
             >
-            <vs-input
-              v-if="itemLocal.professional"
-              v-validate="
-                itemLocal.professional ? 'required|numeric|min:14|max:14' : ''
-              "
-              name="siret"
-              class="w-full mb-4 mt-5"
-              label="Numéro de siret"
-              placeholder="n° siret..."
-              v-model="itemLocal.siret"
-            />
-            <span
-              v-if="itemLocal.professional"
-              class="text-danger text-sm"
-              v-show="errors.has('siret')"
-              >{{ errors.first("siret") }}</span
-            >
-
-            <vs-input
-              v-validate="'required|max:50'"
-              name="lastname"
-              class="w-full mb-4 mt-5"
-              label="Nom du client"
-              placeholder="nom..."
-              v-model="itemLocal.lastname"
-              :color="!errors.has('lastname') ? 'success' : 'danger'"
-            />
-            <span class="text-danger text-sm" v-show="errors.has('lastname')">{{
-              errors.first("lastname")
-            }}</span>
+              Annuler
+            </vs-button>
           </div>
         </div>
-      </form>
-    </div>
-  </vs-prompt>
+      </div>
+    </vx-card>
+  </div>
 </template>
 
 <script>
+import lodash from "lodash";
+import vSelect from "vue-select";
+import moment from "moment";
+import CompanyDetails from "@/components/forms/CompanyDetails.vue";
+
+// FlatPickr import
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
+
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
-
-// register custom messages
 Validator.localize("fr", errorMessage);
+
+// Store Module
+import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+
+var model = "customer";
+var modelPlurial = "customers";
 
 export default {
   components: {
     vSelect,
+    flatPickr,
+    CompanyDetails,
   },
   props: {
     itemId: {
       type: Number,
-      required: true,
     },
   },
   data() {
     return {
-      itemLocal: Object.assign(
-        {},
-        this.$store.getters["customerManagement/getItem"](this.itemId)
-      ),
+      itemLocal: {
+        name: "",
+        siret: "",
+        code: "",
+        type: "",
+        contact_firstname: "",
+        contact_lastname: "",
+        contact_function: "",
+        contact_tel1: "",
+        contact_tel2: "",
+        contact_email: "",
+        street_number: "",
+        street_name: "",
+        postal_code: "",
+        city: "",
+        country: "",
+        company_id: "",
+      },
     };
   },
   computed: {
     isAdmin() {
       return this.$store.state.AppActiveUser.is_admin;
     },
-    activePrompt: {
-      get() {
-        return this.itemId && this.itemId > 0 ? true : false;
-      },
-      set(value) {
-        this.$store
-          .dispatch("customerManagement/editItem", {})
-          .then(() => {})
-          .catch((err) => {
-            console.error(err);
-          });
-      },
+    validateForm() {
+      return (
+        !this.errors.any() &&
+        this.itemLocal.name !== "" &&
+        this.itemLocal.siret !== "" &&
+        this.itemLocal.contact_firstname !== "" &&
+        this.itemLocal.contact_lastname !== "" &&
+        this.itemLocal.contact_function !== "" &&
+        (this.itemLocal.contact_tel1 !== "" ||
+          this.itemLocal.contact_tel2 !== "") &&
+        this.itemLocal.contact_email !== "" &&
+        this.itemLocal.street_number !== "" &&
+        this.itemLocal.street_name !== "" &&
+        this.itemLocal.postal_code !== "" &&
+        this.itemLocal.city !== "" &&
+        this.itemLocal.country !== "" &&
+        this.itemLocal.company_id !== ""
+      );
     },
     companiesData() {
       return this.$store.getters["companyManagement/getItems"];
     },
-    validateForm() {
-      if (this.itemLocal.professional || this.itemLocal.professional === 1) {
-        return (
-          !this.errors.any() &&
-          this.itemLocal.name !== "" &&
-          this.itemLocal.lastname !== "" &&
-          this.itemLocal.company !== "" &&
-          this.itemLocal.siret !== null
-        );
-      } else {
-        return (
-          !this.errors.any() &&
-          this.itemLocal.lastname !== "" &&
-          this.itemLocal.company
-        );
-      }
-    },
   },
   methods: {
-    init() {
-      this.itemLocal = Object.assign(
-        {},
-        this.$store.getters["customerManagement/getItem"](this.itemId)
-      );
+    authorizedTo(action, model = modelPlurial) {
+      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
-    submitItem() {
-      if (this.itemLocal.professional || this.itemLocal.professional === 1) {
-        this.itemLocal.professional = 1;
-      } else if (
-        !this.itemLocal.professional ||
-        this.itemLocal.professional === 0
-      ) {
-        this.itemLocal.professional = 0;
-        this.itemLocal.name = null;
-        this.itemLocal.siret = null;
-      }
+    init() {
+      this.$vs.loading();
+      const id = this.itemId
+        ? this.itemId
+        : parseInt(this.$route.params["customerId"]);
 
       this.$store
-        .dispatch("customerManagement/updateItem", this.itemLocal)
-        .then(() => {
-          this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Modification d'un client",
-            text: `"${
-              this.itemLocal.name
-                ? this.itemLocal.name
-                : this.itemLocal.lastname
-            }" modifié avec succès`,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "success",
-          });
+        .dispatch("customerManagement/fetchItem", id)
+        .then((data) => {
+          const payload = data.payload;
+          for (const prop in payload) {
+            if (payload[prop]) {
+              this.itemLocal[prop] = payload[prop];
+            }
+          }
         })
         .catch((error) => {
-          this.$vs.loading.close();
-          this.$vs.notify({
-            title: "Error",
-            text: error.message,
-            iconPack: "feather",
-            icon: "icon-alert-circle",
-            color: "danger",
-          });
-        });
+          console.log(error);
+        })
+        .finally(() => this.$vs.loading.close());
     },
+    submitItem() {
+      if (this.validateForm) {
+        const item = JSON.parse(JSON.stringify(this.itemLocal));
+        this.$store
+          .dispatch("customerManagement/updateItem", item)
+          .then(() => {
+            this.$vs.notify({
+              title: "Modification d'un client",
+              text: `"${this.itemLocal.name}" modifié avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success",
+            });
+            this.$router.push(`/${modelPlurial}`).catch(() => {});
+          })
+          .catch((error) => {
+            this.$vs.notify({
+              title: "Error",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+            });
+          })
+          .finally(() => {
+            this.$vs.loading.close();
+          });
+      }
+    },
+    back() {
+      this.$router.push(`/${modelPlurial}`).catch(() => {});
+    },
+  },
+  created() {
+    if (!moduleCustomerManagement.isRegistered) {
+      this.$store.registerModule(
+        "customerManagement",
+        moduleCustomerManagement
+      );
+      moduleCustomerManagement.isRegistered = true;
+    }
+    if (!moduleCompanyManagement.isRegistered) {
+      this.$store.registerModule("companyManagement", moduleCompanyManagement);
+      moduleCompanyManagement.isRegistered = true;
+    }
+
+    if (this.authorizedTo("read", "companies")) {
+      this.$store.dispatch("companyManagement/fetchItems").catch((err) => {
+        console.error(err);
+      });
+    }
+
+    this.init();
+  },
+  beforeDestroy() {
+    moduleCustomerManagement.isRegistered = false;
+    moduleCompanyManagement.isRegistered = false;
+
+    this.$store.unregisterModule("customerManagement");
+    this.$store.unregisterModule("companyManagement");
   },
 };
 </script>

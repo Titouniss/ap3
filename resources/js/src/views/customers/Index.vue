@@ -10,32 +10,13 @@
 <template>
   <div id="page-users-list">
     <div class="vx-card w-full p-6">
-      <vs-row
-        vs-type="flex"
-        vs-justify="space-between"
-        vs-align="center"
-        vs-w="12"
+      <vs-button
+        class="mt-1 mb-6"
+        v-if="authorizedTo('publish')"
+        @click="addRecord"
       >
-        <vs-col
-          vs-type="flex"
-          vs-justify="flex-start"
-          vs-align="center"
-          vs-w="2"
-          vs-sm="6"
-        >
-          <add-form v-if="authorizedTo('publish')" />
-        </vs-col>
-        <vs-col
-          vs-type="flex"
-          vs-justify="flex-end"
-          vs-align="center"
-          vs-w="2"
-          vs-sm="6"
-        >
-          <refresh-module />
-        </vs-col>
-      </vs-row>
-
+        Ajouter un client
+      </vs-button>
       <div class="flex flex-wrap items-center">
         <div class="flex-grow">
           <vs-row type="flex">
@@ -147,11 +128,6 @@
 
       <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
     </div>
-    <edit-form
-      :reload="customersData"
-      :itemId="itemIdToEdit"
-      v-if="itemIdToEdit && authorizedTo('edit')"
-    />
   </div>
 </template>
 
@@ -161,7 +137,6 @@ import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
 
 //CRUD
-import EditForm from "./EditForm.vue";
 import AddForm from "./AddForm.vue";
 
 // Store Module
@@ -185,7 +160,6 @@ export default {
     AgGridVue,
     vSelect,
     // Crud
-    EditForm,
     AddForm,
     // Cell Renderer
     CellRendererActions,
@@ -217,35 +191,34 @@ export default {
           width: 40,
         },
         {
-          headerName: "Société",
+          headerName: "Nom",
           field: "name",
           filter: true,
           sortable: true,
         },
         {
-          headerName: "Nom",
-          field: "lastname",
+          headerName: "Email",
+          field: "contact_email",
           filter: true,
           sortable: true,
         },
         {
-          headerName: "Siret",
-          field: "siret",
+          headerName: "Contact",
           filter: true,
           sortable: true,
+          valueGetter: (params) =>
+            params.data.contact_firstname && params.data.contact_lastname
+              ? `${params.data.contact_firstname} ${params.data.contact_lastname}`
+              : "",
         },
         {
-          headerName: "Type",
-          field: "professional",
+          headerName: "Ville",
           filter: true,
           sortable: true,
-          cellRendererFramework: "CellRendererBoolean",
-        },
-        {
-          headerName: "Société",
-          field: "company",
-          filter: true,
-          cellRendererFramework: "CellRendererRelations",
+          valueGetter: (params) =>
+            params.data.postal_code && params.data.city
+              ? `${params.data.postal_code} ${params.data.city}`
+              : "",
         },
         {
           headerName: "Actions",
@@ -255,7 +228,6 @@ export default {
           cellRendererParams: {
             model: "customer",
             modelPlurial: "customers",
-            withPrompt: true,
             name: (data) => `le client ${data.lastname}`,
             footNotes: {
               restore:
@@ -306,6 +278,9 @@ export default {
   methods: {
     authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
+    },
+    addRecord() {
+      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
     },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);

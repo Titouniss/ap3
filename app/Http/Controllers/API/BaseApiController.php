@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
-use App\Models\Company;
 use App\Traits\ReturnsJsonResponse;
 use Exception;
 use Illuminate\Http\Request;
@@ -281,7 +280,7 @@ abstract class BaseApiController extends Controller
      */
     protected function restoreItem($item)
     {
-        return $this->modelDeleteCascades() ? $item->restoreCascade() : $item->restore();
+        return $item->restore();
     }
 
     /**
@@ -353,7 +352,7 @@ abstract class BaseApiController extends Controller
      */
     protected function destroyItem($item)
     {
-        return $this->modelDeleteCascades() ? $item->deleteCascade() : $item->delete();
+        return $item->delete();
     }
 
     /**
@@ -520,13 +519,5 @@ abstract class BaseApiController extends Controller
     private function modelHasCompany()
     {
         return in_array('App\Traits\HasCompany', class_uses($this->model));
-    }
-
-    /**
-     * Checks if the model delete cascades
-     */
-    private function modelDeleteCascades()
-    {
-        return in_array('App\Traits\DeleteCascades', class_uses($this->model));
     }
 }

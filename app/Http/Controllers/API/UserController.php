@@ -26,6 +26,7 @@ use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\Unavailability;
 use App\Models\WorkHours;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
@@ -94,7 +95,7 @@ class UserController extends BaseApiController
         $this->addDefaultWorkHours($item->id);
 
         $item->markEmailAsVerified();
-        if ($item->email !== null) {
+        if ($item->email !== null && App::environment('production')) {
             $item->sendEmailAddUserNotification($item->id, $item->register_token);
         } else {
             $item->clear_password = $password;
@@ -589,12 +590,16 @@ class UserController extends BaseApiController
 
         $company = Company::create([
             'name' => $arrayRequest['company_name'],
+        ]);
+
+        $company->details()->update([
             'contact_firstname' => $arrayRequest['firstname'],
             'contact_lastname' => $arrayRequest['lastname'],
             'contact_function' => $arrayRequest['contact_function'],
             'contact_email' => $arrayRequest['email'],
             'contact_tel1' => $arrayRequest['contact_tel1'],
         ]);
+
         $item->company()->associate($company);
         $item->save();
 
@@ -609,7 +614,9 @@ class UserController extends BaseApiController
 
         DB::commit();
 
-        //$item->sendEmailVerificationNotification();
+        if (App::environment('production')) {
+            $item->sendEmailVerificationNotification();
+        }
 
         $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue

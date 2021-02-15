@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Task;
-use App\Traits\DeleteCascades;
 use App\Traits\HasCompany;
 use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasDocuments, SoftDeletes, HasCompany, DeleteCascades;
+    use HasDocuments, SoftDeletes, HasCompany;
 
     protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
@@ -42,24 +41,5 @@ class Project extends Model
             $tasks = Task::where('tasks_bundle_id', $t->id)->with('skills', 'previousTasks')->get();
         }
         return $tasks;
-    }
-
-    public function restoreCascade()
-    {
-        $this->restore();
-        TasksBundle::withTrashed()->where('project_id', $this->id)->restore();
-        foreach ($this->tasksBundles as $t) {
-            Task::where('tasks_bundle_id', $t->id)->restore();
-        }
-        return true;
-    }
-
-    public function deleteCascade()
-    {
-        foreach ($this->tasksBundles as $t) {
-            Task::where('tasks_bundle_id', $t->id)->delete();
-        }
-        TasksBundle::where('project_id', $this->id)->delete();
-        return $this->delete();
     }
 }
