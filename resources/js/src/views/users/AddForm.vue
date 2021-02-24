@@ -143,6 +143,23 @@
               {{ errors.first("company_id") }}
             </span>
           </div>
+
+          <div>
+            <vs-input                
+                v-validate="{
+                    required: true,                                  
+                    regex : /^-?[0-9]{1,3}(?:.[0-9]{1,2})?$/,
+                }"
+                name="hours"
+                class="w-full mt-5"
+                label="Nombre d'heures supplémentaires"
+                v-model="itemLocal.hours"
+                :color="!errors.has('hours') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('hours')">
+              {{ errors.first("hours") }}
+          </span>
+          </div>
         </vs-col>
       </vs-row>
 
@@ -204,6 +221,7 @@ export default {
         company_id: 0,
         role_id: 0,
         skills: [],
+        hours: 0,
       },
       company_login: "",
     };
@@ -254,7 +272,8 @@ export default {
         this.itemLocal.firstname != "" &&
         this.itemLocal.login != "" &&
         this.itemLocal.company_id > 0 &&
-        this.itemLocal.role_id > 0
+        this.itemLocal.role_id > 0 &&
+        this.itemLocal.hours != null
       );
     },
   },

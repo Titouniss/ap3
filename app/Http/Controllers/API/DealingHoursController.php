@@ -12,9 +12,6 @@ use Carbon\Carbon;
 use Validator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
 class DealingHoursController extends Controller
 {
     use SoftDeletes;
@@ -43,21 +40,27 @@ class DealingHoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public static function getOvertimes($check = false)
-    {
-        $user = Auth::user();
+    public static function getOvertimes($id_user=null, $check = false)
+    {              
+        $user = Auth::user();       
+        if($id_user != "null"){
+            $id=$id_user;                   
+        }
+        else{
+            $id=$user->id;
+        }        
 
         // Check if overtimes
-        $items = DealingHours::where('user_id', $user->id)->get();
+        $items = DealingHours::where('user_id', $id)->get();
 
         $totalOvertimes = 0;
         $nbUsedOvertimes = 0;
 
         if (!$items->isEmpty()) {
             // Get total overtimes
-            $totalOvertimes = DealingHours::where('user_id', $user->id)->sum('overtimes');
+            $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '<', Carbon::now()->startOfWeek())->sum('overtimes');
             // Get nb used overtimes
-            $usedOrvertimes = Unavailability::where([['user_id', $user->id], ['reason', 'Utilisation heures suplémentaires']])->get();
+            $usedOrvertimes = Unavailability::where([['user_id', $id], ['reason', 'Utilisation heures suplémentaires']])->get();
             if (!$usedOrvertimes->isEmpty()) {
                 foreach ($usedOrvertimes as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');

@@ -66,13 +66,13 @@ class HoursController extends BaseApiController
                 $date = Carbon::createFromFormat('d-m-Y', $request->date);
                 switch ($request->period_type) {
                     case 'week':
-                        $paidHolidays->whereBetween('starts_at', [$date->startOfWeek(), $date->endOfWeek()]);
+                        $paidHolidays->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
                         break;
                     case 'month':
-                        $paidHolidays->whereBetween('starts_at', [$date->startOfMonth(), $date->endOfMonth()]);
+                        $paidHolidays->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
                         break;
                     case 'year':
-                        $paidHolidays->whereBetween('starts_at', [$date->startOfYear(), $date->endOfYear()]);
+                        $paidHolidays->whereYear('starts_at', $date->year);
                         break;
 
                     default:
@@ -115,6 +115,13 @@ class HoursController extends BaseApiController
                 })->sum();
                 $workDayHours = HoursController::getTargetWorkHours($userId, Carbon::createFromFormat('d-m-Y', $request->date)->locale('fr_FR')->dayName);
 
+                $ListOfWorkHours= WorkHours::where('user_id', $userId)->where('is_active', 1)->get();
+
+                $ListOfWorkDays=array();
+                foreach($ListOfWorkHours as $day){
+                    array_push($ListOfWorkDays,$day->day);
+                }
+
                 $defaultWorkHours = 0;
                 if ($request->date) {
                     switch ($request->period_type) {
@@ -125,12 +132,15 @@ class HoursController extends BaseApiController
                             $defaultWorkHours = $workWeekHours;
                             break;
                         case 'month':
-                            $defaultWorkHours = ((Carbon::createFromFormat('d-m-Y', $request->date)->daysInMonth * $nbWorkDays) / 7) * ($workWeekHours / $nbWorkDays);
+                            $nbWorkDaysPerMonth=HoursController::calculeNbWorkDaysPerMonth($request,$ListOfWorkDays,null,1);
+                            $defaultWorkHours = $nbWorkDaysPerMonth * ($workWeekHours/count($ListOfWorkDays));
                             break;
                         case 'year':
                             $period = CarbonPeriod::create(Carbon::createFromFormat('d-m-Y', $request->date)->startOfYear(), '1 month', Carbon::createFromFormat('d-m-Y', $request->date)->endOfYear());
                             foreach ($period as $month) {
-                                $defaultWorkHours += (($month->daysInMonth * $nbWorkDays * $workWeekHours) / 7) * ($workWeekHours / $nbWorkDays);
+                                $moisCourant=$month->month;
+                                $nbWorkDaysForEachMonth=HoursController::calculeNbWorkDaysPerMonth($request,$ListOfWorkDays,$moisCourant,0);
+                                $defaultWorkHours += ($nbWorkDaysForEachMonth * ($workWeekHours/count($ListOfWorkDays)));
                             }
                             break;
                         default:
@@ -153,17 +163,69 @@ class HoursController extends BaseApiController
             }
         }
 
-        return collect(['stats' => $stats]);
+        return collect(['stats' => $stats, 'id_user' => $request->user_id]);
+    }
+
+    protected function calculeNbWorkDaysPerMonth(Request $request, $ListOfWorkDays, $month, $showMonth){
+        if ($showMonth){
+            $premierJour = Carbon::createFromFormat('d-m-Y', $request->date)->firstOfMonth();
+            $dernierJour= Carbon::createFromFormat('d-m-Y', $request->date)->lastOfMonth();
+        }
+
+        else{
+            $premierJour = Carbon::createFromFormat('m', $month)->firstOfMonth();
+            $dernierJour= Carbon::createFromFormat('m', $month)->lastOfMonth();
+        }
+        $countMonday = 0;
+        $countTuesday = 0;
+        $countWednesday = 0;
+        $countThursday = 0;
+        $countFriday = 0;
+        $countSaturday = 0;
+        $countSunday = 0;
+
+        $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
+        foreach ($periodWeek as $day) {
+            foreach($ListOfWorkDays as $workDay){
+                if ($day->isMonday() && $workDay=="lundi"){
+                    $countMonday++;
+                }
+                elseif ($day->isTuesday() && $workDay=="mardi"){
+                    $countTuesday++;
+                }
+                elseif ($day->isWednesday() && $workDay=="mercredi"){
+                    $countWednesday++;
+                }
+                elseif ($day->isThursday() && $workDay=="jeudi"){
+                    $countThursday++;
+                }
+                elseif ($day->isFriday() && $workDay=="vendredi"){
+                    $countFriday++;
+                }
+                elseif ($day->isSaturday() && $workDay=="samedi"){
+                    $countSaturday++;
+                }
+                elseif ($day->isSunday() && $workDay=="dimanche"){
+                    $countSunday++;
+                }
+            }
+        }
+        $nbWorkDaysPerMonth = $countMonday + $countTuesday + $countWednesday + $countThursday + $countFriday + $countSaturday + $countSunday;
+        return $nbWorkDaysPerMonth;
     }
 
     protected function filterIndexQuery(Request $request, $query)
     {
         $user = Auth::user();
-        if ($user->is_manager) {
-            $query->join('users', function ($join) use ($user) {
-                $join->on('hours.user_id', '=', 'users.id')
-                    ->where('users.company_id', $user->company_id);
-            });
+        if (!$user->is_admin) {
+            if ($user->is_manager) {
+                $query->join('users', function ($join) use ($user) {
+                    $join->on('hours.user_id', '=', 'users.id')
+                        ->where('users.company_id', $user->company_id);
+                });
+            } else {
+                $query->where('user_id', $user->id);
+            }
         }
 
         if ($request->has('user_id')) {
@@ -185,7 +247,7 @@ class HoursController extends BaseApiController
                 $date = Carbon::createFromFormat('d-m-Y', $request->date);
                 switch ($request->period_type) {
                     case 'week':
-                        $query->whereBetween('start_at', [$date->startOfWeek(), $date->endOfWeek()]);
+                        $query->whereBetween('start_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
                         break;
                     case 'month':
                         $query->whereMonth('start_at', $date->month)->whereYear('start_at', $date->year);
@@ -220,23 +282,10 @@ class HoursController extends BaseApiController
             throw new ApiException("Veuillez inserer une durée.");
         }
 
-        // How many hour user worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($arrayRequest['user_id'], $parseDuration, $arrayRequest['date']);
-
-        // Expected hours for this day
-        $target_day = $start_at->locale('fr_FR')->dayName;
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
-        if ($target_work_hours === 0) {
-            throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day . ".");
-        }
-
         // Check if user have already hour on this new entry period
         if (!$this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at)) {
             throw new ApiException("Attention, vous ne pouvez pas superposer deux horaires.");
         }
-
-        // Check if value in dealing_hours for this date
-        $findDealingHour = DealingHours::where('user_id', $arrayRequest['user_id'])->where('date', $arrayRequest['date'])->first();
 
         $item = Hours::create([
             'user_id' => $arrayRequest['user_id'],
@@ -245,21 +294,53 @@ class HoursController extends BaseApiController
             'end_at' => $arrayRequest['end_at'],
             'date' => $arrayRequest['date'],
         ]);
+
+
+        // How many hour user worked this week
+        $listDealingHour = array();
+        $nb_worked_hours=0;
+        $exist=false;
+        $premierJour = Carbon::parse($arrayRequest['start_at'])->startOfWeek()->format('Y-m-d H:i');
+        $dernierJour= Carbon::parse($arrayRequest['start_at'])->endOfWeek()->format('Y-m-d H:i');
+        $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
+        foreach ($periodWeek as $day) {
+            // Check if value in dealing_hours for this date
+            $findDealingHour = DealingHours::where('user_id', $arrayRequest['user_id'])->where('date', $day)->first();
+            if($findDealingHour != null){
+                array_push($listDealingHour,$findDealingHour);
+                $exist=true;
+            }
+            $nb_worked_hours += HoursController::getNbWorkedHours($arrayRequest['user_id'], 0, $day->format('Y-m-d'));
+        }
+
+        // Expected hours for this week
+        $workWeekHours = WorkHours::where('user_id', $arrayRequest['user_id'])->where('is_active', 1)->get()->map(function ($day) {
+            $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+            $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+            return $morning->add($afternoon)->totalHours;
+        })->sum();
+        if ($workWeekHours === 0) {
+            throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour la semaine.");
+        }
         if (isset($arrayRequest['description'])) {
             $item->update(['description' => $arrayRequest['description']]);
         }
-        if (empty($findDealingHour) === false) {
-            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+
+        if ($exist && ($nb_worked_hours - $workWeekHours == 0)){
+            $listDealingHour[0]->delete();
+            unset($listDealingHour[0]);
+        }
+        elseif ($exist) {
+            // Update dealing_hour with difference between nb_worked_hours and $workWeekHours for overtime column
+            $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
         }
         // Else add new tuple in dealing_hours for this date
-        else {
+        elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)) {
             //Create new tuple in dealing_hours with user_id, date and overtimes
             $deallingHourItem = DealingHours::create(
-                ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]
+                ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $workWeekHours)]
             );
         }
-
         return $item;
     }
 
@@ -268,22 +349,20 @@ class HoursController extends BaseApiController
         $start_at = Carbon::parse($arrayRequest['start_at']);
         $end_at = Carbon::parse($arrayRequest['end_at']);
 
-        // Update user hour have worke_hour for this day ?
-        $target_day = $start_at->locale('fr_FR')->dayName;
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
-        if ($target_work_hours === 0) {
-            throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $target_day . ".");
+        // Expected hours for this week
+        $workWeekHours = WorkHours::where('user_id', $arrayRequest['user_id'])->where('is_active', 1)->get()->map(function ($day) {
+            $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+            $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+            return $morning->add($afternoon)->totalHours;
+        })->sum();
+        if ($workWeekHours === 0) {
+            throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour la semaine.");
         }
 
         // Check if user have already hour on this new entry period
         if (!$this->checkIfNewEntryLayeringOtherHours($arrayRequest['user_id'], $start_at, $end_at, $arrayRequest['id'])) {
             throw new ApiException("Attention, vous ne pouvez pas superposer deux horaires.");
         }
-
-        // get old hour data
-        $old_hours = $item->replicate();
-        $old_date = Carbon::parse($old_hours['start_at']);
-        $old_hours['date'] = $old_date->format('Y-m-d');
 
         $item->update([
             'user_id' => $arrayRequest['user_id'],
@@ -296,49 +375,33 @@ class HoursController extends BaseApiController
             $item->update(['description' => $arrayRequest['description']]);
         }
 
-        //reset old overtimes compteur
-        // How many old hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($old_hours['user_id'], 0, $old_hours['date']);
-
-        // Expected hours for old day
-        $target_work_hours = HoursController::getTargetWorkHours($old_hours['user_id'], $old_date->locale('fr_FR')->dayName);
-
-        // Check if value in dealing_hours for old date
-        $findDealingHour = DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->first();
-
-        if ($nb_worked_hours > $target_work_hours) {
-            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            DealingHours::where('date', $old_hours['date'])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-        } else if ($findDealingHour) {
-            // Not empty and no used_hour ? Delete dealing_hour tuple
-            if ($findDealingHour['used_hours'] === 0) {
-                $item = DealingHours::findOrFail($findDealingHour['id']);
-                $item->delete();
-            } else {
-                DealingHours::where([['date', $old_hours['date']], ['user_id', $old_hours['user_id']]])->update(['overtimes' => 0]);
+        // How many new hour user worked this week
+        $listDealingHour=array();
+        $nb_worked_hours=0;
+        $premierJour = Carbon::parse($arrayRequest['start_at'])->startOfWeek()->format('Y-m-d H:i');
+        $dernierJour= Carbon::parse($arrayRequest['start_at'])->endOfWeek()->format('Y-m-d H:i');
+        $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
+        foreach ($periodWeek as $day) {
+            // Check if value in dealing_hours for this date
+            $findDealingHour = DealingHours::where('user_id', $arrayRequest['user_id'])->where('date', $day)->first();
+            if($findDealingHour != null){
+                array_push($listDealingHour,$findDealingHour);
             }
+            $nb_worked_hours += HoursController::getNbWorkedHours($arrayRequest['user_id'], 0, $day->format('Y-m-d'));
         }
+        if (!empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours == 0)){
+            $listDealingHour[0]->delete();
+            unset($listDealingHour[0]);
+        }
+        elseif (!empty($listDealingHour[0])) {
+            // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
+            $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
 
-        //reset new overtimes compteur
-        // How many new hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($arrayRequest['user_id'], 0, $arrayRequest['date']);
-
-        // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($arrayRequest['user_id'], $target_day);
-
-        // Check if value in dealing_hours for this date
-        $findDealingHour = DealingHours::where([['date', $arrayRequest['date']], ['user_id', $arrayRequest['user_id']]])->first();
-
-        if ($nb_worked_hours > $target_work_hours) {
-            if (!empty($findDealingHour)) {
-                // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-                $findDealingHour->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
-            } else {
-                //Create new tuple in dealing_hours with user_id, date and overtimes
-                $deallingHourItem = DealingHours::create(
-                    ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $target_work_hours)]
-                );
-            }
+        } elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)) {
+            //Create new tuple in dealing_hours with user_id, date and overtimes
+            $deallingHourItem = DealingHours::create(
+                ['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => ($nb_worked_hours - $workWeekHours)]
+            );
         }
 
         return $item;
@@ -441,22 +504,42 @@ class HoursController extends BaseApiController
     {
         $date = Carbon::parse($item->start_at);
 
-        // update overtimes compteur for this user and date
-        // How many hour worked this day
-        $nb_worked_hours = HoursController::getNbWorkedHours($item->user_id, 0, $date->format('Y-m-d'));
+        // How many hour worked this week
+        $listDealingHour=array();
+        $nb_worked_hours=0;
+        $premierJour = Carbon::parse($item['start_at'])->startOfWeek()->format('Y-m-d H:i');
+        $dernierJour= Carbon::parse($item['start_at'])->endOfWeek()->format('Y-m-d H:i');
+        $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
+        foreach ($periodWeek as $day) {
+            // Check if value in dealing_hours for this date
+            $findDealingHour = DealingHours::where('user_id', $item['user_id'])->where('date', $day)->first();
+            if($findDealingHour != null){
+                array_push($listDealingHour,$findDealingHour);
+            }
+            $nb_worked_hours += HoursController::getNbWorkedHours($item['user_id'], 0, $day->format('Y-m-d'));
+        }
+        $nb_worked_hours -= $item['durationInFloatHour'];
 
-        // Expected hours for this day
-        $target_work_hours = HoursController::getTargetWorkHours($item->user_id, Carbon::parse($item->date)->locale('fr_FR')->dayName);
+        // Expected hours for this week
+        $workWeekHours = WorkHours::where('user_id', $item['user_id'])->where('is_active', 1)->get()->map(function ($day) {
+            $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+            $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+            return $morning->add($afternoon)->totalHours;
+        })->sum();
 
-        // Check if value in dealing_hours for old date
-        $findDealingHour = DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->first();
-
-        if (empty($findDealingHour) === false && ($nb_worked_hours - $target_work_hours) >= 0) {
-            // Delete dealing_hours
-            $findDealingHour->delete();
-        } else {
+        if (!empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours == 0)){
+            unset($listDealingHour[0]);
+            $listDealingHour[0]->delete();
+        }
+        elseif(!empty($listDealingHour[0])){
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
-            DealingHours::where([['date', $date->format('Y-m-d')], ['user_id', $item->user_id]])->update(['overtimes' => ($nb_worked_hours - $target_work_hours)]);
+            $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
+        }
+        elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)){
+            //create dealig_hours for this week with difference between nb_worked_hours and $target_work_hours for overtime column
+            $deallingHourItem = DealingHours::create(
+                    ['user_id' => $item['user_id'], 'date' => $item['created_at'], 'overtimes' => ($nb_worked_hours - $workWeekHours)]
+                );
         }
 
         return parent::destroyItem($item);

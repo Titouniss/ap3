@@ -107,7 +107,22 @@
         <span class="text-danger text-sm" v-show="errors.has('company')">{{
           errors.first("company")
         }}</span>
-      </div>
+        <vs-input
+          v-validate="{
+              required: true,                                  
+              regex : /^-?([0-9]{1,3})(?:.[0-9]{1,2})?$/,
+          }"
+          name="hours"
+          class="w-full mt-5"
+          label="Nombre d'heures supplémentaires"
+          v-model="data_local.hours"
+          :color="!errors.has('hours') ? 'success' : 'danger'"
+          disabled="true"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('hours')">
+              {{ errors.first("hours") }}
+          </span>
+      </div>      
     </div>
 
     <!-- Save & Reset Button -->

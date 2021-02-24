@@ -106,11 +106,13 @@ export default {
     flatPickr,
     vSelect,
   },
+  props: ['id_user'],
   data() {
     return {
       activePrompt: false,
 
       itemLocal: {
+        user_id: null,
         starts_at: null,
         ends_at: null,
         reason: "",
@@ -165,6 +167,7 @@ export default {
   methods: {
     clearFields() {
       Object.assign(this.itemLocal, {
+        user_id:null,
         starts_at: null,
         ends_at: null,
         reason: "",
@@ -199,6 +202,7 @@ export default {
           }
           item.starts_at = moment(item.starts_at).format("YYYY-MM-DD HH:mm");
           item.ends_at = moment(item.ends_at).format("YYYY-MM-DD HH:mm");
+          item.user_id = this.id_user;
           this.$store
             .dispatch("unavailabilityManagement/addItem", item)
             .then((data) => {
