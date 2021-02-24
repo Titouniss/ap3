@@ -70,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getModuleAttribute()
     {
-        return $this->company && $this->company->module ? $this->company->module->load('module_data_types:id,data_type_id', 'module_data_types.data_type:id,slug') : null;
+        return $this->company && $this->company->module ? $this->company->module->load('module_data_types:module_data_types.id,data_type_id', 'module_data_types.data_type:data_types.id,slug') : null;
     }
 
     public function getClearPasswordAttribute()

@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Validator;
 
 class ModuleController extends BaseApiController
 {
-    protected static $index_load = ['company:id,name'];
+    protected static $index_load = ['company:companies.id,name'];
     protected static $index_append = null;
-    protected static $show_load = ['company:id,name', 'moduleDataTypes', 'moduleDataTypes.moduleDataRows'];
+    protected static $show_load = ['company:companies.id,name', 'moduleDataTypes', 'moduleDataTypes.moduleDataRows'];
     protected static $show_append = ['connection'];
 
     protected static $store_validation_array = [

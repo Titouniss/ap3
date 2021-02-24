@@ -465,9 +465,7 @@ export default {
           })
       : null;
 
-    this.$store.dispatch("userManagement/fetchItems").catch((err) => {
-      this.manageErrors(err);
-    });
+    this.$store.dispatch("userManagement/fetchItems");
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());

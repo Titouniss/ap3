@@ -9,9 +9,9 @@ class WorkareaController extends BaseApiController
 {
     use StoresDocuments;
 
-    protected static $index_load = ['company:id,name', 'skills:id,name,company_id', 'documents'];
+    protected static $index_load = ['company:companies.id,name', 'skills:skills.id,name,company_id', 'documents'];
     protected static $index_append = null;
-    protected static $show_load = ['company:id,name', 'skills:id,name,company_id', 'documents'];
+    protected static $show_load = ['company:companies.id,name', 'skills:skills.id,name,company_id', 'documents'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
