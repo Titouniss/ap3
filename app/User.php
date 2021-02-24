@@ -6,11 +6,12 @@ use App\Models\Company;
 use App\Models\ModelHasOldId;
 use App\Models\Role;
 use App\Traits\HasCompany;
+use App\Models\DealingHours;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-
+use Carbon\Carbon;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -145,6 +146,12 @@ class User extends Authenticatable implements MustVerifyEmail
             });
         }
         return [];
+    }
+
+    public function getHoursAttribute(){
+        $date=Carbon::parse($this->created_at)->format('Y/m/d');
+        $findDealinHoursHeuresSupp = DealingHours::where('date', $date)->where('user_id', $this->id)->first();
+        return $findDealinHoursHeuresSupp ? $findDealinHoursHeuresSupp->overtimes : 0;
     }
 
     public function hasPermissionTo($perm)

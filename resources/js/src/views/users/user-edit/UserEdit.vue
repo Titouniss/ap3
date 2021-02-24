@@ -33,15 +33,7 @@
               <user-edit-tab-account class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
-          <vs-tab
-            label="Indisponibilités"
-            icon-pack="feather"
-            icon="icon-clock"
-          >
-            <div class="tab-text">
-              <UnavailabilitiesIndex class="mt-4" :data="user_data" />
-            </div>
-          </vs-tab>
+          
           <vs-tab
             label="Notifications"
             icon-pack="feather"

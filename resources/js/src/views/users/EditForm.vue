@@ -159,6 +159,22 @@
             </span>
           </div>
 
+          <div>
+            <vs-input
+                v-validate="{
+                    required: true,                                  
+                    regex : /^-?([0-9]{1,3})(?:.[0-9]{1,2})?$/,
+                }"
+                name="hours"
+                class="w-full mt-5"
+                label="Nombre d'heures supplémentaires"
+                v-model="itemLocal.hours"
+                :color="!errors.has('hours') ? 'success' : 'danger'"
+          />
+          <span class="text-danger text-sm" v-show="errors.has('hours')">
+              {{ errors.first("hours") }}
+          </span>
+          </div>
           <!-- Related users -->
           <div
             v-if="
@@ -259,6 +275,7 @@ export default {
         company_id: 0,
         role_id: 0,
         skills: [],
+        hours: 0,
         work_hours: [],
         related_user_id: null,
       },
@@ -316,7 +333,8 @@ export default {
         this.itemLocal.firstname != "" &&
         this.itemLocal.login != "" &&
         this.itemLocal.company_id != null &&
-        this.itemLocal.role_id > 0
+        this.itemLocal.role_id > 0 &&
+        this.itemLocal.hours != null
       );
     },
   },

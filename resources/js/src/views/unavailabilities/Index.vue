@@ -29,7 +29,7 @@
 
     <div class="mb-base">
       <h6 class="mb-4">Indisponibilités</h6>
-      <add-form :getOvertimes="getOvertimes()" />
+      <add-form :getOvertimes="getOvertimes()" :id_user="this.id" />
       <div class="flex flex-wrap items-center">
         <!-- ITEMS PER PAGE -->
         <div class="flex-grow">
@@ -156,6 +156,7 @@ var modelPlurial = "unavailabilities";
 var modelTitle = "Indisponibilité";
 
 export default {
+  props: ['id'],
   components: {
     AgGridVue,
     vSelect,
@@ -168,7 +169,7 @@ export default {
   data() {
     return {
       overtimes: 0,
-      usedOvertimes: 0,
+      usedOvertimes: 0,      
 
       searchQuery: "",
 
@@ -278,11 +279,11 @@ export default {
       return date + " à " + hour;
     },
     getOvertimes() {
-      this.$vs.loading();
+      this.$vs.loading();      
       this.$store
-        .dispatch("dealingHoursManagement/getOvertimes")
+        .dispatch("dealingHoursManagement/getOvertimes", this.id)
         .then((data) => {
-          if (data && data.status === 200) {
+          if (data && data.status === 200) {            
             this.overtimes = data.data.success.overtimes;
             this.usedOvertimes = data.data.success.usedOvertimes;
           } else {
@@ -393,17 +394,19 @@ export default {
       );
       moduleDealingHoursManagement.isRegistered = true;
     }
-    this.$store.dispatch("unavailabilityManagement/fetchItems").catch((err) => {
-      console.error(err);
+    this.$store.dispatch("unavailabilityManagement/fetchItems")
+      .then((data) => (this.id_user = data.id_user))
+      .catch((err) => {
+        console.error(err);
     });
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize());
 
     moduleUnavailabilityManagement.isRegistered = false;
-    moduleDealingHoursManagement.isRegistered = false;
+    //moduleDealingHoursManagement.isRegistered = false;
     this.$store.unregisterModule("unavailabilityManagement");
-    this.$store.unregisterModule("dealingHoursManagement");
+    //this.$store.unregisterModule("dealingHoursManagement");
   },
 };
 </script>

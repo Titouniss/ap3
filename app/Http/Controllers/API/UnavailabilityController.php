@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Exceptions\ApiException;
+use App\User;
 use App\Models\Unavailability;
 use App\Models\WorkHours;
 use Illuminate\Http\Request;
@@ -36,35 +37,81 @@ class UnavailabilityController extends BaseApiController
         parent::__construct(Unavailability::class);
     }
 
+    protected function extraIndexData(Request $request, $items)
+    {  
+        return collect(['id_user' => $request->user_id]);
+    }
+
     protected function filterIndexQuery(Request $request, $query)
-    {
-        $query->where('user_id', Auth::id());
+    {        
+        if ($request->has('hours_taken_name')) {
+            if (Unavailability::where('reason', $request->hours_taken_name)->doesntExist()) {
+                throw new ApiException("Paramètre 'hours_taken_name' n'est pas valide.");
+            }
+            $query->where('reason', $request->hours_taken_name);
+        }
+        if ($request->has('date')) {
+            try {
+                $date = Carbon::createFromFormat('d-m-Y', $request->date);
+                switch ($request->period_type) {
+                    case 'week':
+                        $query->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
+                        break;
+                    case 'month':
+                        $query->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
+                        break;
+                    case 'year':
+                        $query->whereYear('starts_at', $date->year);
+                        break;
+
+                    default:
+                        $query->whereDate('starts_at', $date);
+                        break;
+                }
+            } catch (\Throwable $th) {
+                throw new ApiException("Paramètre 'date' n'est pas valide.");
+            }
+        }
+        if ($request->has('user_id')) {
+            if (User::where('id', $request->user_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'user_id' n'est pas valide.");
+            }
+            $query->where('user_id', $request->user_id);
+        }
+        else {
+            $query->where('user_id', Auth::id());
+        }
         if (!$request->has('order_by')) {
             $query->orderBy('starts_at');
         }
     }
 
     protected function storeItem(array $arrayRequest)
-    {
-        $unavailabilities = Unavailability::where('user_id', Auth::id())->orderby('starts_at', 'asc')->get();
+    {       
+        if($arrayRequest['user_id'] == null){
+            $arrayRequest['user_id'] = Auth::id();            
+        }
 
-        $arrayRequest['user_id'] = Auth::id();
+        $unavailabilities = Unavailability::where('user_id', $arrayRequest['user_id'])->orderby('starts_at', 'asc')->get();
+
+        
         $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at'])->locale('fr_FR');
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at'])->locale('fr_FR');
         $duration = (floatval(explode(':', $arrayRequest_ends->format('H:i'))[0])) - (floatval(explode(':', $arrayRequest_starts->format('H:i'))[0]));
 
         // Overtimes verification
-        $Overtimes = DealingHoursController::getOvertimes(true);
+        $Overtimes = DealingHoursController::getOvertimes($arrayRequest['user_id'],true);
         $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'];
 
         if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires') {
             if ($OvertimesToUse < $duration) {
-                throw new ApiException("Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " . $arrayRequest_starts->dayName . ".");
+                throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires.");
             }
             // Expected hours for this day
-            $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['starts_at']);
+            $day=$arrayRequest_starts->dayName;
+            $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $day);
             if ($workDuration === 0) {
-                throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires");
+                throw new ApiException("Il n'y a pas d'heures de travail prévues pour ". $day . ".");
             } else if ($workDuration < $duration) {
                 throw new ApiException("Vous ne pouvez pas utiliser plus d'heures supplémentaires que d'heures de travail prévues.");
             }
@@ -113,12 +160,14 @@ class UnavailabilityController extends BaseApiController
     }
 
     protected function updateItem($item, array $arrayRequest)
-    {
-        $arrayRequest['user_id'] = Auth::user()->id;
+    {       
+        if($arrayRequest['user_id'] == null){
+            $arrayRequest['user_id'] = Auth::id();            
+        }        
         $arrayRequest_starts = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['starts_at']);
         $arrayRequest_ends = Carbon::createFromFormat('Y-m-d H:i', $arrayRequest['ends_at']);
 
-        $unavailabilities = Unavailability::where('user_id', Auth::id())->orderby('starts_at', 'asc')->get();
+        $unavailabilities = Unavailability::where('user_id', $arrayRequest['user_id'])->orderby('starts_at', 'asc')->get();
 
         $passage = 0;
 
