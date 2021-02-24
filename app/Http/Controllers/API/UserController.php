@@ -35,8 +35,8 @@ class UserController extends BaseApiController
 {
     protected static $index_load = ['company:companies.id,name', 'skills:skills.id,name'];
     protected static $index_append = null;
-    protected static $show_load = ['company:companies.id,name', 'skills:skills.id,name', 'workHours', 'unavailabilities'];
-    protected static $show_append = ['related_users'];
+    protected static $show_load = ['company:id,name', 'skills:id,name', 'workHours', 'unavailabilities'];
+    protected static $show_append = ['related_users','hours'];
 
     protected static $store_validation_array = [
         'lastname' => 'required',
@@ -106,6 +106,11 @@ class UserController extends BaseApiController
 
         $this->setSkills($item, $arrayRequest['skills']);
 
+        //on crée un dealingHours pour enregistrer le nombres d'heures supplémentaires dans overtimes pour ce nouvel utilisateur
+        $deallingHourItem = DealingHours::create(
+                ['user_id' => $item->id, 'date' => $item['created_at'], 'overtimes' => ($arrayRequest['hours'])]
+            );
+
         return $item;
     }
 
@@ -155,6 +160,18 @@ class UserController extends BaseApiController
 
             ModelHasOldId::where('model', User::class)->where('new_id', $relatedUserOldId->new_id)->update(['new_id' => $item->id]);
             User::find($relatedUserId)->forceDelete();
+        }
+
+        $date=Carbon::parse($arrayRequest['created_at'])->format('Y/m/d');
+        $findDealinHoursHeuresSupp = DealingHours::where('date', $date)->where('user_id', $item->id)->first();
+
+        if(!empty($findDealinHoursHeuresSupp)){
+            $findDealinHoursHeuresSupp->update(['overtimes' => ($arrayRequest['hours'])]);
+        }
+        else{
+            $deallingHourItem = DealingHours::create(
+                ['user_id' => $item->id, 'date' => $arrayRequest['created_at'], 'overtimes' => ($arrayRequest['hours'])]
+            );           
         }
 
         $item->save();

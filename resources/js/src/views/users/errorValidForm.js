@@ -23,6 +23,10 @@ const errorMessage = {
     role: {
       required: "L\'utilisteur doit être rattaché à un rôle"
     },
+    hours: {
+        required: "Le nombre d'heures supplémentaires est requis",       
+        regex: "Le nombre d'heures peut être positif ou négatif et peut contenir jusqu'à 3 chiffres pour la partie entière et 2 chiffres après la virgule"
+    },
   }
 }
 

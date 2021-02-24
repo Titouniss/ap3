@@ -176,12 +176,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************************************************************/
     /*****************************   UNAVAILABILITIES   ********************************/
     /***********************************************************************************/
-    Route::prefix('unavailability-management')->group(function () {
-        Route::get('index', 'API\UnavailabilityController@index');
-        Route::get('show/{id}', 'API\UnavailabilityController@show');
-        Route::post('store', 'API\UnavailabilityController@store');
-        Route::put('update/{id}', 'API\UnavailabilityController@update');
-        Route::put('destroy/{id?}', 'API\UnavailabilityController@destroy');
+    Route::prefix('unavailability-management')->group(function () {        
+            Route::get('index', 'API\UnavailabilityController@index');
+            Route::get('show/{id}', 'API\UnavailabilityController@show');
+            Route::post('store', 'API\UnavailabilityController@store');
+            Route::put('update/{id}', 'API\UnavailabilityController@update');
+            Route::put('destroy/{id?}', 'API\UnavailabilityController@destroy');
     });
 
     /***********************************************************************************/
@@ -199,10 +199,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     /***********************************   Dealing Hours   *************************************/
     /***********************************************************************************/
     Route::prefix('dealing-hours-management')->group(function () {
-        Route::group(['middleware' => ['can:read,App\Models\DealingHours']], function () {
+        Route::group(['middleware' => ['can:read,App\Models\DealingHours,user_id']], function () {
             Route::get('index', 'API\DealingHoursController@index');
-            Route::get('overtimes', 'API\DealingHoursController@getOvertimes');
-        });
+            Route::get('overtimes/{user_id}', 'API\DealingHoursController@getOvertimes');
+        });        
         Route::group(['middleware' => ['can:show,dealing_hours']], function () {
             Route::get('show/{dealing_hours}', 'API\DealingHoursController@show');
         });

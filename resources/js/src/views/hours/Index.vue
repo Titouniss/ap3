@@ -6,7 +6,28 @@
         <h4 class="ml-3">Filtres</h4>
       </div>
       <div class="flex flex-wrap justify-center items-end">
-        <div style="min-width: 15em">
+        <div class="cursor-pointer mx-4">
+          <vs-button :class="{ active: modeIndispo }"
+            @click="modeIndispo = !modeIndispo">
+            {{ modeIndispo ? "Gérer les heures" : "Gérer les indisponibilités" }}
+          </vs-button>
+        </div>
+        <div style="min-width: 15em" class="cursor-pointer mx-4" v-if="modeIndispo">
+          <v-select
+            label="name"
+            v-model="filters.hours_taken"
+            :options="hours_type_names"
+            @input="refreshData()"
+            @search:blur="refreshData()"
+            @search:focus="clearRefreshDataTimeout"
+            class="w-full"            
+          >
+            <template #header>
+              <div style="opacity: 0.8">Heures prises</div>
+            </template>
+          </v-select>
+        </div>
+        <div style="min-width: 15em" v-if="!modeIndispo">
           <v-select
             label="name"
             v-model="filters.project"
@@ -125,8 +146,9 @@
           </vs-col>
         </vs-row>
       </div>
-    </div>
-    <div class="vx-card p-6 mt-1">
+    </div>      
+      <UnavailabilitiesIndex class="mt-4" :id="id_user" v-if="modeIndispo"/>
+    <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
       <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
         <feather-icon icon="BarChart2Icon" svgClasses="h-6 w-6" />
         <h4 class="ml-3">Résumé</h4>
@@ -162,29 +184,16 @@
         vs-type="flex"
         vs-w="12"
         class="mt-6"
-      >
-        <vs-button
-          v-if="
-            (!isManager && !isAdmin) ||
-            (filters.user &&
-              filters.user.id === this.$store.state.AppActiveUser.id)
-          "
-          @click="goToUnavailabilities()"
-        >
-          {{ "Gérer mes indisponibilités" }}
-        </vs-button>
+      >        
       </vs-row>
     </div>
-    <div class="vx-card p-6 mt-1">
+    <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
       <div
         class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
       >
         <div class="flex flex-row justify-start items-center">
           <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
-          <h4 class="ml-3">Heures effectuées</h4>
-          <!-- <div class="px-6 py-2" v-if="authorizedTo('publish')">
-            <vs-button @click="addRecord">Ajouter des heures</vs-button>
-          </div>-->
+          <h4 class="ml-3">Heures effectuées</h4>          
           <div class="px-6 py-2" v-if="authorizedTo('publish')">
             <vs-button @click="readRecord">
               {{ isAdmin ? "Gérer les heures" : "Gérer mes heures" }}
@@ -311,6 +320,7 @@ import vSelect from "vue-select";
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
 
 // FlatPickr import
 import flatPickr from "vue-flatpickr-component";
@@ -320,6 +330,9 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 // Cell Renderer
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
+
+// Unavailabilities
+import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
 
 import moment from "moment";
 
@@ -337,9 +350,13 @@ export default {
     // Cell Renderer
     CellRendererActions,
     CellRendererRelations,
+    //Unavailabilities
+    UnavailabilitiesIndex,
   },
   data() {
     return {
+      id_user: null,
+      modeIndispo: false,
       searchQuery: "",
       // AgGrid
       gridApi: null,
@@ -433,7 +450,9 @@ export default {
         user: null,
         date: moment(),
         period_type: "month",
+        hours_taken: null,
       },
+      hours_type_names: ["Utilisation heures suplémentaires", "Jours fériés", "Réunion", "Rendez-vous", "Congés payés", "Période de cours", "Arrêt de travail", "Autre..."],
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
         date: {
@@ -478,7 +497,7 @@ export default {
       refreshDataTimeout: null,
 
       // Stats
-      stats: { total: 0 },
+      stats: { total: 0 },      
     };
   },
   computed: {
@@ -523,7 +542,7 @@ export default {
       return this.$store.getters["userManagement/getItems"];
     },
     hoursData() {
-      return this.$store.getters["hoursManagement/getItems"];
+      return this.$store.getters["hoursManagement/getItems"];      
     },
     showSummary() {
       if (
@@ -551,8 +570,8 @@ export default {
       set(val) {
         this.gridApi.paginationGoToPage(val - 1);
       },
-    },
-  },
+    },    
+  },  
   methods: {
     authorizedTo(action, model = modelPlurial) {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
@@ -582,7 +601,7 @@ export default {
       if (this.stats["overtime"]) {
         return "Heures supplémentaires sur la période :";
       } else {
-        return "Heures manquante sur la période :";
+        return "Heures manquantes sur la période :";
       }
     },
     addToFilterDate() {
@@ -616,6 +635,9 @@ export default {
     },
     refreshData(targetDate = this.filters.date) {
       const filter = {};
+      if (this.filters.hours_taken) {
+        filter.hours_taken_name = this.filters.hours_taken;
+      }
       if (this.filters.project) {
         filter.project_id = this.filters.project.id;
       }
@@ -629,13 +651,15 @@ export default {
         }
       }
       this.clearRefreshDataTimeout();
-      this.refreshDataTimeout = setTimeout(() => {
-        this.$vs.loading();
+      if(!this.modeIndispo){
+        this.refreshDataTimeout = setTimeout(() => {       
+        this.$vs.loading();            
         // refresh Hours
         this.$store
           .dispatch("hoursManagement/fetchItems", filter)
           .then((data) => {
-            this.stats = data.stats;
+              this.stats = data.stats,
+              this.id_user = data.id_user;
           })
           .catch((error) => {
             this.$vs.notify({
@@ -648,6 +672,29 @@ export default {
           })
           .finally(() => this.$vs.loading.close());
       }, 1500);
+      }
+      else{        
+        this.refreshDataTimeout = setTimeout(() => {        
+        this.$vs.loading();             
+        // refresh Unavailabilities
+        this.$store
+          .dispatch("unavailabilityManagement/fetchItems", filter)
+          .then((data) => {              
+              this.id_user = data.id_user; 
+          })
+          .catch((error) => {
+            this.$vs.notify({
+              title: "Erreur",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+            });
+          })
+          .finally(() => this.$vs.loading.close());
+      }, 1500);
+      }     
+      
     },
     setColumnFilter(column, val) {
       const filter = this.gridApi.getFilterInstance(column);
@@ -774,7 +821,7 @@ export default {
           return value;
         })
       );
-    },
+    },    
   },
   mounted() {
     this.gridApi = this.gridOptions.api;
@@ -817,13 +864,19 @@ export default {
       this.$store.registerModule("userManagement", moduleUserManagement);
       moduleUserManagement.isRegistered = true;
     }
+    if (!moduleUnavailabilityManagement.isRegistered) {
+      this.$store.registerModule("unavailabilityManagement", moduleUnavailabilityManagement);
+      moduleUnavailabilityManagement.isRegistered = true;
+    }  
 
     this.$store
       .dispatch("hoursManagement/fetchItems", {
         date: moment().format("DD-MM-YYYY"),
         period_type: "month",
+        user_id: null,
       })
-      .then((data) => (this.stats = data.stats));
+        .then((data) => (this.stats = data.stats,
+                         this.id_user = data.id_user));
     this.$store.dispatch("projectManagement/fetchItems");
     if (this.authorizedTo("read", "users")) {
       this.$store.dispatch("userManagement/fetchItems");
@@ -836,9 +889,11 @@ export default {
     moduleProjectManagement.isRegistered = false;
     moduleUserManagement.isRegistered = false;
     moduleHoursManagement.isRegistered = false;
+    moduleUnavailabilityManagement.isRegistered = false;
     this.$store.unregisterModule("hoursManagement");
     this.$store.unregisterModule("projectManagement");
     this.$store.unregisterModule("userManagement");
+    this.$store.unregisterModule("unavailabilityManagement");
   },
 };
 </script>
