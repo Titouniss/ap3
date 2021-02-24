@@ -40,15 +40,15 @@ class DealingHoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public static function getOvertimes($id_user=null, $check = false)
-    {              
-        $user = Auth::user();       
-        if($id_user != "null"){
-            $id=$id_user;                   
+    public static function getOvertimes($user_id=null, $check = false)
+    {
+        $user = Auth::user();
+        if($user_id != "null"){
+            $id=$user_id;
         }
         else{
             $id=$user->id;
-        }        
+        }
 
         // Check if overtimes
         $items = DealingHours::where('user_id', $id)->get();
