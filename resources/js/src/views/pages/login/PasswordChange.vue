@@ -21,11 +21,11 @@
           alt="graphic-500"
           class="mx-auto mb-4"
         />
-        <h4 class="mb-4 text-center">Changement de mot de passe</h4>
+        <h4 class="mb-4 text-center">Changement de mot de passe</h4><br>
 
         <vs-input
           type="password"
-          class="w-full mb-base"
+          class="w-full"
           label-placeholder="Nouveau mot de passe"
           v-model="new_password"
           v-validate="'required'"
@@ -33,11 +33,11 @@
         />
         <span class="text-danger text-sm" v-show="errors.has('password')">{{
           errors.first("password")
-        }}</span>
+        }}</span><br>
 
         <vs-input
           type="password"
-          class="w-full mb-base"
+          class="w-full"
           label-placeholder="Confirmation mot de passe"
           v-model="confirm_new_password"
           v-validate="'required'"
@@ -72,7 +72,7 @@ export default {
     return {
       new_password: "",
       confirm_new_password: "",
-      message: "Les champs du nouveau mot de passe no sont pas identiques",
+      message: "Les champs du nouveau mot de passe ne sont pas identiques",
 
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
@@ -121,14 +121,18 @@ export default {
           })
           .catch((error) => {
             // Wrong format message
-            if (error == "Error: error_format") {
+            if (error.message.includes("comporter")) {
               this.message =
                 "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
+            }
+            //mot de passe déjà changé
+            else if (error.message.includes("changé")) {
+              this.message = "Le mot de passe de l'utilisateur a déjà été changé.";
             }
             // Unknown error message
             else {
               this.message =
-                "Une erreur est survenu, veuillez réessayer plus tard.";
+                "Une erreur est survenue, veuillez réessayer plus tard.";
             }
             this.$vs.notify({
               title: "Modification du mot de passe",
@@ -145,10 +149,11 @@ export default {
       } else {
         this.$vs.notify({
           title: "Modification du mot de passe",
-          text: "les deux mots de passe ne sont pas identiques",
+          text: "Les deux mots de passe doivent être identiques.",
           iconPack: "feather",
           icon: "icon-alert-circle",
           color: "danger",
+          time: 10000,
         });
       }
     },
