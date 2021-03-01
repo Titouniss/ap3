@@ -393,6 +393,15 @@ const router = new Router({
                         rule: "editor"
                     }
                 },
+                {
+                    path: "/pages/register/cgu",
+                    name: "page-register-cgu",
+                    component: () =>
+                        import("@/views/users/user-edit/UserEditCGU.vue"),
+                    meta: {
+                        rule: "editor"
+                    }
+                },
                 // {
                 //     path: "/pages/register/:token/:email",
                 //     name: "page-register",

@@ -589,7 +589,7 @@ class UserController extends BaseApiController
             'login' => $login,
             'email' => $arrayRequest['email'],
             'password' => bcrypt($arrayRequest['password']),
-            'is_password_change' => true,
+            'is_password_change' => false,
             'isTermsConditionAccepted' => $arrayRequest['terms_accepted'],
         ]);
 

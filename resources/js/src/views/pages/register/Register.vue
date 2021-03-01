@@ -118,12 +118,22 @@
               :danger-text="errors.first('confirm_password')"
             />
 
-            <vs-checkbox
-              v-model="isTermsConditionAccepted"
-              class="mt-6 text-center"
-            >
-              J'accepte les conditions générales d'utilisation.
-            </vs-checkbox>
+            <vs-row
+              vs-align="center"
+              vs-type="flex"
+              vs-justify="space-around"
+              class="mt-10"
+            >  
+              <vs-checkbox
+                v-model="isTermsConditionAccepted"
+                class="mt-6 text-center"
+              >
+              </vs-checkbox>
+              <router-link to="register/cgu" @click="cgu" target="_blank"
+                  ><U>J'accepte les conditions<br> générales d'utilisation.</U>
+              </router-link>
+            </vs-row><br><br>
+            <div class="g-recaptcha" data-sitekey="6LfwGpIUAAAAAB_BNNxwXpr7MunyPbG2izN6WOLE" data-callback="captchaChecked"></div><br>
             <vs-row
               vs-align="center"
               vs-type="flex"
@@ -166,6 +176,7 @@ export default {
       password: "",
       confirm_password: "",
       isTermsConditionAccepted: false,
+      isCaptchaChecked: false,
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
@@ -185,11 +196,21 @@ export default {
         this.contact_tel1 !== "" &&
         this.password !== "" &&
         this.confirm_password !== "" &&
-        this.isTermsConditionAccepted === true
+        this.isTermsConditionAccepted === true &&
+        this.isCaptchaChecked == true
       );
     },
   },
-  methods: {
+  mounted() {
+    let recaptchaScript = document.createElement('script')
+    recaptchaScript.setAttribute('src', 'https://www.google.com/recaptcha/api.js')
+    document.head.appendChild(recaptchaScript)
+    window.captchaChecked = this.captchaChecked;
+  },
+  methods: {    
+    captchaChecked() {      
+      this.isCaptchaChecked = grecaptcha && grecaptcha.getResponse().length !== 0 ? true : false;      
+    },
     checkLogin() {
       // If user is already logged in notify
       if (this.$store.getters["auth.isUserLoggedIn"]) {
@@ -228,9 +249,9 @@ export default {
         .dispatch("auth/register", payload)
         .then(() => {
           this.$vs.notify({
-            title: "Inscription réussi !",
+            title: "Inscription réussie !",
             text:
-              "Un email vous a été envoyé, consulter votre bôite mail pour valider votre email",
+              "Un email vous a été envoyé, consultez votre boîte mail pour valider votre email",
             iconPack: "feather",
             icon: "icon-alert-circle",
             color: "success",
@@ -247,6 +268,9 @@ export default {
           });
         })
         .finally(() => this.$vs.loading.close());
+    },
+    cgu() {      
+      this.$router.push("/pages/register/cgu").catch(() => {});
     },
     goLogin() {
       if (!this.checkLogin()) return;
