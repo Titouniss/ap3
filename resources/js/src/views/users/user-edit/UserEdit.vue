@@ -48,6 +48,11 @@
               <user-edit-tab-password class="mt-4" :data="user_data" />
             </div>
           </vs-tab>
+          <vs-tab label="Conditions générales d'utilisation" icon-pack="feather" icon="icon-edit">
+            <div class="tab-text">
+              <UserEditCGU class="mt-4" :data="user_data" />
+            </div>
+          </vs-tab>
         </vs-tabs>
       </div>
     </vx-card>
@@ -68,6 +73,7 @@ import UnavailabilitiesIndex from "../../unavailabilities/Index.vue";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import UserEditCGU from './UserEditCGU.vue';
 
 export default {
   components: {
@@ -75,6 +81,7 @@ export default {
     UnavailabilitiesIndex,
     UserEditTabNotifications,
     UserEditTabPassword,
+    UserEditCGU,    
   },
   data() {
     return {

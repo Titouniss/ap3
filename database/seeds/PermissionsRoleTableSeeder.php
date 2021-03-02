@@ -87,6 +87,7 @@ class PermissionsRoleTableSeeder extends Seeder
             $admin = User::create([
                 'firstname' => 'admin',
                 'lastname' => 'NUMIDEV',
+                'login' => 'admin',
                 'email' => 'admin@numidev.fr',
                 'password' => Hash::make('password'),
                 //'email_verified_at' => '2020-01-01 00:00:00.000000',

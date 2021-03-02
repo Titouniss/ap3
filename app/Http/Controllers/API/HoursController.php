@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Auth;
 
 class HoursController extends BaseApiController
 {
-    protected static $index_load = ['project:projects.id,name', 'user:users.id,firstname,lastname,email'];
+    protected static $index_load = ['project:projects.id,name,color', 'user:users.id,firstname,lastname,email'];
     protected static $index_append = null;
-    protected static $show_load = ['project:projects.id,name', 'user:users.id,firstname,lastname,email'];
+    protected static $show_load = ['project:projects.id,name,color', 'user:users.id,firstname,lastname,email'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
@@ -98,15 +98,81 @@ class HoursController extends BaseApiController
             $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
             $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
         }
-
-        if (!$items->isEmpty()) {
+        $listId = array();        
+        if (!$items->isEmpty()) {            
+            array_push($listId,$items->first()->user_id);            
             foreach ($items as $item) {
-                $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));
+                $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));  
+                if(!in_array($item->user_id, $listId)){                        
+                    array_push($listId,$item->user_id);
+                }
             }
 
-            $stats['total'] = $stats['total']->totalHours;
+            $stats['total'] = $stats['total']->totalHours;            
+            if($request->date){
+                $nbWorkDays=0;
+                $workDayHours=0;
+                $workWeekHours=0;            
 
-            if ($request->date && $userId = $user->is_admin ? $request->user_id : $user->id) {
+                for($i=0;$i<count($listId);$i++){
+                    $nbWorkDays += WorkHours::where('user_id', $listId[$i])->where('is_active', 1)->count() || 1;
+                    $workWeekHours += WorkHours::where('user_id', $listId[$i])->where('is_active', 1)->get()->map(function ($day) {
+                        $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+                        $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                        return $morning->add($afternoon)->totalHours;
+                    })->sum();
+                    $workDayHours += HoursController::getTargetWorkHours($listId[$i], Carbon::createFromFormat('d-m-Y', $request->date)->locale('fr_FR')->dayName);
+    
+                    $ListOfWorkHours= WorkHours::where('user_id', $listId[$i])->where('is_active', 1)->get();
+    
+                    $ListOfWorkDays=array();
+                    foreach($ListOfWorkHours as $day){
+                        array_push($ListOfWorkDays,$day->day);
+                    }
+                }
+                
+
+                $defaultWorkHours = 0;
+                if ($request->date) {
+                    switch ($request->period_type) {
+                        case 'day':
+                            $defaultWorkHours = $workDayHours;
+                            break;
+                        case 'week':
+                            $defaultWorkHours = $workWeekHours;
+                            break;
+                        case 'month':
+                            $nbWorkDaysPerMonth=HoursController::calculeNbWorkDaysPerMonth($request,$ListOfWorkDays,null,1);
+                            $defaultWorkHours = $nbWorkDaysPerMonth * ($workWeekHours/count($ListOfWorkDays));
+                            break;
+                        case 'year':
+                            $period = CarbonPeriod::create(Carbon::createFromFormat('d-m-Y', $request->date)->startOfYear(), '1 month', Carbon::createFromFormat('d-m-Y', $request->date)->endOfYear());
+                            foreach ($period as $month) {
+                                $moisCourant=$month->month;
+                                $nbWorkDaysForEachMonth=HoursController::calculeNbWorkDaysPerMonth($request,$ListOfWorkDays,$moisCourant,0);
+                                $defaultWorkHours += ($nbWorkDaysForEachMonth * ($workWeekHours/count($ListOfWorkDays)));
+                            }
+                            break;
+                        default:
+                            $defaultWorkHours = $workWeekHours / $nbWorkDays;
+                            break;
+                    }
+                } else {
+                    $period = CarbonPeriod::create($items->min('start_at'), '1 week', $items->max('end_at'));
+                    foreach ($period as $week) {
+                        $defaultWorkHours += $workWeekHours;
+                    }
+                }
+
+                //On veut connaitre également le nombre d'heures effectuées en moins.
+                if ($stats['total'] > $defaultWorkHours) {
+                    $stats['overtime'] = $stats['total'] - $defaultWorkHours;
+                } else {
+                    $stats['lost_time'] = $defaultWorkHours - $stats['total'];
+                } 
+            }            
+
+            else if ($request->date && $userId = $user->is_admin ? $request->user_id : $user->id) {
                 $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count() || 1;
                 $workWeekHours = WorkHours::where('user_id', $userId)->where('is_active', 1)->get()->map(function ($day) {
                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));

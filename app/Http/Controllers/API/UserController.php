@@ -26,6 +26,7 @@ use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\Unavailability;
 use App\Models\WorkHours;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
@@ -34,8 +35,8 @@ class UserController extends BaseApiController
 {
     protected static $index_load = ['company:companies.id,name', 'skills:skills.id,name'];
     protected static $index_append = null;
-    protected static $show_load = ['company:id,name', 'skills:id,name', 'workHours', 'unavailabilities'];
-    protected static $show_append = ['related_users','hours'];
+    protected static $show_load = ['company:companies.id,name', 'skills:skills.id,name', 'workHours', 'unavailabilities'];
+    protected static $show_append = ['related_users', 'hours'];
 
     protected static $store_validation_array = [
         'lastname' => 'required',
@@ -94,7 +95,7 @@ class UserController extends BaseApiController
         $this->addDefaultWorkHours($item->id);
 
         $item->markEmailAsVerified();
-        if ($item->email !== null) {
+        if ($item->email !== null && App::environment('production')) {
             $item->sendEmailAddUserNotification($item->id, $item->register_token);
         } else {
             $item->clear_password = $password;
@@ -107,8 +108,8 @@ class UserController extends BaseApiController
 
         //on crée un dealingHours pour enregistrer le nombres d'heures supplémentaires dans overtimes pour ce nouvel utilisateur
         $deallingHourItem = DealingHours::create(
-                ['user_id' => $item->id, 'date' => $item['created_at'], 'overtimes' => ($arrayRequest['hours'])]
-            );
+            ['user_id' => $item->id, 'date' => $item['created_at'], 'overtimes' => ($arrayRequest['hours'])]
+        );
 
         return $item;
     }
@@ -161,16 +162,15 @@ class UserController extends BaseApiController
             User::find($relatedUserId)->forceDelete();
         }
 
-        $date=Carbon::parse($arrayRequest['created_at'])->format('Y/m/d');
+        $date = Carbon::parse($arrayRequest['created_at'])->format('Y/m/d');
         $findDealinHoursHeuresSupp = DealingHours::where('date', $date)->where('user_id', $item->id)->first();
 
-        if(!empty($findDealinHoursHeuresSupp)){
+        if (!empty($findDealinHoursHeuresSupp)) {
             $findDealinHoursHeuresSupp->update(['overtimes' => ($arrayRequest['hours'])]);
-        }
-        else{
+        } else {
             $deallingHourItem = DealingHours::create(
                 ['user_id' => $item->id, 'date' => $arrayRequest['created_at'], 'overtimes' => ($arrayRequest['hours'])]
-            );           
+            );
         }
 
         $item->save();
@@ -588,7 +588,7 @@ class UserController extends BaseApiController
             'login' => $login,
             'email' => $arrayRequest['email'],
             'password' => bcrypt($arrayRequest['password']),
-            'is_password_change' => true,
+            'is_password_change' => false,
             'isTermsConditionAccepted' => $arrayRequest['terms_accepted'],
         ]);
 
@@ -606,12 +606,16 @@ class UserController extends BaseApiController
 
         $company = Company::create([
             'name' => $arrayRequest['company_name'],
+        ]);
+
+        $company->details()->update([
             'contact_firstname' => $arrayRequest['firstname'],
             'contact_lastname' => $arrayRequest['lastname'],
             'contact_function' => $arrayRequest['contact_function'],
             'contact_email' => $arrayRequest['email'],
             'contact_tel1' => $arrayRequest['contact_tel1'],
         ]);
+
         $item->company()->associate($company);
         $item->save();
 
@@ -626,7 +630,9 @@ class UserController extends BaseApiController
 
         DB::commit();
 
-        //$item->sendEmailVerificationNotification();
+        if (App::environment('production')) {
+            $item->sendEmailVerificationNotification();
+        }
 
         $token = $item->createToken('ProjetX');
         $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue

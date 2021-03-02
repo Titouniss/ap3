@@ -296,6 +296,28 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: "/customers/customer-add/",
+                    name: "customers-customer-add",
+                    component: () => import("./views/customers/AddForm.vue"),
+                    meta: {
+                        parent: "customers",
+                        pageTitle: "Ajout d'un client",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/customers/customer-edit/:customerId",
+                    name: "customers-customer-edit",
+                    component: () => import("./views/customers/EditForm.vue"),
+                    meta: {
+                        parent: "customers",
+                        pageTitle: "Édition de client",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Modules---/////
                 {
                     path: "/modules",
@@ -367,6 +389,15 @@ const router = new Router({
                     name: "page-register",
                     component: () =>
                         import("@/views/pages/register/Register.vue"),
+                    meta: {
+                        rule: "editor"
+                    }
+                },
+                {
+                    path: "/pages/register/cgu",
+                    name: "page-register-cgu",
+                    component: () =>
+                        import("@/views/users/user-edit/UserEditCGU.vue"),
                     meta: {
                         rule: "editor"
                     }
@@ -472,8 +503,7 @@ router.beforeEach((to, from, next) => {
             "Authorization"
         ] = `Bearer ${localStorage.getItem("token")}`;
         isAuthenticated =
-            moment().unix() < expiresAt &&
-            localStorage.getItem("logged_in");
+            moment().unix() < expiresAt && localStorage.getItem("logged_in");
     }
 
     if (

@@ -80,6 +80,7 @@
 
 <script>
 import themeConfig from "@/../themeConfig.js";
+import moment from 'moment'
 
 export default {
   data() {
@@ -99,6 +100,17 @@ export default {
     validateForm() {
       return !this.errors.any() && this.login !== "" && this.password !== "";
     },
+  },
+  mounted(){
+    let expiresAt = localStorage.getItem('token_expires_at')
+    if(expiresAt && expiresAt < moment().unix()){
+      this.$vs.notify({            
+            color: "danger",
+            title: "Déconnexion",
+            text: "Vous avez été déconnecté automatiquement.",
+            time: 10000,
+      });
+    }
   },
   methods: {
     checkLogin() {

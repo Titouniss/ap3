@@ -99,14 +99,7 @@ class DataRowsSeeder extends Seeder
         $row = $this->dataRow($type, 'name');
         $row->fill([
             'type'         => 'string',
-            'display_name' => 'Nom de la société',
-            'required'     => 0,
-        ])->save();
-
-        $row = $this->dataRow($type, 'lastname');
-        $row->fill([
-            'type'         => 'string',
-            'display_name' => 'Nom du client',
+            'display_name' => 'Nom',
             'required'     => 1,
         ])->save();
 
@@ -115,13 +108,6 @@ class DataRowsSeeder extends Seeder
             'type'         => 'string',
             'display_name' => 'Siret',
             'required'     => 0,
-        ])->save();
-
-        $row = $this->dataRow($type, 'professional');
-        $row->fill([
-            'type'         => 'string',
-            'display_name' => 'Professionnel',
-            'required'     => 1,
         ])->save();
 
         $row = $this->dataRow($type, 'updated_at');
