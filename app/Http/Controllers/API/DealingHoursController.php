@@ -55,12 +55,14 @@ class DealingHoursController extends Controller
 
         $totalOvertimes = 0;
         $nbUsedOvertimes = 0;
+        $nbPayedOvertimes = 0;
 
         if (!$items->isEmpty()) {
             // Get total overtimes
             $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '<', Carbon::now()->startOfWeek())->sum('overtimes');
-            // Get nb used overtimes
+            // Get nb used and payed overtimes
             $usedOrvertimes = Unavailability::where([['user_id', $id], ['reason', 'Utilisation heures suplémentaires']])->get();
+            $usedOvertimesPayed = Unavailability::where([['user_id', $id], ['reason', 'Heures suplémentaires payées']])->get();
             if (!$usedOrvertimes->isEmpty()) {
                 foreach ($usedOrvertimes as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
@@ -69,14 +71,24 @@ class DealingHoursController extends Controller
                     $nbUsedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
                 }
             }
+            if (!$usedOvertimesPayed->isEmpty()) {
+                foreach ($usedOvertimesPayed as $key => $used) {
+                    $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
+                    $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
+
+                    $nbPayedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
+                }
+            }
             $result = array(
                 "overtimes" => $totalOvertimes,
-                "usedOvertimes" => $nbUsedOvertimes
+                "usedOvertimes" => $nbUsedOvertimes,
+                "payedOvertimes" => $nbPayedOvertimes
             );
         } else {
             $result = array(
                 "overtimes" => $totalOvertimes,
-                "usedOvertimes" => $nbUsedOvertimes
+                "usedOvertimes" => $nbUsedOvertimes,
+                "payedOvertimes" => $nbPayedOvertimes
             );
         }
         if ($check === true) {

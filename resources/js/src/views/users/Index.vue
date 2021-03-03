@@ -28,6 +28,21 @@
         >
           <refresh-module />
         </vs-col>
+        
+        <div class="mr-10" style="min-width: 30em">
+          <v-select
+            label="name"
+            v-model="filters.company"
+            :options="companiesData"
+            @input="refreshDataUsers"
+            class="w-full"
+          >
+            <template #header>
+              <div style="opacity: 0.8">Société</div>
+            </template>
+          </v-select>
+        </div>
+        
       </vs-row>
       <div class="flex flex-wrap items-center">
         <div class="flex-grow">
@@ -240,6 +255,10 @@ export default {
         suppressMenu: true,
       },
       columnDefs: this.getColumnDef(),
+      // Filters
+      filters: {
+        company: this.isAdmin ? null : this.$store.state.AppActiveUser.company,    
+      },
 
       // Cell Renderer Components
       components: {
@@ -273,7 +292,23 @@ export default {
       return this.$store.state.userManagement.user.id || 0;
     },
     usersData() {
-      return this.$store.state.userManagement.users;
+      //return this.$store.state.userManagement.users;
+      const users = JSON.parse(
+        JSON.stringify(this.$store.getters["userManagement/getItems"])
+      );
+      return this.filters.company
+        ? users.filter((item) => item.company_id === this.filters.company.id)
+        : [];
+    },
+    companiesData() {
+      const companies = JSON.parse(
+        JSON.stringify(this.$store.getters["companyManagement/getItems"])
+      );
+      return companies.sort(function (a, b) {
+        var textA = a.name.toUpperCase();
+        var textB = b.name.toUpperCase();
+        return textA < textB ? -1 : textA > textB ? 1 : 0;
+      });
     },
     paginationPageSize() {
       if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -353,7 +388,7 @@ export default {
     deleteRecord() {
       this.gridApi.getSelectedRows().map((selectRow) => {
         this.$store
-          .dispatch("userManagement/forceRemoveItem", selectRow.id)
+          .dispatch("userManagement/forceRemoveItems", [selectRow.id])
           .then((data) => {
             this.showDeleteSuccess();
           })
@@ -383,6 +418,9 @@ export default {
     },
     addRecord() {
       this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
+    },
+    refreshDataUsers() {
+      this.filters.user = null;
     },
   },
   mounted() {
