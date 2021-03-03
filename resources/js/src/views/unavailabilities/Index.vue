@@ -19,10 +19,19 @@
         >
       </div>
       <div class="flex items-center mb-4">
+        <span class="ml-4">{{
+          payedOvertimes > 1 ? "Payées :" : "Payée :"
+        }}</span>
+        <span class="ml-4"
+          >{{ payedOvertimes.toFixed(2) }}
+          {{ payedOvertimes > 1 ? "heures" : "heure" }}</span
+        >
+      </div>
+      <div class="flex items-center mb-4">
         <span class="ml-4">Reste à utiliser :</span>
         <span class="ml-4"
-          >{{ (overtimes - usedOvertimes).toFixed(2) }}
-          {{ overtimes - usedOvertimes > 1 ? "heures" : "heure" }}</span
+          >{{ (overtimes - usedOvertimes- payedOvertimes).toFixed(2) }}
+          {{ overtimes - (usedOvertimes - payedOvertimes) > 1 ? "heures" : "heure" }}</span
         >
       </div>
     </div>
@@ -169,7 +178,8 @@ export default {
   data() {
     return {
       overtimes: 0,
-      usedOvertimes: 0,      
+      usedOvertimes: 0,
+      payedOvertimes: 0,  
 
       searchQuery: "",
 
@@ -286,6 +296,7 @@ export default {
           if (data && data.status === 200) {            
             this.overtimes = data.data.success.overtimes;
             this.usedOvertimes = data.data.success.usedOvertimes;
+            this.payedOvertimes = data.data.success.payedOvertimes;
           } else {
             this.$vs.notify({
               color: "error",
