@@ -221,5 +221,10 @@ export default {
         });
     },
   },
+  mounted(){
+    if(this.$store.state.AppActiveUser.is_admin){
+      this.reasons.unshift({ name: "Heures suplémentaires payées" });
+    }
+  }
 };
 </script>

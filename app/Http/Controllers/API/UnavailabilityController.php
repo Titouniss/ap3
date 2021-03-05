@@ -45,9 +45,6 @@ class UnavailabilityController extends BaseApiController
     protected function filterIndexQuery(Request $request, $query)
     {        
         if ($request->has('hours_taken_name')) {
-            if (Unavailability::where('reason', $request->hours_taken_name)->doesntExist()) {
-                throw new ApiException("Paramètre 'hours_taken_name' n'est pas valide.");
-            }
             $query->where('reason', $request->hours_taken_name);
         }
         if ($request->has('date')) {
@@ -101,11 +98,14 @@ class UnavailabilityController extends BaseApiController
 
         // Overtimes verification
         $Overtimes = DealingHoursController::getOvertimes($arrayRequest['user_id'],true);
-        $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'];
+        $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'] - $Overtimes['payedOvertimes'];
 
-        if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires') {
+        if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires' || $arrayRequest['reason'] == 'Heures suplémentaires payées') {
             if ($OvertimesToUse < $duration) {
                 throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires.");
+            }
+            if($arrayRequest_starts->format("Y-m-d") != $arrayRequest_ends->format("Y-m-d")){
+                throw new ApiException("Vous ne pouvez pas prendre d'heures supplémentaires sur plusieurs jours.");
             }
             // Expected hours for this day
             $day=$arrayRequest_starts->dayName;
