@@ -75,7 +75,7 @@
           </span><br>
           
           <vs-button @click="sendVerificationEmail">
-            Renvoyer un mail de confirmation
+            Renvoyer un mail de vérification
           </vs-button>
         </vs-col>
 
