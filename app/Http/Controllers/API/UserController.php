@@ -108,7 +108,7 @@ class UserController extends BaseApiController
 
         //on crée un dealingHours pour enregistrer le nombres d'heures supplémentaires dans overtimes pour ce nouvel utilisateur
         $deallingHourItem = DealingHours::create(
-            ['user_id' => $item->id, 'date' => $item['created_at'], 'overtimes' => ($arrayRequest['hours'])]
+            ['user_id' => $item->id, 'date' => '2001-01-01', 'overtimes' => ($arrayRequest['hours'])]
         );
 
         return $item;
@@ -162,14 +162,13 @@ class UserController extends BaseApiController
             User::find($relatedUserId)->forceDelete();
         }
 
-        $date = Carbon::parse($arrayRequest['created_at'])->format('Y/m/d');
-        $findDealinHoursHeuresSupp = DealingHours::where('date', $date)->where('user_id', $item->id)->first();
+        $findDealinHoursHeuresSupp = DealingHours::where('date', '2001-01-01')->where('user_id', $item->id)->first();
 
         if (!empty($findDealinHoursHeuresSupp)) {
             $findDealinHoursHeuresSupp->update(['overtimes' => ($arrayRequest['hours'])]);
         } else {
             $deallingHourItem = DealingHours::create(
-                ['user_id' => $item->id, 'date' => $arrayRequest['created_at'], 'overtimes' => ($arrayRequest['hours'])]
+                ['user_id' => $item->id, 'date' => '2001-01-01', 'overtimes' => ($arrayRequest['hours'])]
             );
         }
 

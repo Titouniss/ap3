@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\User;
 use App\Models\Unavailability;
 use App\Models\WorkHours;
+use App\Models\DealingHours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -147,7 +148,7 @@ class UnavailabilityController extends BaseApiController
         }
 
         // Ajouter l'indisponibilité
-        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés'])) {
+        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés', 'Période de cours'])) {
             return $this->setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends);
         } else {
             return Unavailability::create([
@@ -207,13 +208,44 @@ class UnavailabilityController extends BaseApiController
             }
         }
 
-        // Ajouter l'indisponibilité
+        $old_item = clone $item;
+        // Update l'indisponibilité
         $item->update([
             'starts_at' => $arrayRequest['starts_at'],
             'ends_at' => $arrayRequest['ends_at'],
             'reason' => $arrayRequest['reason']
         ]);
+
+        //no overtime change 
+        if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours'])){
+            
+            //Do nothing
+        }
+        //add Overtime
+        else if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours']) && in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours'])){
+
+            $this->addOrUpdateOvertimes([$item]);
+        }
+        //del Overtime
+        else if(in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours'])){
+
+            $this->delOvertimes([$old_item]);
+        }
+        //compare hours for addOrDelOvertime
+        else{
+            $this->delOvertimes([$old_item]);
+            $this->addOrUpdateOvertimes([$item]);
+        }
+
         return $item;
+    }
+
+    protected function destroyItem($item)
+    {
+
+        $this->delOvertimes([$item]);
+
+        return parent::destroyItem($item);
     }
 
     /**
@@ -260,6 +292,7 @@ class UnavailabilityController extends BaseApiController
         // Pour chaques $days je regarde s'il est dans $userWorkingDays
 
         $itemIds = [];
+        $items = [];
         // return response()->json(['error' => [$days, $userWorkingDays, $userWorkingHours]], 400);
         foreach ($days  as $key => $d) {
             //d est il un jour ou je travaille ?
@@ -273,7 +306,9 @@ class UnavailabilityController extends BaseApiController
                     $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->morning_starts_at;
                     $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->morning_ends_at;
 
-                    array_push($itemIds, Unavailability::create($arrayRequest)->id);
+                    $item = Unavailability::create($arrayRequest);
+                    array_push($items, $item);
+                    array_push($itemIds, $item->id);
                 }
 
                 // si travail l'après midi on ajoute une indispo égale au temps de travail et au même heures
@@ -281,11 +316,46 @@ class UnavailabilityController extends BaseApiController
                     $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->afternoon_starts_at;
                     $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->afternoon_ends_at;
 
-                    array_push($itemIds, Unavailability::create($arrayRequest)->id);
+                    $item = Unavailability::create($arrayRequest);
+                    array_push($items, $item);
+                    array_push($itemIds, $item->id);
                 }
+
             }
         }
 
+        $this->addOrUpdateOvertimes($items);
+
         return Unavailability::whereIn('id', $itemIds)->get();
+    }
+
+    private function addOrUpdateOvertimes($unavailabilities){
+
+        foreach($unavailabilities as $unavailability){
+
+            $timeToAdd = Carbon::create($unavailability->ends_at)->diffInHours(Carbon::create($unavailability->starts_at));
+            $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
+
+            if(!$weekOvertimes){
+                $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
+            }
+            $weekOvertimes->overtimes += $timeToAdd; 
+            $weekOvertimes->update();
+        }
+    }
+
+    private function delOvertimes($unavailabilities){
+
+        foreach($unavailabilities as $unavailability){
+
+            $timeToDel = Carbon::create($unavailability->ends_at)->diffInHours(Carbon::create($unavailability->starts_at));
+            $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
+
+            if(!$weekOvertimes){
+                $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
+            }
+            $weekOvertimes->overtimes -= $timeToDel; 
+            $weekOvertimes->update();
+        }
     }
 }

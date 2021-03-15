@@ -452,7 +452,7 @@ export default {
         period_type: "month",
         hours_taken: null,
       },
-      hours_type_names: ["Heures suplémentaires payées", "Utilisation heures suplémentaires", "Jours fériés", "Réunion", "Rendez-vous", "Congés payés", "Période de cours", "Arrêt de travail", "Autre..."],
+      hours_type_names: ["Heures suplémentaires payées", "Utilisation heures suplémentaires", "Jours fériés", "Rendez-vous privé", "Congés payés", "Période de cours", "Arrêt de travail", "Autre..."],
       period_type_names: ["date", "day", "week", "month", "year", "full"],
       period_types: {
         date: {
