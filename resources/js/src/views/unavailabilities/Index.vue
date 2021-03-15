@@ -277,7 +277,7 @@ export default {
       return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
     },
     formatDateTime(value) {
-      return moment(value).format("YYYY-MM-DD HH:mm");
+      return moment(value).format("DD-MM-YYYY HH:mm");
     },
     updateSearchQuery(val) {
       this.gridApi.setQuickFilter(val);

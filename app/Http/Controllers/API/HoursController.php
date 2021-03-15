@@ -90,8 +90,8 @@ class HoursController extends BaseApiController
         if (!$paidHolidays->isEmpty()) {
             $stats['total'] = CarbonInterval::hours(0);
             foreach ($paidHolidays as $pH) {
-                $hours = Carbon::create($pH->ends_at)->diffInHours(Carbon::create($pH->starts_at));
-                $stats['total']->add(CarbonInterval::createFromFormat('H', $hours));
+                $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::hours($hours));
             }
         } else {
             $stats['total'] = CarbonInterval::hours(0);
@@ -522,7 +522,7 @@ class HoursController extends BaseApiController
         if (!$worked_unavailabilities->isEmpty()) {
 
             foreach ($worked_unavailabilities as $wu) {
-                $nb_worked_hours += Carbon::create($wu->ends_at)->diffInHours(Carbon::create($wu->starts_at));
+                $nb_worked_hours += Carbon::create($wu->ends_at)->floatDiffInHours(Carbon::create($wu->starts_at));
             }
         }
 
