@@ -48,7 +48,7 @@ class SqlModule extends Model
         $rows = [];
         $lowestUniqueId = 0;
         try {
-            Config::set('database.connections.' . $this->module->name, $this->connection_data);
+            Config::set('database.connections.' . $this->module->name, $this->getConnectionDataAttribute(true));
             DB::purge($this->module->name);
 
             $query = DB::connection($this->module->name)->table($mdt->source);
