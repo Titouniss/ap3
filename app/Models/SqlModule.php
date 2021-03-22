@@ -22,9 +22,9 @@ class SqlModule extends Model
         return $this->morphOne(BaseModule::class, 'modulable');
     }
 
-    public function getConnectionDataAttribute()
+    public function getConnectionDataAttribute($includePassword = false)
     {
-        return [
+        $data = [
             'id' => $this->id,
             'driver' => $this->driver ?? "",
             'host' => $this->host ?? "",
@@ -32,8 +32,15 @@ class SqlModule extends Model
             'charset' => $this->charset ?? "",
             'database' => $this->database ?? "",
             'username' => $this->username ?? "",
-            'has_password' => $this->password !== null,
         ];
+
+        if ($includePassword) {
+            $data['password'] = $this->password;
+        } else {
+            $data['has_password'] = $this->password !== null;
+        }
+
+        return $data;
     }
 
     public function getRows(ModuleDataType $mdt)
