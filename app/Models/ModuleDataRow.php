@@ -202,6 +202,11 @@ class ModuleDataRow extends Model
                     break;
             }
         }
+
+        if ($this->dataRow->required && is_null($newValue)) {
+            throw new Exception($this->moduleDataType->dataType->model . " : " . $this->dataRow->field . " cannot be null");
+        }
+
         return $newValue;
     }
 

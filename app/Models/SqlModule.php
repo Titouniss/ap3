@@ -64,7 +64,7 @@ class SqlModule extends Model
 
             foreach ($query->get() as $result) {
                 $row = new stdClass();
-                if (!in_array($mdt->dataType->slug, ["unavailabilities", "tasks"])) {
+                if (!in_array($mdt->dataType->slug, ["unavailabilities", "tasks", "task_time_spent"])) {
                     $row->company_id = $this->module->company_id;
                 }
 
