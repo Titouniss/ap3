@@ -203,8 +203,8 @@ class TaskController extends BaseApiController
                 $start_at = $date->format('Y-m-d H:i:s');
                 $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
 
-                $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at);
-                $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at);
+                $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $item->id);
+                $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $item->id);
 
                 if (!$userAvailable && !$workareaAvailable) {
                     throw new ApiException('L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.');
@@ -443,13 +443,18 @@ class TaskController extends BaseApiController
     {
         if ($duration != 0) {
             $timeSpent = TaskTimeSpent::firstOrCreate([
-                'date' => Carbon::now(),
+                'date' => Carbon::now()->startOfDay(),
                 'user_id' => Auth::id(),
                 'task_id' => $taskId,
             ]);
-            $timeSpent->update([
-                'duration' => $duration + $timeSpent->duration
-            ]);
+
+            if (($newDuration = $duration + $timeSpent->duration) != 0) {
+                $timeSpent->update([
+                    'duration' => $newDuration
+                ]);
+            } else {
+                $timeSpent->delete();
+            }
         }
     }
 }

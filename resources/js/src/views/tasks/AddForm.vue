@@ -558,7 +558,6 @@ export default {
 
             this.isSubmiting = true;
             const item = JSON.parse(JSON.stringify(this.itemLocal));
-            console.log(item);
             if (this.project_data != null) {
                 item.project_id = this.project_data.id;
             } else if (this.type && this.type === "projects") {

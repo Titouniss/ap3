@@ -346,7 +346,6 @@ export default {
     },
     computed: {
         tasksData() {
-            console.log(this.$store.getters["taskManagement/getItems"]);
             return this.$store.getters["taskManagement/getItems"];
         },
         paginationPageSize() {
