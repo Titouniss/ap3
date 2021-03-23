@@ -33,6 +33,9 @@ class ModuleDataRow extends Model
                 case 'integer':
                     $newValue = intval(ceil($newValue));
                     break;
+                case 'double':
+                    $newValue = doubleval($newValue);
+                    break;
                 case 'datetime':
                     if ($details && isset($details->format)) {
                         $newValue = Carbon::createFromFormat($details->format, $newValue);

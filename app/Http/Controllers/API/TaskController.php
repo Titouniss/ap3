@@ -12,6 +12,7 @@ use App\Models\TaskComment;
 use App\Models\PreviousTask;
 use App\Models\Skill;
 use App\Models\TasksSkill;
+use App\Models\TaskTimeSpent;
 use App\Models\Workarea;
 use App\Traits\StoresDocuments;
 use App\User;
@@ -160,13 +161,16 @@ class TaskController extends BaseApiController
             'date' => $arrayRequest['date'] ?? null,
             'date_end' => $arrayRequest['date_end'] ?? null,
             'estimated_time' => $arrayRequest['estimated_time'],
-            'time_spent' => $arrayRequest['time_spent'] ?? null,
             'project_id' => $arrayRequest['project_id'],
             'user_id' => $arrayRequest['user_id'] ?? null,
             'workarea_id' => $arrayRequest['workarea_id'] ?? null,
             'tasks_bundle_id' => $this->checkIfTaskBundleExist($project->id)->id,
             'created_by' => Auth::id(),
         ]);
+
+        if (isset($arrayRequest['time_spent'])) {
+            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
+        }
 
         if ($project->status == 'doing') {
             TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -222,10 +226,13 @@ class TaskController extends BaseApiController
             'date' => $arrayRequest['date'] ?? null,
             'date_end' => $arrayRequest['date_end'] ?? null,
             'estimated_time' => $arrayRequest['estimated_time'],
-            'time_spent' => $arrayRequest['time_spent'] ?? null,
             'user_id' => $arrayRequest['user_id'] ?? null,
             'workarea_id' => $arrayRequest['workarea_id'] ?? null,
         ]);
+
+        if (isset($arrayRequest['time_spent'])) {
+            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
+        }
 
         if ($project->status == 'doing') {
             TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -301,9 +308,8 @@ class TaskController extends BaseApiController
             return $this->errorResponse($validator->errors());
         }
 
-        $item->update([
-            'time_spent' => $arrayRequest['time_spent'],
-        ]);
+        $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
+
         if (isset($arrayRequest['comment'])) {
             $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
         }
@@ -430,6 +436,20 @@ class TaskController extends BaseApiController
             foreach ($previousTasksIds as $id) {
                 PreviousTask::create(['task_id' => $task_id, 'previous_task_id' => $id]);
             }
+        }
+    }
+
+    private function addTimeSpent(int $taskId, float $duration)
+    {
+        if ($duration != 0) {
+            $timeSpent = TaskTimeSpent::firstOrCreate([
+                'date' => Carbon::now(),
+                'user_id' => Auth::id(),
+                'task_id' => $taskId,
+            ]);
+            $timeSpent->update([
+                'duration' => $duration + $timeSpent->duration
+            ]);
         }
     }
 }
