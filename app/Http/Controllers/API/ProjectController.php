@@ -438,7 +438,7 @@ class ProjectController extends BaseApiController
             // En cas d'erreur, on annule les changements et on retourne une erreur
             if (!$allPlanified) {
                 Task::whereIn('id', $taskIds)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
-                throw new Exception('Erreur lors de la plannification.');
+                throw new Exception("Il n'y a pas assez de temps pour plannifier toutes les tâches. Veuillez reculer la date de livraison.");
             }
 
             // Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
