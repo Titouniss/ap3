@@ -285,6 +285,16 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: "/schedules/schedules-edit",
+                    name: "schedules-edit",
+                    component: () => import("@/views/schedules/Edit.vue"),
+                    meta: {
+                        parent: "schedules",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Customers---/////
                 {
                     path: "/customers",
