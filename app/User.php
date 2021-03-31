@@ -149,7 +149,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     public function getHoursAttribute(){
-        $date=Carbon::parse($this->created_at)->format('Y/m/d');
+        $date='2001-01-01';
         $findDealinHoursHeuresSupp = DealingHours::where('date', $date)->where('user_id', $this->id)->first();
         return $findDealinHoursHeuresSupp ? $findDealinHoursHeuresSupp->overtimes : 0;
     }

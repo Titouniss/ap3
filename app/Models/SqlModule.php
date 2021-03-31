@@ -22,9 +22,9 @@ class SqlModule extends Model
         return $this->morphOne(BaseModule::class, 'modulable');
     }
 
-    public function getConnectionDataAttribute()
+    public function getConnectionDataAttribute($includePassword = false)
     {
-        return [
+        $data = [
             'id' => $this->id,
             'driver' => $this->driver ?? "",
             'host' => $this->host ?? "",
@@ -32,8 +32,15 @@ class SqlModule extends Model
             'charset' => $this->charset ?? "",
             'database' => $this->database ?? "",
             'username' => $this->username ?? "",
-            'has_password' => $this->password !== null,
         ];
+
+        if ($includePassword) {
+            $data['password'] = $this->password;
+        } else {
+            $data['has_password'] = $this->password !== null;
+        }
+
+        return $data;
     }
 
     public function getRows(ModuleDataType $mdt)
@@ -41,7 +48,7 @@ class SqlModule extends Model
         $rows = [];
         $lowestUniqueId = 0;
         try {
-            Config::set('database.connections.' . $this->module->name, $this->connection_data);
+            Config::set('database.connections.' . $this->module->name, $this->getConnectionDataAttribute(true));
             DB::purge($this->module->name);
 
             $query = DB::connection($this->module->name)->table($mdt->source);
@@ -57,7 +64,7 @@ class SqlModule extends Model
 
             foreach ($query->get() as $result) {
                 $row = new stdClass();
-                if (!in_array($mdt->dataType->slug, ["unavailabilities", "tasks"])) {
+                if (!in_array($mdt->dataType->slug, ["unavailabilities", "tasks", "task_time_spent"])) {
                     $row->company_id = $this->module->company_id;
                 }
 

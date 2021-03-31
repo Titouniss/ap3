@@ -121,8 +121,7 @@ export default {
       reasons: [
         { name: "Utilisation heures suplémentaires" },
         { name: "Jours fériés" },
-        { name: "Réunion" },
-        { name: "Rendez-vous" },
+        { name: "Rendez-vous privé" },
         { name: "Congés payés" },
         { name: "Période de cours" },
         { name: "Arrêt de travail" },
