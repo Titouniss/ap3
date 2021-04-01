@@ -427,7 +427,7 @@ class UserController extends BaseApiController
         $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
             'email' => 'required|email',
-            'password' => 'required',
+            //'password' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->errorResponse($validator->errors());
@@ -438,9 +438,9 @@ class UserController extends BaseApiController
             return $this->errorResponse("Émail inconnu.");
         }
 
-        if ($item->hasVerifiedEmail()) {
-            return $this->errorResponse("Émail déjà vérifié.");
-        }
+        // if ($item->hasVerifiedEmail()) {
+        //     return $this->errorResponse("Émail déjà vérifié.");
+        // }
 
         try {
             $item->SendEmailVerificationNotification();

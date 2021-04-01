@@ -72,7 +72,11 @@
           />
           <span class="text-danger text-sm" v-show="errors.has('email')">
             {{ errors.first("email") }}
-          </span>
+          </span><br>
+          
+          <vs-button @click="sendVerificationEmail">
+            Renvoyer un mail de vérification
+          </vs-button>
         </vs-col>
 
         <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
@@ -472,6 +476,23 @@ export default {
       });
       return str.join("");
     },
+    sendVerificationEmail() {
+      // Loading
+      this.$vs.loading();
+      console.log("email",this.itemLocal.email);
+      this.$store
+        .dispatch("auth/verify", { email: this.itemLocal.email })
+        .catch((error) => {
+          this.$vs.notify({
+            title: "Echec",
+            text: error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+          });
+        })
+        .finally(() => this.$vs.loading.close());
+    },  
   },
   created() {
     if (!moduleUserManagement.isRegistered) {
