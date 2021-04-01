@@ -187,6 +187,22 @@
                                 </v-select>
                             </div>
 
+<<<<<<< HEAD
+              <span
+                v-if="
+                  itemLocal.skills &&
+                  itemLocal.skills.length > 0 &&
+                  workareasDataFiltered.length == 0 &&
+                  checkProjectStatus &&
+                  this.type != 'users' &&
+                  this.type != 'workarea'
+                "
+                class="text-danger text-sm"
+              >
+                Attention, aucun pôle de production ne possède cette combinaison
+                de compétences
+              </span>
+=======
                             <span
                                 v-if="
                                     itemLocal.skills &&
@@ -201,6 +217,7 @@
                                 Attention, aucun pôle de produciton ne possède
                                 cette combinaison de compétences
                             </span>
+>>>>>>> master
 
                             <div
                                 class="my-3"
@@ -439,6 +456,29 @@
                     </div>
                 </form>
             </div>
+<<<<<<< HEAD
+          </div>
+        </form>
+      </div>
+      <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
+        <vs-button
+          @click="() => confirmDeleteTask(itemLocal.id)"
+          color="danger"
+          type="filled"
+          size="small"
+        >
+          Supprimer la tâche
+        </vs-button>
+        <vs-button
+          v-on:click="goToEditView"
+          class="ml-auto mt-2"
+        >
+          Déplacer la tâche
+        </vs-button>
+      </vs-row>
+    </vs-prompt>
+  </div>
+=======
             <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
                 <vs-button
                     @click="() => confirmDeleteTask(itemLocal.id)"
@@ -451,6 +491,7 @@
             </vs-row>
         </vs-prompt>
     </div>
+>>>>>>> master
 </template>
 
 <script>
@@ -616,6 +657,17 @@ export default {
             }
         }
     },
+<<<<<<< HEAD
+    goToEditView(){
+      console.log('id',this.itemId);
+      this.$router.push({
+        path: `/schedules/schedules-edit`,
+        query: { id: this.$route.query.id, type: this.$route.query.type, task_id: this.itemId },
+      });
+    },
+    submitItem() {
+      if (!this.validateForm) return;
+=======
     methods: {
         clear() {
             this.deleteFiles();
@@ -634,6 +686,7 @@ export default {
         },
         submitItem() {
             if (!this.validateForm) return;
+>>>>>>> master
 
             if (this.itemLocal.comment) {
                 this.addComment();
@@ -652,6 +705,76 @@ export default {
                 item.project_id = this.itemLocal.project.id;
             }
 
+<<<<<<< HEAD
+      item.token = this.token;
+      this.$store
+        .dispatch("taskManagement/updateItem", item)
+        .then((data) => {
+          this.refreshData ? this.refreshData() : null;
+          this.$vs.notify({
+            title: "Modification d'une tâche",
+            text: `"${this.itemLocal.name}" modifiée avec succès`,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
+          });
+        })
+        .catch((error) => {
+          this.$vs.notify({
+            title: "Erreur",
+            text: error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+          });
+        })
+        .finally(() => {
+          this.$vs.loading.close();
+        });
+    },
+    deleteFiles() {
+      const ids = this.itemLocal.documents
+        .filter((item) => item.token)
+        .map((item) => item.id);
+      if (ids.length > 0) {
+        this.$store
+          .dispatch("documentManagement/removeItems", ids)
+          .catch((error) => {});
+      }
+    },
+    addComment() {
+      this.$vs.loading({
+        background: "success",
+        color: "#fff",
+        container: "#button-with-loading",
+        scale: 0.3,
+      });
+      this.$store
+        .dispatch(
+          "taskManagement/addComment",
+          Object.assign({}, this.itemLocal)
+        )
+        .then((data) => {
+          this.itemLocal.comments = data.payload.comments;
+          this.$vs.loading.close("#button-with-loading > .con-vs-loading");
+          this.itemLocal.comment = "";
+        });
+    },
+    updateUsersAndWorkareasList(ids) {
+      this.updateWorkareasList(ids);
+      this.updateUsersList(ids);
+    },
+    updateWorkareasList(ids) {
+      if (ids && this.workareasData != null) {
+        this.workareasDataFiltered = this.workareasData.filter(function (
+          workarea
+        ) {
+          for (let i = 0; i < ids.length; i++) {
+            if (
+              workarea.skills.filter((skill) => skill.id == ids[i]).length == 0
+            ) {
+              return false;
+=======
             item.token = this.token;
             this.$store
                 .dispatch("taskManagement/updateItem", item)
@@ -686,6 +809,7 @@ export default {
                 this.$store
                     .dispatch("documentManagement/removeItems", ids)
                     .catch(error => {});
+>>>>>>> master
             }
         },
         addComment() {
@@ -764,6 +888,41 @@ export default {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];
 
+<<<<<<< HEAD
+      taskIds.forEach((id) => {
+        let task = this.tasks_list.filter((t) => t.id == id);
+        if(task[0] != null){
+          previousTasks_local.push(task[0].name);
+        }
+      });
+      this.previousTasks = previousTasks_local;
+    },
+    showDescription() {
+      this.descriptionDisplay = true;
+    },
+    confirmDeleteTask(idEvent) {
+      this.deleteWarning = true;
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title: "Confirmer suppression",
+        text: `Vous allez supprimer la tâche "${this.itemLocal.name}"`,
+        accept: this.deleteTask,
+        cancel: this.keepTask,
+        acceptText: "Supprimer !",
+        cancelText: "Annuler",
+      });
+    },
+    keepTask() {
+      this.deleteWarning = false;
+    },
+    deleteTask() {
+      this.$store
+        .dispatch("scheduleManagement/removeItem", this.idEvent)
+        .catch((err) => {
+          console.error(err);
+        });
+=======
             taskIds.forEach(id => {
                 let task = this.tasks_list.filter(t => t.id == id);
                 previousTasks_local.push(task[0].name);
@@ -795,6 +954,7 @@ export default {
                 .catch(err => {
                     console.error(err);
                 });
+>>>>>>> master
 
             this.$store
                 .dispatch("taskManagement/removeItems", [this.itemLocal.id])
