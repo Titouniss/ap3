@@ -4144,9 +4144,6 @@ class ProjectController extends BaseApiController
                 //horaires en commun des utilisateurs sur le projet
                 $id=$request->id;
                 $project = Project::find($id);
-                if ($error = $this->itemErrors($project, 'edit')) {
-                    return $error;
-                }
                 $arrayRequest = $request->all();     
                 $date=Carbon::createFromFormat("Y-m-d H:i:s",$project["start_date"]);
                 $project->start_date = $date->format("Y-m-d");
