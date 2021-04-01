@@ -534,7 +534,7 @@ router.beforeEach((to, from, next) => {
         } else {
             // Update expireAt
             let newExpireAt = moment()
-                .add(2, "hours")
+                .add(8, "hours")
                 .unix();
             localStorage.setItem("token_expires_at", newExpireAt);
         }
