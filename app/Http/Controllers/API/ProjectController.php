@@ -4865,93 +4865,44 @@ class ProjectController extends BaseApiController
                                         $workareas = $this->getWorkareasBySkills($task->skills, $project->company_id);
 
                                         foreach ($workareas as $workarea) {
-
                                             if (!$taskPlan) {
-
                                                 $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->where('status', '!=', 'done')->get();
                                                 //s'il y a plusieurs tasks sur le même ilôt
                                                 if (count($tasksWorkarea) > 0) {
                                                     //on récupère le max_users de l'ilôt
                                                     $workArea = Workarea::where('id', $workarea->id)->get();
-
-                                                    $controllerLog = new Logger('hours');
-                                                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                    $controllerLog->info('workArea',[$workArea]);
-
                                                     $max_users=$workArea[0]['max_users'];
-
-                                                    $controllerLog = new Logger('hours');
-                                                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                    $controllerLog->info('max_users',[$max_users]);
-
                                                     //on compte le nombre de tasks en même temps et sur le même ilôt
-                                                    $controllerLog = new Logger('hours');
-                                                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                    $controllerLog->info('tasksWorkarea',[$tasksWorkarea]);
-
                                                     $nbTasksTogether=1;
                                                     $maxNbTasksTogether=0;
-
                                                     foreach($tasksWorkarea as $taskWorkarea){
-                                                        $controllerLog = new Logger('hours');
-                                                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                        $controllerLog->info('taskWorkarea',[$taskWorkarea]);
-                                                    
                                                         $periodTask = CarbonPeriod::create($taskWorkarea['date'], $taskWorkarea['date_end']);
-
-                                                        $controllerLog = new Logger('hours');
-                                                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                        $controllerLog->info('periodTask',[$periodTask]);
-
                                                         $nbTasksTogether=1;
-
                                                         foreach($tasksWorkarea as $taskworkarea){
-                                                            $controllerLog = new Logger('hours');
-                                                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                            $controllerLog->info('2 taskWorkarea',[$taskworkarea]);
-
                                                             if (($taskworkarea != $taskWorkarea) && ($periodTask->contains($taskworkarea['date']) || $periodTask->contains($taskworkarea['date_end']))) {
                                                                 $nbTasksTogether++;
-
-                                                                $controllerLog = new Logger('hours');
-                                                                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                                $controllerLog->info('nbTasksTogether',[$nbTasksTogether]);
                                                             }
                                                             if($nbTasksTogether > $maxNbTasksTogether){
                                                                 $maxNbTasksTogether=$nbTasksTogether;
                                                             }
                                                         }
                                                     }
-
                                                     $nbTasksTogether=$maxNbTasksTogether;
-                                                    $controllerLog = new Logger('hours');
-                                                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                    $controllerLog->info('nbTasksTogether',[$nbTasksTogether]);
-
                                                     //si le nombre de tasks en même temps sur l'ilôt >= max_users, on planifie en dehors des périodes où il y a déjà des tasks sur l'ilôt
                                                     if($nbTasksTogether >= $max_users){
-                                                        $controllerLog = new Logger('hours');
-                                                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                        $controllerLog->info('ok',["max"]);
-
                                                         //return array de periods || null
                                                         $newPeriods = $this->getNewPeriodsWorkareaTasksLess($tasksWorkarea, $period);
                                                         if ($newPeriods && count($newPeriods) > 0) {
-    
                                                             foreach ($newPeriods as $newPeriod) {
-    
                                                                 //On vérifie si la period contient toujours assez d'heure
                                                                 if ($task->estimated_time <= $newPeriod['hours']) {
-    
                                                                     //On planifie
                                                                     $taskPlan = true;
                                                                     $planifiedTask = $this->planTask($task, $newPeriod, $workarea->id);
                                                                     $tasksTemp[$keytask] = Task::findOrFail($task->id);
                                                                     $start_date_project = $start_date_project == null || $start_date_project > $planifiedTask->date ? $planifiedTask->date : $start_date_project;
-    
                                                                     //On supprime les periodes utilisées
                                                                     $available_periods_temp = $this->delUsedPeriods($available_periods, $key, $planifiedTask);
-    
                                                                     break;
                                                                 }
                                                             }
@@ -4959,20 +4910,11 @@ class ProjectController extends BaseApiController
                                                     }
                                                     //sinon on planifie sur les mêmes périodes
                                                     else{
-                                                        $controllerLog = new Logger('hours');
-                                                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                        $controllerLog->info('ok',["pas max"]);
-
                                                         $taskPlan = true;
                                                         $planifiedTask = $this->planTask($task, $period, $workarea->id);
                                                         $tasksTemp[$keytask] = Task::findOrFail($task->id);
                                                         $start_date_project = $start_date_project == null || $start_date_project > $planifiedTask->date ? $planifiedTask->date : $start_date_project;
                                                         $nbTasksTogether++;
-
-                                                        $controllerLog = new Logger('hours');
-                                                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                                                        $controllerLog->info('nbTasksTogether',[$nbTasksTogether]);
-
                                                         if($nbTasksTogether == $max_users){
                                                             //On supprime les periodes utilisées
                                                             $available_periods_temp = $this->delUsedPeriods($available_periods, $key, $planifiedTask);
