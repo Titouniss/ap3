@@ -1072,7 +1072,7 @@ class ProjectController extends BaseApiController
         $controllerLog->info('taskIdTaskPeriodToMove',[$taskIdTaskPeriodToMove]);
 
         for($i=0;$i<$newPeriod->count();$i++){
-            if((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave))){
+            if((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete))){
                 $controllerLog = new Logger('hours');
                 $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
                 $controllerLog->info('ok',["déjà traitée break"]);
@@ -1480,7 +1480,7 @@ class ProjectController extends BaseApiController
                     $controllerLog->info('in_array($taskPeriodToMove[id] $listTaskPeriodToSave',[in_array($taskPeriodToMove->id, $listTaskPeriodToSave)]);
 
                     //s'il y a une task_period après et qu'elle n'a pas été traitée, on la déplace le matin car il n'y a pas d'indispo pour la journée
-                    if(count($listTaskPeriodToMove)==0 && (in_array($taskPeriodToMove['id'], $listTaskPeriodToSave))){
+                    if(count($listTaskPeriodToMove)==0 && ((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete)))){
                         break;
                     }
 
@@ -2326,7 +2326,7 @@ class ProjectController extends BaseApiController
 
         $heureFinTaskPrecedente=$request->end;
         foreach($newPeriod as $keyNewPeriod => $p){
-            if((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave))){
+            if((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete))){
                 $controllerLog = new Logger('hours');
                 $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
                 $controllerLog->info('ok',["déjà traitée break"]);
@@ -2547,7 +2547,7 @@ class ProjectController extends BaseApiController
                     $heureDebutNewPeriod=Carbon::createFromFormat('Y-m-d H:i:s', $heureFinTaskPrecedente)->format('H:i');
                     $debutJourLendemain=Carbon::parse($p)->startOfDay()->addDays(1)->format("Y-m-d H:i:s");
 
-                    if((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave))){
+                    if((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete))){
                         $controllerLog = new Logger('hours');
                         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
                         $controllerLog->info('ok',["déjà traitée break"]);
@@ -2845,7 +2845,7 @@ class ProjectController extends BaseApiController
 
             }
 
-            if(count($listTaskPeriodToMove)==0 && (in_array($taskPeriodToMove['id'], $listTaskPeriodToSave))){
+            if(count($listTaskPeriodToMove)==0 && ((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete)))){
                 break;
             }
             //sinon voir si indispo matin ou après midi
@@ -3268,7 +3268,7 @@ class ProjectController extends BaseApiController
 
         $controllerLog = new Logger('hours');
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('heuresDisposMatin avant',[$heuresDisposMatin]);
+        $controllerLog->info('heuresDisposApresMidi avant',[$heuresDisposApresMidi]);
 
         //s'il reste du temps l'après-midi on remplit la période sinon on crée une nouvelle task_period avec le temps total le lendemain matin
         if($heuresDisposApresMidi > 0){
@@ -3355,6 +3355,10 @@ class ProjectController extends BaseApiController
 
         //sinon on ajoute l'id de la task_period à la liste des tasks_period à supprimer
         else{
+            $controllerLog = new Logger('hours');
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            $controllerLog->info('ok',["pas de temps après midi"]);
+
             array_push($listTaskPeriodToDelete,$taskPeriodToMove['id']);
             array_push($listTaskPeriodToDelete,$taskPeriodToMove['start_time']);
             array_push($listTaskPeriodToDelete,$taskPeriodToMove['end_time']);
