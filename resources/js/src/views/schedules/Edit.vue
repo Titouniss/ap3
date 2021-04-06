@@ -33,7 +33,7 @@
         class="demo-app-calendar border-c"
         ref="fullCalendar"
         defaultView="timeGridWeek"
-        :editable="false"
+        :editable="true"
         :header="{
           left: 'prev today next',
           center: 'dayGridMonth, timeGridWeek, timeGridDay',
@@ -50,7 +50,7 @@
           week: 'Semaine',
           day: 'Jour',
           list: 'Liste',
-        }"        
+        }"
         :allDaySlot="false"
         :plugins="calendarPlugins"
         :weekends="calendarWeekends"
@@ -66,23 +66,24 @@
         @eventClick="handleEventClick"
         @eventResize="handleEventResize"
       />
-      <edit-form
+      <!-- <edit-form
         :itemId="itemIdToEdit"
-        :tasks_list="tasksEvent"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedTo('edit')"
-      />
-      <!-- <EditFormTaskPeriod
-        :itemId="itemIdToEdit"
-        :taskId="taskIdItem"
-        :start_at="start_atItem"
-        :end_at="end_atItem"
         :tasks_list="tasksEvent"
         :type="this.$route.query.type"
         :idType="parseInt(this.$route.query.id, 10)"
         v-if="itemIdToEdit && authorizedTo('edit')"
       /> -->
+      <EditFormTaskPeriod
+        :itemId="itemIdToEdit"
+        :taskId="taskIdItem"
+        :start_at="start_atItem"
+        :end_at="end_atItem"
+        :tasks_list="tasksEvent"
+        :unavailabilities_list="this.unavailableEvent"
+        :type="this.$route.query.type"
+        :idType="parseInt(this.$route.query.id, 10)"
+        v-if="itemIdToEdit && authorizedTo('edit')"
+      />
     </div>
   </div>
 </template>
@@ -149,14 +150,12 @@ export default {
       },
       businessHours: false,
       minTime: "05:00",
-      maxTime: "24:00",   
-      date:null,   
+      maxTime: "24:00",
     };
   },
   computed: {
     itemIdToEdit() {
-      //return this.$store.state.taskManagement.task.period_id || 0;
-      return this.$store.state.taskManagement.task.id || 0;
+      return this.$store.state.taskManagement.task.period_id || 0;      
     },
     taskIdItem() {
       return this.$store.state.taskManagement.task.id || 0;
@@ -167,7 +166,6 @@ export default {
     end_atItem() {
       return this.$store.state.taskManagement.task.end || 0;      
     },
-    
     calendarEvents() {
       // Get all task and parse to show
       var eventsParse = [];
@@ -175,8 +173,15 @@ export default {
       let maxHour = null;
       if (this.$route.query.type === "projects") {
         if (this.tasksEvent !== []) {
+          var task;
           this.tasksEvent.forEach((t) => {
-            t.periods.forEach((p) => {
+            if(t.id==this.$route.query.task_id){
+              task=t;
+            }
+            
+          });
+          if(task != null){
+            task.periods.forEach((p) => {
               let start_period_hour = moment(p.start_time).format("HH:mm");
               let end_period_hour = moment(p.end_time).format("HH:mm");
 
@@ -188,29 +193,109 @@ export default {
                 : null;
 
               eventsParse.push({
-                id: t.id,
+                id: task.id,
                 period_id: p.id,
-                title: t.name,
+                title: task.name,
                 start: p.start_time,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
+                estimated_time: task.estimated_time,
+                order: task.order,
+                description: task.description,
+                time_spent: task.time_spent,
+                workarea_id: task.workarea_id,
+                status: task.status,
                 end: p.end_time,
-                user_id: t.user_id,
-                project_id: parseInt(this.$route.query.id, 10),
-                color: t.project.color,
+                user_id: task.user_id,
+                project_id: task.project_id,
+                color: task.project.color,
               });
             });
-          });
+          }
+        }
+        if(this.unavailableEvent != null){
+          console.log("unavailableEvent",this.unavailableEvent);
+          //console.log("businessHours",this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id).work_hours);
+          var businessHours=this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id);
+          console.log("unavailableEvent.length",this.unavailableEvent.length);
+          for(var i=0; i<this.unavailableEvent.length; i++){            
+              if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
+                // for(var i=0; i<3; i++){
+                //   console.log("daysOfWeek",hours[i].daysOfWeek);
+                // }
+                //console.log("startRecur", moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'));
+                //console.log("endRecur", moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'));
+                //événements récurrents matin
+                eventsParse.push({
+                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                    startTime: "08:00:00",
+                    endTime: "12:00:00",
+                    daysOfWeek:['1','2','3','4','5'],
+                    color: "#808080",
+                });
+                //événements récurrents après-midi
+                eventsParse.push({
+                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                    startTime: "13:00:00",
+                    endTime: "16:00:00",
+                    daysOfWeek:['1','2','3','4','5'],
+                    color: "#808080",
+                });
+                //date de fin
+                if(moment(this.unavailableEvent[i].date_end).format('HH:mm') <= "12:00"){
+                  //console.log("< 12h",moment(this.unavailableEvent[i].date_end));
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
+                    end: this.unavailableEvent[i].date_end,                    
+                    color: "#808080",
+                  });
+                }
+                else{
+                  //console.log("> 12h",moment(this.unavailableEvent[i].date_end));
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
+                    end: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 12:00:00",                    
+                    color: "#808080",
+                  });
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 13:00:00",
+                    end: this.unavailableEvent[i].date_end,                    
+                    color: "#808080",
+                  });
+                }
+                
+                //date de début
+                if(moment(this.unavailableEvent[i].date).format('HH:mm') < "12:00"){                  
+                  eventsParse.push({                    
+                    start: this.unavailableEvent[i].date,
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 12:00:00",                    
+                    color: "#808080",
+                  });
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 13:00:00",
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
+                    color: "#808080",
+                  });
+                }
+                else {
+                  //console.log("> 12h",moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00");
+                  eventsParse.push({                    
+                    start: this.unavailableEvent[i].date,
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
+                    color: "#808080",
+                  });
+                }
+                
+                
+              }          
+            }
         }
 
         console.log(minHour);
         console.log(maxHour);
       } else if (this.$route.query.type === "users") {
-        if (this.tasksEvent !== []) {
+        if (this.tasksEvent !== []) {          
+          var task;          
           this.tasksEvent.forEach((t) => {
             // if (
             //   t.user_id !== null &&
@@ -218,16 +303,20 @@ export default {
             //     t.user_id === this.$route.query.id)
             // ) {
             // Get project id
-            let project_id = null;
-            this.$store.state.projectManagement.projects.forEach((p) => {
-              p.tasks_bundles.forEach((tb) => {
-                if (t.tasks_bundle_id === tb.id) {
-                  project_id = tb.project_id;
-                }
-              });
-            });
-
-            t.periods.forEach((p) => {
+            // let project_id = null;
+            // this.$store.state.projectManagement.projects.forEach((p) => {
+            //   p.tasks_bundles.forEach((tb) => {
+            //     if (t.tasks_bundle_id === tb.id) {
+            //       project_id = tb.project_id;
+            //     }
+            //   });
+            // });
+            if(t.id==this.$route.query.task_id){
+              task=t;
+            }
+          });          
+          if(task != null){
+            task.periods.forEach((p) => {
               let start_period_hour = moment(p.start_time).format("HH:mm");
               let end_period_hour = moment(p.end_time).format("HH:mm");
 
@@ -239,24 +328,102 @@ export default {
                 : null;
 
               eventsParse.push({
-                id: t.id,
+                id: task.id,
                 period_id: p.id,
-                title: t.name,
+                title: task.name,
                 start: p.start_time,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
+                estimated_time: task.estimated_time,
+                order: task.order,
+                description: task.description,
+                time_spent: task.time_spent,
+                workarea_id: task.workarea_id,
+                status: task.status,
                 end: p.end_time,
-                user_id: t.user_id,
-                project_id: project_id,
-                color: t.project.color,
+                user_id: task.user_id,
+                project_id: task.project_id,
+                color: task.project.color,
               });
             });
-            // }
-          });
+          }
+        }
+        if(this.unavailableEvent != null){
+          console.log("unavailableEvent",this.unavailableEvent);
+          //console.log("businessHours",this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id).work_hours);
+          var businessHours=this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id);
+          console.log("unavailableEvent.length",this.unavailableEvent.length);
+          for(var i=0; i<this.unavailableEvent.length; i++){            
+              if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
+                // for(var i=0; i<3; i++){
+                //   console.log("daysOfWeek",hours[i].daysOfWeek);
+                // }
+                //console.log("startRecur", moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'));
+                //console.log("endRecur", moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'));
+                //événements récurrents matin
+                eventsParse.push({
+                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                    startTime: "08:00:00",
+                    endTime: "12:00:00",
+                    daysOfWeek:['1','2','3','4','5'],
+                    color: "#808080",
+                });
+                //événements récurrents après-midi
+                eventsParse.push({
+                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                    startTime: "13:00:00",
+                    endTime: "16:00:00",
+                    daysOfWeek:['1','2','3','4','5'],
+                    color: "#808080",
+                });
+                //date de fin
+                if(moment(this.unavailableEvent[i].date_end).format('HH:mm') <= "12:00"){
+                  //console.log("< 12h",moment(this.unavailableEvent[i].date_end));
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
+                    end: this.unavailableEvent[i].date_end,                    
+                    color: "#808080",
+                  });
+                }
+                else{
+                  //console.log("> 12h",moment(this.unavailableEvent[i].date_end));
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
+                    end: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 12:00:00",                    
+                    color: "#808080",
+                  });
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 13:00:00",
+                    end: this.unavailableEvent[i].date_end,                    
+                    color: "#808080",
+                  });
+                }
+                
+                //date de début
+                if(moment(this.unavailableEvent[i].date).format('HH:mm') < "12:00"){                  
+                  eventsParse.push({                    
+                    start: this.unavailableEvent[i].date,
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 12:00:00",                    
+                    color: "#808080",
+                  });
+                  eventsParse.push({                    
+                    start: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 13:00:00",
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
+                    color: "#808080",
+                  });
+                }
+                else {
+                  //console.log("> 12h",moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00");
+                  eventsParse.push({                    
+                    start: this.unavailableEvent[i].date,
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
+                    color: "#808080",
+                  });
+                }
+                
+                
+              }          
+            }
         }
       } else if (this.$route.query.type === "workarea") {
         if (this.tasksEvent !== []) {
@@ -307,23 +474,7 @@ export default {
             // }
           });
         }
-      }     
-      
-      // if(this.unavailableEvent != []){
-      //   console.log("unavailableEvent",this.unavailableEvent);
-      //   for(var i=1; i<this.unavailableEvent.length; i++){
-      //     if(this.unavailableEvent[i].task_id != null){
-      //       eventsParse.push({
-      //           start: this.unavailableEvent[i].start_time,
-      //           end: this.unavailableEvent[i].end_time,
-      //           color: "#808080",
-      //         });
-      //     }
-      //     //console.log("unavailable",this.unavailableEvent[i].task_id);
-      //   }
-        
-        
-      // }
+      }    
       
       this.minTime =
         minHour && minHour >= "02:00"
@@ -333,21 +484,20 @@ export default {
         maxHour && maxHour <= "22:00"
           ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
           : "24:00";
-
-      this.$store.dispatch("scheduleManagement/addItems", eventsParse);
-
+      
+      this.$store.dispatch("scheduleManagement/addItems", eventsParse);      
       return eventsParse;
     },
-    tasksEvent() {      
+    tasksEvent() {
       return this.$store.state.taskManagement
         ? this.$store.state.taskManagement.tasks
         : [];
     },
-    // unavailableEvent() {
-    //   return this.$store.state.projectManagement 
-    //   ? this.$store.state.projectManagement.projects 
-    //   : [];
-    // },
+    unavailableEvent() {
+      return this.$store.state.projectManagement 
+      ? this.$store.state.projectManagement.projects 
+      : [];
+    },
     project_data() {
       if (this.$route.query.type === "projects") {
         return this.$store.getters["projectManagement/getItem"](
@@ -356,7 +506,7 @@ export default {
       }
       return null;
     },
-    user_data() {      
+    user_data() {
       var user_data = this.$store.state.userManagement.users.find(
         (u) => u.id === this.$route.query.id
       );
@@ -404,7 +554,7 @@ export default {
     },
     handleEventClick(arg) {
       var targetEvent = this.calendarEvents.find(
-        (event) => event.id.toString() === arg.event.id
+        (event) => event.period_id === arg.event._def.extendedProps.period_id
       );
 
       this.$store
@@ -415,73 +565,131 @@ export default {
     },
     handleEventDrop(arg) {
       var itemTemp = this.calendarEvents.find(
-        (e) => e.id.toString() === arg.event.id
+        (e) => e.period_id === arg.event._def.extendedProps.period_id
       );
+      var startPeriodTask=moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss");
+      var endPeriodTask=moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss")
       //Parse new item to update task
+      console.log("start",moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"));
+      console.log("end",moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"));
+      var erreur=false;
+      if(this.unavailableEvent != null){
+        for(var i=0; i<this.unavailableEvent.length; i++){            
+            if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
+              console.log("date",this.unavailableEvent[i].date);
+              console.log("date_end",this.unavailableEvent[i].date_end);
+              if(startPeriodTask>this.unavailableEvent[i].date && endPeriodTask<this.unavailableEvent[i].date_end){
+                erreur=true;
+                this.$vs.notify({
+                  title: "Erreur",
+                  text: "Vous ne pouvez pas déplacer cette période ici car il n'y a pas de ressources nécessaires.",
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "danger",
+                });
 
-      var itemToSave = {
-        id: itemTemp.id,
-        name: itemTemp.title,
-        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-        estimated_time: itemTemp.estimated_time,
-        order: itemTemp.order,
-        description: itemTemp.description,
-        time_spent: itemTemp.time_spent,
-        workarea_id: itemTemp.workarea_id,
-        user_id: itemTemp.user_id,
-        project_id: itemTemp.project_id,
-        status: itemTemp.status,
-        from: "schedule",
-      };
-
-      this.$store
-        .dispatch("taskManagement/updateItem", itemToSave)
-        .then((data) => {
-          if (data && data.status === 200) {
-            //this.refresh();
-          } else {
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+              }
+            }
+        }
+      }
+      if(!erreur){
+        var itemToSave = {
+          id: itemTemp.period_id,
+          start: startPeriodTask,
+          end: endPeriodTask,
+          type: this.$route.query.type,
+          task_id: this.$route.query.task_id,
+        };
+        this.$vs.loading();
+        this.$store
+          .dispatch("taskManagement/updateTaskPeriod", itemToSave)
+          .then((data) => {                 
+            this.$vs.notify({
+              title: "Modification d'une période",
+              text: `modifiée avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success",
+            })
+          })
+          .catch((error) => {          
+            this.$vs.notify({
+              title: "Erreur",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+              time: 10000,
+            });
+          })
+          .finally(() => {
+            this.$vs.loading.close();
+          });       
+      }
     },
     handleEventResize(arg) {
       var itemTemp = this.calendarEvents.find(
-        (e) => e.id.toString() === arg.event.id
+        (e) => e.period_id === arg.event._def.extendedProps.period_id
       );
-
       //Parse new item to update task
+      var startPeriodTask=moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss");
+      var endPeriodTask=moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss")
+      //Parse new item to update task
+      console.log("start",moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"));
+      console.log("end",moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"));
+      var erreur=false;
+      if(this.unavailableEvent != null){
+        for(var i=0; i<this.unavailableEvent.length; i++){            
+            if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
+              console.log("date",this.unavailableEvent[i].date);
+              console.log("date_end",this.unavailableEvent[i].date_end);
+              if(startPeriodTask>this.unavailableEvent[i].date && endPeriodTask<this.unavailableEvent[i].date_end){
+                erreur=true;
+                this.$vs.notify({
+                  title: "Erreur",
+                  text: "Vous ne pouvez pas déplacer cette période ici car il n'y a pas de ressources nécessaires.",
+                  iconPack: "feather",
+                  icon: "icon-alert-circle",
+                  color: "danger",
+                });
 
-      var start = moment(arg.event.start);
-      var end = moment(arg.event.end);
-
-      var itemToSave = {
-        id: itemTemp.id,
-        name: itemTemp.title,
-        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-        estimated_time: end.diff(start, "hours"),
-        order: itemTemp.order,
-        description: itemTemp.description,
-        time_spent: itemTemp.time_spent,
-        workarea_id: itemTemp.workarea_id,
-        user_id: itemTemp.user_id,
-        project_id: itemTemp.project_id,
-        status: itemTemp.status,
-        from: "schedule",
-      };
-
-      this.$store
-        .dispatch("taskManagement/updateItem", itemToSave)
-        .then((data) => {
-          if (data && data.status === 200) {
-            //this.refresh();
-          } else {
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+              }
+            }
+        }
+      }
+      if(!erreur){
+        var itemToSave = {
+          id: itemTemp.period_id,
+          start: startPeriodTask,
+          end: endPeriodTask,
+          type: this.$route.query.type,
+          task_id: this.$route.query.task_id,
+        };
+        this.$vs.loading();
+        this.$store
+          .dispatch("taskManagement/updateTaskPeriod", itemToSave)
+          .then((data) => {                 
+            this.$vs.notify({
+              title: "Modification d'une période",
+              text: `modifiée avec succès`,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "success",
+            })
+          })
+          .catch((error) => {          
+            this.$vs.notify({
+              title: "Erreur",
+              text: error.message,
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+            });
+          })
+          .finally(() => {
+            this.$vs.loading.close();
+          });       
+      }
     },
     handleClose() {
       //this.refresh();
@@ -496,7 +704,8 @@ export default {
         let businessHours = [];
         var item = {
         id: this.$route.query.id,
-        type: this.$route.query.type
+        type: this.$route.query.type,
+        task_id: this.$route.query.task_id,
         };
         this.$store
         .dispatch("projectManagement/workHoursPeriods", item)
@@ -661,7 +870,8 @@ export default {
         let businessHours = [];
         var item = {
         id: this.$route.query.id,
-        type: this.$route.query.type
+        type: this.$route.query.type,
+        task_id: this.$route.query.task_id,
         };
         this.$store
         .dispatch("projectManagement/workHoursPeriods", item)
@@ -788,9 +998,9 @@ export default {
       return dayNumber;
     },
   },
-  created() {     
-      
-                
+  created() {
+    
+
     // Add store management
     if (!moduleScheduleManagement.isRegistered) {
       this.$store.registerModule(
@@ -800,23 +1010,8 @@ export default {
       moduleScheduleManagement.isRegistered = true;
     }
     if (!moduleTaskManagement.isRegistered) {
-      let firstDate;
       this.$store.registerModule("taskManagement", moduleTaskManagement);
       moduleTaskManagement.isRegistered = true;
-      if(this.$store.state.taskManagement.tasks != null && this.$store.state.taskManagement.tasks[0] != null){
-      firstDate=this.$store.state.taskManagement.tasks[0].date;
-      this.$store.state.taskManagement.tasks.forEach((t) => {
-        console.log("store task",t.date);
-        if(t.date<firstDate){
-            
-          firstDate=t.date;
-            
-        }
-      });
-    } 
-      
-    this.date=moment(firstDate).format("YYYY-MM-DD"); 
-    console.log("date",this.date);
     }
     if (!moduleProjectManagement.isRegistered) {
       this.$store.registerModule("projectManagement", moduleProjectManagement);
@@ -838,7 +1033,7 @@ export default {
       );
       moduleDocumentManagement.isRegistered = true;
     }
-    
+
     //this.$store.state.taskManagement.tasks = [];
 
     if (this.$route.query.type === "projects") {
@@ -858,27 +1053,45 @@ export default {
               this.$store.dispatch("taskManagement/fetchItems", {
                 tasks_bundle_id: id_bundle,
               });
+            
             }
           })
           .catch((err) => {
             console.error(err);
           });
-          // var item = {
-          //   id: this.$route.query.id,
-          //   type: this.$route.query.type
-          // };
-          // this.$store
-          //  .dispatch("projectManagement/unavailablePeriods", item)
-          //  console.log("store",this.$store.state);
+          var item = {
+            id: this.$route.query.id,
+            type: this.$route.query.type,
+            task_id: this.$route.query.task_id
+          };
+          this.$store
+           .dispatch("projectManagement/unavailablePeriods", item)
+           console.log("store",this.$store.state);
       }
     } else if (this.$route.query.type === "users") {
       this.$store.dispatch("taskManagement/fetchItems", {
         user_id: this.$route.query.id,
       });
+      var item = {
+            id: this.$route.query.id,
+            type: this.$route.query.type,
+            task_id: this.$route.query.task_id
+      };
+      this.$store
+        .dispatch("projectManagement/unavailablePeriods", item)
+        console.log("store",this.$store.state);
     } else if (this.$route.query.type === "workarea") {
       this.$store.dispatch("taskManagement/fetchItems", {
         workarea: this.$route.query.id,
       });
+      var item = {
+            id: this.$route.query.id,
+            type: this.$route.query.type,
+            task_id: this.$route.query.task_id
+      };
+      this.$store
+        .dispatch("projectManagement/unavailablePeriods", item)
+        console.log("store",this.$store.state);
     }
 
     this.$store.dispatch("skillManagement/fetchItems");

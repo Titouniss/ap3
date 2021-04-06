@@ -166,7 +166,7 @@
                 "
                 class="text-danger text-sm"
               >
-                Attention, aucun pôle de produciton ne possède cette combinaison
+                Attention, aucun pôle de production ne possède cette combinaison
                 de compétences
               </span>
 
@@ -370,6 +370,12 @@
         >
           Supprimer la tâche
         </vs-button>
+        <vs-button
+          v-on:click="goToEditView"
+          class="ml-auto mt-2"
+        >
+          Déplacer la tâche
+        </vs-button>
       </vs-row>
     </vs-prompt>
   </div>
@@ -542,6 +548,13 @@ export default {
       moment.locale("fr");
       return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
     },
+    goToEditView(){
+      console.log('id',this.itemId);
+      this.$router.push({
+        path: `/schedules/schedules-edit`,
+        query: { id: this.$route.query.id, type: this.$route.query.type, task_id: this.itemId },
+      });
+    },
     submitItem() {
       if (!this.validateForm) return;
 
@@ -626,7 +639,7 @@ export default {
       this.updateUsersList(ids);
     },
     updateWorkareasList(ids) {
-      if (ids) {
+      if (ids && this.workareasData != null) {
         this.workareasDataFiltered = this.workareasData.filter(function (
           workarea
         ) {
@@ -676,7 +689,9 @@ export default {
 
       taskIds.forEach((id) => {
         let task = this.tasks_list.filter((t) => t.id == id);
-        previousTasks_local.push(task[0].name);
+        if(task[0] != null){
+          previousTasks_local.push(task[0].name);
+        }
       });
       this.previousTasks = previousTasks_local;
     },

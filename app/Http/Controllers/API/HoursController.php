@@ -90,8 +90,8 @@ class HoursController extends BaseApiController
         if (!$paidHolidays->isEmpty()) {
             $stats['total'] = CarbonInterval::hours(0);
             foreach ($paidHolidays as $pH) {
-                $hours = Carbon::create($pH->ends_at)->diffInHours(Carbon::create($pH->starts_at));
-                $stats['total']->add(CarbonInterval::createFromFormat('H', $hours));
+                $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::hours($hours));
             }
         } else {
             $stats['total'] = CarbonInterval::hours(0);
@@ -514,9 +514,19 @@ class HoursController extends BaseApiController
     {
         // How many hour user worked this day
         $worked_hours = $date ? Hours::where([['user_id', $user_id], ['start_at', 'LIKE', '%' . $date . '%']])->get() : [];
+        // add some Unavailability  
+        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%']])->get() : [];
+
+        $nb_worked_hours = 0;
+
+        if (!$worked_unavailabilities->isEmpty()) {
+
+            foreach ($worked_unavailabilities as $wu) {
+                $nb_worked_hours += Carbon::create($wu->ends_at)->floatDiffInHours(Carbon::create($wu->starts_at));
+            }
+        }
 
         if (!$worked_hours->isEmpty()) {
-            $nb_worked_hours = 0;
 
             foreach ($worked_hours as $wh) {
                 $nb_worked_hours += $wh->durationInFloatHour;
@@ -524,7 +534,7 @@ class HoursController extends BaseApiController
             // Add current insert work hours
             return $nb_worked_hours += $duration;
         } else {
-            return $nb_worked_hours = $duration;
+            return $nb_worked_hours += $duration;
         }
     }
 

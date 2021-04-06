@@ -285,6 +285,16 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: "/schedules/schedules-edit",
+                    name: "schedules-edit",
+                    component: () => import("@/views/schedules/Edit.vue"),
+                    meta: {
+                        parent: "schedules",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Customers---/////
                 {
                     path: "/customers",
@@ -524,7 +534,7 @@ router.beforeEach((to, from, next) => {
         } else {
             // Update expireAt
             let newExpireAt = moment()
-                .add(2, "hours")
+                .add(8, "hours")
                 .unix();
             localStorage.setItem("token_expires_at", newExpireAt);
         }
