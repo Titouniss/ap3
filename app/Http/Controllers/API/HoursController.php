@@ -53,12 +53,18 @@ class HoursController extends BaseApiController
 
         $user = Auth::user();
         $paidHolidays = $user->is_admin ? Unavailability::where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
+        $schoolPeriods = $user->is_admin ? Unavailability::where('reason', 'Période de cours') : Unavailability::where('user_id', $user->id)->where('reason', "Période de cours");
+        $publicHolidays = $user->is_admin ? Unavailability::where('reason', 'Jours fériés') : Unavailability::where('user_id', $user->id)->where('reason', "Jours fériés");
+        $overtimesUsed = $user->is_admin ? Unavailability::where('reason', 'Utilisation heures supplémentaires') : Unavailability::where('user_id', $user->id)->where('reason', "Utilisation heures supplémentaires");
 
         if ($request->has('user_id')) {
             if (User::where('id', $request->user_id)->doesntExist()) {
                 throw new ApiException("Paramètre 'user_id' n'est pas valide.");
             }
             $paidHolidays->where('user_id', $request->user_id);
+            $schoolPeriods->where('user_id', $request->user_id);
+            $publicHolidays->where('user_id', $request->user_id);
+            $overtimesUsed->where('user_id', $request->user_id);
         }
 
         if ($request->has('date')) {
@@ -67,16 +73,28 @@ class HoursController extends BaseApiController
                 switch ($request->period_type) {
                     case 'week':
                         $paidHolidays->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
+                        $schoolPeriods->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
+                        $publicHolidays->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
+                        $overtimesUsed->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
                         break;
                     case 'month':
                         $paidHolidays->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
+                        $schoolPeriods->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
+                        $publicHolidays->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
+                        $overtimesUsed->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
                         break;
                     case 'year':
                         $paidHolidays->whereYear('starts_at', $date->year);
+                        $schoolPeriods->whereYear('starts_at', $date->year);
+                        $publicHolidays->whereYear('starts_at', $date->year);
+                        $overtimesUsed->whereYear('starts_at', $date->year);
                         break;
 
                     default:
                         $paidHolidays->whereDate('starts_at', $date);
+                        $schoolPeriods->whereDate('starts_at', $date);
+                        $publicHolidays->whereDate('starts_at', $date);
+                        $overtimesUsed->whereDate('starts_at', $date);
                         break;
                 }
             } catch (\Throwable $th) {
@@ -85,16 +103,51 @@ class HoursController extends BaseApiController
         }
 
         $paidHolidays = $paidHolidays->get();
+        $schoolPeriods = $schoolPeriods->get();
+        $publicHolidays = $publicHolidays->get();
+        $overtimesUsed = $overtimesUsed->get();
 
+        $stats['total'] = CarbonInterval::hours(0);
         // // Ajout des congés payés au nombre d'heures
         if (!$paidHolidays->isEmpty()) {
-            $stats['total'] = CarbonInterval::hours(0);
             foreach ($paidHolidays as $pH) {
                 $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::hours($hours));
             }
         } else {
-            $stats['total'] = CarbonInterval::hours(0);
+            $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
+            $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
+        }
+
+        // // Ajout des périodes de cours au nombre d'heures
+        if (!$schoolPeriods->isEmpty()) {
+            foreach ($schoolPeriods as $pH) {
+                $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::hours($hours));
+            }
+        } else {
+            $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
+            $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
+        }
+
+        // // Ajout des jours fériés au nombre d'heures
+        if (!$publicHolidays->isEmpty()) {
+            foreach ($publicHolidays as $pH) {
+                $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::hours($hours));
+            }
+        } else {
+            $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
+            $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
+        }
+
+        // // Ajout des heures supplémentaires utilisées au nombre d'heures
+        if (!$overtimesUsed->isEmpty()) {
+            foreach ($overtimesUsed as $pH) {
+                $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::hours($hours));
+            }
+        } else {
             $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
             $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
         }
@@ -515,7 +568,10 @@ class HoursController extends BaseApiController
         // How many hour user worked this day
         $worked_hours = $date ? Hours::where([['user_id', $user_id], ['start_at', 'LIKE', '%' . $date . '%']])->get() : [];
         // add some Unavailability  
-        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%']])->get() : [];
+        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Congés payés"]])
+                                                        ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Jours fériés"]])
+                                                        ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Période de cours"]])
+                                                        ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Utilisation heures supplémentaires"]])->get() : [];
 
         $nb_worked_hours = 0;
 

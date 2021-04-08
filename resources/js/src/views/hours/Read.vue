@@ -202,7 +202,42 @@ export default {
           user_id: this.filters.user.id,
         });
       });
-
+      paidHolidays = this.$store.getters[
+        "unavailabilityManagement/getItems"
+      ].filter((item) => item.reason === "Jours fériés");
+      paidHolidays.forEach((pH) => {
+        finalHours.push({
+          color: "#AEAEAE ",
+          title: "Jours fériés",
+          end: pH.ends_at,
+          start: pH.starts_at,
+          user_id: this.filters.user.id,
+        });
+      });
+      paidHolidays = this.$store.getters[
+        "unavailabilityManagement/getItems"
+      ].filter((item) => item.reason === "Période de cours");
+      paidHolidays.forEach((pH) => {
+        finalHours.push({
+          color: "#AEAEAE ",
+          title: "Période de cours",
+          end: pH.ends_at,
+          start: pH.starts_at,
+          user_id: this.filters.user.id,
+        });
+      });
+      paidHolidays = this.$store.getters[
+        "unavailabilityManagement/getItems"
+      ].filter((item) => item.reason === "Utilisation heures supplémentaires");
+      paidHolidays.forEach((pH) => {
+        finalHours.push({
+          color: "#AEAEAE ",
+          title: "Utilisation heures supplémentaires",
+          end: pH.ends_at,
+          start: pH.starts_at,
+          user_id: this.filters.user.id,
+        });
+      });
       //   console.log("calendarEvents -> finalHours", finalHours);
       return finalHours;
     },
