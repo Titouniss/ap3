@@ -34,6 +34,7 @@
           {{ overtimes - (usedOvertimes - payedOvertimes) > 1 ? "heures" : "heure" }}</span
         >
       </div>
+      <add-payed-hours-form :getOvertimes="getOvertimes()" :id_user="this.id" v-if="isAdmin"/>
     </div>
 
     <div class="mb-base">
@@ -150,6 +151,7 @@ import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
+import AddPayedHoursForm from './AddPayedHoursForm.vue';
 import EditForm from "./EditForm.vue";
 
 // Store Module
@@ -174,6 +176,7 @@ export default {
 
     // Cell Renderer
     CellRendererActions,
+    AddPayedHoursForm,
   },
   data() {
     return {
@@ -246,6 +249,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     unavailabilitiesData() {
       return this.$store.getters["unavailabilityManagement/getItems"];
     },
