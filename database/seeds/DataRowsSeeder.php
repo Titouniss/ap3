@@ -4,6 +4,7 @@ use App\Models\Customer;
 use App\Models\DataRow;
 use App\Models\DataType;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\TasksBundle;
 use App\Models\Workarea;
 use App\User;
@@ -101,13 +102,6 @@ class DataRowsSeeder extends Seeder
             'type'         => 'string',
             'display_name' => 'Nom',
             'required'     => 1,
-        ])->save();
-
-        $row = $this->dataRow($type, 'siret');
-        $row->fill([
-            'type'         => 'string',
-            'display_name' => 'Siret',
-            'required'     => 0,
         ])->save();
 
         $row = $this->dataRow($type, 'updated_at');
@@ -370,13 +364,6 @@ class DataRowsSeeder extends Seeder
             'required'     => 1,
         ])->save();
 
-        $row = $this->dataRow($type, 'time_spent');
-        $row->fill([
-            'type'         => 'integer',
-            'display_name' => 'Temps effectué',
-            'required'     => 0,
-        ])->save();
-
         $row = $this->dataRow($type, 'workarea_id');
         $row->fill([
             'type'         => 'relationship',
@@ -395,6 +382,59 @@ class DataRowsSeeder extends Seeder
             'required'     => 1,
             'details' => json_encode([
                 'options' => ['todo', 'doing', 'done']
+            ])
+        ])->save();
+
+        $row = $this->dataRow($type, 'updated_at');
+        $row->fill([
+            'type'         => 'datetime',
+            'display_name' => 'Dernière modification',
+            'required'     => 0,
+        ])->save();
+        /* #endregion */
+
+        /* #region TaskTimeSpent */
+        $type = $this->dataType('task_time_spent');
+        $row = $this->dataRow($type, 'id');
+        $row->fill([
+            'type'         => 'integer',
+            'display_name' => 'Identifiant',
+            'required'     => 1,
+        ])->save();
+
+        $row = $this->dataRow($type, 'date');
+        $row->fill([
+            'type'         => 'datetime',
+            'display_name' => 'Date',
+            'required'     => 1,
+        ])->save();
+
+        $row = $this->dataRow($type, 'duration');
+        $row->fill([
+            'type'         => 'double',
+            'display_name' => 'Temps effectué',
+            'required'     => 1,
+        ])->save();
+
+        $row = $this->dataRow($type, 'user_id');
+        $row->fill([
+            'type'         => 'relationship',
+            'display_name' => 'Utilisateur',
+            'required'     => 1,
+            'details' => json_encode([
+                'model' => User::class,
+                'label' => 'email'
+            ])
+        ])->save();
+
+        $row = $this->dataRow($type, 'task_id');
+        $row->fill([
+            'type'         => 'relationship',
+            'display_name' => 'Tâche',
+            'required'     => 1,
+            'details' => json_encode([
+                'model' => Task::class,
+                'label' => 'name'
             ])
         ])->save();
 

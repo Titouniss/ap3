@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\User;
 use App\Models\Unavailability;
 use App\Models\WorkHours;
+use App\Models\DealingHours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -100,19 +101,19 @@ class UnavailabilityController extends BaseApiController
         $Overtimes = DealingHoursController::getOvertimes($arrayRequest['user_id'],true);
         $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'] - $Overtimes['payedOvertimes'];
 
-        if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires' || $arrayRequest['reason'] == 'Heures suplémentaires payées') {
+        if ($arrayRequest['reason'] == 'Utilisation heures supplémentaires' || $arrayRequest['reason'] == 'Heures supplémentaires payées') {
             if ($OvertimesToUse < $duration) {
                 throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires.");
             }
-            if($arrayRequest_starts->format("Y-m-d") != $arrayRequest_ends->format("Y-m-d")){
+            if($arrayRequest_starts->format("Y-m-d") != $arrayRequest_ends->format("Y-m-d") && $arrayRequest['reason'] != 'Heures supplémentaires payées'){
                 throw new ApiException("Vous ne pouvez pas prendre d'heures supplémentaires sur plusieurs jours.");
             }
             // Expected hours for this day
             $day=$arrayRequest_starts->dayName;
             $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $day);
-            if ($workDuration === 0) {
+            if ($workDuration === 0 && $arrayRequest['reason'] != 'Heures supplémentaires payées') {
                 throw new ApiException("Il n'y a pas d'heures de travail prévues pour ". $day . ".");
-            } else if ($workDuration < $duration) {
+            } else if ($workDuration < $duration && $arrayRequest['reason'] != 'Heures supplémentaires payées') {
                 throw new ApiException("Vous ne pouvez pas utiliser plus d'heures supplémentaires que d'heures de travail prévues.");
             }
         }
@@ -120,6 +121,9 @@ class UnavailabilityController extends BaseApiController
         // Unavailability already existe or layering
         if (!$unavailabilities->isEmpty()) {
             foreach ($unavailabilities as $unavailability) {
+                if($unavailability['reason']=="Heures supplémentaires payées"){
+                    continue;
+                }
                 $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
                 $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
@@ -147,7 +151,7 @@ class UnavailabilityController extends BaseApiController
         }
 
         // Ajouter l'indisponibilité
-        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés'])) {
+        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])) {
             return $this->setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends);
         } else {
             return Unavailability::create([
@@ -172,6 +176,9 @@ class UnavailabilityController extends BaseApiController
         $passage = 0;
 
         foreach ($unavailabilities as $unavailability) {
+            if($unavailability['reason']=="Heures supplémentaires payées"){
+                continue;
+            }
             $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
             $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
@@ -207,13 +214,44 @@ class UnavailabilityController extends BaseApiController
             }
         }
 
-        // Ajouter l'indisponibilité
+        $old_item = clone $item;
+        // Update l'indisponibilité
         $item->update([
             'starts_at' => $arrayRequest['starts_at'],
             'ends_at' => $arrayRequest['ends_at'],
             'reason' => $arrayRequest['reason']
         ]);
+
+        //no overtime change 
+        if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])){
+            
+            //Do nothing
+        }
+        //add Overtime
+        else if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires']) && in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])){
+
+            $this->addOrUpdateOvertimes([$item]);
+        }
+        //del Overtime
+        else if(in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])){
+
+            $this->delOvertimes([$old_item]);
+        }
+        //compare hours for addOrDelOvertime
+        else{
+            $this->delOvertimes([$old_item]);
+            $this->addOrUpdateOvertimes([$item]);
+        }
+
         return $item;
+    }
+
+    protected function destroyItem($item)
+    {
+
+        $this->delOvertimes([$item]);
+
+        return parent::destroyItem($item);
     }
 
     /**
@@ -227,9 +265,12 @@ class UnavailabilityController extends BaseApiController
         $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['starts_at']);
         $date_start = $arrayRequest_starts->format('Y-m-d');
         $date_end = $arrayRequest_ends->format('Y-m-d');
+        $datetime_start = Carbon::parse($arrayRequest['starts_at']);
+        $datetime_end = Carbon::parse($arrayRequest['ends_at']);
+
 
         //pour chaque jours je note les noms de jours dans un tableau
-        $dayDuration = $arrayRequest_starts->diffInDays($arrayRequest_ends);
+        $dayDuration = $arrayRequest_starts->startOfDay()->diffInDays($arrayRequest_ends->endOfDay());
         $days = [];
         $workingDaysNames = [];
 
@@ -260,6 +301,7 @@ class UnavailabilityController extends BaseApiController
         // Pour chaques $days je regarde s'il est dans $userWorkingDays
 
         $itemIds = [];
+        $items = [];
         // return response()->json(['error' => [$days, $userWorkingDays, $userWorkingHours]], 400);
         foreach ($days  as $key => $d) {
             //d est il un jour ou je travaille ?
@@ -268,24 +310,111 @@ class UnavailabilityController extends BaseApiController
                 $index = array_search($dayTemp, array_column($userWorkingHours, 'day'));
                 $dayWorkingHours = $userWorkingHours[$index];
 
-                // si travail le matin on ajoute une indispo égale au temps de travail et au même heures
+               
+                //Si horraire le matin
                 if ($dayWorkingHours->morning_starts_at !== null && $dayWorkingHours->morning_ends_at != null) {
-                    $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->morning_starts_at;
-                    $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->morning_ends_at;
 
-                    array_push($itemIds, Unavailability::create($arrayRequest)->id);
+                    $new_request = [];
+                    $morning_starts_at = Carbon::parse($d . " " . $dayWorkingHours->morning_starts_at);
+                    $morning_ends_at = Carbon::parse($d . " " . $dayWorkingHours->morning_ends_at);
+
+                    //Si la periode est comprise et ou englobe le matin on ajoute une indispo 
+                    if($datetime_start <= $morning_starts_at){
+                        $new_request["starts_at"] = $morning_starts_at;
+                    }
+                    else if($datetime_start < $morning_ends_at){
+                        $new_request["starts_at"] = $datetime_start;
+                    }
+
+                    if($datetime_end >= $morning_ends_at){
+                        $new_request["ends_at"] = $morning_ends_at;
+                    }
+                    else if($datetime_end > $morning_starts_at){
+                        $new_request["ends_at"] = $datetime_end;
+                    }
+
+                    if(isset($new_request['starts_at']) && isset($new_request['ends_at'])){
+                        $new_request['user_id'] =  $arrayRequest['user_id'];
+                        $new_request['reason'] =  $arrayRequest['reason'];
+
+                        $item = Unavailability::create($new_request);
+                        array_push($items, $item);
+                        array_push($itemIds, $item->id);
+                    }
+                    
                 }
 
-                // si travail l'après midi on ajoute une indispo égale au temps de travail et au même heures
+                //Si horraire l'après-midi
                 if ($dayWorkingHours->afternoon_starts_at !== null && $dayWorkingHours->afternoon_ends_at != null) {
-                    $arrayRequest["starts_at"] = $d . " " . $dayWorkingHours->afternoon_starts_at;
-                    $arrayRequest["ends_at"] = $d . " " . $dayWorkingHours->afternoon_ends_at;
 
-                    array_push($itemIds, Unavailability::create($arrayRequest)->id);
+                    $new_request = [];
+                    $afternoon_starts_at = Carbon::parse($d . " " . $dayWorkingHours->afternoon_starts_at);
+                    $afternoon_ends_at = Carbon::parse($d . " " . $dayWorkingHours->afternoon_ends_at);
+
+                    //Si la periode est comprise et ou englobe le matin on ajoute une indispo 
+                    if($datetime_start <= $afternoon_starts_at){
+                        $new_request["starts_at"] = $afternoon_starts_at;
+                    }
+                    else if($datetime_start < $afternoon_ends_at){
+                        $new_request["starts_at"] = $datetime_start;
+                    }
+
+                    if($datetime_end >= $afternoon_ends_at){
+                        $new_request["ends_at"] = $afternoon_ends_at;
+                    }
+                    else if($datetime_end > $afternoon_starts_at){
+                        $new_request["ends_at"] = $datetime_end;
+                    }
+
+                    if(isset($new_request['starts_at']) && isset($new_request['ends_at'])){
+                        $new_request['user_id'] =  $arrayRequest['user_id'];
+                        $new_request['reason'] =  $arrayRequest['reason'];
+
+                        $item = Unavailability::create($new_request);
+                        array_push($items, $item);
+                        array_push($itemIds, $item->id);
+                    }
                 }
+
             }
         }
 
+        if(empty($items)){
+            throw new ApiException("Indisponibilité saisie hors des horaires de travail.");
+        }
+
+        $this->addOrUpdateOvertimes($items);
+
         return Unavailability::whereIn('id', $itemIds)->get();
+    }
+
+    private function addOrUpdateOvertimes($unavailabilities){
+
+        foreach($unavailabilities as $unavailability){
+
+            $timeToAdd = Carbon::parse($unavailability->ends_at)->floatDiffInHours(Carbon::parse($unavailability->starts_at));
+            $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
+
+            if(!$weekOvertimes){
+                $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
+            }
+            $weekOvertimes->overtimes += $timeToAdd; 
+            $weekOvertimes->update();
+        }
+    }
+
+    private function delOvertimes($unavailabilities){
+
+        foreach($unavailabilities as $unavailability){
+
+            $timeToDel = Carbon::parse($unavailability->ends_at)->floatDiffInHours(Carbon::parse($unavailability->starts_at));
+            $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
+
+            if(!$weekOvertimes){
+                $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
+            }
+            $weekOvertimes->overtimes -= $timeToDel; 
+            $weekOvertimes->update();
+        }
     }
 }

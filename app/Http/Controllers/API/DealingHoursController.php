@@ -61,8 +61,8 @@ class DealingHoursController extends Controller
             // Get total overtimes
             $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '<', Carbon::now()->startOfWeek())->sum('overtimes');
             // Get nb used and payed overtimes
-            $usedOrvertimes = Unavailability::where([['user_id', $id], ['reason', 'Utilisation heures suplémentaires']])->get();
-            $usedOvertimesPayed = Unavailability::where([['user_id', $id], ['reason', 'Heures suplémentaires payées']])->get();
+            $usedOrvertimes = Unavailability::where([['user_id', $id], ['reason', 'Utilisation heures supplémentaires']])->get();
+            $usedOvertimesPayed = Unavailability::where([['user_id', $id], ['reason', 'Heures supplémentaires payées']])->get();
             if (!$usedOrvertimes->isEmpty()) {
                 foreach ($usedOrvertimes as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');

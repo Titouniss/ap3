@@ -10,9 +10,19 @@ class Task extends Model
 {
     use SoftDeletes, HasDocuments;
 
-    protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
+    protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
-    protected $appends = ['project_id'];
+    protected $appends = ['project_id', 'time_spent'];
+
+    public function getTimeSpentAttribute()
+    {
+        return TaskTimeSpent::where('task_id', $this->id)->sum('duration');
+    }
+
+    public function taskTimeSpent()
+    {
+        return $this->hasMany(TaskTimeSpent::class, 'task_id')->orderBy('date');
+    }
 
     public function periods()
     {

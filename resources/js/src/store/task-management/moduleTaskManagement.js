@@ -18,7 +18,11 @@ actions.addComment = ({ commit }, item) => {
 }
 
 actions.addItemRange = ({ commit }, item) => {
-    return apiRequest(`project-management/store-range/${item.range_id}`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
+    return apiRequest(`project-management/store-range/${item.rangeId}`, 'post', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
+}
+
+actions.updateTaskPeriod = ({ commit }, item) => {    
+    return apiRequest(`project-management/updateTaskPeriod`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);     
 }
 
 export default {

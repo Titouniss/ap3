@@ -119,10 +119,9 @@ export default {
       },
       custom_reason: "",
       reasons: [
-        { name: "Utilisation heures suplémentaires" },
+        { name: "Utilisation heures supplémentaires" },
         { name: "Jours fériés" },
-        { name: "Réunion" },
-        { name: "Rendez-vous" },
+        { name: "Rendez-vous privé" },
         { name: "Congés payés" },
         { name: "Période de cours" },
         { name: "Arrêt de travail" },
@@ -234,7 +233,7 @@ export default {
   },
   mounted(){
     if(this.$store.state.AppActiveUser.is_admin){
-      this.reasons.unshift({ name: "Heures suplémentaires payées" });
+      this.reasons.unshift({ name: "Heures supplémentaires payées" });
     }
   }
 };

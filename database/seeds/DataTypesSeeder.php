@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Range;
 use App\Models\Skill;
 use App\Models\Task;
+use App\Models\TaskTimeSpent;
 use App\Models\Unavailability;
 use App\Models\Workarea;
 use App\User;
@@ -82,6 +83,15 @@ class DataTypesSeeder extends Seeder
             'display_name_plurial' => 'Tâches',
             'model' => Task::class,
             'order' => 3
+        ])->save();
+
+
+        $type = $this->dataType('task_time_spent');
+        $type->fill([
+            'display_name_singular' => 'Pointage',
+            'display_name_plurial' => 'Pointages',
+            'model' => TaskTimeSpent::class,
+            'order' => 4
         ])->save();
     }
 
