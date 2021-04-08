@@ -50,12 +50,31 @@ class HoursController extends BaseApiController
     protected function extraIndexData(Request $request, $items)
     {
         $stats = [];
-
         $user = Auth::user();
-        $paidHolidays = $user->is_admin ? Unavailability::where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
-        $schoolPeriods = $user->is_admin ? Unavailability::where('reason', 'Période de cours') : Unavailability::where('user_id', $user->id)->where('reason', "Période de cours");
-        $publicHolidays = $user->is_admin ? Unavailability::where('reason', 'Jours fériés') : Unavailability::where('user_id', $user->id)->where('reason', "Jours fériés");
-        $overtimesUsed = $user->is_admin ? Unavailability::where('reason', 'Utilisation heures supplémentaires') : Unavailability::where('user_id', $user->id)->where('reason', "Utilisation heures supplémentaires");
+        $paidHolidays = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
+        $schoolPeriods = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Période de cours') : Unavailability::where('user_id', $user->id)->where('reason', "Période de cours");
+        $publicHolidays = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Jours fériés') : Unavailability::where('user_id', $user->id)->where('reason', "Jours fériés");
+        $overtimesUsed = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Utilisation heures supplémentaires') : Unavailability::where('user_id', $user->id)->where('reason', "Utilisation heures supplémentaires");
+        
+        if ($request->has('project_id')) {
+            if (Project::where('id', $request->project_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'project_id' n'est pas valide.");
+            }
+            //récupérer les utilisateurs qui ont enregistré des heures pour ce projet
+            $hoursProject=Hours::where('project_id', $request->project_id)->get();
+            $listUserIdProject=array();
+            array_push($listUserIdProject, $hoursProject[0]['user_id']);
+            foreach($hoursProject as $hourProject){
+                if(!in_array($hourProject['user_id'], $listUserIdProject)){
+                    array_push($listUserIdProject, $hourProject['user_id']);
+                }
+            }
+            //récupérer les indispos des utilisateurs qui ont enregistré des heures pour ce projet
+            $paidHolidays->whereIn('user_id', $listUserIdProject);
+            $schoolPeriods->whereIn('user_id', $listUserIdProject);
+            $publicHolidays->whereIn('user_id', $listUserIdProject);
+            $overtimesUsed->whereIn('user_id', $listUserIdProject);
+        }
 
         if ($request->has('user_id')) {
             if (User::where('id', $request->user_id)->doesntExist()) {
@@ -225,7 +244,7 @@ class HoursController extends BaseApiController
                 } 
             }            
 
-            else if ($request->date && $userId = $user->is_admin ? $request->user_id : $user->id) {
+            else if ($request->date && $userId = ($user->is_admin || $user->is_manager) ? $request->user_id : $user->id) {
                 $nbWorkDays = WorkHours::where('user_id', $userId)->where('is_active', 1)->count() || 1;
                 $workWeekHours = WorkHours::where('user_id', $userId)->where('is_active', 1)->get()->map(function ($day) {
                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
