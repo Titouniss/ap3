@@ -18,7 +18,7 @@
         <img
           src="@assets/images/login/plan-icon.png"
           alt="login"
-          class="w-2/5 ml-auto mr-auto"
+          class="w-4/5 ml-auto mr-auto"
         />
         <div class="p-8 login-tabs-container">
           <div class="vx-card__title mb-4">

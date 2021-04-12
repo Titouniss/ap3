@@ -101,19 +101,19 @@ class UnavailabilityController extends BaseApiController
         $Overtimes = DealingHoursController::getOvertimes($arrayRequest['user_id'],true);
         $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'] - $Overtimes['payedOvertimes'];
 
-        if ($arrayRequest['reason'] == 'Utilisation heures suplémentaires' || $arrayRequest['reason'] == 'Heures suplémentaires payées') {
+        if ($arrayRequest['reason'] == 'Utilisation heures supplémentaires' || $arrayRequest['reason'] == 'Heures supplémentaires payées') {
             if ($OvertimesToUse < $duration) {
                 throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires.");
             }
-            if($arrayRequest_starts->format("Y-m-d") != $arrayRequest_ends->format("Y-m-d")){
+            if($arrayRequest_starts->format("Y-m-d") != $arrayRequest_ends->format("Y-m-d") && $arrayRequest['reason'] != 'Heures supplémentaires payées'){
                 throw new ApiException("Vous ne pouvez pas prendre d'heures supplémentaires sur plusieurs jours.");
             }
             // Expected hours for this day
             $day=$arrayRequest_starts->dayName;
             $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $day);
-            if ($workDuration === 0) {
+            if ($workDuration === 0 && $arrayRequest['reason'] != 'Heures supplémentaires payées') {
                 throw new ApiException("Il n'y a pas d'heures de travail prévues pour ". $day . ".");
-            } else if ($workDuration < $duration) {
+            } else if ($workDuration < $duration && $arrayRequest['reason'] != 'Heures supplémentaires payées') {
                 throw new ApiException("Vous ne pouvez pas utiliser plus d'heures supplémentaires que d'heures de travail prévues.");
             }
         }
@@ -121,6 +121,9 @@ class UnavailabilityController extends BaseApiController
         // Unavailability already existe or layering
         if (!$unavailabilities->isEmpty()) {
             foreach ($unavailabilities as $unavailability) {
+                if($unavailability['reason']=="Heures supplémentaires payées"){
+                    continue;
+                }
                 $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
                 $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
@@ -148,7 +151,7 @@ class UnavailabilityController extends BaseApiController
         }
 
         // Ajouter l'indisponibilité
-        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés', 'Période de cours'])) {
+        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])) {
             return $this->setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends);
         } else {
             return Unavailability::create([
@@ -173,6 +176,9 @@ class UnavailabilityController extends BaseApiController
         $passage = 0;
 
         foreach ($unavailabilities as $unavailability) {
+            if($unavailability['reason']=="Heures supplémentaires payées"){
+                continue;
+            }
             $unavailability_starts = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->starts_at);
             $unavailability_ends = Carbon::createFromFormat('Y-m-d H:i:s', $unavailability->ends_at);
 
@@ -217,17 +223,17 @@ class UnavailabilityController extends BaseApiController
         ]);
 
         //no overtime change 
-        if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours'])){
+        if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])){
             
             //Do nothing
         }
         //add Overtime
-        else if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours']) && in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours'])){
+        else if(!in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires']) && in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])){
 
             $this->addOrUpdateOvertimes([$item]);
         }
         //del Overtime
-        else if(in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours'])){
+        else if(in_array($old_item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires']) && !in_array($item->reason, ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])){
 
             $this->delOvertimes([$old_item]);
         }
