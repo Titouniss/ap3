@@ -34,7 +34,7 @@
           {{ overtimes - (usedOvertimes - payedOvertimes) > 1 ? "heures" : "heure" }}</span
         >
       </div>
-      <add-payed-hours-form :getOvertimes="getOvertimes()" :id_user="this.id" v-if="isAdmin"/>
+      <add-payed-hours-form :getOvertimes="getOvertimes()" :id_user="this.id" v-if="isAdmin || isManager"/>
     </div>
 
     <div class="mb-base">
@@ -251,6 +251,9 @@ export default {
   computed: {
     isAdmin() {
       return this.$store.state.AppActiveUser.is_admin;
+    },
+    isManager() {
+      return this.$store.state.AppActiveUser.is_manager;
     },
     unavailabilitiesData() {
       return this.$store.getters["unavailabilityManagement/getItems"];

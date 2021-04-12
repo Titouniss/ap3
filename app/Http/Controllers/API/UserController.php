@@ -477,6 +477,34 @@ class UserController extends BaseApiController
     }
 
     /**
+     * send the registrationLink with company.
+     */
+    public function sendRegistrationLink(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $item = User::where('id', $arrayRequest["id"])->first();
+        $validator = Validator::make($arrayRequest["email"], [
+            'required|email',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
+        }
+
+        //on récupère la company de l'admin authentifié
+        $companyId=$item["company_id"];
+        $company=Company::where('id', $companyId)->get();
+        $companyName=$company[0]['name'];
+
+        try {
+            $item->SendEmailRegistrationLinkNotification($arrayRequest["email"], $companyName);
+        } catch (\Throwable $th) {
+           return $this->errorResponse("Impossible d'envoyer le mail avec le lien d'inscription.");
+        }
+
+        return $this->successResponse(true, "Émail envoyé.");
+    }
+
+    /**
      * Logs the user in via token
      */
     // public function getUserByUserToken()
@@ -602,20 +630,31 @@ class UserController extends BaseApiController
             return $this->errorResponse($th->getMessage());
             return $this->errorResponse("Erreur serveur.", static::$response_codes['error_server']);
         }
+        if($arrayRequest['registerLink'] != null){
+            if (Company::where('name', $arrayRequest['company_name'])->doesntExist()) {
+                throw new ApiException("La société n'existe pas.");
+            }
+            $company = Company::where([
+                'name' => $arrayRequest['company_name'],
+            ])->get();
+            $company=$company[0];
+            $item->company()->associate($company);
 
-        $company = Company::create([
-            'name' => $arrayRequest['company_name'],
-        ]);
-
-        $company->details()->update([
-            'contact_firstname' => $arrayRequest['firstname'],
-            'contact_lastname' => $arrayRequest['lastname'],
-            'contact_function' => $arrayRequest['contact_function'],
-            'contact_email' => $arrayRequest['email'],
-            'contact_tel1' => $arrayRequest['contact_tel1'],
-        ]);
-
-        $item->company()->associate($company);
+        }
+        else{
+            $company = Company::create([
+                'name' => $arrayRequest['company_name'],
+            ]);
+    
+            $company->details()->update([
+                'contact_firstname' => $arrayRequest['firstname'],
+                'contact_lastname' => $arrayRequest['lastname'],
+                'contact_function' => $arrayRequest['contact_function'],
+                'contact_email' => $arrayRequest['email'],
+                'contact_tel1' => $arrayRequest['contact_tel1'],
+            ]);
+            $item->company()->associate($company);
+        }
         $item->save();
 
         $subscription = Subscription::create([
