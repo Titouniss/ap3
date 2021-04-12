@@ -15,9 +15,10 @@ abstract class BaseApiController extends Controller
 {
     use ReturnsJsonResponse;
 
-    protected static $per_page = 25;
+    protected static $per_page = 10;
 
     protected $model;
+    protected static $label = null;
     protected static $index_load = null;
     protected static $index_append = null;
     protected static $show_load = null;
@@ -62,8 +63,10 @@ abstract class BaseApiController extends Controller
                 return $error;
             }
 
+            $labelOnly = static::$label && $request->has('label_only') && $request->label_only;
+
             $model = app($this->model);
-            $query = $model->select($model->getTable() . ".*");
+            $query = $model->select("{$model->getTable()}." . ($labelOnly ? static::$label : "*"));
 
             $user = Auth::user();
             if (!$user->is_admin) {
@@ -88,6 +91,22 @@ abstract class BaseApiController extends Controller
                 }
 
                 $this->filterIndexQuery($request, $query);
+
+                if ($request->has('q') && $request->q) {
+                    try {
+                        $query->where(function ($query) use ($model, $request) {
+                            $columns = DB::select("describe " . $model->getTable());
+                            foreach ($columns as $column) {
+                                if (str_contains($column->Type, "char")) {
+                                    $query->orWhere($column->Field, 'like', '%' . $request->q . '%');
+                                }
+                            }
+                        });
+                    } catch (\Throwable $th) {
+                        return $this->errorResponse($th);
+                        throw new ApiException("Paramêtre 'q' n'est pas valide.");
+                    }
+                }
 
                 if ($request->has('page')) {
                     if (!is_numeric($request->page)) {
@@ -118,7 +137,7 @@ abstract class BaseApiController extends Controller
                     ]);
                 }
 
-                if (static::$index_load) {
+                if (!$labelOnly && static::$index_load) {
                     $query->with(static::$index_load);
                 }
             } catch (ApiException $th) {
@@ -129,7 +148,7 @@ abstract class BaseApiController extends Controller
 
             $items = $query->get();
 
-            if (static::$index_append) {
+            if (!$labelOnly && static::$index_append) {
                 $items->each->append(static::$index_append);
             }
 
