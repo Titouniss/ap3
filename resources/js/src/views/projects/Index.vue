@@ -152,25 +152,17 @@
                         </div>
                         <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
                         <vs-dropdown-menu>
-                            <vs-dropdown-item
-                                @click="gridApi.paginationSetPageSize(10)"
-                            >
+                            <vs-dropdown-item @click="itemsPerPage = 10">
                                 <span>10</span>
                             </vs-dropdown-item>
-                            <vs-dropdown-item
-                                @click="gridApi.paginationSetPageSize(20)"
-                            >
+                            <vs-dropdown-item @click="itemsPerPage = 20">
                                 <span>20</span>
                             </vs-dropdown-item>
-                            <vs-dropdown-item
-                                @click="gridApi.paginationSetPageSize(25)"
-                            >
-                                <span>25</span>
-                            </vs-dropdown-item>
-                            <vs-dropdown-item
-                                @click="gridApi.paginationSetPageSize(30)"
-                            >
+                            <vs-dropdown-item @click="itemsPerPage = 30">
                                 <span>30</span>
+                            </vs-dropdown-item>
+                            <vs-dropdown-item @click="itemsPerPage = 50">
+                                <span>50</span>
                             </vs-dropdown-item>
                         </vs-dropdown-menu>
                     </vs-dropdown>
@@ -383,6 +375,15 @@ export default {
         itemIdToEdit() {
             return this.$store.state.projectManagement.project.id || 0;
         },
+        itemsPerPage: {
+            get() {
+                return this.perPage;
+            },
+            set(val) {
+                this.perPage = val;
+                this.fetchProjects();
+            }
+        },
         currentPage: {
             get() {
                 return this.page;
@@ -401,6 +402,7 @@ export default {
                 .dispatch("projectManagement/fetchItems", {
                     with_trashed: true,
                     page: this.currentPage,
+                    per_page: this.perPage,
                     q: this.searchQuery || undefined
                 })
                 .then(data => {

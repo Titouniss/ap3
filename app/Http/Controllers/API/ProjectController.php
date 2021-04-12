@@ -64,6 +64,10 @@ class ProjectController extends BaseApiController
 
     protected function filterIndexQuery(Request $request, $query)
     {
+        $user = Auth::user();
+        if ($user->is_admin && $request->has('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }

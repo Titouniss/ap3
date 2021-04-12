@@ -66,7 +66,11 @@ abstract class BaseApiController extends Controller
             $labelOnly = static::$label && $request->has('label_only') && $request->label_only;
 
             $model = app($this->model);
-            $query = $model->select("{$model->getTable()}." . ($labelOnly ? static::$label : "*"));
+            $table = $model->getTable();
+            $query = $model->select("{$table}.*");
+            if ($labelOnly) {
+                $query = $model->select("{$table}.id", "{$table}." . static::$label);
+            }
 
             $user = Auth::user();
             if (!$user->is_admin) {
@@ -148,7 +152,9 @@ abstract class BaseApiController extends Controller
 
             $items = $query->get();
 
-            if (!$labelOnly && static::$index_append) {
+            if ($labelOnly) {
+                $items->each->setAppends([]);
+            } else if (static::$index_append) {
                 $items->each->append(static::$index_append);
             }
 
@@ -160,6 +166,7 @@ abstract class BaseApiController extends Controller
 
             return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
         } catch (\Throwable $th) {
+            return $this->errorResponse($th, static::$response_codes['error_server']);
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
     }
