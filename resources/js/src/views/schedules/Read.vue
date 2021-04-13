@@ -73,16 +73,6 @@
         :idType="parseInt(this.$route.query.id, 10)"
         v-if="itemIdToEdit && authorizedTo('edit')"
       />
-      <!-- <EditFormTaskPeriod
-        :itemId="itemIdToEdit"
-        :taskId="taskIdItem"
-        :start_at="start_atItem"
-        :end_at="end_atItem"
-        :tasks_list="tasksEvent"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedTo('edit')"
-      /> -->
     </div>
   </div>
 </template>
@@ -150,7 +140,7 @@ export default {
       businessHours: false,
       minTime: "05:00",
       maxTime: "24:00",   
-      date:null,   
+      date: null,   
     };
   },
   computed: {
@@ -174,6 +164,10 @@ export default {
       let minHour = null;
       let maxHour = null;
       if (this.$route.query.type === "projects") {
+        if (this.tasksEvent !== [] && this.tasksEvent[0] != null && this.$refs.fullCalendar != null) {
+          this.date=moment(this.tasksEvent[0].date).format("YYYY-MM-DD");
+          this.$refs.fullCalendar.getApi().gotoDate(this.date);
+        }
         if (this.tasksEvent !== []) {
           this.tasksEvent.forEach((t) => {
             t.periods.forEach((p) => {
@@ -800,24 +794,9 @@ export default {
       moduleScheduleManagement.isRegistered = true;
     }
     if (!moduleTaskManagement.isRegistered) {
-      let firstDate;
       this.$store.registerModule("taskManagement", moduleTaskManagement);
       moduleTaskManagement.isRegistered = true;
-      if(this.$store.state.taskManagement.tasks != null && this.$store.state.taskManagement.tasks[0] != null){
-      firstDate=this.$store.state.taskManagement.tasks[0].date;
-      this.$store.state.taskManagement.tasks.forEach((t) => {
-        console.log("store task",t.date);
-        if(t.date<firstDate){
-            
-          firstDate=t.date;
-            
-        }
-      });
     } 
-      
-    this.date=moment(firstDate).format("YYYY-MM-DD"); 
-    console.log("date",this.date);
-    }
     if (!moduleProjectManagement.isRegistered) {
       this.$store.registerModule("projectManagement", moduleProjectManagement);
       moduleProjectManagement.isRegistered = true;
