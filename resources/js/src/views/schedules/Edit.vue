@@ -66,13 +66,6 @@
         @eventClick="handleEventClick"
         @eventResize="handleEventResize"
       />
-      <!-- <edit-form
-        :itemId="itemIdToEdit"
-        :tasks_list="tasksEvent"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedTo('edit')"
-      /> -->
       <EditFormTaskPeriod
         :itemId="itemIdToEdit"
         :taskId="taskIdItem"
@@ -151,6 +144,7 @@ export default {
       businessHours: false,
       minTime: "05:00",
       maxTime: "24:00",
+      date: null,
     };
   },
   computed: {
@@ -172,6 +166,10 @@ export default {
       let minHour = null;
       let maxHour = null;
       if (this.$route.query.type === "projects") {
+        if (this.tasksEvent !== [] && this.tasksEvent[0] != null && this.$refs.fullCalendar != null) {
+          this.date=moment(this.tasksEvent[0].date).format("YYYY-MM-DD");
+          this.$refs.fullCalendar.getApi().gotoDate(this.date);
+        }
         if (this.tasksEvent !== []) {
           var task;
           this.tasksEvent.forEach((t) => {
