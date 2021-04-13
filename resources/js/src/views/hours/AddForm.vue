@@ -19,7 +19,6 @@
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <infinite-scroll-select
-                                name="project_id"
                                 model="project"
                                 label="name"
                                 v-model="itemLocal.project_id"

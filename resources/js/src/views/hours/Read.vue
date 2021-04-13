@@ -91,6 +91,7 @@
                 @dateClick="handleDateClick"
                 @eventClick="handleEventClick"
                 @eventResize="handleEventResize"
+                @datesRender="fetchHours"
             />
             <edit-form
                 :reload="calendarEvents"
@@ -139,7 +140,7 @@ export default {
         AddForm,
         EditForm
     },
-    data: function() {
+    data() {
         return {
             calendarPlugins: [
                 // plugins must be defined in the JS
@@ -165,10 +166,8 @@ export default {
             maxTime: "24:00",
             // Filters
             filters: {
-                company: this.isAdmin
-                    ? null
-                    : this.$store.state.AppActiveUser.company,
-                user: this.isAdmin ? null : this.$store.state.AppActiveUser
+                company: null,
+                user: null
             }
         };
     },
@@ -272,6 +271,33 @@ export default {
         }
     },
     methods: {
+        fetchHours() {
+            const { user } = this.filters;
+            if (user && this.$refs.fullCalendar) {
+                const calendarApi = this.$refs.fullCalendar.getApi();
+                const unit = calendarApi.view.viewSpec.singleUnit;
+                const date = moment(calendarApi.getDate()).format("DD-MM-YYYY");
+                // Refresh hours
+                this.$vs.loading();
+                this.$store
+                    .dispatch("hoursManagement/fetchItems", {
+                        date,
+                        period_type: unit,
+                        user_id: user.id
+                    })
+                    .finally(() => this.$vs.loading.close());
+
+                // Refresh unavailabilities
+                this.$vs.loading();
+                this.$store
+                    .dispatch("unavailabilityManagement/fetchItems", {
+                        date,
+                        period_type: unit,
+                        user_id: user.id
+                    })
+                    .finally(() => this.$vs.loading.close());
+            }
+        },
         authorizedTo(action, model = "hours") {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
@@ -405,15 +431,9 @@ export default {
             this.filters.user = null;
         },
         refreshDataCalendar() {
-            const filter = {};
-            if (this.filters.company) {
-                filter.company_id = this.filters.company.id;
-            }
-            if (this.filters.company && this.filters.user) {
-                filter.user_id = this.filters.user.id;
-            }
             // get user work hours
             this.getBusinessHours();
+            this.fetchHours();
         },
         getBusinessHours() {
             this.$store
@@ -566,7 +586,6 @@ export default {
             this.$store.registerModule("userManagement", moduleUserManagement);
             moduleUserManagement.isRegistered = true;
         }
-        this.$store.dispatch("hoursManagement/fetchItems");
 
         if (this.authorizedTo("read", "companies")) {
             this.$store.dispatch("companyManagement/fetchItems").catch(err => {
@@ -578,10 +597,10 @@ export default {
                 console.error(err);
             });
         }
-        if (this.authorizedTo("read", "unavailabilities")) {
-            this.$store.dispatch("unavailabilityManagement/fetchItems");
-        }
-        if (this.filters.user) {
+
+        if (!this.isAdmin) {
+            this.filters.user = this.$store.state.AppActiveUser;
+            this.filters.company = this.filters.user.company;
             this.getBusinessHours();
         }
     },

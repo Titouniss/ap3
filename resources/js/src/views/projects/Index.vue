@@ -381,6 +381,7 @@ export default {
             },
             set(val) {
                 this.perPage = val;
+                this.page = 1;
                 this.fetchProjects();
             }
         },

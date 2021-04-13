@@ -1,6 +1,5 @@
 <template>
     <v-select
-        :name="name"
         :ref="`${model}Select`"
         :label="label"
         :options="items"
@@ -37,10 +36,6 @@ export default {
         vSelect
     },
     props: {
-        name: {
-            type: String,
-            required: true
-        },
         model: {
             type: String,
             required: true
@@ -54,7 +49,9 @@ export default {
         },
         filters: {
             type: Object,
-            default: {}
+            default() {
+                return {};
+            }
         },
         input: {
             type: Function,

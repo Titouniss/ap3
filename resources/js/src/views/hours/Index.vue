@@ -571,6 +571,7 @@ export default {
         modeIndispo(value, prev) {
             if (prev !== value) {
                 this.currentPage = 1;
+                this.perPage = 10;
             }
         }
     },
@@ -632,7 +633,8 @@ export default {
             },
             set(val) {
                 this.perPage = val;
-                this.refreshData();
+                this.page = 1;
+                this.refreshData(this.filters.date, 0);
             }
         },
         currentPage: {
@@ -641,7 +643,7 @@ export default {
             },
             set(val) {
                 this.page = val;
-                this.refreshData();
+                this.refreshData(this.filters.date, 0);
             }
         }
     },
@@ -707,7 +709,7 @@ export default {
             //this.filters.date = selectedDates[0];
             this.refreshData(selectedDates[0]);
         },
-        refreshData(targetDate = this.filters.date) {
+        refreshData(targetDate = this.filters.date, delay = 1500) {
             const filter = {};
             if (this.filters.hours_taken) {
                 filter.hours_taken_name = this.filters.hours_taken;
@@ -756,7 +758,7 @@ export default {
                             });
                         })
                         .finally(() => this.$vs.loading.close());
-                }, 1500);
+                }, delay);
             } else {
                 this.refreshDataTimeout = setTimeout(() => {
                     this.$vs.loading();
@@ -787,7 +789,7 @@ export default {
                             });
                         })
                         .finally(() => this.$vs.loading.close());
-                }, 1500);
+                }, delay);
             }
         },
         setColumnFilter(column, val) {
@@ -978,17 +980,7 @@ export default {
             moduleUnavailabilityManagement.isRegistered = true;
         }
 
-        this.$store
-            .dispatch("hoursManagement/fetchItems", {
-                date: moment().format("DD-MM-YYYY"),
-                period_type: "month",
-                user_id: null
-            })
-            .then(
-                data => (
-                    (this.stats = data.stats), (this.id_user = data.id_user)
-                )
-            );
+        this.refreshData(this.filters.date, 0);
         if (this.authorizedTo("read", "users")) {
             this.$store.dispatch("userManagement/fetchItems");
         } else {
