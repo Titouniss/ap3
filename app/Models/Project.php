@@ -14,13 +14,14 @@ class Project extends Model
 
     protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
-    protected $appends = ['tasks', 'progress'];
+    protected $appends = ['progress'];
 
     public function getProgressAttribute()
     {
-        return floor(100 * ($this->tasks->isNotEmpty() ? $this->tasks->filter(function ($task) {
+        $tasks = $this->hasManyThrough(Task::class, TasksBundle::class, 'project_id', 'tasks_bundle_id')->get();
+        return floor(100 * ($tasks->isNotEmpty() ? $tasks->filter(function ($task) {
             return $task->status === "done";
-        })->count() / $this->tasks->count() : 0));
+        })->count() / $tasks->count() : 0));
     }
 
     public function customer()
@@ -33,13 +34,8 @@ class Project extends Model
         return $this->hasMany(TasksBundle::class);
     }
 
-    public function getTasksAttribute()
+    public function tasks()
     {
-        $tasksBundles = $this->tasksBundles;
-        $tasks = collect();
-        foreach ($tasksBundles as $t) {
-            $tasks = Task::where('tasks_bundle_id', $t->id)->with('skills', 'previousTasks')->get();
-        }
-        return $tasks;
+        return $this->hasManyThrough(Task::class, TasksBundle::class, 'project_id', 'tasks_bundle_id')->with('skills', 'previousTasks');
     }
 }

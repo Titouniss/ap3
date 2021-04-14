@@ -29,10 +29,9 @@ class ProjectController extends BaseApiController
 {
     use StoresDocuments;
 
-    protected static $label = 'name';
-    protected static $index_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents'];
+    protected static $index_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents', 'tasks'];
     protected static $index_append = null;
-    protected static $show_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents'];
+    protected static $show_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents', 'tasks'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [

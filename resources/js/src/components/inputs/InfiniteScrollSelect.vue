@@ -126,7 +126,9 @@ export default {
         async fetchItems() {
             await this.$store
                 .dispatch(`${this.model}Management/fetchItems`, {
-                    label_only: 1,
+                    fields: this.label,
+                    loads: "",
+                    appends: "",
                     order_by: this.label,
                     page: this.page,
                     per_page: this.perPage,

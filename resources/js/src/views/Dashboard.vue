@@ -1,7 +1,7 @@
 <template>
     <div id="dashboard">
         <vs-row vs-type="flex" vs-justify="center" vs-w="12">
-            <vs-col vs-w="6" vs-xs="12" class="px-3">
+            <vs-col vs-w="6" vs-xs="12" class="mt-3 px-3">
                 <vs-button
                     to="/projects"
                     color="rgba(var(--vs-primary),1)"
@@ -9,11 +9,7 @@
                     type="gradient"
                     class="flex w-full p-0"
                 >
-                    <vx-card
-                        style="background: transparent"
-                        @mouseover="projectHover = true"
-                        @mouseleave="projectHover = false"
-                    >
+                    <vx-card style="background: transparent">
                         <vs-row
                             vs-type="flex"
                             vs-justify="space-between"
@@ -41,12 +37,8 @@
                             >
                                 <feather-icon
                                     icon="ExternalLinkIcon"
-                                    :svgClasses="[
-                                        { 'text-white': projectHover },
-                                        'h-6',
-                                        'w-6',
-                                        'text-transparent'
-                                    ]"
+                                    svgClasses="h-6 w-6"
+                                    class="link-icon"
                                 />
                             </vs-col>
                         </vs-row>
@@ -62,7 +54,7 @@
                                     style="width: 200px; height: 200px"
                                 >
                                     <h1 class="main-data text-primary">
-                                        {{ activeProjects.length }}
+                                        {{ projects.length }}
                                     </h1>
                                     <div class="text-center text-dark">
                                         Dont {{ lateProjects.length }} en retard
@@ -74,7 +66,7 @@
                 </vs-button>
             </vs-col>
 
-            <vs-col vs-w="6" vs-xs="12" class="px-3">
+            <vs-col vs-w="6" vs-xs="12" class="mt-3 px-3">
                 <vx-card>
                     <vs-row
                         vs-type="flex"
@@ -142,14 +134,16 @@
             </vs-col>
         </vs-row>
 
-        <vs-row vs-type="flex" vs-justify="center" vs-w="12" class="mt-6">
+        <vs-row vs-type="flex" vs-justify="center" vs-w="12" class="mt-3">
             <vs-col vs-w="4" vs-sm="12" class="px-3">
-                <vx-card>
+                <vx-card class="mt-3">
                     <vs-row
+                        slot="header"
                         vs-type="flex"
                         vs-justify="flex-start"
                         vs-align="center"
                         vs-w="12"
+                        class="info-title"
                     >
                         <vs-col
                             vs-type="flex"
@@ -165,126 +159,104 @@
                             <h3 class="text-dark">Livraisons prévues</h3>
                         </vs-col>
                     </vs-row>
-                    <vs-row>
+                    <vs-row slot="no-body">
                         <vs-col
                             vs-type="flex"
                             vs-justify="center"
-                            vs-align="center"
                             vs-w="12"
+                            class="info-card"
                         >
-                            <ul class="w-full vx-timeline mt-6">
-                                <transition-group name="slide-fade">
-                                    <li
-                                        v-for="project in projectsToDeliver.length <=
-                                            4 || showAllDeliveries
-                                            ? projectsToDeliver
-                                            : projectsToDeliver.slice(0, 4)"
-                                        :key="project.id"
-                                        class="py-3"
-                                    >
-                                        <div
-                                            class="timeline-icon"
-                                            :class="[
-                                                project.status === 'done'
-                                                    ? 'bg-success'
-                                                    : isDatePassed(project.date)
-                                                    ? 'bg-danger'
-                                                    : 'bg-warning'
-                                            ]"
-                                        >
-                                            <vx-tooltip
-                                                :text="
-                                                    project.status === 'done'
-                                                        ? 'Terminé'
-                                                        : isDatePassed(
-                                                              project.date
-                                                          )
-                                                        ? 'En retard'
-                                                        : 'À terminer'
-                                                "
-                                                delay=".5s"
-                                            >
-                                                <feather-icon
-                                                    :icon="
-                                                        project.status ===
-                                                        'done'
-                                                            ? 'CheckIcon'
-                                                            : isDatePassed(
-                                                                  project.date
-                                                              )
-                                                            ? 'AlertOctagonIcon'
-                                                            : 'AlertTriangleIcon'
-                                                    "
-                                                    svgClasses="text-white stroke-current w-5 h-5"
-                                                />
-                                            </vx-tooltip>
-                                        </div>
-                                        <vs-row
-                                            class="timeline-info"
-                                            vs-justify="center"
-                                            vs-type="flex"
-                                            vs-w="12"
-                                        >
-                                            <vs-col
-                                                vs-type="flex"
-                                                vs-justify="flex-start"
-                                                vs-w="6"
-                                            >
-                                                <div>{{ project.name }}</div>
-                                            </vs-col>
-                                            <vs-col
-                                                vs-type="flex"
-                                                vs-justify="flex-end"
-                                                vs-w="6"
-                                            >
-                                                <small>
-                                                    {{
-                                                        displayDate(
-                                                            project.date
-                                                        )
-                                                    }}
-                                                </small>
-                                            </vs-col>
-                                        </vs-row>
-                                    </li>
-                                </transition-group>
-                            </ul>
-                        </vs-col>
-                    </vs-row>
-                    <vs-row
-                        v-if="projectsToDeliver.length > 4"
-                        vs-type="flex"
-                        vs-justify="center"
-                        vs-align="center"
-                        vs-w="12"
-                        class="mt-3"
-                    >
-                        <vs-col
-                            vs-type="flex"
-                            vs-justify="center"
-                            vs-align="center"
-                            vs-w="12"
-                        >
-                            <vs-button
-                                type="line"
-                                line-position="top"
-                                @click="showAllDeliveries = !showAllDeliveries"
+                            <ul
+                                v-if="projectsToDeliver.length > 0"
+                                class="w-full vx-timeline info-list"
                             >
-                                Voir
-                                {{ showAllDeliveries ? "moins" : "plus" }}
-                            </vs-button>
+                                <li
+                                    v-for="project in projectsToDeliver.slice(
+                                        0,
+                                        10
+                                    )"
+                                    :key="project.id"
+                                    class="py-3"
+                                >
+                                    <div
+                                        class="timeline-icon"
+                                        :class="[
+                                            moment(project.date).isBefore()
+                                                ? 'bg-danger'
+                                                : 'bg-warning'
+                                        ]"
+                                    >
+                                        <vx-tooltip
+                                            :text="
+                                                moment(project.date).isBefore()
+                                                    ? 'En retard'
+                                                    : 'À terminer'
+                                            "
+                                            delay=".5s"
+                                        >
+                                            <feather-icon
+                                                :icon="
+                                                    moment(
+                                                        project.date
+                                                    ).isBefore()
+                                                        ? 'AlertOctagonIcon'
+                                                        : 'AlertTriangleIcon'
+                                                "
+                                                svgClasses="text-white stroke-current w-5 h-5"
+                                            />
+                                        </vx-tooltip>
+                                    </div>
+                                    <vs-row
+                                        class="timeline-info"
+                                        vs-justify="center"
+                                        vs-type="flex"
+                                        vs-w="12"
+                                    >
+                                        <vs-col
+                                            vs-type="flex"
+                                            vs-justify="flex-start"
+                                            vs-w="6"
+                                        >
+                                            <div>
+                                                {{ project.name }}
+                                            </div>
+                                        </vs-col>
+                                        <vs-col
+                                            vs-type="flex"
+                                            vs-justify="flex-end"
+                                            vs-w="6"
+                                        >
+                                            <small>
+                                                {{ displayDate(project.date) }}
+                                            </small>
+                                        </vs-col>
+                                    </vs-row>
+                                </li>
+                            </ul>
+
+                            <div v-else class="info-empty">
+                                <feather-icon
+                                    icon="CheckIcon"
+                                    svgClasses="h-16 w-16 text-white"
+                                />
+                                <div class="text-center text-white">
+                                    Pas de livraisons
+                                </div>
+                            </div>
                         </vs-col>
                     </vs-row>
                 </vx-card>
             </vs-col>
 
             <vs-col vs-w="4" vs-sm="12" class="px-3">
-                <vx-card>
+                <vx-card class="mt-3">
                     <vs-row
+                        slot="header"
                         vs-type="flex"
                         vs-justify="flex-start"
                         vs-align="center"
                         vs-w="12"
+                        class="info-title"
                     >
                         <vs-col
                             vs-type="flex"
@@ -300,91 +272,72 @@
                             <h3 class="text-dark">Avancement</h3>
                         </vs-col>
                     </vs-row>
-                    <vs-row>
+                    <vs-row slot="no-body">
                         <vs-col
                             vs-type="flex"
                             vs-justify="center"
-                            vs-align="center"
                             vs-w="12"
+                            class="info-card"
                         >
                             <div
-                                class="items-center w-full"
-                                :class="{ 'mb-6': activeProjects.length <= 3 }"
+                                v-if="projects.length > 0"
+                                class="items-center w-full info-list"
                             >
-                                <transition-group name="slide-fade">
-                                    <vs-button
-                                        v-for="project in activeProjects.length <=
-                                            3 || showAllProjects
-                                            ? activeProjects
-                                            : activeProjects.slice(0, 3)"
-                                        :key="project.id"
-                                        :to="
-                                            '/projects/project-view/' +
-                                                project.id
-                                        "
-                                        type="flat"
-                                        text-color="grey"
-                                        class="w-full mt-4"
+                                <vs-button
+                                    v-for="project in projects
+                                        .sort((a, b) => a.progress > b.progress)
+                                        .slice(0, 8)"
+                                    :key="project.id"
+                                    :to="'/projects/project-view/' + project.id"
+                                    type="flat"
+                                    text-color="grey"
+                                    class="w-full mt-4"
+                                >
+                                    <div
+                                        class="flex justify-between items-start"
                                     >
-                                        <div
-                                            class="flex justify-between items-start"
-                                        >
-                                            <div
-                                                class="flex flex-col items-start"
-                                            >
-                                                <span class="mb-1">
-                                                    {{ project.name }}
-                                                </span>
-                                                <h4>{{ project.progress }}%</h4>
-                                            </div>
-                                            <feather-icon
-                                                icon="ExternalLinkIcon"
-                                                svgClasses="h-6 w-6 text-dark"
-                                            />
+                                        <div class="flex flex-col items-start">
+                                            <span class="text-left mb-1">
+                                                {{ project.name }}
+                                            </span>
+                                            <h4>{{ project.progress }}%</h4>
                                         </div>
-                                        <vs-progress
-                                            :height="10"
-                                            :percent="project.progress"
-                                        ></vs-progress>
-                                    </vs-button>
-                                </transition-group>
+                                        <feather-icon
+                                            icon="ExternalLinkIcon"
+                                            svgClasses="h-6 w-6"
+                                            class="link-icon"
+                                        />
+                                    </div>
+                                    <vs-progress
+                                        :height="10"
+                                        :percent="project.progress"
+                                    ></vs-progress>
+                                </vs-button>
                             </div>
-                        </vs-col>
-                    </vs-row>
-                    <vs-row
-                        v-if="activeProjects.length > 3"
-                        vs-type="flex"
-                        vs-justify="center"
-                        vs-align="center"
-                        vs-w="12"
-                        class="mt-3"
-                    >
-                        <vs-col
-                            vs-type="flex"
-                            vs-justify="center"
-                            vs-align="center"
-                            vs-w="12"
-                        >
-                            <vs-button
-                                type="line"
-                                line-position="top"
-                                @click="showAllProjects = !showAllProjects"
-                            >
-                                Voir
-                                {{ showAllProjects ? "moins" : "plus" }}
-                            </vs-button>
+
+                            <div v-else class="info-empty">
+                                <feather-icon
+                                    icon="CheckIcon"
+                                    svgClasses="h-16 w-16 text-white"
+                                />
+                                <div class="text-center text-white">
+                                    Pas de projets
+                                </div>
+                            </div>
                         </vs-col>
                     </vs-row>
                 </vx-card>
             </vs-col>
 
             <vs-col vs-w="4" vs-sm="12" class="px-3">
-                <vx-card>
+                <vx-card class="mt-3">
                     <vs-row
+                        slot="header"
                         vs-type="flex"
                         vs-justify="flex-start"
                         vs-align="center"
                         vs-w="12"
+                        class="info-title"
                     >
                         <vs-col
                             vs-type="flex"
@@ -400,112 +353,94 @@
                             <h3 class="text-dark">Remontés d'opérateurs</h3>
                         </vs-col>
                     </vs-row>
-                    <vs-row>
+                    <vs-row slot="no-body">
                         <vs-col
                             vs-type="flex"
                             vs-justify="center"
-                            vs-align="center"
                             vs-w="12"
+                            class="info-card"
                         >
-                            <ul class="w-full vx-timeline mt-6">
-                                <transition-group name="slide-fade">
-                                    <li
-                                        v-for="comment in taskComments.length <=
-                                            3 || showAllComments
-                                            ? taskComments
-                                            : taskComments.slice(0, 3)"
-                                        :key="comment.id"
-                                        class="py-3"
-                                    >
-                                        <div class="timeline-icon bg-primary">
-                                            <feather-icon
-                                                icon="BellIcon"
-                                                svgClasses="text-white stroke-current w-5 h-5"
-                                            />
-                                        </div>
-                                        <div class="timeline-info">
-                                            <vs-row
-                                                vs-type="flex"
-                                                vs-justify="space-between"
-                                                vs-align="center"
-                                                vs-w="12"
-                                            >
-                                                <vs-col
-                                                    vs-type="flex"
-                                                    vs-justify="flex-start"
-                                                    vs-w="6"
-                                                >
-                                                    <div>
-                                                        {{
-                                                            comment.creator
-                                                                .firstname +
-                                                                " " +
-                                                                comment.creator
-                                                                    .lastname
-                                                        }}
-                                                    </div>
-                                                </vs-col>
-                                                <vs-col
-                                                    vs-type="flex"
-                                                    vs-justify="flex-end"
-                                                    vs-w="6"
-                                                >
-                                                    <small>
-                                                        {{
-                                                            displayDateTime(
-                                                                comment.created_at
-                                                            )
-                                                        }}
-                                                    </small>
-                                                </vs-col>
-                                            </vs-row>
-                                            <vs-row
+                            <ul
+                                v-if="taskComments.length > 0"
+                                class="w-full vx-timeline info-list"
+                            >
+                                <li
+                                    v-for="comment in taskComments"
+                                    :key="comment.id"
+                                    class="py-3"
+                                >
+                                    <div class="timeline-icon bg-primary">
+                                        <feather-icon
+                                            icon="BellIcon"
+                                            svgClasses="text-white stroke-current w-5 h-5"
+                                        />
+                                    </div>
+                                    <div class="timeline-info">
+                                        <vs-row
+                                            vs-type="flex"
+                                            vs-justify="space-between"
+                                            vs-align="center"
+                                            vs-w="12"
+                                        >
+                                            <vs-col
                                                 vs-type="flex"
                                                 vs-justify="flex-start"
-                                                vs-align="center"
-                                                vs-w="12"
-                                                class="mt-2"
+                                                vs-w="6"
                                             >
-                                                <vs-col
-                                                    vs-type="flex"
-                                                    vs-justify="flex-start"
-                                                    vs-w="12"
-                                                >
-                                                    <h6>
-                                                        {{
-                                                            comment.description
-                                                        }}
-                                                    </h6>
-                                                </vs-col>
-                                            </vs-row>
-                                        </div>
-                                    </li>
-                                </transition-group>
+                                                <div>
+                                                    {{
+                                                        comment.creator
+                                                            .firstname +
+                                                            " " +
+                                                            comment.creator
+                                                                .lastname
+                                                    }}
+                                                </div>
+                                            </vs-col>
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-end"
+                                                vs-w="6"
+                                            >
+                                                <small>
+                                                    {{
+                                                        displayDateTime(
+                                                            comment.created_at
+                                                        )
+                                                    }}
+                                                </small>
+                                            </vs-col>
+                                        </vs-row>
+                                        <vs-row
+                                            vs-type="flex"
+                                            vs-justify="flex-start"
+                                            vs-align="center"
+                                            vs-w="12"
+                                            class="mt-2"
+                                        >
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-start"
+                                                vs-w="12"
+                                            >
+                                                <h6>
+                                                    {{ comment.description }}
+                                                </h6>
+                                            </vs-col>
+                                        </vs-row>
+                                    </div>
+                                </li>
                             </ul>
-                        </vs-col>
-                    </vs-row>
-                    <vs-row
-                        v-if="taskComments.length > 3"
-                        vs-type="flex"
-                        vs-justify="center"
-                        vs-align="center"
-                        vs-w="12"
-                        class="mt-3"
-                    >
-                        <vs-col
-                            vs-type="flex"
-                            vs-justify="center"
-                            vs-align="center"
-                            vs-w="12"
-                        >
-                            <vs-button
-                                type="line"
-                                line-position="top"
-                                @click="showAllComments = !showAllComments"
-                            >
-                                Voir
-                                {{ showAllComments ? "moins" : "plus" }}
-                            </vs-button>
+
+                            <div v-else class="info-empty">
+                                <feather-icon
+                                    icon="CheckIcon"
+                                    svgClasses="h-16 w-16 text-white"
+                                />
+                                <div class="text-center text-white">
+                                    Pas de remontés
+                                </div>
+                            </div>
                         </vs-col>
                     </vs-row>
                 </vx-card>
@@ -530,11 +465,6 @@ import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.j
 export default {
     data() {
         return {
-            projectHover: false,
-            showAllDeliveries: false,
-            showAllProjects: false,
-            showAllComments: false,
-
             chartOptions: {
                 plotOptions: {
                     radialBar: {
@@ -600,28 +530,18 @@ export default {
     },
     computed: {
         projects() {
-            return this.$store.state.projectManagement.projects.filter(
-                p => !p.deleted_at
-            );
-        },
-        activeProjects() {
-            return this.projects.filter(p => p.status !== "done");
+            return this.$store.getters["projectManagement/getItems"];
         },
         lateProjects() {
-            return this.activeProjects.filter(p => this.isDatePassed(p.date));
+            return this.projects.filter(p => moment(p.date).isBefore());
         },
         projectsToDeliver() {
-            return this.projects
-                .filter(p =>
-                    moment(p.date).isBetween(
-                        moment().subtract(1, "month"),
-                        moment().add(1, "month")
-                    )
-                )
-                .sort((a, b) => moment(b.date).unix() - moment(a.date).unix());
+            return this.projects.filter(p =>
+                moment(p.date).isBefore(moment().add(1, "month"))
+            );
         },
         tasks() {
-            return this.$store.state.taskManagement.tasks;
+            return this.$store.getters["taskManagement/getItems"];
         },
         tasksToday() {
             return this.tasks.filter(task =>
@@ -638,21 +558,14 @@ export default {
                           this.tasksToday.length) *
                           100
                   )
-                : 0;
+                : 100;
         },
         taskComments() {
-            const comments = [];
-            this.tasks.forEach(task => comments.push(...task.comments));
-            return comments.sort(
-                (a, b) =>
-                    moment(b.created_at).unix() - moment(a.created_at).unix()
-            );
+            return this.$store.getters["taskManagement/getComments"];
         }
     },
     methods: {
-        isDatePassed(date) {
-            return moment(date).isBefore();
-        },
+        moment,
         displayDate(date) {
             return moment(date).format("DD/MM/YYYY");
         },
@@ -672,12 +585,33 @@ export default {
             this.$store.registerModule("taskManagement", moduleTaskManagement);
             moduleTaskManagement.isRegistered = true;
         }
-        this.$store.dispatch("projectManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        this.$store
+            .dispatch("projectManagement/fetchItems", {
+                loads: "",
+                status: "doing",
+                page: 1,
+                per_page: 100,
+                order_by: "date",
+                order_by_desc: 1
+            })
+            .catch(err => {
+                console.error(err);
+            });
         this.$store
             .dispatch("taskManagement/fetchItems", {
-                user_id: this.$store.state.AppActiveUser.id
+                date: moment().format("DD-MM-YYYY"),
+                user_id: this.$store.state.AppActiveUser.id,
+                loads: ""
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        this.$store
+            .dispatch("taskManagement/fetchComments", {
+                page: 1,
+                per_page: 10,
+                order_by: "created_at",
+                order_by_desc: 1
             })
             .catch(err => {
                 console.error(err);
@@ -699,8 +633,50 @@ export default {
     font-weight: bold;
 }
 
+.info-title {
+    padding-bottom: 10px;
+
+    --shadow-color: rgba(240, 240, 240, 0.9);
+    box-shadow: 0 10px 10px -10px var(--shadow-color);
+    -moz-box-shadow: 0 0 0 10px var(--shadow-color);
+    -webkit-box-shadow: 0 0 0 10px var(--shadow-color);
+}
+
+.info-card {
+    padding: 0 20px;
+    padding-bottom: 20px;
+    min-height: max(30vh, 300px);
+}
+
+.info-list {
+}
+
+.info-empty {
+    display: grid;
+    place-items: center;
+    place-content: center;
+    width: 160px;
+    height: 160px;
+    margin: auto 0;
+    border-radius: 50%;
+    background-color: rgb(var(--vs-primary));
+}
+
 .vs-button-text {
     width: 100%;
+}
+
+.vs-button .link-icon {
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 200ms;
+}
+
+.vs-button:hover .link-icon {
+    color: white;
+}
+
+.vs-button-flat:hover .link-icon {
+    color: rgba(var(--vs-primary), 0.4) !important;
 }
 
 .con-content--item {
