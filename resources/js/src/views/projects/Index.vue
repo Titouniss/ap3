@@ -573,7 +573,7 @@ export default {
                 this.gridApi.sizeColumnsToFit();
             }
         },
-        sortProjects(projects) {
+        sortProjects(projects = []) {
             let todoProjects = projects
                 .filter(project => project.status == "todo")
                 .reverse();

@@ -488,14 +488,20 @@ export default {
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
-        moduleTaskManagement.isRegistered = false;
-        this.$store.unregisterModule("taskManagement");
+        if (moduleTaskManagement.isRegistered) {
+            moduleTaskManagement.isRegistered = false;
+            this.$store.unregisterModule("taskManagement");
+        }
 
-        moduleUserManagement.isRegistered = false;
-        this.$store.unregisterModule("userManagement");
+        if (moduleUserManagement.isRegistered) {
+            moduleUserManagement.isRegistered = false;
+            this.$store.unregisterModule("userManagement");
+        }
 
-        moduleDocumentManagement.isRegistered = false;
-        this.$store.unregisterModule("documentManagement");
+        if (moduleDocumentManagement.isRegistered) {
+            moduleDocumentManagement.isRegistered = false;
+            this.$store.unregisterModule("documentManagement");
+        }
     }
 };
 </script>

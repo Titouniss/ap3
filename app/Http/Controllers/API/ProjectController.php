@@ -31,7 +31,7 @@ class ProjectController extends BaseApiController
 
     protected static $index_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents', 'tasks'];
     protected static $index_append = null;
-    protected static $show_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents', 'tasks'];
+    protected static $show_load = ['company:companies.id,name', 'customer:customers.id,name', 'documents', 'tasksBundles', 'tasks'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
