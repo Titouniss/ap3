@@ -481,11 +481,13 @@ class TaskController extends BaseApiController
 
             $user = Auth::user();
             if (!$user->is_admin) {
-                if ($this->modelHasCompany()) {
+                if ($user->is_manager) {
                     $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
-                        ->join('tasks_bundles', 'task.tasks_bundle_id', '=', 'tasks_bundles.id')
-                        ->join('projects', 'tasks_bundle.project_id', '=', 'projects.id')
-                        ->where('company_id', $user->company_id);
+                        ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                        ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
+                        ->where('projects.company_id', $user->company_id);
+                } else {
+                    $query->where('created_by', $user->id);
                 }
             }
 

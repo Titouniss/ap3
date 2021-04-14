@@ -284,14 +284,19 @@
                                 class="items-center w-full info-list"
                             >
                                 <vs-button
-                                    v-for="project in projects
+                                    v-for="(project, index) in projects
                                         .sort((a, b) => a.progress > b.progress)
                                         .slice(0, 8)"
                                     :key="project.id"
                                     :to="'/projects/project-view/' + project.id"
                                     type="flat"
                                     text-color="grey"
-                                    class="w-full mt-4"
+                                    :class="[
+                                        'w-full',
+                                        {
+                                            'mt-4': index > 0
+                                        }
+                                    ]"
                                 >
                                     <div
                                         class="flex justify-between items-start"
@@ -634,12 +639,6 @@ export default {
 }
 
 .info-title {
-    padding-bottom: 10px;
-
-    --shadow-color: rgba(240, 240, 240, 0.9);
-    box-shadow: 0 10px 10px -10px var(--shadow-color);
-    -moz-box-shadow: 0 0 0 10px var(--shadow-color);
-    -webkit-box-shadow: 0 0 0 10px var(--shadow-color);
 }
 
 .info-card {
