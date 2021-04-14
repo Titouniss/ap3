@@ -485,6 +485,7 @@ export default {
 
 .vx-logo-full {
     height: 3rem;
+    margin-left: 5px;
     margin-bottom: -0.5rem;
 }
 </style>
