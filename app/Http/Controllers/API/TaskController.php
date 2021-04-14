@@ -549,7 +549,7 @@ class TaskController extends BaseApiController
         } catch (ApiException $th) {
             return $this->errorResponse($th->getMessage(), $th->getHttpCode());
         } catch (\Throwable $th) {
-            return $this->errorResponse($th, static::$response_codes['error_server']);
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
     }
 }

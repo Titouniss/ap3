@@ -121,104 +121,20 @@ class ProjectController extends BaseApiController
     protected function updateTaskPeriod(Request $request)
     {
         $taskPeriod = TaskPeriod::where('id', $request->id)->get();
-
+        $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
         //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
         //si l'utilisateur n'a pas coché la case pour déplacer la date de livraison automatiquement
         //si la task_period doit être déplacée après la date originale
         if ($request->moveChecked == "true" && $request->moveDateEndChecked == "false" && ($request->start > $taskPeriod[0]['start_time'])) {
             //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
-            $orderTask = $task[0]['order'];
-            $bundle_id = $task[0]['tasks_bundle_id'];
-            $taskBundle = TasksBundle::where('id', $bundle_id)->get();
-            $projectId = $taskBundle[0]['project_id'];
-            $project = Project::where('id', $projectId)->get();
-            $dateLivraison = $project[0]['date'];
-            $tasksProject = Task::where('tasks_bundle_id', $bundle_id)->get();
-            //récupérer la liste des id des tasks qui doivent être faites après la task sélectionnée
-            $listIdTaskDependant = array();
-            if ($orderTask != null) {
-                foreach ($tasksProject as $taskProject) {
-                    if ($taskProject['order'] != null && $taskProject['order'] > $orderTask) {
-                        array_push($listIdTaskDependant, $taskProject['id']);
-                    }
-                }
-            }
-            $user_id = $task[0]['user_id'];
-            $workarea_id = $task[0]['workarea_id'];
-
-            //récupérer toutes les tasks avec le même workarea_id
-            $tasksWorkarea = Task::where('workarea_id', $workarea_id)->get();
-
-            //récupérer toutes les tasks avec le même user_id
-            $tasksUser = Task::where('user_id', $user_id)->get();
-
-            //récupérer tous les id des tasks avec le même user_id et tous les id des tasks avec le même workarea_id
-            //sauf les id des tasks dépendantes à faire après la task car elles vont être déplacées après
-            $listTaskId = array();
-            if ($listIdTaskDependant != null) {
-                if (!in_array($tasksWorkarea->first()->id, $listIdTaskDependant) && $tasksWorkarea->first()->id != $task[0]['id']) {
-                    array_push($listTaskId, $tasksWorkarea->first()->id);
-                }
-                foreach ($tasksWorkarea as $taskWorkarea) {
-                    if (!in_array($taskWorkarea->id, $listTaskId) && !in_array($taskWorkarea->id, $listIdTaskDependant) && ($taskWorkarea->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskWorkarea->id);
-                    }
-                }
-                foreach ($tasksUser as $taskUser) {
-                    if (!in_array($taskUser->id, $listTaskId) && !in_array($taskUser->id, $listIdTaskDependant) && ($taskUser->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskUser->id);
-                    }
-                }
-            } else {
-                if ($tasksWorkarea->first()->id != $task[0]['id']) {
-                    array_push($listTaskId, $tasksWorkarea->first()->id);
-                }
-                foreach ($tasksWorkarea as $taskWorkarea) {
-                    if (!in_array($taskWorkarea->id, $listTaskId) && ($taskWorkarea->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskWorkarea->id);
-                    }
-                }
-                foreach ($tasksUser as $taskUser) {
-                    if (!in_array($taskUser->id, $listTaskId) && ($taskUser->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskUser->id);
-                    }
-                }
-            }
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('listTaskId', [$listTaskId]);
-
-            //récupérer toutes les task_periods des tasks qui ont le même utilisateur ou le même workarea grâce à la liste des id
-            $listTasksPeriod = array();
-            foreach ($listTaskId as $taskId) {
-                $item = TaskPeriod::where('task_id', $taskId)->get();
-                if (!$item->isEmpty()) {
-                    array_push($listTasksPeriod, $item);
-                }
-            }
-            $list = array();
-            foreach ($listTasksPeriod as $items) {
-                foreach ($items as $item) {
-                    array_push($list, $item);
-                }
-            }
-
-            $listDebutTaskPeriodIndispo = array();
-            foreach ($list as $taskPeriodIndispo) {
-                array_push($listDebutTaskPeriodIndispo, Carbon::parse($taskPeriodIndispo['start_time'])->format('Y-m-d'));
-            }
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('list', [$list]);
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('listDebutTaskPeriodIndispo', [$listDebutTaskPeriodIndispo]);
+            $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "next");
+            $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
+            $list = $arrayPeriodIndispo["list"];
+            $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
+            $dateLivraison = $arrayPeriodIndispo["date"];
 
             $erreur = false;
-            //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
+            //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec une task period occupée
             foreach ($list as $period) {
                 //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
                 if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
@@ -285,44 +201,7 @@ class ProjectController extends BaseApiController
                     $controllerLog = new Logger('hours');
                     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
                     $controllerLog->info('avant date de livraison', ["ok"]);
-                    // for($i=0;$i<count($listTaskPeriodToMoveAndCreate["move"]);$i=$i+3){
-                    //     $controllerLog = new Logger('hours');
-                    //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    //     $controllerLog->info('info i',[$listTaskPeriodToMoveAndCreate["move"][$i]]);
 
-                    //     $controllerLog = new Logger('hours');
-                    //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    //     $controllerLog->info('info i+1',[$listTaskPeriodToMoveAndCreate["move"][$i+1]]);
-
-                    //     $controllerLog = new Logger('hours');
-                    //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    //     $controllerLog->info('info i+2',[$listTaskPeriodToMoveAndCreate["move"][$i+2]]);
-                    //     TaskPeriod::where('id',$listTaskPeriodToMoveAndCreate["move"][$i])->update([
-                    //         'start_time' => $listTaskPeriodToMoveAndCreate["move"][$i+1],
-                    //         'end_time' => $listTaskPeriodToMoveAndCreate["move"][$i+2],
-                    //     ]);
-                    // }
-                    // if(count($listTaskPeriodToMoveAndCreate["create"]) > 0){
-                    //     for($i=0;$i<count($listTaskPeriodToMoveAndCreate["create"]);$i=$i+3){
-                    //         $controllerLog = new Logger('hours');
-                    //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    //         $controllerLog->info('info i',[$listTaskPeriodToMoveAndCreate["create"][$i]]);
-
-                    //         $controllerLog = new Logger('hours');
-                    //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    //         $controllerLog->info('info i+1',[$listTaskPeriodToMoveAndCreate["create"][$i+1]]);
-
-                    //         $controllerLog = new Logger('hours');
-                    //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    //         $controllerLog->info('info i+1',[$listTaskPeriodToMoveAndCreate["create"][$i+2]]);
-
-                    //         TaskPeriod::create([
-                    //             'task_id' => $listTaskPeriodToMoveAndCreate["create"][$i],
-                    //             'start_time' => $listTaskPeriodToMoveAndCreate["create"][$i+1],
-                    //             'end_time' => $listTaskPeriodToMoveAndCreate["create"][$i+2],
-                    //         ]);
-                    //     }
-                    // }
                     $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
                     //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
                     $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
@@ -401,117 +280,11 @@ class ProjectController extends BaseApiController
         //si la task_period doit être déplacée après la date originale
         else if ($request->moveChecked == "true" && $request->moveDateEndChecked == "true" && ($request->start > $taskPeriod[0]['start_time'])) {
             //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
-            $orderTask = $task[0]['order'];
-            $bundle_id = $task[0]['tasks_bundle_id'];
-            $taskBundle = TasksBundle::where('id', $bundle_id)->get();
-            $projectId = $taskBundle[0]['project_id'];
-            $project = Project::where('id', $projectId)->get();
-            $dateLivraison = $project[0]['date'];
-            $tasksProject = Task::where('tasks_bundle_id', $bundle_id)->get();
-
-            //récupérer la liste des id des tasks qui doivent être faites après la task sélectionnée
-            $listIdTaskDependant = array();
-            if ($orderTask != null) {
-                foreach ($tasksProject as $taskProject) {
-                    if ($taskProject['order'] != null && $taskProject['order'] > $orderTask) {
-                        array_push($listIdTaskDependant, $taskProject['id']);
-                    }
-                }
-            }
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('listIdTaskDependant', [$listIdTaskDependant]);
-
-            $user_id = $task[0]['user_id'];
-            $workarea_id = $task[0]['workarea_id'];
-
-            //récupérer toutes les tasks avec le même workarea_id
-            $tasksWorkarea = Task::where('workarea_id', $workarea_id)->get();
-
-            //récupérer toutes les tasks avec le même user_id
-            $tasksUser = Task::where('user_id', $user_id)->get();
-
-            //récupérer tous les id des tasks avec le même user_id et tous les id des tasks avec le même workarea_id
-            //sauf l'id de la task à déplacer et les id des tasks dépendantes à faire après la task car elles vont être déplacées après
-            $listTaskId = array();
-            if ($listIdTaskDependant != null) {
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('ok', ["!= null"]);
-
-                if (!in_array($tasksWorkarea->first()->id, $listIdTaskDependant) && $tasksWorkarea->first()->id != $task[0]['id']) {
-                    array_push($listTaskId, $tasksWorkarea->first()->id);
-                }
-                foreach ($tasksWorkarea as $taskWorkarea) {
-                    if (!in_array($taskWorkarea->id, $listTaskId) && !in_array($taskWorkarea->id, $listIdTaskDependant) && ($taskWorkarea->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskWorkarea->id);
-                    }
-                }
-                foreach ($tasksUser as $taskUser) {
-                    if (!in_array($taskUser->id, $listTaskId) && !in_array($taskUser->id, $listIdTaskDependant) && ($taskUser->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskUser->id);
-                    }
-                }
-            } else {
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('$tasksWorkarea->first()->id ', [$tasksWorkarea->first()->id]);
-
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('$task[0][id]', [$task[0]['id']]);
-
-                if ($tasksWorkarea->first()->id != $task[0]['id']) {
-                    array_push($listTaskId, $tasksWorkarea->first()->id);
-                }
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('$tasksWorkarea', [$tasksWorkarea]);
-
-                foreach ($tasksWorkarea as $taskWorkarea) {
-                    $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                    $controllerLog->info('$taskWorkarea->id', [$taskWorkarea->id]);
-
-                    if (!in_array($taskWorkarea->id, $listTaskId) && ($taskWorkarea->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskWorkarea->id);
-                    }
-                }
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('$tasksUser', [$tasksUser]);
-                foreach ($tasksUser as $taskUser) {
-                    $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                    $controllerLog->info('$taskUser', [$taskUser]);
-
-                    if (!in_array($taskUser->id, $listTaskId) && ($taskUser->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskUser->id);
-                    }
-                }
-            }
-
-            //récupérer toutes les task_periods des tasks qui ont le même utilisateur ou le même workarea grâce à la liste des id
-            $listTasksPeriod = array();
-            foreach ($listTaskId as $taskId) {
-                $item = TaskPeriod::where('task_id', $taskId)->get();
-                if (!$item->isEmpty()) {
-                    array_push($listTasksPeriod, $item);
-                }
-            }
-            $list = array();
-            foreach ($listTasksPeriod as $items) {
-                foreach ($items as $item) {
-                    array_push($list, $item);
-                }
-            }
-
-            $listDebutTaskPeriodIndispo = array();
-            foreach ($list as $taskPeriodIndispo) {
-                array_push($listDebutTaskPeriodIndispo, Carbon::parse($taskPeriodIndispo['start_time'])->format('Y-m-d'));
-            }
+            $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "next");
+            $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
+            $list = $arrayPeriodIndispo["list"];
+            $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
+            $dateLivraison = $arrayPeriodIndispo["date"];
 
             $erreur = false;
             //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
@@ -577,66 +350,7 @@ class ProjectController extends BaseApiController
                     ]);
                 }
                 $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
-                // //on met à jour les tasks_period
-                // for($i=0;$i<count($listTaskPeriodToMoveAndCreate["move"]);$i=$i+3){
-                //     $controllerLog = new Logger('hours');
-                //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //     $controllerLog->info('info i',[$listTaskPeriodToMoveAndCreate["move"][$i]]);
 
-                //     $controllerLog = new Logger('hours');
-                //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //     $controllerLog->info('info i+1',[$listTaskPeriodToMoveAndCreate["move"][$i+1]]);
-
-                //     $controllerLog = new Logger('hours');
-                //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //     $controllerLog->info('info i+2',[$listTaskPeriodToMoveAndCreate["move"][$i+2]]);
-                //     TaskPeriod::where('id',$listTaskPeriodToMoveAndCreate["move"][$i])->update([
-                //         'start_time' => $listTaskPeriodToMoveAndCreate["move"][$i+1],
-                //         'end_time' => $listTaskPeriodToMoveAndCreate["move"][$i+2],
-                //     ]);
-                // }
-                // //on crée les tasks_period s'il y en a à créer
-                // if(count($listTaskPeriodToMoveAndCreate["create"]) > 0){
-                //     for($i=0;$i<count($listTaskPeriodToMoveAndCreate["create"]);$i=$i+3){
-                //         $controllerLog = new Logger('hours');
-                //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //         $controllerLog->info('info i',[$listTaskPeriodToMoveAndCreate["create"][$i]]);
-
-                //         $controllerLog = new Logger('hours');
-                //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //         $controllerLog->info('info i+1',[$listTaskPeriodToMoveAndCreate["create"][$i+1]]);
-
-                //         $controllerLog = new Logger('hours');
-                //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //         $controllerLog->info('info i+1',[$listTaskPeriodToMoveAndCreate["create"][$i+2]]);
-
-                //         TaskPeriod::create([
-                //             'task_id' => $listTaskPeriodToMoveAndCreate["create"][$i],
-                //             'start_time' => $listTaskPeriodToMoveAndCreate["create"][$i+1],
-                //             'end_time' => $listTaskPeriodToMoveAndCreate["create"][$i+2],
-                //         ]);
-                //     }
-                // }
-                // //on supprime les tasks_period s'il y en a à supprimer
-                // if(count($listTaskPeriodToMoveAndCreate["delete"]) > 0){
-                //     for($i=0;$i<count($listTaskPeriodToMoveAndCreate["delete"]);$i=$i+3){
-                //         $controllerLog = new Logger('hours');
-                //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //         $controllerLog->info('info i',[$listTaskPeriodToMoveAndCreate["delete"][$i]]);
-
-                //         $taskToDelete=TaskPeriod::where('id',$listTaskPeriodToMoveAndCreate["delete"][$i])
-                //                     ->where('start_time', $listTaskPeriodToMoveAndCreate["delete"][$i+1])
-                //                     ->where('end_time', $listTaskPeriodToMoveAndCreate["delete"][$i+2])->get();
-
-                //         $controllerLog = new Logger('hours');
-                //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                //         $controllerLog->info('taskToDelete',[$taskToDelete]);
-
-                //         $taskToDelete=TaskPeriod::where('id',$listTaskPeriodToMoveAndCreate["delete"][$i])
-                //         ->where('start_time', $listTaskPeriodToMoveAndCreate["delete"][$i+1])
-                //         ->where('end_time', $listTaskPeriodToMoveAndCreate["delete"][$i+2])->delete();
-                //     }
-                // }
                 //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
                 $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
                 $firstTaskPeriod = $listTaskPeriodModified->first();
@@ -710,100 +424,12 @@ class ProjectController extends BaseApiController
         } else if ($request->moveChecked == "true" && ($request->start < $taskPeriod[0]['start_time'])) {
 
             //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
-            $orderTask = $task[0]['order'];
-            $bundle_id = $task[0]['tasks_bundle_id'];
-            $taskBundle = TasksBundle::where('id', $bundle_id)->get();
-            $projectId = $taskBundle[0]['project_id'];
-            $project = Project::where('id', $projectId)->get();
+            $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "before");
+            $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
+            $list = $arrayPeriodIndispo["list"];
+            $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
+            $dateDebutProjet = $arrayPeriodIndispo["date"];
             $dateDemain = Carbon::now()->addDays(1)->format("Y-m-d H:i:s");
-            $dateDebutProjet = $project[0]['start_date'];
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('dateDemain', [$dateDemain]);
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('dateDebutProjet', [$dateDebutProjet]);
-
-            $tasksProject = Task::where('tasks_bundle_id', $bundle_id)->get();
-
-            //récupérer la liste des id des tasks qui doivent être faites avant la task sélectionnée
-            $listIdTaskDependant = array();
-            if ($orderTask != null) {
-                foreach ($tasksProject as $taskProject) {
-                    if ($taskProject['order'] != null && $taskProject['order'] < $orderTask) {
-                        array_push($listIdTaskDependant, $taskProject['id']);
-                    }
-                }
-            }
-
-            $user_id = $task[0]['user_id'];
-            $workarea_id = $task[0]['workarea_id'];
-
-            //récupérer toutes les tasks avec le même workarea_id
-            $tasksWorkarea = Task::where('workarea_id', $workarea_id)->get();
-
-            //récupérer toutes les tasks avec le même user_id
-            $tasksUser = Task::where('user_id', $user_id)->get();
-
-            //récupérer tous les id des tasks avec le même user_id et tous les id des tasks avec le même workarea_id
-            //sauf les id des tasks dépendantes à faire après la task car elles vont être déplacées après
-            $listTaskId = array();
-            if ($listIdTaskDependant != null) {
-                if (!in_array($tasksWorkarea->first()->id, $listIdTaskDependant) && $tasksWorkarea->first()->id != $task[0]['id']) {
-                    array_push($listTaskId, $tasksWorkarea->first()->id);
-                }
-                foreach ($tasksWorkarea as $taskWorkarea) {
-                    if (!in_array($taskWorkarea->id, $listTaskId) && !in_array($taskWorkarea->id, $listIdTaskDependant) && ($taskWorkarea->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskWorkarea->id);
-                    }
-                }
-                foreach ($tasksUser as $taskUser) {
-                    if (!in_array($taskUser->id, $listTaskId) && !in_array($taskUser->id, $listIdTaskDependant) && ($taskUser->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskUser->id);
-                    }
-                }
-            } else {
-                if ($tasksWorkarea->first()->id != $task[0]['id']) {
-                    array_push($listTaskId, $tasksWorkarea->first()->id);
-                }
-                foreach ($tasksWorkarea as $taskWorkarea) {
-                    if (!in_array($taskWorkarea->id, $listTaskId) && ($taskWorkarea->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskWorkarea->id);
-                    }
-                }
-                foreach ($tasksUser as $taskUser) {
-                    if (!in_array($taskUser->id, $listTaskId) && ($taskUser->id != $task[0]['id'])) {
-                        array_push($listTaskId, $taskUser->id);
-                    }
-                }
-            }
-
-            //récupérer toutes les task_periods des tasks qui ont le même utilisateur ou le même workarea grâce à la liste des id
-            $listTasksPeriod = array();
-            foreach ($listTaskId as $taskId) {
-                $item = TaskPeriod::where('task_id', $taskId)->get();
-                if (!$item->isEmpty()) {
-                    array_push($listTasksPeriod, $item);
-                }
-            }
-            $list = array();
-            foreach ($listTasksPeriod as $items) {
-                foreach ($items as $item) {
-                    array_push($list, $item);
-                }
-            }
-
-            $listDebutTaskPeriodIndispo = array();
-            foreach ($list as $taskPeriodIndispo) {
-                array_push($listDebutTaskPeriodIndispo, Carbon::parse($taskPeriodIndispo['start_time'])->format('Y-m-d'));
-            }
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('listDebutTaskPeriodIndispo', [$listDebutTaskPeriodIndispo]);
 
             $erreur = false;
             //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
@@ -3538,6 +3164,161 @@ class ProjectController extends BaseApiController
         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
         $controllerLog->info('arrayInfos avant', [$arrayInfos]);
         return $arrayInfos;
+    }
+
+    private function listDebutPeriodIndispo($taskPeriod, $task, $algo)
+    {
+        $orderTask = $task[0]['order'];
+        $bundle_id = $task[0]['tasks_bundle_id'];
+        $taskBundle = TasksBundle::where('id', $bundle_id)->get();
+        $projectId = $taskBundle[0]['project_id'];
+        $project = Project::where('id', $projectId)->get();
+        $tasksProject = Task::where('tasks_bundle_id', $bundle_id)->get();
+        //s'il faut avancer, la date vaut la date de fin de projet
+        if ($algo == "next") {
+            $date = $project[0]['date'];
+        }
+        //s'il faut reculer, la date vaut la date de début de projet
+        else if ($algo == "before") {
+            $date = $project[0]['start_date'];
+        }
+        //s'il faut avancer, récupérer la liste des id des tasks qui doivent être faites après la task sélectionnée
+        $listIdTaskDependant = array();
+        if ($orderTask != null && $algo == "next") {
+            foreach ($tasksProject as $taskProject) {
+                if ($taskProject['order'] != null && $taskProject['order'] > $orderTask) {
+                    array_push($listIdTaskDependant, $taskProject['id']);
+                }
+            }
+        }
+        //s'il faut reculer, récupérer la liste des id des tasks qui doivent être faites avant la task sélectionnée
+        else if ($orderTask != null && $algo == "before") {
+            foreach ($tasksProject as $taskProject) {
+                if ($taskProject['order'] != null && $taskProject['order'] < $orderTask) {
+                    array_push($listIdTaskDependant, $taskProject['id']);
+                }
+            }
+        }
+        $user_id = $task[0]['user_id'];
+        $workarea_id = $task[0]['workarea_id'];
+
+        //récupérer toutes les tasks avec le même workarea_id
+        $tasksWorkarea = Task::where('workarea_id', $workarea_id)->get();
+        $listTaskId = array();
+        //s'il y a au moins une task sur le même ilôt
+        if (count($tasksWorkarea) > 0) {
+            //on récupère le max_users de l'ilôt
+            $workArea = Workarea::where('id', $workarea_id)->get();
+            $max_users = $workArea[0]['max_users'];
+
+            //on compte le nombre de tasks en même temps et sur le même ilôt
+            $nbTasksTogether = 1;
+            $maxNbTasksTogether = 0;
+            $listTaskTogether = array();
+            $listTasksWorkarea = array();
+            foreach ($tasksWorkarea as $taskWorkarea) {
+                $periodTask = CarbonPeriod::create($taskWorkarea['date'], $taskWorkarea['date_end']);
+                $nbTasksTogether = 1;
+                array_push($listTasksWorkarea, $taskWorkarea);
+                foreach ($tasksWorkarea as $taskworkarea) {
+                    if (($taskworkarea != $taskWorkarea) && ($periodTask->contains($taskworkarea['date']) || $periodTask->contains($taskworkarea['date_end']))) {
+                        $nbTasksTogether++;
+                        if (!in_array($taskworkarea, $listTaskTogether)) {
+                            array_push($listTaskTogether, $taskworkarea);
+                        }
+                        if (!in_array($taskWorkarea, $listTaskTogether)) {
+                            array_push($listTaskTogether, $taskWorkarea);
+                        }
+                    }
+                    if ($nbTasksTogether > $maxNbTasksTogether) {
+                        $maxNbTasksTogether = $nbTasksTogether;
+                    }
+                }
+            }
+            $nbTasksTogether = $maxNbTasksTogether;
+            //si le nombre de tasks en même temps sur l'ilôt < max_users, on enlève la task de la liste des tasks avec le même workarea car période dispo
+            $tasksWorkarea = Task::where('workarea_id', $workarea_id);
+            if ($nbTasksTogether < $max_users) {
+                foreach ($listTaskTogether as $taskTogether) {
+                    $key = array_search($taskTogether, $listTasksWorkarea);
+                    $tasksWorkarea = $tasksWorkarea->where('id', '!=', $listTasksWorkarea[$key]['id']);
+                }
+            }
+        }
+        $tasksWorkarea = $tasksWorkarea->get();
+
+        //récupérer toutes les tasks avec le même user_id
+        $tasksUser = Task::where('user_id', $user_id)->get();
+
+        //récupérer tous les id des tasks avec le même user_id et tous les id des tasks avec le même workarea_id
+        //sauf les id des tasks dépendantes car elles vont être déplacées
+
+        if ($listIdTaskDependant != null) {
+            if (!in_array($tasksWorkarea->first()->id, $listIdTaskDependant) && $tasksWorkarea->first()->id != $task[0]['id']) {
+                array_push($listTaskId, $tasksWorkarea->first()->id);
+            }
+            foreach ($tasksWorkarea as $taskWorkarea) {
+                if (!in_array($taskWorkarea->id, $listTaskId) && !in_array($taskWorkarea->id, $listIdTaskDependant) && ($taskWorkarea->id != $task[0]['id'])) {
+                    array_push($listTaskId, $taskWorkarea->id);
+                }
+            }
+            foreach ($tasksUser as $taskUser) {
+                if (!in_array($taskUser->id, $listTaskId) && !in_array($taskUser->id, $listIdTaskDependant) && ($taskUser->id != $task[0]['id'])) {
+                    array_push($listTaskId, $taskUser->id);
+                }
+            }
+        } else {
+            if ($tasksWorkarea->first()->id != $task[0]['id']) {
+                array_push($listTaskId, $tasksWorkarea->first()->id);
+            }
+            foreach ($tasksWorkarea as $taskWorkarea) {
+                if (!in_array($taskWorkarea->id, $listTaskId) && ($taskWorkarea->id != $task[0]['id'])) {
+                    array_push($listTaskId, $taskWorkarea->id);
+                }
+            }
+            foreach ($tasksUser as $taskUser) {
+                if (!in_array($taskUser->id, $listTaskId) && ($taskUser->id != $task[0]['id'])) {
+                    array_push($listTaskId, $taskUser->id);
+                }
+            }
+        }
+        $controllerLog = new Logger('hours');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('listTaskId', [$listTaskId]);
+
+        //récupérer toutes les task_periods des tasks qui ont le même utilisateur ou le même workarea grâce à la liste des id
+        $listTasksPeriod = array();
+        foreach ($listTaskId as $taskId) {
+            $item = TaskPeriod::where('task_id', $taskId)->get();
+            if (!$item->isEmpty()) {
+                array_push($listTasksPeriod, $item);
+            }
+        }
+        $list = array();
+        foreach ($listTasksPeriod as $items) {
+            foreach ($items as $item) {
+                array_push($list, $item);
+            }
+        }
+
+        $listDebutTaskPeriodIndispo = array();
+        foreach ($list as $taskPeriodIndispo) {
+            array_push($listDebutTaskPeriodIndispo, Carbon::parse($taskPeriodIndispo['start_time'])->format('Y-m-d'));
+        }
+
+        $controllerLog = new Logger('hours');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('list', [$list]);
+
+        $controllerLog = new Logger('hours');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('listDebutTaskPeriodIndispo', [$listDebutTaskPeriodIndispo]);
+        return array(
+            "listDebutTaskPeriodIndispo" => $listDebutTaskPeriodIndispo,
+            "list" => $list,
+            "listIdTaskDependant" => $listIdTaskDependant,
+            "date" => $date,
+        );
     }
 
     private function workHoursTask($taskIdTaskPeriodToMove, $taskPeriodToMove, $listUserId, $dayName, $heureNewPeriod, $algo)

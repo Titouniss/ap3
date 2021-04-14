@@ -50,7 +50,8 @@ export default {
             contact_tel1,
             password,
             c_password,
-            terms_accepted
+            terms_accepted,
+            registerLink,
         } = user;
 
         return apiRequest(`${slug}/register`, 'post', (payload) => router.push("/pages/login"), {
@@ -62,7 +63,8 @@ export default {
             contact_tel1,
             password,
             c_password,
-            terms_accepted
+            terms_accepted,
+            registerLink,
         })
     },
     logout: ({ commit }) => {
@@ -93,5 +95,10 @@ export default {
         const { email } = user;
 
         return apiRequest(`${slug}/email/resend`, 'post', null, { email });
+    },
+    registrationLink({ commit}, user){
+        const { id, email } = user;
+
+        return apiRequest(`${slug}/email/registrationLink`, 'post', null, { id, email });
     }
 };

@@ -38,6 +38,7 @@ Route::prefix('auth')->group(function () {
     Route::prefix('email')->group(function () {
         Route::get('verify/{id}/{hash}', 'API\UserController@verify')->name('api.verification.verify')->middleware('signed');
         Route::post('resend', 'API\UserController@resendVerification');
+        Route::post('registrationLink', 'API\UserController@sendRegistrationLink');
     });
 });
 

@@ -180,4 +180,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\MailAddUserNotification($id, $register_token));
     }
+    /**
+     * Override the mail body for registration link notification mail.
+     */
+    public function sendEmailRegistrationLinkNotification($mails, $companyName)
+    {
+        $this->notify(new \App\Notifications\MailRegistrationLinkNotification($mails, $companyName));
+    }
 }

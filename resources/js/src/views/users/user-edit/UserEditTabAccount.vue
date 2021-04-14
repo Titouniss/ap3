@@ -124,6 +124,17 @@
           </span>
       </div>      
     </div>
+    <br>
+    <vs-button v-if="isManager"
+      class="ml-auto mt-2"
+      @click="generateLink"
+      >Générer le lien d'inscription
+    </vs-button>
+    <vs-button v-if="isManager"
+      class="ml-auto mt-2"
+      @click="activePrompt = true"
+      >Envoyer le lien d'inscription par mail
+    </vs-button>
 
     <!-- Save & Reset Button -->
     <div class="vx-row">
@@ -145,6 +156,40 @@
         </div>
       </div>
     </div>
+    <vs-prompt
+      title="Envoyer le lien d'inscription par mail "
+      accept-text="Envoyer"
+      cancel-text="Annuler"
+      button-cancel="border"
+      @cancel="clearFields"
+      @accept="sendMail"
+      @close="clearFields"
+      :is-valid="validateFormMail"
+      :active.sync="activePrompt"
+    >
+      <div class="form">
+        <form autocomplete="off">
+          <span>Adresse Mail</span>
+          <vs-input v-validate="'required|email'" name="email" type="email" label-placeholder="Email" v-model="mail0" class="w-full mb-4" 
+          />
+          <span class="text-danger text-sm" v-show="errors.has('email')">
+              {{ errors.first("email") }}
+         </span>
+          <div v-for="i in nbAddress" :key="i">
+            <span>Adresse Mail </span>
+            <vs-input v-validate="'required|email'" name="email"  type="email" label-placeholder="Email" v-model="mails[i]" class="w-full mb-4" />
+            <span class="text-danger text-sm" v-show="errors.has('email')">
+              {{ errors.first("email") }}
+            </span>
+          </div>
+          <vs-button
+            class="ml-auto mt-2"
+            @click="addAddress"
+            >Ajouter une adresse mail
+          </vs-button>
+        </form>
+      </div>
+    </vs-prompt>
   </div>
 </template>
 
@@ -164,6 +209,10 @@ export default {
   data() {
     console.log(this.data);
     return {
+      activePrompt: false,
+      nbAddress: 0,
+      mail0: "",
+      mails: [],
       data_local: JSON.parse(JSON.stringify(this.data)),
 
       statusOptions: [
@@ -179,6 +228,9 @@ export default {
     };
   },
   computed: {
+    isManager() {
+      return this.$store.state.AppActiveUser.is_manager;
+    },
     status_local: {
       get() {
         return {
@@ -203,6 +255,9 @@ export default {
     },
     validateForm() {
       return !this.errors.any();
+    },
+    validateFormMail() {
+      return !this.errors.any() && this.mail0!=null && this.mail0!="";
     },
   },
   methods: {
@@ -250,6 +305,44 @@ export default {
       // For reference you can check dataList example
       // We haven't integrated it here, because data isn't saved in DB
     },
+    generateLink(){
+      this.$vs.dialog({
+          color: "primary",
+          title: "Lien d'inscription",
+          text: "app.plannigo.fr/pages/register?company="+this.data_local.company.name,
+          acceptText: "OK",
+        });
+    },
+    clearFields() {
+      this.activePrompt = false;
+    },
+    addAddress(){
+      this.nbAddress++;
+    },
+    sendMail(){
+      this.mails[0]=this.mail0;
+      this.$store
+        .dispatch("auth/registrationLink", { id: this.$route.params.userId, email: this.mails })
+        .catch((error) => {
+          this.$vs.notify({
+            title: "Echec",
+            text: error.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+          });
+        })
+    },
   },
 };
 </script>
+
+<style>
+
+.form {
+  max-height: 450px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+</style>

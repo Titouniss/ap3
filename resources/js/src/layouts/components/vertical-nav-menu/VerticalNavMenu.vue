@@ -484,7 +484,7 @@ export default {
 @import "@sass/vuexy/components/verticalNavMenu.scss";
 
 .vx-logo-full {
-    height: 3rem;
+    height: 2.9rem;
     margin-left: 5px;
     margin-bottom: -0.5rem;
 }

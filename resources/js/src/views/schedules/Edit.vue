@@ -66,13 +66,6 @@
         @eventClick="handleEventClick"
         @eventResize="handleEventResize"
       />
-      <!-- <edit-form
-        :itemId="itemIdToEdit"
-        :tasks_list="tasksEvent"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedTo('edit')"
-      /> -->
       <EditFormTaskPeriod
         :itemId="itemIdToEdit"
         :taskId="taskIdItem"
@@ -151,6 +144,7 @@ export default {
       businessHours: false,
       minTime: "05:00",
       maxTime: "24:00",
+      date: null,
     };
   },
   computed: {
@@ -172,6 +166,10 @@ export default {
       let minHour = null;
       let maxHour = null;
       if (this.$route.query.type === "projects") {
+        if (this.tasksEvent !== [] && this.tasksEvent[0] != null && this.$refs.fullCalendar != null) {
+          this.date=moment(this.tasksEvent[0].date).format("YYYY-MM-DD");
+          this.$refs.fullCalendar.getApi().gotoDate(this.date);
+        }
         if (this.tasksEvent !== []) {
           var task;
           this.tasksEvent.forEach((t) => {
@@ -213,82 +211,104 @@ export default {
         }
         if(this.unavailableEvent != null){
           console.log("unavailableEvent",this.unavailableEvent);
-          //console.log("businessHours",this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id).work_hours);
-          var businessHours=this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id);
           console.log("unavailableEvent.length",this.unavailableEvent.length);
           for(var i=0; i<this.unavailableEvent.length; i++){            
-              if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
-                // for(var i=0; i<3; i++){
-                //   console.log("daysOfWeek",hours[i].daysOfWeek);
-                // }
-                //console.log("startRecur", moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'));
-                //console.log("endRecur", moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'));
-                //événements récurrents matin
-                eventsParse.push({
-                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
-                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
-                    startTime: "08:00:00",
-                    endTime: "12:00:00",
-                    daysOfWeek:['1','2','3','4','5'],
-                    color: "#808080",
+            if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
+              let hoursDay=[];
+              let heureDebutMatin;
+              let heureFinMatin;
+              let heureDebutApresMidi;
+              let heureFinApresMidi;
+              if(this.$store.state.projectManagement.projects != null && this.$store.state.projectManagement.projects[0] != null){
+                let workHours=this.$store.state.projectManagement.projects[0];
+                hoursDay.push(workHours['dimanche']);
+                hoursDay.push(workHours['lundi']);
+                hoursDay.push(workHours['mardi']);
+                hoursDay.push(workHours['mercredi']);
+                hoursDay.push(workHours['jeudi']);
+                hoursDay.push(workHours['vendredi']);
+                hoursDay.push(workHours['samedi']);
+                if(hoursDay != null && hoursDay.length>0 && hoursDay[0] != null){
+                  for(var d=0; d<hoursDay.length; d++){
+                    //événements récurrents matin
+                    if(hoursDay[d] != null && hoursDay[d][0] != null && hoursDay[d][0] != "00:00:00" && hoursDay[d][1] != null && hoursDay[d][1] != "00:00:00"){
+                      eventsParse.push({
+                        startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                        endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                        startTime: hoursDay[d][0],
+                        endTime: hoursDay[d][1],
+                        daysOfWeek:[d],
+                        color: "#808080",
+                      });
+                    }
+                    //événements récurrents après-midi
+                    if(hoursDay[d] != null && hoursDay[d][2] != null && hoursDay[d][2] != "00:00:00" && hoursDay[d][3] != null && hoursDay[d][3] != "00:00:00"){
+                      eventsParse.push({
+                        startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                        endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                        startTime: hoursDay[d][2],
+                        endTime: hoursDay[d][3],
+                        daysOfWeek:[d],
+                        color: "#808080",
+                      });
+                    }
+                  }
+                  let nbDay=moment(this.unavailableEvent[i].date_end).weekday();
+                  //dimanche = 7 -> 0 pour les événements récurrents (daysOfWeek)
+                  if (nbDay==7){
+                    nbDay=0;
+                  }
+                  heureDebutMatin=hoursDay[nbDay][0];
+                  heureFinMatin=hoursDay[nbDay][1];
+                  heureDebutApresMidi=hoursDay[nbDay][2];
+                  heureFinApresMidi=hoursDay[nbDay][3];
+                }
+              }
+              //date de fin
+              if(moment(this.unavailableEvent[i].date_end).format('HH:mm') <= heureFinMatin){
+                eventsParse.push({                    
+                  start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureDebutMatin,
+                  end: this.unavailableEvent[i].date_end,                    
+                  color: "#808080",
                 });
-                //événements récurrents après-midi
-                eventsParse.push({
-                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
-                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
-                    startTime: "13:00:00",
-                    endTime: "16:00:00",
-                    daysOfWeek:['1','2','3','4','5'],
-                    color: "#808080",
+              }
+              else{
+                eventsParse.push({                    
+                  start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureDebutMatin,
+                  end: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureFinMatin,                    
+                  color: "#808080",
                 });
-                //date de fin
-                if(moment(this.unavailableEvent[i].date_end).format('HH:mm') <= "12:00"){
-                  //console.log("< 12h",moment(this.unavailableEvent[i].date_end));
-                  eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
-                    end: this.unavailableEvent[i].date_end,                    
-                    color: "#808080",
-                  });
-                }
-                else{
-                  //console.log("> 12h",moment(this.unavailableEvent[i].date_end));
-                  eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
-                    end: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 12:00:00",                    
-                    color: "#808080",
-                  });
-                  eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 13:00:00",
-                    end: this.unavailableEvent[i].date_end,                    
-                    color: "#808080",
-                  });
-                }
-                
-                //date de début
-                if(moment(this.unavailableEvent[i].date).format('HH:mm') < "12:00"){                  
-                  eventsParse.push({                    
-                    start: this.unavailableEvent[i].date,
-                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 12:00:00",                    
-                    color: "#808080",
-                  });
-                  eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 13:00:00",
-                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
-                    color: "#808080",
-                  });
-                }
-                else {
-                  //console.log("> 12h",moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00");
-                  eventsParse.push({                    
-                    start: this.unavailableEvent[i].date,
-                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
-                    color: "#808080",
-                  });
-                }
-                
-                
-              }          
-            }
+                eventsParse.push({                    
+                  start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureDebutApresMidi,
+                  end: this.unavailableEvent[i].date_end,                    
+                  color: "#808080",
+                });
+              }
+              
+              //date de début
+              if(moment(this.unavailableEvent[i].date).format('HH:mm') < heureFinMatin){                  
+                eventsParse.push({                    
+                  start: this.unavailableEvent[i].date,
+                  end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureFinMatin,                    
+                  color: "#808080",
+                });
+                eventsParse.push({                    
+                  start: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureDebutApresMidi,
+                  end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureFinApresMidi,                    
+                  color: "#808080",
+                });
+              }
+              else {
+                eventsParse.push({                    
+                  start: this.unavailableEvent[i].date,
+                  end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureFinApresMidi,                    
+                  color: "#808080",
+                });
+              }
+              
+              
+            }          
+          }
         }
 
         console.log(minHour);
@@ -348,39 +368,76 @@ export default {
         }
         if(this.unavailableEvent != null){
           console.log("unavailableEvent",this.unavailableEvent);
-          //console.log("businessHours",this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id).work_hours);
-          var businessHours=this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id);
           console.log("unavailableEvent.length",this.unavailableEvent.length);
+          //console.log("businessHours",this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id).work_hours);
           for(var i=0; i<this.unavailableEvent.length; i++){            
               if(this.unavailableEvent[i].date_end != null && (this.unavailableEvent[i].date != this.unavailableEvent[i].date_end)){
-                // for(var i=0; i<3; i++){
-                //   console.log("daysOfWeek",hours[i].daysOfWeek);
-                // }
-                //console.log("startRecur", moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'));
-                //console.log("endRecur", moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'));
-                //événements récurrents matin
-                eventsParse.push({
-                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
-                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
-                    startTime: "08:00:00",
-                    endTime: "12:00:00",
-                    daysOfWeek:['1','2','3','4','5'],
-                    color: "#808080",
-                });
-                //événements récurrents après-midi
-                eventsParse.push({
-                    startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
-                    endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
-                    startTime: "13:00:00",
-                    endTime: "16:00:00",
-                    daysOfWeek:['1','2','3','4','5'],
-                    color: "#808080",
-                });
+                let workHours=this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id);
+                let hoursDay=[];
+                let nbDay;
+                let heureDebutMatin;
+                let heureFinMatin;
+                let heureDebutApresMidi;
+                let heureFinApresMidi;
+
+                if(workHours != null && workHours.work_hours != null){
+                  workHours=workHours.work_hours
+                  hoursDay.push(workHours[0]);//lundi
+                  hoursDay.push(workHours[1]);//mardi
+                  hoursDay.push(workHours[2]);//mercredi
+                  hoursDay.push(workHours[3]);//jeudi
+                  hoursDay.push(workHours[4]);//vendredi
+                  hoursDay.push(workHours[5]);//samedi
+                  hoursDay.push(workHours[6]);//dimanche
+                  if(hoursDay != null && hoursDay.length>0){
+                    for(var d=0; d<hoursDay.length; d++){
+                      let day=d+1;
+                      //dimanche = 7 -> 0 pour les événements récurrents (daysOfWeek)
+                      if(day==7){
+                        day=0;
+                      }
+                      //événements récurrents matin
+                      if(hoursDay[d] != null && hoursDay[d]["morning_starts_at"] != null && hoursDay[d]["morning_starts_at"] != "00:00:00" && 
+                                                hoursDay[d]["morning_ends_at"] != null && hoursDay[d]["morning_ends_at"] != "00:00:00"){
+                        eventsParse.push({
+                          startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                          endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                          startTime: hoursDay[d]["morning_starts_at"],
+                          endTime: hoursDay[d]["morning_ends_at"],
+                          daysOfWeek:[day],
+                          color: "#808080",
+                        });
+                      }
+                      //événements récurrents après-midi
+                      if(hoursDay[d] != null && hoursDay[d]["afternoon_starts_at"] != null && hoursDay[d]["afternoon_starts_at"] != "00:00:00" && 
+                                                hoursDay[d]["afternoon_ends_at"] != null && hoursDay[d]["afternoon_ends_at"] != "00:00:00"){
+                        eventsParse.push({
+                          startRecur: moment(this.unavailableEvent[i].date).add(1,"d").format('YYYY-MM-DD'),
+                          endRecur: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD'),
+                          startTime: hoursDay[d]["afternoon_starts_at"],
+                          endTime: hoursDay[d]["afternoon_ends_at"],
+                          daysOfWeek:[day],
+                          color: "#808080",
+                        });
+                      }
+                    }
+                    nbDay=moment(this.unavailableEvent[i].date_end).weekday();
+                    //dimanche = 7 -> 0 pour les événements récurrents (daysOfWeek)
+                    if (nbDay==7){
+                      nbDay=0;
+                    }
+                    heureDebutMatin=hoursDay[nbDay]["morning_starts_at"];
+                    heureFinMatin=hoursDay[nbDay]["morning_ends_at"];
+                    heureDebutApresMidi=hoursDay[nbDay]["afternoon_starts_at"];
+                    heureFinApresMidi=hoursDay[nbDay]["afternoon_ends_at"];
+                  }
+                }
+
                 //date de fin
-                if(moment(this.unavailableEvent[i].date_end).format('HH:mm') <= "12:00"){
+                if(moment(this.unavailableEvent[i].date_end).format('HH:mm') <= heureFinMatin){
                   //console.log("< 12h",moment(this.unavailableEvent[i].date_end));
                   eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureDebutMatin,
                     end: this.unavailableEvent[i].date_end,                    
                     color: "#808080",
                   });
@@ -388,27 +445,27 @@ export default {
                 else{
                   //console.log("> 12h",moment(this.unavailableEvent[i].date_end));
                   eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00",
-                    end: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 12:00:00",                    
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureDebutMatin,
+                    end: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureFinMatin,                    
                     color: "#808080",
                   });
                   eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 13:00:00",
+                    start: moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" "+heureDebutApresMidi,
                     end: this.unavailableEvent[i].date_end,                    
                     color: "#808080",
                   });
                 }
                 
                 //date de début
-                if(moment(this.unavailableEvent[i].date).format('HH:mm') < "12:00"){                  
+                if(moment(this.unavailableEvent[i].date).format('HH:mm') < heureFinMatin){                  
                   eventsParse.push({                    
                     start: this.unavailableEvent[i].date,
-                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 12:00:00",                    
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureFinMatin,                    
                     color: "#808080",
                   });
                   eventsParse.push({                    
-                    start: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 13:00:00",
-                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
+                    start: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureDebutApresMidi,
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureFinApresMidi,                    
                     color: "#808080",
                   });
                 }
@@ -416,7 +473,7 @@ export default {
                   //console.log("> 12h",moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00");
                   eventsParse.push({                    
                     start: this.unavailableEvent[i].date,
-                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" 16:00:00",                    
+                    end: moment(this.unavailableEvent[i].date).format('YYYY-MM-DD')+" "+heureFinApresMidi,                    
                     color: "#808080",
                   });
                 }
