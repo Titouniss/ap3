@@ -108,7 +108,7 @@
                         </div>
                     </div>
                     <h4 v-if="!workareasData" color="red">
-                        Aucun pôle de produciton
+                        Aucun pôle de production
                     </h4>
                 </div>
                 <!-- users list-->

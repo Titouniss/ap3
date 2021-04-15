@@ -90,7 +90,7 @@
                                     workareasSkillsData.length > 0
                             "
                         >
-                            Pôle de produciton
+                            Pôle de production
                         </p>
                         <vs-select
                             v-if="
