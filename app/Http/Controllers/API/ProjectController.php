@@ -4476,86 +4476,86 @@ class ProjectController extends BaseApiController
 
     public function workHoursPeriods(Request $request)
     {
-        //vue read planning -> horaires en commun des utilisateurs
-        if ($request->task_id == null) {
-            if ($request->type == "projects") {
-                //horaires en commun des utilisateurs sur le projet
-                $id = $request->id;
-                $project = Project::find($id);
-                $arrayRequest = $request->all();
-                $date = Carbon::createFromFormat("Y-m-d H:i:s", $project["start_date"]);
-                $project->start_date = $date->format("Y-m-d");
-
-                //skills des tâches du projet :
-                $tasks_bundle = TasksBundle::where('project_id', $id)->get();
-                $tasks = Task::where('tasks_bundle_id', $tasks_bundle[0]->id)->get();
-                $listUserId = array();
-                $listTaskIdProject = array();
-                $skills = array();
-
-                //liste des id des utilisateurs du projet
-                array_push($listUserId, $tasks->first()->user_id);
-                foreach ($tasks as $task) {
-                    if (!in_array($task->user_id, $listUserId)) {
-                        array_push($listUserId, $task->user_id);
-                    }
-                }
-            } else if ($request->type == "workarea") {
-                //horaires en commun des utilisateurs qui ont les compétences du workarea
-                $id = $request->id;
-                $workareasSkill = WorkareasSkill::where('workarea_id', $id)->get();
-
-                $skills = array();
-                foreach ($workareasSkill as $workareaSkill) {
-                    array_push($skills, $workareaSkill['skill_id']);
-                }
-                foreach ($skills as $skill) {
-                    $usersSkill = UsersSkill::where('skill_id', $skill)->get();
-                }
-                //liste des id des utilisateurs qui ont les compétences du workarea
-                $listUserId = array();
-                foreach ($usersSkill as $userSkill) {
-                    $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
-                    if (!$item->isEmpty()) {
-                        array_push($listUserId, $userSkill['user_id']);
-                    }
-                }
-            }
-            $workHours = $this->workHoursUsers($listUserId);
-        }
-        //sinon horaires de l'utilisateur
-        else {
-            if ($request->type == "projects") {
-                $taskCourante = Task::where('id', $request->task_id)->get();
-                $listUserId = array();
-
-                //liste des id des utilisateurs du projet
-                array_push($listUserId, $taskCourante[0]['user_id']);
-            } else if ($request->type == "workarea") {
-                //horaires en commun des utilisateurs qui ont les compétences du workarea
-                $id = $request->id;
-                $workareasSkill = WorkareasSkill::where('workarea_id', $id)->get();
-
-                $skills = array();
-                foreach ($workareasSkill as $workareaSkill) {
-                    array_push($skills, $workareaSkill['skill_id']);
-                }
-                foreach ($skills as $skill) {
-                    $usersSkill = UsersSkill::where('skill_id', $skill)->get();
-                }
-                //liste des id des utilisateurs qui ont les compétences du workarea
-                $listUserId = array();
-                foreach ($usersSkill as $userSkill) {
-                    $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
-                    if (!$item->isEmpty()) {
-                        array_push($listUserId, $userSkill['user_id']);
-                    }
-                }
-            }
-            $workHours = $this->workHoursUsers($listUserId);
-        }
-        //on renvoie côté vue la liste des heures de travail en commun pour chaque jour
         try {
+            //vue read planning -> horaires en commun des utilisateurs
+            if ($request->task_id == null) {
+                if ($request->type == "projects") {
+                    //horaires en commun des utilisateurs sur le projet
+                    $id = $request->id;
+                    $project = Project::find($id);
+                    $arrayRequest = $request->all();
+                    $date = Carbon::createFromFormat("Y-m-d H:i:s", $project["start_date"]);
+                    $project->start_date = $date->format("Y-m-d");
+
+                    //skills des tâches du projet :
+                    $tasks_bundle = TasksBundle::where('project_id', $id)->get();
+                    $tasks = Task::where('tasks_bundle_id', $tasks_bundle[0]->id)->get();
+                    $listUserId = array();
+                    $listTaskIdProject = array();
+                    $skills = array();
+
+                    //liste des id des utilisateurs du projet
+                    array_push($listUserId, $tasks->first()->user_id);
+                    foreach ($tasks as $task) {
+                        if (!in_array($task->user_id, $listUserId)) {
+                            array_push($listUserId, $task->user_id);
+                        }
+                    }
+                } else if ($request->type == "workarea") {
+                    //horaires en commun des utilisateurs qui ont les compétences du workarea
+                    $id = $request->id;
+                    $workareasSkill = WorkareasSkill::where('workarea_id', $id)->get();
+
+                    $skills = array();
+                    foreach ($workareasSkill as $workareaSkill) {
+                        array_push($skills, $workareaSkill['skill_id']);
+                    }
+                    foreach ($skills as $skill) {
+                        $usersSkill = UsersSkill::where('skill_id', $skill)->get();
+                    }
+                    //liste des id des utilisateurs qui ont les compétences du workarea
+                    $listUserId = array();
+                    foreach ($usersSkill as $userSkill) {
+                        $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
+                        if (!$item->isEmpty()) {
+                            array_push($listUserId, $userSkill['user_id']);
+                        }
+                    }
+                }
+                $workHours = $this->workHoursUsers($listUserId);
+            }
+            //sinon horaires de l'utilisateur
+            else {
+                if ($request->type == "projects") {
+                    $taskCourante = Task::where('id', $request->task_id)->get();
+                    $listUserId = array();
+
+                    //liste des id des utilisateurs du projet
+                    array_push($listUserId, $taskCourante[0]['user_id']);
+                } else if ($request->type == "workarea") {
+                    //horaires en commun des utilisateurs qui ont les compétences du workarea
+                    $id = $request->id;
+                    $workareasSkill = WorkareasSkill::where('workarea_id', $id)->get();
+
+                    $skills = array();
+                    foreach ($workareasSkill as $workareaSkill) {
+                        array_push($skills, $workareaSkill['skill_id']);
+                    }
+                    foreach ($skills as $skill) {
+                        $usersSkill = UsersSkill::where('skill_id', $skill)->get();
+                    }
+                    //liste des id des utilisateurs qui ont les compétences du workarea
+                    $listUserId = array();
+                    foreach ($usersSkill as $userSkill) {
+                        $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
+                        if (!$item->isEmpty()) {
+                            array_push($listUserId, $userSkill['user_id']);
+                        }
+                    }
+                }
+                $workHours = $this->workHoursUsers($listUserId);
+            }
+            //on renvoie côté vue la liste des heures de travail en commun pour chaque jour
             return $this->successResponse($workHours, 'Chargement terminé avec succès.');
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);

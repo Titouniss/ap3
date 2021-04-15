@@ -473,15 +473,14 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
-        this.project_data.tasks_bundles.length > 0
-            ? this.$store
-                  .dispatch("taskManagement/fetchItems", {
-                      tasks_bundle_id: this.project_data.tasks_bundles[0].id
-                  })
-                  .catch(err => {
-                      console.error(err);
-                  })
-            : null;
+
+        this.$store
+            .dispatch("taskManagement/fetchItems", {
+                project_id: this.project_data.id
+            })
+            .catch(err => {
+                console.error(err);
+            });
 
         this.$store.dispatch("userManagement/fetchItems");
     },

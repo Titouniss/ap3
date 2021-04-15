@@ -90,6 +90,15 @@ class TaskController extends BaseApiController
             $query->where('tasks_bundle_id', $request->tasks_bundle_id);
         }
 
+        if ($request->has('project_id')) {
+            if (Project::where('id', $request->project_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'project_id' n'est pas valide.");
+            }
+
+            $query->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                ->where('tasks_bundles.project_id', $request->project_id);
+        }
+
         if ($request->has('skill_id')) {
             if (Skill::where('id', $request->skill_id)->doesntExist()) {
                 throw new ApiException("Paramètre 'skill_id' n'est pas valide.");
