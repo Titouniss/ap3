@@ -148,13 +148,15 @@ export default {
                     if (this.page === 1) {
                         this.items = data.payload;
                     } else {
+                        const ids = this.items.map(item => item.id);
                         const unique = [];
                         data.payload.forEach(item => {
-                            if (!unique[item.id]) {
-                                this.items.push(item);
-                                unique[item.id] = true;
+                            if (ids.indexOf(item.id) === -1) {
+                                ids.push(item.id);
+                                unique.push(item);
                             }
                         });
+                        this.items.push(...unique);
                     }
                 })
                 .catch(err => {
