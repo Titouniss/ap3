@@ -148,9 +148,13 @@ export default {
                     if (this.page === 1) {
                         this.items = data.payload;
                     } else {
-                        this.items = [
-                            ...new Set([...this.items, ...data.payload])
-                        ];
+                        const unique = [];
+                        data.payload.forEach(item => {
+                            if (!unique[item.id]) {
+                                this.items.push(item);
+                                unique[item.id] = true;
+                            }
+                        });
                     }
                 })
                 .catch(err => {
