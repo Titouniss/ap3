@@ -664,7 +664,6 @@ export default {
                 return this.page;
             },
             set(val) {
-                console.log(val);
                 this.page = val;
                 this.refreshData();
             }
