@@ -56,7 +56,7 @@ export default {
                             message =
                                 "La compétence " +
                                 this.params.data.name +
-                                " est utilisée dans des pôles de productions et des tâches. Voulez vous vraiment la supprimer ?";
+                                " est utilisée dans des pôles de production et des tâches. Voulez vous vraiment la supprimer ?";
                         } else if (tasks.length > 0) {
                             message =
                                 "La compétence " +

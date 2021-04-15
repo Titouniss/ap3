@@ -243,11 +243,11 @@ export default {
                         withPrompt: true,
                         footNotes: {
                             restore:
-                                "Si vous restaurez la compétence elle sera utilisée à nouveau par les pôles de productions tâches et utilisateurs associés.",
+                                "Si vous restaurez la compétence elle sera utilisée à nouveau par les pôles de production tâches et utilisateurs associés.",
                             archive:
-                                "Si vous archivez la compétence elle ne sera plus utilisée par les pôles de productions, tâches et utilisateurs associés.",
+                                "Si vous archivez la compétence elle ne sera plus utilisée par les pôles de production, tâches et utilisateurs associés.",
                             delete:
-                                "Si vous supprimez la compétence elle ne sera plus associée à ses pôles de productions, tâches et utilisateurs."
+                                "Si vous supprimez la compétence elle ne sera plus associée à ses pôles de production, tâches et utilisateurs."
                         }
                     }
                 }
@@ -336,10 +336,10 @@ export default {
                         if (haveSkill.length > 0 && tasks.length > 0) {
                             message =
                                 selectedRow.length > 1
-                                    ? "Ces compétences sont utilisées dans des pôles de productions et des tâches. Voulez vous vraiment les supprimer ?"
+                                    ? "Ces compétences sont utilisées dans des pôles de production et des tâches. Voulez vous vraiment les supprimer ?"
                                     : "La compétences " +
                                       selectedRow[0].name +
-                                      " est utilisées dans des pôles de productions et des tâches. Voulez vous vraiment la supprimer ?";
+                                      " est utilisées dans des pôles de production et des tâches. Voulez vous vraiment la supprimer ?";
                         } else if (tasks.length > 0) {
                             message =
                                 selectedRow.length > 1
@@ -350,10 +350,10 @@ export default {
                         } else if (haveSkill.length > 0) {
                             message =
                                 selectedRow.length > 1
-                                    ? "Ces compétences sont est utilisées dans des pôles de productions. Voulez vous vraiment les supprimer ?"
+                                    ? "Ces compétences sont est utilisées dans des pôles de production. Voulez vous vraiment les supprimer ?"
                                     : "La compétences " +
                                       selectedRow[0].name +
-                                      " est est utilisée dans des pôles de productions. Voulez vous vraiment la supprimer ?";
+                                      " est est utilisée dans des pôles de production. Voulez vous vraiment la supprimer ?";
                         }
 
                         if (message !== "") {

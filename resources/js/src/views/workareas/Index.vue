@@ -338,12 +338,12 @@ export default {
                 text:
                     type === "delete" &&
                     this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces pôles de productions ?`
+                        ? `Voulez vous vraiment supprimer ces pôles de production ?`
                         : type === "delete" &&
                           this.gridApi.getSelectedRows().length === 1
                         ? `Voulez vous vraiment supprimer le pôle de production ${singleWorkarea.name} ?`
                         : this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment archiver ces pôles de productions ?`
+                        ? `Voulez vous vraiment archiver ces pôles de production ?`
                         : `Voulez vous vraiment archiver le pôle de production ${singleWorkarea.name} ?`,
                 accept:
                     type === "delete" ? this.deleteRecord : this.archiveRecord,
@@ -400,11 +400,11 @@ export default {
                 title: modelTitle,
                 text:
                     type === "delete" && selectedRowLength > 1
-                        ? `pôles de productions supprimés`
+                        ? `pôles de production supprimés`
                         : type === "delete" && selectedRowLength === 1
                         ? `pôle de production supprimé`
                         : selectedRowLength > 1
-                        ? `pôles de productions archivés`
+                        ? `pôles de production archivés`
                         : `pôle de production archivé`
             });
         },
