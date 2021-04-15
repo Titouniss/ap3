@@ -277,25 +277,20 @@ export default {
                 const calendarApi = this.$refs.fullCalendar.getApi();
                 const unit = calendarApi.view.viewSpec.singleUnit;
                 const date = moment(calendarApi.getDate()).format("DD-MM-YYYY");
+
                 // Refresh hours
-                this.$vs.loading();
-                this.$store
-                    .dispatch("hoursManagement/fetchItems", {
-                        date,
-                        period_type: unit,
-                        user_id: user.id
-                    })
-                    .finally(() => this.$vs.loading.close());
+                this.$store.dispatch("hoursManagement/fetchItems", {
+                    date,
+                    period_type: unit,
+                    user_id: user.id
+                });
 
                 // Refresh unavailabilities
-                this.$vs.loading();
-                this.$store
-                    .dispatch("unavailabilityManagement/fetchItems", {
-                        date,
-                        period_type: unit,
-                        user_id: user.id
-                    })
-                    .finally(() => this.$vs.loading.close());
+                this.$store.dispatch("unavailabilityManagement/fetchItems", {
+                    date,
+                    period_type: unit,
+                    user_id: user.id
+                });
             }
         },
         authorizedTo(action, model = "hours") {

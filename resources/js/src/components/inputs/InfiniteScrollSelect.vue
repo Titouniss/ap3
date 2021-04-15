@@ -81,7 +81,9 @@ export default {
             page: 1,
             perPage: 30,
             hasNextPage: false,
-            items: this.$store.getters[`${this.model}Management/getItems`]
+            items: this.$store.getters[`${this.model}Management/getItems`],
+
+            fetchTimeout: null
         };
     },
     methods: {
@@ -109,7 +111,10 @@ export default {
         onSearch(query) {
             this.searchQuery = query;
             this.page = 1;
-            this.fetchItems();
+            if (this.fetchTimeout) {
+                clearTimeout(this.fetchTimeout);
+            }
+            this.fetchTimeout = setTimeout(this.fetchItems, 500);
         },
         async infiniteScroll([{ isIntersecting, target }]) {
             if (isIntersecting) {

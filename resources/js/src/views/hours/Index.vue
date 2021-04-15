@@ -27,8 +27,6 @@
                         label="name"
                         v-model="filters.hours_taken"
                         :options="hours_type_names"
-                        @input="refreshData()"
-                        @search:blur="refreshData()"
                         @search:focus="clearRefreshDataTimeout"
                         class="w-full"
                     >
@@ -41,9 +39,8 @@
                     <infinite-scroll-select
                         model="project"
                         label="name"
-                        v-model="filters.project"
-                        :input="refreshData"
-                        :search:blur="refreshData"
+                        v-model="filters.project_id"
+                        :reduce="project => project.id"
                         :search:focus="clearRefreshDataTimeout"
                     >
                         <template #header>
@@ -81,9 +78,8 @@
                         v-if="authorizedTo('show', 'users')"
                         label="lastname"
                         :options="users"
-                        v-model="filters.user"
-                        @input="refreshData()"
-                        @search:blur="refreshData()"
+                        v-model="filters.user_id"
+                        :reduce="user => user.id"
                         @search:focus="clearRefreshDataTimeout"
                         class="w-full"
                     >
@@ -145,7 +141,6 @@
                                         :config="configDatePicker()"
                                         placeholder="Date"
                                         v-model="filters.date"
-                                        @on-change="onFilterDateChange"
                                         @on-open="clearRefreshDataTimeout"
                                     />
                                 </vs-col>
@@ -165,7 +160,7 @@
             </div>
         </div>
         <div class="p-6 mt-1 vx-card" v-if="modeIndispo">
-            <UnavailabilitiesIndex class="mt-4" :id="id_user" />
+            <UnavailabilitiesIndex class="mt-4" :filters="filterParams" />
         </div>
         <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
             <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
@@ -357,7 +352,6 @@ import vSelect from "vue-select";
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
-import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
 
 // FlatPickr import
 import flatPickr from "vue-flatpickr-component";
@@ -374,6 +368,7 @@ import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
 import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
 
 import moment from "moment";
+import _ from "lodash";
 
 var model = "hours";
 var modelPlurial = "hours";
@@ -504,8 +499,8 @@ export default {
 
             // Filters
             filters: {
-                project: null,
-                user: null,
+                project_id: null,
+                user_id: null,
                 date: moment(),
                 period_type: "month",
                 hours_taken: null
@@ -568,11 +563,17 @@ export default {
         };
     },
     watch: {
-        modeIndispo(value, prev) {
-            if (prev !== value) {
-                this.currentPage = 1;
-                this.perPage = 10;
-            }
+        filterParams: {
+            handler(value, prev) {
+                if (!this.modeIndispo && !_.isEqual(value, prev)) {
+                    this.clearRefreshDataTimeout();
+                    this.refreshDataTimeout = setTimeout(() => {
+                        this.page = 1;
+                        this.refreshData();
+                    }, 1500);
+                }
+            },
+            deep: true
         }
     },
     computed: {
@@ -627,14 +628,35 @@ export default {
                 return true;
             }
         },
+        filterParams() {
+            const filter = {};
+            if (this.modeIndispo) {
+                if (this.filters.hours_taken) {
+                    filter.hours_taken_name = this.filters.hours_taken;
+                }
+            } else {
+                if (this.filters.project_id) {
+                    filter.project_id = this.filters.project_id;
+                }
+            }
+            if (this.filters.user_id) {
+                filter.user_id = this.filters.user_id;
+            }
+            if (this.filters.date) {
+                filter.date = moment(this.filters.date).format("DD-MM-YYYY");
+                if (this.isPeriodFilter) {
+                    filter.period_type = this.filters.period_type;
+                }
+            }
+            return filter;
+        },
         itemsPerPage: {
             get() {
                 return this.perPage;
             },
             set(val) {
                 this.perPage = val;
-                this.page = 1;
-                this.refreshData(this.filters.date, 0);
+                this.currentPage = 1;
             }
         },
         currentPage: {
@@ -642,8 +664,9 @@ export default {
                 return this.page;
             },
             set(val) {
+                console.log(val);
                 this.page = val;
-                this.refreshData(this.filters.date, 0);
+                this.refreshData();
             }
         }
     },
@@ -690,107 +713,49 @@ export default {
                 1,
                 this.period_types[this.filters.period_type].symbol
             );
-            this.refreshData();
         },
         removeFromFilterDate() {
             this.filters.date = moment(this.filters.date).subtract(
                 1,
                 this.period_types[this.filters.period_type].symbol
             );
-            this.refreshData();
         },
         setPeriodType(type) {
             this.filters.period_type = type;
             this.filters.date =
                 type === "date" || type === "full" ? null : moment();
-            this.refreshData();
         },
-        onFilterDateChange(selectedDates, dateStr, instance) {
-            //this.filters.date = selectedDates[0];
-            this.refreshData(selectedDates[0]);
-        },
-        refreshData(targetDate = this.filters.date, delay = 1500) {
-            const filter = {};
-            if (this.filters.hours_taken) {
-                filter.hours_taken_name = this.filters.hours_taken;
-            }
-            if (this.filters.project) {
-                filter.project_id = this.filters.project.id;
-            }
-            if (this.filters.user) {
-                filter.user_id = this.filters.user.id;
-            }
-            if (targetDate) {
-                filter.date = moment(targetDate).format("DD-MM-YYYY");
-                if (this.isPeriodFilter) {
-                    filter.period_type = this.filters.period_type;
-                }
-            }
-            this.clearRefreshDataTimeout();
-            if (!this.modeIndispo) {
-                this.refreshDataTimeout = setTimeout(() => {
-                    this.$vs.loading();
-                    // refresh Hours
-                    this.$store
-                        .dispatch("hoursManagement/fetchItems", {
-                            ...filter,
-                            page: this.currentPage,
-                            per_page: this.perPage,
-                            q: this.searchQuery || undefined
-                        })
-                        .then(data => {
-                            this.stats = data.stats;
-                            this.id_user = data.id_user;
+        refreshData() {
+            this.$vs.loading();
+            // refresh Hours
+            this.$store
+                .dispatch("hoursManagement/fetchItems", {
+                    ...this.filterParams,
+                    page: this.currentPage,
+                    per_page: this.perPage,
+                    q: this.searchQuery || undefined,
+                    order_by: "start_at",
+                    order_by_desc: 1
+                })
+                .then(data => {
+                    this.stats = data.stats;
 
-                            if (data.pagination) {
-                                const { total, last_page } = data.pagination;
-                                this.totalPages = last_page;
-                                this.total = total;
-                            }
-                        })
-                        .catch(error => {
-                            this.$vs.notify({
-                                title: "Erreur",
-                                text: error.message,
-                                iconPack: "feather",
-                                icon: "icon-alert-circle",
-                                color: "danger"
-                            });
-                        })
-                        .finally(() => this.$vs.loading.close());
-                }, delay);
-            } else {
-                this.refreshDataTimeout = setTimeout(() => {
-                    this.$vs.loading();
-                    // refresh Unavailabilities
-                    this.$store
-                        .dispatch("unavailabilityManagement/fetchItems", {
-                            ...filter,
-                            page: this.currentPage,
-                            per_page: this.perPage,
-                            q: this.searchQuery || undefined
-                        })
-                        .then(data => {
-                            this.id_user = data.id_user;
-
-                            if (data.pagination) {
-                                const { total, last_page } = data.pagination;
-                                this.totalPages = last_page;
-                                this.total = total;
-                            }
-                        })
-                        .catch(error => {
-                            this.$vs.notify({
-                                title: "Erreur",
-                                text: error.message,
-                                iconPack: "feather",
-                                icon: "icon-alert-circle",
-                                color: "danger"
-                            });
-                        })
-                        .finally(() => this.$vs.loading.close());
-                }, delay);
-            }
+                    if (data.pagination) {
+                        const { total, last_page } = data.pagination;
+                        this.totalPages = last_page;
+                        this.total = total;
+                    }
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Erreur",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                })
+                .finally(() => this.$vs.loading.close());
         },
         setColumnFilter(column, val) {
             const filter = this.gridApi.getFilterInstance(column);
@@ -972,19 +937,11 @@ export default {
             this.$store.registerModule("userManagement", moduleUserManagement);
             moduleUserManagement.isRegistered = true;
         }
-        if (!moduleUnavailabilityManagement.isRegistered) {
-            this.$store.registerModule(
-                "unavailabilityManagement",
-                moduleUnavailabilityManagement
-            );
-            moduleUnavailabilityManagement.isRegistered = true;
-        }
 
-        this.refreshData(this.filters.date, 0);
         if (this.authorizedTo("read", "users")) {
             this.$store.dispatch("userManagement/fetchItems");
         } else {
-            this.filters.user = this.$store.state.AppActiveUser;
+            this.filters.user_id = this.$store.state.AppActiveUser.id;
         }
     },
     beforeDestroy() {
@@ -992,11 +949,9 @@ export default {
         moduleProjectManagement.isRegistered = false;
         moduleUserManagement.isRegistered = false;
         moduleHoursManagement.isRegistered = false;
-        moduleUnavailabilityManagement.isRegistered = false;
         this.$store.unregisterModule("hoursManagement");
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("userManagement");
-        this.$store.unregisterModule("unavailabilityManagement");
     }
 };
 </script>

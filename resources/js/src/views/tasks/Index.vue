@@ -366,13 +366,13 @@ export default {
                 else return 1;
             },
             set(val) {
-                this.gridApi.paginationGoToPage(val - 1);
+                if (this.gridApi) this.gridApi.paginationGoToPage(val - 1);
             }
         }
     },
     methods: {
         updateSearchQuery(val) {
-            this.gridApi.setQuickFilter(val);
+            if (this.gridApi) this.gridApi.setQuickFilter(val);
         },
         momentTransform(date) {
             return moment(date).format("DD MMMM YYYY") == "Invalid date"
