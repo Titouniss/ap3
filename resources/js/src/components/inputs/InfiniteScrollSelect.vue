@@ -19,7 +19,7 @@
         </template>
         <template #option="item">
             <slot name="option" :data="item">
-                <span>{{ item[label] }}</span>
+                <span :key="item.id">{{ item[label] }}</span>
             </slot>
         </template>
         <template #list-footer>
@@ -148,7 +148,9 @@ export default {
                     if (this.page === 1) {
                         this.items = data.payload;
                     } else {
-                        this.items.push(...data.payload);
+                        this.items = [
+                            ...new Set([...this.items, ...data.payload])
+                        ];
                     }
                 })
                 .catch(err => {

@@ -170,7 +170,11 @@ abstract class BaseApiController extends Controller
 
             if ($request->has('appends')) {
                 try {
-                    $items->each->setAppends(is_array($request->appends) ? $request->appends : [$request->appends]);
+                    $appends = $request->appends;
+                    if (!is_array($appends)) {
+                        $appends = $appends ? [$appends] : [];
+                    }
+                    $items->each->setAppends($appends);
                 } catch (\Throwable $th) {
                     throw new ApiException("Paramètre 'appends' n'est pas valide.");
                 }
