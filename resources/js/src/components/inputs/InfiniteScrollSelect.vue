@@ -6,7 +6,7 @@
         :value="value"
         :filterable="false"
         :multiple="multiple"
-        :reduce="item => (reduce ? reduce(item) : item)"
+        :reduce="reduce"
         @input="onInput"
         @search:blur="onBlur"
         @search:focus="onFocus"
@@ -49,9 +49,7 @@ export default {
         },
         filters: {
             type: Object,
-            default() {
-                return {};
-            }
+            default: () => ({})
         },
         input: {
             type: Function,
@@ -67,7 +65,7 @@ export default {
         },
         reduce: {
             type: Function,
-            default: null
+            default: item => item
         },
         multiple: {
             type: Boolean,

@@ -781,16 +781,20 @@ export default {
             return null;
         },
         user_data() {
-            var user_data = this.$store.state.userManagement.users.find(
-                u => u.id === this.$route.query.id
-            );
-            return user_data;
+            if (this.$route.query.type === "users") {
+                return this.$store.getters["userManagement/getItem"](
+                    parseInt(this.$route.query.id)
+                );
+            }
+            return null;
         },
         workarea_data() {
-            var workarea_data = this.$store.state.workareaManagement.workareas.find(
-                w => w.id === this.$route.query.id
-            );
-            return workarea_data;
+            if (this.$route.query.type === "workarea") {
+                return this.$store.getters["workareaManagement/getItem"](
+                    parseInt(this.$route.query.id)
+                );
+            }
+            return null;
         },
         scheduleTitle() {
             let title;
@@ -1410,40 +1414,28 @@ export default {
 
         //this.$store.state.taskManagement.tasks = [];
 
+        const item = {
+            id: this.$route.query.id,
+            type: this.$route.query.type,
+            task_id: this.$route.query.task_id
+        };
         if (this.$route.query.type === "projects") {
             this.$store.dispatch("taskManagement/fetchItems", {
-                project_id: this.$route.query.id
+                project_id: item.id
             });
-            var item = {
-                id: this.$route.query.id,
-                type: this.$route.query.type,
-                task_id: this.$route.query.task_id
-            };
-            this.$store.dispatch("projectManagement/unavailablePeriods", item);
-            console.log("store", this.$store.state);
+            this.$store.dispatch("projectManagement/fetchItem", item.id);
         } else if (this.$route.query.type === "users") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 user_id: this.$route.query.id
             });
-            var item = {
-                id: this.$route.query.id,
-                type: this.$route.query.type,
-                task_id: this.$route.query.task_id
-            };
-            this.$store.dispatch("projectManagement/unavailablePeriods", item);
-            console.log("store", this.$store.state);
+            this.$store.dispatch("userManagement/fetchItem", item.id);
         } else if (this.$route.query.type === "workarea") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 workarea_id: this.$route.query.id
             });
-            var item = {
-                id: this.$route.query.id,
-                type: this.$route.query.type,
-                task_id: this.$route.query.task_id
-            };
-            this.$store.dispatch("projectManagement/unavailablePeriods", item);
-            console.log("store", this.$store.state);
+            this.$store.dispatch("workareaManagement/fetchItem", item.id);
         }
+        this.$store.dispatch("projectManagement/unavailablePeriods", item);
 
         this.$store.dispatch("skillManagement/fetchItems");
         if (this.authorizedTo("read", "users")) {
