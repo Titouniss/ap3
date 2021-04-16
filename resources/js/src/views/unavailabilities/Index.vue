@@ -41,14 +41,14 @@
                 >
             </div>
             <add-payed-hours-form
-                :id_user="filters.user_id"
+                :id_user="user_id"
                 v-if="isAdmin || isManager"
             />
         </div>
 
         <div class="mb-base">
             <h6 class="mb-4">Indisponibilités</h6>
-            <add-form :id_user="filters.user_id" />
+            <add-form :id_user="user_id" />
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
@@ -309,6 +309,11 @@ export default {
                     .id || 0
             );
         },
+        user_id() {
+            return this.isAdmin || this.isManager
+                ? this.filters.user_id
+                : this.$store.state.AppActiveUser.id;
+        },
         itemsPerPage: {
             get() {
                 return this.perPage;
@@ -362,12 +367,12 @@ export default {
             );
 
             // refresh Overtimes
-            if (this.filters.user_id) {
+            if (this.user_id) {
                 requests.push(
                     this.$store
                         .dispatch(
                             "dealingHoursManagement/getOvertimes",
-                            this.filters.user_id
+                            this.user_id
                         )
                         .then(data => {
                             if (data && data.status === 200) {

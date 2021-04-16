@@ -53,15 +53,15 @@ export default {
         },
         input: {
             type: Function,
-            default: null
+            default: value => {}
         },
         blur: {
             type: Function,
-            default: null
+            default: () => {}
         },
         focus: {
             type: Function,
-            default: null
+            default: () => {}
         },
         reduce: {
             type: Function,
@@ -85,33 +85,31 @@ export default {
         };
     },
     methods: {
+        clearFetchTimeout() {
+            if (this.fetchTimeout) {
+                clearTimeout(this.fetchTimeout);
+            }
+        },
         onInput(value) {
             this.$emit("input", value);
-            if (this.input) {
-                this.input();
-            }
+            this.input(value);
         },
         onBlur() {
             this.observer.disconnect();
-            if (this.blur) {
-                this.blur();
-            }
+            setTimeout(this.clearFetchTimeout, 0);
+            this.blur();
         },
         async onFocus() {
             if (this.hasNextPage) {
                 await this.$nextTick();
                 this.observer.observe(this.$refs.load);
             }
-            if (this.focus) {
-                this.focus();
-            }
+            this.focus();
         },
         onSearch(query) {
             this.searchQuery = query;
             this.page = 1;
-            if (this.fetchTimeout) {
-                clearTimeout(this.fetchTimeout);
-            }
+            this.clearFetchTimeout();
             this.fetchTimeout = setTimeout(this.fetchItems, 500);
         },
         async infiniteScroll([{ isIntersecting, target }]) {

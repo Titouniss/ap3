@@ -40,8 +40,8 @@
                         model="project"
                         label="name"
                         v-model="filters.project_id"
-                        :reduce="project => project.id"
-                        :search:focus="clearRefreshDataTimeout"
+                        :reduce="item => item.id"
+                        :focus="clearRefreshDataTimeout"
                     >
                         <template #header>
                             <div style="opacity: 0.8">Projet</div>
