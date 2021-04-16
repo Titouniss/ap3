@@ -21,7 +21,6 @@
                             :filters="{
                                 company_id: company.id
                             }"
-                            :reduce="item => item.id"
                         >
                             <template #header>
                                 <div style="opacity: 0.8">Projet</div>

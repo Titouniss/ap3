@@ -40,7 +40,6 @@
                         model="project"
                         label="name"
                         v-model="filters.project_id"
-                        :reduce="item => item.id"
                         :focus="clearRefreshDataTimeout"
                     >
                         <template #header>
