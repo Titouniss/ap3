@@ -41,14 +41,15 @@
                 >
             </div>
             <add-payed-hours-form
-                :id_user="user_id"
                 v-if="isAdmin || isManager"
+                :id_user="user_id"
+                @on-submit="fetchOvertimes"
             />
         </div>
 
         <div class="mb-base">
             <h6 class="mb-4">Indisponibilités</h6>
-            <add-form :id_user="user_id" />
+            <add-form :id_user="user_id" @on-submit="fetchOvertimes" />
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
@@ -151,7 +152,11 @@
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
 
-            <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
+            <edit-form
+                v-if="itemIdToEdit"
+                :itemId="itemIdToEdit"
+                @on-submit="fetchOvertimes"
+            />
         </div>
     </div>
 </template>
@@ -287,6 +292,9 @@ export default {
                     this.refreshDataTimeout = setTimeout(() => {
                         this.page = 1;
                         this.refreshData();
+                        if (value.user_id !== prev.user_id) {
+                            this.fetchOvertimes();
+                        }
                     }, 1500);
                 }
             },
@@ -336,67 +344,60 @@ export default {
     methods: {
         refreshData() {
             this.$vs.loading();
-            const requests = [];
-
-            requests.push(
+            this.$store
+                .dispatch("unavailabilityManagement/fetchItems", {
+                    ...this.filters,
+                    page: this.currentPage,
+                    per_page: this.perPage,
+                    q: this.searchQuery || undefined,
+                    order_by: "starts_at",
+                    order_by_desc: 1
+                })
+                .then(data => {
+                    if (data.pagination) {
+                        const { total, last_page } = data.pagination;
+                        this.totalPages = last_page;
+                        this.total = total;
+                    }
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Erreur",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                })
+                .finally(() => this.$vs.loading.close());
+        },
+        fetchOvertimes() {
+            if (this.user_id) {
                 this.$store
-                    .dispatch("unavailabilityManagement/fetchItems", {
-                        ...this.filters,
-                        page: this.currentPage,
-                        per_page: this.perPage,
-                        q: this.searchQuery || undefined,
-                        order_by: "starts_at",
-                        order_by_desc: 1
-                    })
+                    .dispatch(
+                        "dealingHoursManagement/getOvertimes",
+                        this.user_id
+                    )
                     .then(data => {
-                        if (data.pagination) {
-                            const { total, last_page } = data.pagination;
-                            this.totalPages = last_page;
-                            this.total = total;
+                        if (data && data.status === 200) {
+                            this.overtimes = data.data.success.overtimes;
+                            this.usedOvertimes =
+                                data.data.success.usedOvertimes;
+                            this.payedOvertimes =
+                                data.data.success.payedOvertimes;
+                        } else {
+                            this.$vs.notify({
+                                color: "error",
+                                title: "Erreur",
+                                text: `Impossible d'afficher les heures supplémentaires`
+                            });
+                            this.overtimes = 0;
                         }
                     })
-                    .catch(error => {
-                        this.$vs.notify({
-                            title: "Erreur",
-                            text: error.message,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "danger"
-                        });
-                    })
-            );
-
-            // refresh Overtimes
-            if (this.user_id) {
-                requests.push(
-                    this.$store
-                        .dispatch(
-                            "dealingHoursManagement/getOvertimes",
-                            this.user_id
-                        )
-                        .then(data => {
-                            if (data && data.status === 200) {
-                                this.overtimes = data.data.success.overtimes;
-                                this.usedOvertimes =
-                                    data.data.success.usedOvertimes;
-                                this.payedOvertimes =
-                                    data.data.success.payedOvertimes;
-                            } else {
-                                this.$vs.notify({
-                                    color: "error",
-                                    title: "Erreur",
-                                    text: `Impossible d'afficher les heures supplémentaires`
-                                });
-                                this.overtimes = 0;
-                            }
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        })
-                );
+                    .catch(err => {
+                        console.error(err);
+                    });
             }
-
-            Promise.all(requests).finally(() => this.$vs.loading.close());
         },
         authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
@@ -467,6 +468,7 @@ export default {
         }
     },
     mounted() {
+        this.fetchOvertimes();
         this.gridApi = this.gridOptions.api;
 
         window.addEventListener("resize", this.onResize);

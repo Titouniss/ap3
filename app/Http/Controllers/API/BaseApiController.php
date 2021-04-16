@@ -36,7 +36,7 @@ abstract class BaseApiController extends Controller
     /**
      * Provides custom extra data to be returned by the indexx function.
      */
-    protected function extraIndexData(Request $request, $items)
+    protected function extraIndexData(Request $request, $items, $nonPaginatedQuery)
     {
         return [];
     }
@@ -125,6 +125,8 @@ abstract class BaseApiController extends Controller
                 }
             }
 
+            $nonPaginatedQuery = clone $query;
+
             if ($request->has('page')) {
                 if (!is_numeric($request->page)) {
                     throw new ApiException("Paramètre 'page' doit être un nombre.");
@@ -182,7 +184,7 @@ abstract class BaseApiController extends Controller
                 $items->each->append(static::$index_append);
             }
 
-            $extra = $extra->merge($this->extraIndexData($request, $items));
+            $extra = $extra->merge($this->extraIndexData($request, $items, $nonPaginatedQuery));
 
             return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
         } catch (ApiException $th) {

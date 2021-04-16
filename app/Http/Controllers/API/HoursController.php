@@ -47,8 +47,9 @@ class HoursController extends BaseApiController
         parent::__construct(Hours::class);
     }
 
-    protected function extraIndexData(Request $request, $items)
+    protected function extraIndexData(Request $request, $items, $nonPaginatedQuery)
     {
+        $allItems = $nonPaginatedQuery->get();
         $stats = [];
         $user = Auth::user();
         $paidHolidays = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Congés payés') : Unavailability::where('user_id', $user->id)->where('reason', "Congés payés");
@@ -171,9 +172,8 @@ class HoursController extends BaseApiController
             $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
         }
         $listId = array();
-        if (!$items->isEmpty()) {
-            array_push($listId, $items->first()->user_id);
-            foreach ($items as $item) {
+        if (!$allItems->isEmpty()) {
+            foreach ($nonPaginatedQuery->get() as $item) {
                 $stats['total']->add(CarbonInterval::createFromFormat('H:i:s', $item->duration));
                 if (!in_array($item->user_id, $listId)) {
                     array_push($listId, $item->user_id);
@@ -214,14 +214,14 @@ class HoursController extends BaseApiController
                             $defaultWorkHours = $workWeekHours;
                             break;
                         case 'month':
-                            $nbWorkDaysPerMonth = HoursController::calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, null, 1);
+                            $nbWorkDaysPerMonth = $this->calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, null, 1);
                             $defaultWorkHours = $nbWorkDaysPerMonth * ($workWeekHours / count($ListOfWorkDays));
                             break;
                         case 'year':
                             $period = CarbonPeriod::create(Carbon::createFromFormat('d-m-Y', $request->date)->startOfYear(), '1 month', Carbon::createFromFormat('d-m-Y', $request->date)->endOfYear());
                             foreach ($period as $month) {
                                 $moisCourant = $month->month;
-                                $nbWorkDaysForEachMonth = HoursController::calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, $moisCourant, 0);
+                                $nbWorkDaysForEachMonth = $this->calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, $moisCourant, 0);
                                 $defaultWorkHours += ($nbWorkDaysForEachMonth * ($workWeekHours / count($ListOfWorkDays)));
                             }
                             break;
@@ -230,7 +230,7 @@ class HoursController extends BaseApiController
                             break;
                     }
                 } else {
-                    $period = CarbonPeriod::create($items->min('start_at'), '1 week', $items->max('end_at'));
+                    $period = CarbonPeriod::create($allItems->min('start_at'), '1 week', $allItems->max('end_at'));
                     foreach ($period as $week) {
                         $defaultWorkHours += $workWeekHours;
                     }
@@ -268,14 +268,14 @@ class HoursController extends BaseApiController
                             $defaultWorkHours = $workWeekHours;
                             break;
                         case 'month':
-                            $nbWorkDaysPerMonth = HoursController::calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, null, 1);
+                            $nbWorkDaysPerMonth = $this->calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, null, 1);
                             $defaultWorkHours = $nbWorkDaysPerMonth * ($workWeekHours / count($ListOfWorkDays));
                             break;
                         case 'year':
                             $period = CarbonPeriod::create(Carbon::createFromFormat('d-m-Y', $request->date)->startOfYear(), '1 month', Carbon::createFromFormat('d-m-Y', $request->date)->endOfYear());
                             foreach ($period as $month) {
                                 $moisCourant = $month->month;
-                                $nbWorkDaysForEachMonth = HoursController::calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, $moisCourant, 0);
+                                $nbWorkDaysForEachMonth = $this->calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, $moisCourant, 0);
                                 $defaultWorkHours += ($nbWorkDaysForEachMonth * ($workWeekHours / count($ListOfWorkDays)));
                             }
                             break;
@@ -284,7 +284,7 @@ class HoursController extends BaseApiController
                             break;
                     }
                 } else {
-                    $period = CarbonPeriod::create($items->min('start_at'), '1 week', $items->max('end_at'));
+                    $period = CarbonPeriod::create($allItems->min('start_at'), '1 week', $allItems->max('end_at'));
                     foreach ($period as $week) {
                         $defaultWorkHours += $workWeekHours;
                     }
@@ -299,7 +299,7 @@ class HoursController extends BaseApiController
             }
         }
 
-        return collect(['stats' => $stats, 'id_user' => $request->user_id]);
+        return collect(['stats' => $stats]);
     }
 
     protected function calculeNbWorkDaysPerMonth(Request $request, $ListOfWorkDays, $month, $showMonth)
