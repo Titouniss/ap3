@@ -3173,7 +3173,7 @@ class ProjectController extends BaseApiController
         $taskBundle = TasksBundle::where('id', $bundle_id)->get();
         $projectId = $taskBundle[0]['project_id'];
         $project = Project::where('id', $projectId)->get();
-        $tasksProject = Task::where('tasks_bundle_id', $bundle_id)->get();
+        $tasksProject = Task::where('tasks_bundle_id', $bundle_id)->whereNotNull('date')->whereNotNull('date_end')->get();
         //s'il faut avancer, la date vaut la date de fin de projet
         if ($algo == "next") {
             $date = $project[0]['date'];
@@ -3203,7 +3203,7 @@ class ProjectController extends BaseApiController
         $workarea_id = $task[0]['workarea_id'];
 
         //récupérer toutes les tasks avec le même workarea_id
-        $tasksWorkarea = Task::where('workarea_id', $workarea_id)->get();
+        $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
         $listTaskId = array();
         //s'il y a au moins une task sur le même ilôt
         if (count($tasksWorkarea) > 0) {
@@ -3237,7 +3237,7 @@ class ProjectController extends BaseApiController
             }
             $nbTasksTogether = $maxNbTasksTogether;
             //si le nombre de tasks en même temps sur l'ilôt < max_users, on enlève la task de la liste des tasks avec le même workarea car période dispo
-            $tasksWorkarea = Task::where('workarea_id', $workarea_id);
+            $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end');
             if ($nbTasksTogether < $max_users) {
                 foreach ($listTaskTogether as $taskTogether) {
                     $key = array_search($taskTogether, $listTasksWorkarea);
@@ -3248,7 +3248,7 @@ class ProjectController extends BaseApiController
         $tasksWorkarea = $tasksWorkarea->get();
 
         //récupérer toutes les tasks avec le même user_id
-        $tasksUser = Task::where('user_id', $user_id)->get();
+        $tasksUser = Task::where('user_id', $user_id)->whereNotNull('date')->whereNotNull('date_end')->get();
 
         //récupérer tous les id des tasks avec le même user_id et tous les id des tasks avec le même workarea_id
         //sauf les id des tasks dépendantes car elles vont être déplacées
@@ -4489,7 +4489,7 @@ class ProjectController extends BaseApiController
 
                     //skills des tâches du projet :
                     $tasks_bundle = TasksBundle::where('project_id', $id)->get();
-                    $tasks = Task::where('tasks_bundle_id', $tasks_bundle[0]->id)->get();
+                    $tasks = Task::where('tasks_bundle_id', $tasks_bundle[0]->id)->whereNotNull('date')->whereNotNull('date_end')->get();
                     $listUserId = array();
                     $listTaskIdProject = array();
                     $skills = array();
@@ -4655,7 +4655,8 @@ class ProjectController extends BaseApiController
 
                                         foreach ($workareas as $workarea) {
                                             if (!$taskPlan) {
-                                                $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->where('status', '!=', 'done')->get();
+                                                $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->whereNotNull('date_end')->where('status', '!=', 'done')->get();                                            
+
                                                 //s'il y a plusieurs tasks sur le même ilôt
                                                 if (count($tasksWorkarea) > 0) {
                                                     //on récupère le max_users de l'ilôt
