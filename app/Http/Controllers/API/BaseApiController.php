@@ -15,7 +15,7 @@ abstract class BaseApiController extends Controller
 {
     use ReturnsJsonResponse;
 
-    protected static $per_page = 25;
+    protected static $per_page = 10;
 
     protected $model;
     protected static $index_load = null;
@@ -36,7 +36,7 @@ abstract class BaseApiController extends Controller
     /**
      * Provides custom extra data to be returned by the indexx function.
      */
-    protected function extraIndexData(Request $request, $items)
+    protected function extraIndexData(Request $request, $items, $nonPaginatedQuery)
     {
         return [];
     }
@@ -57,13 +57,30 @@ abstract class BaseApiController extends Controller
     public function index(Request $request)
     {
         try {
-
             if ($error = $this->permissionErrors('read')) {
                 return $error;
             }
 
+            $fields = collect(['*']);
+            if ($request->has('fields') && $request->fields) {
+                try {
+                    $fields = collect(['id']);
+                    if (is_array($request->fields)) {
+                        $fields = $fields->merge($request->fields);
+                    } else {
+                        $fields->push($request->fields);
+                    }
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramètre 'fields' n'est pas valide.");
+                }
+            }
+
             $model = app($this->model);
-            $query = $model->select($model->getTable() . ".*");
+            $table = $model->getTable();
+            $query = $model->select("{$table}.{$fields->shift()}");
+            foreach ($fields as $field) {
+                $query->addSelect("{$table}.{$field}");
+            }
 
             $user = Auth::user();
             if (!$user->is_admin) {
@@ -74,72 +91,104 @@ abstract class BaseApiController extends Controller
 
             $extra = collect([]);
 
-            try {
-                if ($this->modelUsesSoftDelete() && $request->has('with_trashed') && $request->with_trashed) {
-                    $query->withTrashed();
-                }
+            if ($this->modelUsesSoftDelete() && $request->has('with_trashed') && $request->with_trashed) {
+                $query->withTrashed();
+            }
 
-                if ($request->has('order_by')) {
-                    try {
-                        $query->orderBy($request->order_by);
-                    } catch (\Throwable $th) {
-                        throw new Exception("Paramètre 'order_by' n'est pas valide.");
-                    }
-                }
-
-                $this->filterIndexQuery($request, $query);
-
-                if ($request->has('page')) {
-                    if (!is_numeric($request->page)) {
-                        throw new Exception("Paramètre 'page' doit être un nombre.");
+            if ($request->has('order_by')) {
+                try {
+                    $direction = 'asc';
+                    if ($request->has('order_by_desc')) {
+                        $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
                     }
 
-                    $per_page = static::$per_page;
-                    if ($request->has('per_page')) {
-                        if (!is_numeric($request->per_page)) {
-                            throw new Exception("Paramètre 'per_page' doit être un nombre.");
+                    $query->orderBy($request->order_by, $direction);
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramètre 'order_by' n'est pas valide.");
+                }
+            }
+
+            $this->filterIndexQuery($request, $query);
+
+            if ($request->has('q') && $request->q) {
+                try {
+                    $query->where(function ($query) use ($model, $request) {
+                        $columns = DB::select("describe " . $model->getTable());
+                        foreach ($columns as $column) {
+                            if (str_contains($column->Type, "char")) {
+                                $query->orWhere($column->Field, 'like', '%' . $request->q . '%');
+                            }
                         }
-                        $per_page = $request->per_page;
+                    });
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramêtre 'q' n'est pas valide.");
+                }
+            }
+
+            $nonPaginatedQuery = clone $query;
+
+            if ($request->has('page')) {
+                if (!is_numeric($request->page)) {
+                    throw new ApiException("Paramètre 'page' doit être un nombre.");
+                }
+
+                $per_page = static::$per_page;
+                if ($request->has('per_page')) {
+                    if (!is_numeric($request->per_page)) {
+                        throw new ApiException("Paramètre 'per_page' doit être un nombre.");
                     }
-
-                    $current_page = $request->page;
-                    $paginator = $query->paginate($per_page, $current_page);
-
-                    $pageParameter = 'page=' . $current_page;
-                    $extra->put('pagination', [
-                        'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
-                        'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
-                        'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
-                        'last_page_url' => str_replace($pageParameter, 'page=' . $paginator->lastPage(), $request->fullUrl()),
-                        'current_page' => $paginator->currentPage(),
-                        'last_page' => $paginator->lastPage(),
-                        'count' => $paginator->count(),
-                        'total' => $paginator->total()
-                    ]);
+                    $per_page = $request->per_page;
                 }
 
-                if (static::$index_load) {
-                    $query->with(static::$index_load);
+                $current_page = $request->page;
+                $paginator = $query->paginate($per_page, $current_page);
+
+                $pageParameter = 'page=' . $current_page;
+                $extra->put('pagination', [
+                    'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
+                    'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
+                    'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
+                    'last_page_url' => str_replace($pageParameter, 'page=' . $paginator->lastPage(), $request->fullUrl()),
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'count' => $paginator->count(),
+                    'total' => $paginator->total()
+                ]);
+            }
+
+            if ($request->has('loads')) {
+                try {
+                    if ($loads = $request->loads) {
+                        $query->with($loads);
+                    }
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramètre 'loads' n'est pas valide.");
                 }
-            } catch (ApiException $th) {
-                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
-            } catch (\Throwable $th) {
-                return $this->errorResponse($th->getMessage());
+            } else {
+                $query->with(static::$index_load);
             }
 
             $items = $query->get();
 
-            if (static::$index_append) {
+            if ($request->has('appends')) {
+                try {
+                    $appends = $request->appends;
+                    if (!is_array($appends)) {
+                        $appends = $appends ? [$appends] : [];
+                    }
+                    $items->each->setAppends($appends);
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramètre 'appends' n'est pas valide.");
+                }
+            } else if (static::$index_append) {
                 $items->each->append(static::$index_append);
             }
 
-            try {
-                $extra = $extra->merge($this->extraIndexData($request, $items));
-            } catch (ApiException $th) {
-                return $this->errorResponse($th->getMessage(), $th->getHttpCode());
-            }
+            $extra = $extra->merge($this->extraIndexData($request, $items, $nonPaginatedQuery));
 
             return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }

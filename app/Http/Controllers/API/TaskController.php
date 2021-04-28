@@ -90,6 +90,15 @@ class TaskController extends BaseApiController
             $query->where('tasks_bundle_id', $request->tasks_bundle_id);
         }
 
+        if ($request->has('project_id')) {
+            if (Project::where('id', $request->project_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'project_id' n'est pas valide.");
+            }
+
+            $query->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                ->where('tasks_bundles.project_id', $request->project_id);
+        }
+
         if ($request->has('skill_id')) {
             if (Skill::where('id', $request->skill_id)->doesntExist()) {
                 throw new ApiException("Paramètre 'skill_id' n'est pas valide.");
@@ -118,6 +127,15 @@ class TaskController extends BaseApiController
             }
 
             $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->has('date')) {
+            try {
+                $date = Carbon::createFromFormat('d-m-Y', $request->date);
+                $query->whereDate('date', $date);
+            } catch (\Throwable $th) {
+                throw new ApiException("Paramètre 'date' n'est pas valide.");
+            }
         }
     }
 
@@ -455,6 +473,92 @@ class TaskController extends BaseApiController
             } else {
                 $timeSpent->delete();
             }
+        }
+    }
+
+    /**
+     * Display a listing of comments.
+     */
+    public function comments(Request $request)
+    {
+        try {
+            if ($error = $this->permissionErrors('read')) {
+                return $error;
+            }
+
+            $query = TaskComment::select('task_comments.*');
+
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                if ($user->is_manager) {
+                    $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
+                        ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                        ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
+                        ->where('projects.company_id', $user->company_id);
+                } else {
+                    $query->where('created_by', $user->id);
+                }
+            }
+
+            $extra = collect([]);
+
+            if ($request->has('order_by')) {
+                try {
+                    $direction = 'asc';
+                    if ($request->has('order_by_desc')) {
+                        $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
+                    }
+
+                    $query->orderBy($request->order_by, $direction);
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramètre 'order_by' n'est pas valide.");
+                }
+            }
+
+            if ($request->has('q') && $request->q) {
+                try {
+                    $query->where('description', 'like', "%{$request->q}%");
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramêtre 'q' n'est pas valide.");
+                }
+            }
+
+            if ($request->has('page')) {
+                if (!is_numeric($request->page)) {
+                    throw new ApiException("Paramètre 'page' doit être un nombre.");
+                }
+
+                $per_page = static::$per_page;
+                if ($request->has('per_page')) {
+                    if (!is_numeric($request->per_page)) {
+                        throw new ApiException("Paramètre 'per_page' doit être un nombre.");
+                    }
+                    $per_page = $request->per_page;
+                }
+
+                $current_page = $request->page;
+                $paginator = $query->paginate($per_page, $current_page);
+
+                $pageParameter = 'page=' . $current_page;
+                $extra->put('pagination', [
+                    'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
+                    'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
+                    'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
+                    'last_page_url' => str_replace($pageParameter, 'page=' . $paginator->lastPage(), $request->fullUrl()),
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'count' => $paginator->count(),
+                    'total' => $paginator->total()
+                ]);
+            }
+
+            $items = $query->get();
+
+            return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
     }
 }

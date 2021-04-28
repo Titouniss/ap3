@@ -367,7 +367,7 @@ class DataRowsSeeder extends Seeder
         $row = $this->dataRow($type, 'workarea_id');
         $row->fill([
             'type'         => 'relationship',
-            'display_name' => 'pôle de produciton',
+            'display_name' => 'pôle de production',
             'required'     => 0,
             'details' => json_encode([
                 'model' => Workarea::class,

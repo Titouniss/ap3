@@ -615,9 +615,12 @@ class UserController extends BaseApiController
             'login' => $login,
             'email' => $arrayRequest['email'],
             'password' => bcrypt($arrayRequest['password']),
+            'register_token' => Str::random(8),
             'is_password_change' => false,
             'isTermsConditionAccepted' => $arrayRequest['terms_accepted'],
         ]);
+        //On ajoute des heures de travail par défaut ( 35H )
+        $this->addDefaultWorkHours($item->id);
 
         try {
             $role = Role::where('code', 'admin')->firstOrFail();

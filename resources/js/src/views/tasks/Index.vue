@@ -366,18 +366,18 @@ export default {
                 else return 1;
             },
             set(val) {
-                this.gridApi.paginationGoToPage(val - 1);
+                if (this.gridApi) this.gridApi.paginationGoToPage(val - 1);
             }
         }
     },
     methods: {
         updateSearchQuery(val) {
-            this.gridApi.setQuickFilter(val);
+            if (this.gridApi) this.gridApi.setQuickFilter(val);
         },
         momentTransform(date) {
-            return moment(date).format("DD MMMM YYYY") == "Invalid date"
+            return moment(date).format("DD MMMM YYYY - HH:mm") == "Invalid date"
                 ? ""
-                : moment(date).format("DD MMMM YYYY");
+                : moment(date).format("DD MMMM YYYY - HH:mm");
         },
         onResize(event) {
             if (this.gridApi) {
@@ -473,29 +473,34 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
-        this.project_data.tasks_bundles.length > 0
-            ? this.$store
-                  .dispatch("taskManagement/fetchItems", {
-                      tasks_bundle_id: this.project_data.tasks_bundles[0].id
-                  })
-                  .catch(err => {
-                      console.error(err);
-                  })
-            : null;
+
+        this.$store
+            .dispatch("taskManagement/fetchItems", {
+                project_id: this.project_data.id
+            })
+            .catch(err => {
+                console.error(err);
+            });
 
         this.$store.dispatch("userManagement/fetchItems");
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
-        moduleTaskManagement.isRegistered = false;
-        this.$store.unregisterModule("taskManagement");
+        if (moduleTaskManagement.isRegistered) {
+            moduleTaskManagement.isRegistered = false;
+            this.$store.unregisterModule("taskManagement");
+        }
 
-        moduleUserManagement.isRegistered = false;
-        this.$store.unregisterModule("userManagement");
+        if (moduleUserManagement.isRegistered) {
+            moduleUserManagement.isRegistered = false;
+            this.$store.unregisterModule("userManagement");
+        }
 
-        moduleDocumentManagement.isRegistered = false;
-        this.$store.unregisterModule("documentManagement");
+        if (moduleDocumentManagement.isRegistered) {
+            moduleDocumentManagement.isRegistered = false;
+            this.$store.unregisterModule("documentManagement");
+        }
     }
 };
 </script>

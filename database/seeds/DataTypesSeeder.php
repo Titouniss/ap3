@@ -55,8 +55,8 @@ class DataTypesSeeder extends Seeder
 
         $type = $this->dataType('workareas');
         $type->fill([
-            'display_name_singular' => 'Pôle de produciton',
-            'display_name_plurial' => 'Pôles de produciton',
+            'display_name_singular' => 'Pôle de production',
+            'display_name_plurial' => 'Pôles de production',
             'model' => Workarea::class,
             'order' => 1
         ])->save();
