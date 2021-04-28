@@ -206,7 +206,7 @@
                                 "
                                 class="text-danger text-sm"
                             >
-                                Attention, aucun pôle de produciton ne possède
+                                Attention, aucun pôle de production ne possède
                                 cette combinaison de compétences
                             </span>
 

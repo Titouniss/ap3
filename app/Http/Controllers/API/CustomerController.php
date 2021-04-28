@@ -35,40 +35,40 @@ class CustomerController extends BaseApiController
     ];
 
     protected static $store_validation_array = [
-        'name' => 'nullable',
-        'siret' => 'required',
+        'name' => 'required',
+        'siret' => 'nullable',
         'code' => 'nullable',
         'type' => 'nullable',
-        'contact_firstname' => 'required',
-        'contact_lastname' => 'required',
-        'contact_function' => 'required',
+        'contact_firstname' => 'nullable',
+        'contact_lastname' => 'nullable',
+        'contact_function' => 'nullable',
         'contact_email' => 'required|email',
-        'contact_tel1' => 'nullable',
+        'contact_tel1' => 'required',
         'contact_tel2' => 'nullable',
-        'street_number' => 'required',
-        'street_name' => 'required',
-        'postal_code' => 'required',
-        'city' => 'required',
-        'country' => 'required',
+        'street_number' => 'nullable',
+        'street_name' => 'nullable',
+        'postal_code' => 'nullable',
+        'city' => 'nullable',
+        'country' => 'nullable',
         'company_id' => 'required'
     ];
 
     protected static $update_validation_array = [
         'name' => 'required',
-        'siret' => 'required',
+        'siret' => 'nullable',
         'code' => 'nullable',
         'type' => 'nullable',
-        'contact_firstname' => 'required',
-        'contact_lastname' => 'required',
-        'contact_function' => 'required',
+        'contact_firstname' => 'nullable',
+        'contact_lastname' => 'nullable',
+        'contact_function' => 'nullable',
         'contact_email' => 'required|email',
-        'contact_tel1' => 'nullable',
+        'contact_tel1' => 'required',
         'contact_tel2' => 'nullable',
-        'street_number' => 'required',
-        'street_name' => 'required',
-        'postal_code' => 'required',
-        'city' => 'required',
-        'country' => 'required',
+        'street_number' => 'nullable',
+        'street_name' => 'nullable',
+        'postal_code' => 'nullable',
+        'city' => 'nullable',
+        'country' => 'nullable',
         'company_id' => 'required'
     ];
 
@@ -88,20 +88,20 @@ class CustomerController extends BaseApiController
         ]);
 
         $item->details()->update([
-            'siret' => $arrayRequest['siret'],
+            'siret' => $arrayRequest['siret'] ?? null,
             'code' => $arrayRequest['code'] ?? null,
             'type' => $arrayRequest['type'] ?? null,
-            'contact_firstname' => $arrayRequest['contact_firstname'],
-            'contact_lastname' => $arrayRequest['contact_lastname'],
-            'contact_function' => $arrayRequest['contact_function'],
+            'contact_firstname' => $arrayRequest['contact_firstname'] ?? null,
+            'contact_lastname' => $arrayRequest['contact_lastname'] ?? null,
+            'contact_function' => $arrayRequest['contact_function'] ?? null,
             'contact_email' => $arrayRequest['contact_email'],
             'contact_tel1' => $arrayRequest['contact_tel1'],
-            'contact_tel2' => $arrayRequest['contact_tel2'],
-            'street_number' => $arrayRequest['street_number'],
-            'street_name' => $arrayRequest['street_name'],
-            'postal_code' => $arrayRequest['postal_code'],
-            'city' => $arrayRequest['city'],
-            'country' => $arrayRequest['country'],
+            'contact_tel2' => $arrayRequest['contact_tel2'] ?? null,
+            'street_number' => $arrayRequest['street_number'] ?? null,
+            'street_name' => $arrayRequest['street_name'] ?? null,
+            'postal_code' => $arrayRequest['postal_code'] ?? null,
+            'city' => $arrayRequest['city'] ?? null,
+            'country' => $arrayRequest['country'] ?? null,
         ]);
 
         return $item;
@@ -119,20 +119,20 @@ class CustomerController extends BaseApiController
         }
 
         $item->details()->update([
-            'siret' => $arrayRequest['siret'],
+            'siret' => $arrayRequest['siret'] ?? null,
             'code' => $arrayRequest['code'] ?? null,
             'type' => $arrayRequest['type'] ?? null,
-            'contact_firstname' => $arrayRequest['contact_firstname'],
-            'contact_lastname' => $arrayRequest['contact_lastname'],
-            'contact_function' => $arrayRequest['contact_function'],
+            'contact_firstname' => $arrayRequest['contact_firstname'] ?? null,
+            'contact_lastname' => $arrayRequest['contact_lastname'] ?? null,
+            'contact_function' => $arrayRequest['contact_function'] ?? null,
             'contact_email' => $arrayRequest['contact_email'],
             'contact_tel1' => $arrayRequest['contact_tel1'],
-            'contact_tel2' => $arrayRequest['contact_tel2'],
-            'street_number' => $arrayRequest['street_number'],
-            'street_name' => $arrayRequest['street_name'],
-            'postal_code' => $arrayRequest['postal_code'],
-            'city' => $arrayRequest['city'],
-            'country' => $arrayRequest['country'],
+            'contact_tel2' => $arrayRequest['contact_tel2'] ?? null,
+            'street_number' => $arrayRequest['street_number'] ?? null,
+            'street_name' => $arrayRequest['street_name'] ?? null,
+            'postal_code' => $arrayRequest['postal_code'] ?? null,
+            'city' => $arrayRequest['city'] ?? null,
+            'country' => $arrayRequest['country'] ?? null,
         ]);
 
         return $item;

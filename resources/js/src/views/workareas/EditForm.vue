@@ -1,123 +1,139 @@
 <template>
-  <vs-prompt
-    title="Editer un pôle de production"
-    accept-text="Modifier"
-    cancel-text="Annuler"
-    button-cancel="border"
-    @cancel="init"
-    @accept="submitItem"
-    @close="init"
-    :is-valid="validateForm"
-    :active.sync="activePrompt"
-  >
-    <div>
-      <form autocomplete="off">
-        <div class="vx-row">
-          <div class="vx-col w-full">
-            <vs-input
-              v-validate="'required|max:255'"
-              name="name"
-              class="w-full mb-4 mt-5"
-              placeholder="Nom"
-              v-model="itemLocal.name"
-              :color="validateForm ? 'success' : 'danger'"
-            />
-            <span class="text-danger text-sm" v-show="errors.has('name')">{{
-              errors.first("name")
-            }}</span>
+    <vs-prompt
+        title="Editer un pôle de production"
+        accept-text="Modifier"
+        cancel-text="Annuler"
+        button-cancel="border"
+        @cancel="init"
+        @accept="submitItem"
+        @close="init"
+        :is-valid="validateForm"
+        :active.sync="activePrompt"
+    >
+        <div>
+            <form autocomplete="off">
+                <div class="vx-row">
+                    <div class="vx-col w-full">
+                        <vs-input
+                            v-validate="'required|max:255'"
+                            name="name"
+                            class="w-full mb-4 mt-5"
+                            placeholder="Nom"
+                            v-model="itemLocal.name"
+                            :color="validateForm ? 'success' : 'danger'"
+                        />
+                        <span
+                            class="text-danger text-sm"
+                            v-show="errors.has('name')"
+                            >{{ errors.first("name") }}</span
+                        >
 
-            <small class="ml-1 mb-2" for>Nombre d'opérateur maximum</small>
-            <vs-row vs-w="12">
-              <vs-col vs-w="6">
-                <vs-input-number
-                  min="1"
-                  max="25"
-                  name="max_users"
-                  class="inputNumber"
-                  v-model="itemLocal.max_users"
-                />
-              </vs-col>
-            </vs-row>
-            <span
-              class="text-danger text-sm"
-              v-show="errors.has('max_users')"
-              >{{ errors.first("max_users") }}</span
-            >
+                        <small class="ml-1 mb-2" for
+                            >Nombre d'opérateur maximum</small
+                        >
+                        <vs-row vs-w="12">
+                            <vs-col vs-w="6">
+                                <vs-input-number
+                                    min="1"
+                                    max="25"
+                                    name="max_users"
+                                    class="inputNumber"
+                                    v-model="itemLocal.max_users"
+                                />
+                            </vs-col>
+                        </vs-row>
+                        <span
+                            class="text-danger text-sm"
+                            v-show="errors.has('max_users')"
+                            >{{ errors.first("max_users") }}</span
+                        >
 
-            <div v-if="itemLocal.company_id">
-              <v-select
-                v-validate="'required'"
-                name="skill"
-                label="name"
-                :multiple="true"
-                v-model="itemLocal.skills"
-                :reduce="(skill) => skill.id"
-                class="w-full mt-5"
-                autocomplete
-                :options="skillsData"
-              >
-                <template #header>
-                  <div style="opacity: .8 font-size: .85rem">Compétences</div>
-                </template>
-                <template #option="skill">
-                  <span>{{ `${skill.name}` }}</span>
-                </template>
-              </v-select>
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('company_id')"
-                >{{ errors.first("company_id") }}</span
-              >
-            </div>
+                        <div v-if="itemLocal.company_id">
+                            <v-select
+                                v-validate="'required'"
+                                name="skill"
+                                label="name"
+                                :multiple="true"
+                                v-model="itemLocal.skills"
+                                :reduce="skill => skill.id"
+                                class="w-full mt-5"
+                                autocomplete
+                                :options="skillsData"
+                            >
+                                <template #header>
+                                    <div style="opacity: .8 font-size: .85rem">
+                                        Compétences
+                                    </div>
+                                </template>
+                                <template #option="skill">
+                                    <span>{{ `${skill.name}` }}</span>
+                                </template>
+                            </v-select>
+                            <span
+                                class="text-danger text-sm"
+                                v-show="errors.has('company_id')"
+                                >{{ errors.first("company_id") }}</span
+                            >
+                        </div>
 
-            <div class="vx-row mt-4" v-if="!disabled">
-              <div class="vx-col w-full">
-                <div class="flex items-end px-3">
-                  <feather-icon
-                    svgClasses="w-6 h-6"
-                    icon="LockIcon"
-                    class="mr-2"
-                  />
-                  <span class="font-medium text-lg leading-none">Admin</span>
+                        <div class="vx-row mt-4" v-if="!disabled">
+                            <div class="vx-col w-full">
+                                <div class="flex items-end px-3">
+                                    <feather-icon
+                                        svgClasses="w-6 h-6"
+                                        icon="LockIcon"
+                                        class="mr-2"
+                                    />
+                                    <span
+                                        class="font-medium text-lg leading-none"
+                                        >Admin</span
+                                    >
+                                </div>
+                                <vs-divider />
+                                <div>
+                                    <v-select
+                                        v-validate="'required'"
+                                        @input="cleanSkillsInput"
+                                        name="company"
+                                        label="name"
+                                        :multiple="false"
+                                        v-model="itemLocal.company_id"
+                                        :reduce="name => name.id"
+                                        class="w-full mt-5"
+                                        autocomplete
+                                        :options="companiesData"
+                                    >
+                                        <template #header>
+                                            <div
+                                                style="opacity: .8 font-size: .85rem"
+                                            >
+                                                Société
+                                            </div>
+                                        </template>
+                                        <template #option="company">
+                                            <span>{{ `${company.name}` }}</span>
+                                        </template>
+                                    </v-select>
+                                    <span
+                                        class="text-danger text-sm"
+                                        v-show="errors.has('company_id')"
+                                        >{{ errors.first("company_id") }}</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <file-input
+                                :items="itemLocal.documents"
+                                :token="token"
+                            />
+                        </div>
+                    </div>
                 </div>
-                <vs-divider />
-                <div>
-                  <v-select
-                    v-validate="'required'"
-                    @input="cleanSkillsInput"
-                    name="company"
-                    label="name"
-                    :multiple="false"
-                    v-model="itemLocal.company_id"
-                    :reduce="(name) => name.id"
-                    class="w-full mt-5"
-                    autocomplete
-                    :options="companiesData"
-                  >
-                    <template #header>
-                      <div style="opacity: .8 font-size: .85rem">Société</div>
-                    </template>
-                    <template #option="company">
-                      <span>{{ `${company.name}` }}</span>
-                    </template>
-                  </v-select>
-                  <span
-                    class="text-danger text-sm"
-                    v-show="errors.has('company_id')"
-                    >{{ errors.first("company_id") }}</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <file-input :items="itemLocal.documents" :token="token" />
-            </div>
-          </div>
+            </form>
         </div>
-      </form>
-    </div>
-  </vs-prompt>
+    </vs-prompt>
 </template>
 
 <script>
@@ -130,118 +146,122 @@ import FileInput from "@/components/inputs/FileInput.vue";
 Validator.localize("fr", errorMessage);
 
 export default {
-  props: {
-    itemId: {
-      type: Number,
-      required: true,
-    },
-  },
-  components: {
-    vSelect,
-    FileInput,
-  },
-  data() {
-    const item = JSON.parse(
-      JSON.stringify(
-        this.$store.getters["workareaManagement/getItem"](this.itemId)
-      )
-    );
-    item.skills = item.skills.map((skill) => skill.id);
-    return {
-      itemLocal: item,
-
-      token: "token_" + Math.random().toString(36).substring(2, 15),
-      company_id_temps: null,
-    };
-  },
-  computed: {
-    isAdmin() {
-      return this.$store.state.AppActiveUser.is_admin;
-    },
-    activePrompt: {
-      get() {
-        return this.itemId && this.itemId > 0 ? true : false;
-      },
-      set(value) {
-        this.$store
-          .dispatch("workareaManagement/editItem", {})
-          .then(() => {})
-          .catch((err) => {
-            console.error(err);
-          });
-      },
-    },
-    companiesData() {
-      return this.$store.getters["companyManagement/getItems"];
-    },
-    skillsData() {
-      return this.itemLocal.company_id
-        ? this.$store.getters["skillManagement/getItemsByCompany"](
-            this.itemLocal.company_id
-          )
-        : [];
-    },
-    disabled() {
-      const user = this.$store.state.AppActiveUser;
-      if (this.isAdmin) {
-        return false;
-      } else {
-        this.itemLocal.company_id = user.company_id;
-        return true;
-      }
-    },
-    validateForm() {
-      return !this.errors.any() && this.itemLocal.name != "";
-    },
-  },
-  methods: {
-    init() {
-      this.deleteFiles();
-      this.itemLocal = {};
-    },
-    submitItem() {
-      this.$validator.validateAll().then((result) => {
-        if (result) {
-          const item = JSON.parse(JSON.stringify(this.itemLocal));
-          item.token = this.token;
-          this.$store
-            .dispatch("workareaManagement/updateItem", item)
-            .then(() => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Modification d'un pôle de produciton",
-                text: `"${this.itemLocal.name}" modifié avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success",
-              });
-            })
-            .catch((error) => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Error",
-                text: error.message,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "danger",
-              });
-            });
+    props: {
+        itemId: {
+            type: Number,
+            required: true
         }
-      });
     },
-    cleanSkillsInput() {
-      this.itemLocal.skills = [];
+    components: {
+        vSelect,
+        FileInput
     },
-    deleteFiles() {
-      const ids = this.itemLocal.documents
-        .filter((item) => item.token)
-        .map((item) => item.id);
-      if (ids.length > 0) {
-        this.$store
-          .dispatch("documentManagement/removeItems", ids)
-          .catch((error) => {});
-      }
+    data() {
+        const item = JSON.parse(
+            JSON.stringify(
+                this.$store.getters["workareaManagement/getItem"](this.itemId)
+            )
+        );
+        item.skills = item.skills.map(skill => skill.id);
+        return {
+            itemLocal: item,
+
+            token:
+                "token_" +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 15),
+            company_id_temps: null
+        };
     },
-  },
+    computed: {
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
+        },
+        activePrompt: {
+            get() {
+                return this.itemId && this.itemId > 0 ? true : false;
+            },
+            set(value) {
+                this.$store
+                    .dispatch("workareaManagement/editItem", {})
+                    .then(() => {})
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+        },
+        companiesData() {
+            return this.$store.getters["companyManagement/getItems"];
+        },
+        skillsData() {
+            return this.itemLocal.company_id
+                ? this.$store.getters["skillManagement/getItemsByCompany"](
+                      this.itemLocal.company_id
+                  )
+                : [];
+        },
+        disabled() {
+            const user = this.$store.state.AppActiveUser;
+            if (this.isAdmin) {
+                return false;
+            } else {
+                this.itemLocal.company_id = user.company_id;
+                return true;
+            }
+        },
+        validateForm() {
+            return !this.errors.any() && this.itemLocal.name != "";
+        }
+    },
+    methods: {
+        init() {
+            this.deleteFiles();
+            this.itemLocal = {};
+        },
+        submitItem() {
+            this.$validator.validateAll().then(result => {
+                if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    item.token = this.token;
+                    this.$store
+                        .dispatch("workareaManagement/updateItem", item)
+                        .then(() => {
+                            this.$vs.loading.close();
+                            this.$vs.notify({
+                                title: "Modification d'un pôle de production",
+                                text: `"${this.itemLocal.name}" modifié avec succès`,
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "success"
+                            });
+                        })
+                        .catch(error => {
+                            this.$vs.loading.close();
+                            this.$vs.notify({
+                                title: "Error",
+                                text: error.message,
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "danger"
+                            });
+                        });
+                }
+            });
+        },
+        cleanSkillsInput() {
+            this.itemLocal.skills = [];
+        },
+        deleteFiles() {
+            const ids = this.itemLocal.documents
+                .filter(item => item.token)
+                .map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/removeItems", ids)
+                    .catch(error => {});
+            }
+        }
+    }
 };
 </script>

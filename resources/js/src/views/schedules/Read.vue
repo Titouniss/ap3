@@ -1,90 +1,84 @@
 <template>
-  <div>
-    <router-link
-      :to="'/schedules'"
-      class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3"
-    >
-      <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
-      <span class="ml-2">Retour à la liste des plannings</span>
-    </router-link>
+    <div>
+        <router-link
+            :to="'/schedules'"
+            class="btnBack flex cursor-pointer text-inherit hover:text-primary pt-3 mb-3"
+        >
+            <feather-icon class="'h-5 w-5" icon="ArrowLeftIcon"></feather-icon>
+            <span class="ml-2">Retour à la liste des plannings</span>
+        </router-link>
 
-    <div class="vx-card w-full p-6">
-      <h2 class="mb-4 color-primary">{{ scheduleTitle }}</h2>
-      <!-- <div>
+        <div class="vx-card w-full p-6">
+            <h2 class="mb-4 color-primary">{{ scheduleTitle }}</h2>
+            <!-- <div>
         <button @click="toggleWeekends">toggle weekends</button>
         <button @click="gotoPast">go to a date in the past</button>
         (also, click a date/time to add an event)
       </div>-->
-      <add-form
-        v-if="project_data"
-        :activeAddPrompt="this.activeAddPrompt"
-        :handleClose="handleClose"
-        :dateData="dateData"
-        :project_data="project_data"
-        :tasks_list="tasksEvent"
-        :customTask="false"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        :hideProjectInput="this.$route.query.type === 'projects' ? true : false"
-        :hideUserInput="this.$route.query.type === 'users' ? true : false"
-      />
-      <FullCalendar
-        locale="fr"
-        class="demo-app-calendar border-c"
-        ref="fullCalendar"
-        defaultView="timeGridWeek"
-        :editable="false"
-        :header="{
-          left: 'prev today next',
-          center: 'dayGridMonth, timeGridWeek, timeGridDay',
-          right: 'title',
-        }"
-        :views="{
-          timeGridWeek: {
-            titleFormat: '{dddd DD MMM}, [Semaine] w, YYYY',
-          },
-        }"
-        :buttonText="{
-          today: 'Aujourd\'hui',
-          month: 'Mois',
-          week: 'Semaine',
-          day: 'Jour',
-          list: 'Liste',
-        }"        
-        :allDaySlot="false"
-        :plugins="calendarPlugins"
-        :weekends="calendarWeekends"
-        :events="calendarEvents"
-        :firstDay="1"
-        :minTime="minTime"
-        :maxTime="maxTime"
-        contentHeight="auto"
-        :weekNumbers="true"
-        :businessHours="businessHours"
-        @eventDrop="handleEventDrop"
-        @dateClick="handleDateClick"
-        @eventClick="handleEventClick"
-        @eventResize="handleEventResize"
-      />
-      <edit-form
-        :itemId="itemIdToEdit"
-        :tasks_list="tasksEvent"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedTo('edit')"
-      />
-      <!-- <EditFormTaskPeriod
-        :itemId="itemIdToEdit"
-        :taskId="taskIdItem"
-        :start_at="start_atItem"
-        :end_at="end_atItem"
-        :tasks_list="tasksEvent"
-        :type="this.$route.query.type"
-        :idType="parseInt(this.$route.query.id, 10)"
-        v-if="itemIdToEdit && authorizedTo('edit')"
-      /> -->
+            <add-form
+                v-if="project_data"
+                :activeAddPrompt="this.activeAddPrompt"
+                :handleClose="handleClose"
+                :dateData="dateData"
+                :project_data="project_data"
+                :tasks_list="tasksEvent"
+                :customTask="false"
+                :type="this.$route.query.type"
+                :idType="parseInt(this.$route.query.id, 10)"
+                :hideProjectInput="
+                    this.$route.query.type === 'projects' ? true : false
+                "
+                :hideUserInput="
+                    this.$route.query.type === 'users' ? true : false
+                "
+            />
+            <FullCalendar
+                locale="fr"
+                class="demo-app-calendar border-c"
+                ref="fullCalendar"
+                defaultView="timeGridWeek"
+                :editable="false"
+                :header="{
+                    left: 'prev today next',
+                    center: 'dayGridMonth, timeGridWeek, timeGridDay',
+                    right: 'title'
+                }"
+                :views="{
+                    timeGridWeek: {
+                        titleFormat: '{dddd DD MMM}, [Semaine] w, YYYY'
+                    }
+                }"
+                :buttonText="{
+                    today: 'Aujourd\'hui',
+                    month: 'Mois',
+                    week: 'Semaine',
+                    day: 'Jour',
+                    list: 'Liste'
+                }"
+                :allDaySlot="false"
+                :plugins="calendarPlugins"
+                :weekends="calendarWeekends"
+                :events="calendarEvents"
+                :firstDay="1"
+                :minTime="minTime"
+                :maxTime="maxTime"
+                contentHeight="auto"
+                :weekNumbers="true"
+                :businessHours="businessHours"
+                @eventDrop="handleEventDrop"
+                @dateClick="handleDateClick"
+                @eventClick="handleEventClick"
+                @eventResize="handleEventResize"
+            />
+            <edit-form
+                :itemId="itemIdToEdit"
+                :tasks_list="tasksEvent"
+                :type="this.$route.query.type"
+                :idType="parseInt(this.$route.query.id, 10)"
+                v-if="itemIdToEdit && authorizedTo('edit')"
+            />
+        </div>
     </div>
-  </div>
 </template>
 
 <script>
@@ -104,6 +98,7 @@ import moduleSkillManagement from "@/store/skill-management/moduleSkillManagemen
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 
 // Component
 import EditForm from "../tasks/EditForm.vue";
@@ -120,859 +115,910 @@ var modelPlurial = "schedules";
 var modelTitle = "Plannings";
 
 export default {
-  components: {
-    EditForm,
-    EditFormTaskPeriod,
-    AddForm,
-    FullCalendar, // make the <FullCalendar> tag available
-  },
-  data: function () {
-    return {
-      calendarPlugins: [
-        // plugins must be defined in the JS
-        dayGridPlugin,
-        timeGridPlugin,
-        interactionPlugin, // needed for dateClick
-        momentPlugin,
-      ],
-      activeAddPrompt: false,
-      dateData: {},
-      taskBundle: null,
-      calendarWeekends: true,
-      customButtons: {
-        AddEventBtn: {
-          text: "custom!",
-          click: function () {
-            alert("clicked the custom button!");
-          },
+    components: {
+        EditForm,
+        EditFormTaskPeriod,
+        AddForm,
+        FullCalendar // make the <FullCalendar> tag available
+    },
+    data: function() {
+        return {
+            calendarPlugins: [
+                // plugins must be defined in the JS
+                dayGridPlugin,
+                timeGridPlugin,
+                interactionPlugin, // needed for dateClick
+                momentPlugin
+            ],
+            activeAddPrompt: false,
+            dateData: {},
+            taskBundle: null,
+            calendarWeekends: true,
+            customButtons: {
+                AddEventBtn: {
+                    text: "custom!",
+                    click: function() {
+                        alert("clicked the custom button!");
+                    }
+                }
+            },
+            businessHours: false,
+            minTime: "05:00",
+            maxTime: "24:00",
+            date: null
+        };
+    },
+    computed: {
+        itemIdToEdit() {
+            //return this.$store.state.taskManagement.task.period_id || 0;
+            return this.$store.state.taskManagement.task.id || 0;
         },
-      },
-      businessHours: false,
-      minTime: "05:00",
-      maxTime: "24:00",   
-      date:null,   
-    };
-  },
-  computed: {
-    itemIdToEdit() {
-      //return this.$store.state.taskManagement.task.period_id || 0;
-      return this.$store.state.taskManagement.task.id || 0;
-    },
-    taskIdItem() {
-      return this.$store.state.taskManagement.task.id || 0;
-    },
-    start_atItem() {
-      return this.$store.state.taskManagement.task.start || 0;      
-    },
-    end_atItem() {
-      return this.$store.state.taskManagement.task.end || 0;      
-    },
-    
-    calendarEvents() {
-      // Get all task and parse to show
-      var eventsParse = [];
-      let minHour = null;
-      let maxHour = null;
-      if (this.$route.query.type === "projects") {
-        if (this.tasksEvent !== []) {
-          this.tasksEvent.forEach((t) => {
-            t.periods.forEach((p) => {
-              let start_period_hour = moment(p.start_time).format("HH:mm");
-              let end_period_hour = moment(p.end_time).format("HH:mm");
+        taskIdItem() {
+            return this.$store.state.taskManagement.task.id || 0;
+        },
+        start_atItem() {
+            return this.$store.state.taskManagement.task.start || 0;
+        },
+        end_atItem() {
+            return this.$store.state.taskManagement.task.end || 0;
+        },
 
-              minHour == null || start_period_hour < minHour
-                ? (minHour = start_period_hour)
-                : null;
-              maxHour == null || end_period_hour > maxHour
-                ? (maxHour = end_period_hour)
-                : null;
-
-              eventsParse.push({
-                id: t.id,
-                period_id: p.id,
-                title: t.name,
-                start: p.start_time,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: p.end_time,
-                user_id: t.user_id,
-                project_id: parseInt(this.$route.query.id, 10),
-                color: t.project.color,
-              });
-            });
-          });
-        }
-
-        console.log(minHour);
-        console.log(maxHour);
-      } else if (this.$route.query.type === "users") {
-        if (this.tasksEvent !== []) {
-          this.tasksEvent.forEach((t) => {
-            // if (
-            //   t.user_id !== null &&
-            //   (t.user_id.toString() === this.$route.query.id ||
-            //     t.user_id === this.$route.query.id)
-            // ) {
-            // Get project id
-            let project_id = null;
-            this.$store.state.projectManagement.projects.forEach((p) => {
-              p.tasks_bundles.forEach((tb) => {
-                if (t.tasks_bundle_id === tb.id) {
-                  project_id = tb.project_id;
+        calendarEvents() {
+            // Get all task and parse to show
+            var eventsParse = [];
+            let minHour = null;
+            let maxHour = null;
+            if (this.$route.query.type === "projects") {
+                if (
+                    this.tasksEvent !== [] &&
+                    this.tasksEvent[0] != null &&
+                    this.$refs.fullCalendar != null
+                ) {
+                    this.date = moment(this.tasksEvent[0].date).format(
+                        "YYYY-MM-DD"
+                    );
+                    this.$refs.fullCalendar.getApi().gotoDate(this.date);
                 }
-              });
-            });
+                if (this.tasksEvent !== []) {
+                    this.tasksEvent.forEach(t => {
+                        t.periods.forEach(p => {
+                            let start_period_hour = moment(p.start_time).format(
+                                "HH:mm"
+                            );
+                            let end_period_hour = moment(p.end_time).format(
+                                "HH:mm"
+                            );
 
-            t.periods.forEach((p) => {
-              let start_period_hour = moment(p.start_time).format("HH:mm");
-              let end_period_hour = moment(p.end_time).format("HH:mm");
+                            minHour == null || start_period_hour < minHour
+                                ? (minHour = start_period_hour)
+                                : null;
+                            maxHour == null || end_period_hour > maxHour
+                                ? (maxHour = end_period_hour)
+                                : null;
 
-              minHour == null || start_period_hour < minHour
-                ? (minHour = start_period_hour)
-                : null;
-              maxHour == null || end_period_hour > maxHour
-                ? (maxHour = end_period_hour)
-                : null;
+                            eventsParse.push({
+                                id: t.id,
+                                period_id: p.id,
+                                title: t.name,
+                                start: p.start_time,
+                                estimated_time: t.estimated_time,
+                                order: t.order,
+                                description: t.description,
+                                time_spent: t.time_spent,
+                                workarea_id: t.workarea_id,
+                                status: t.status,
+                                end: p.end_time,
+                                user_id: t.user_id,
+                                project_id: parseInt(this.$route.query.id, 10),
+                                color: t.project.color
+                            });
+                        });
+                    });
+                }
 
-              eventsParse.push({
-                id: t.id,
-                period_id: p.id,
-                title: t.name,
-                start: p.start_time,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: p.end_time,
-                user_id: t.user_id,
-                project_id: project_id,
-                color: t.project.color,
-              });
-            });
+                console.log(minHour);
+                console.log(maxHour);
+            } else if (this.$route.query.type === "users") {
+                if (this.tasksEvent !== []) {
+                    this.tasksEvent.forEach(t => {
+                        // if (
+                        //   t.user_id !== null &&
+                        //   (t.user_id.toString() === this.$route.query.id ||
+                        //     t.user_id === this.$route.query.id)
+                        // ) {
+
+                        t.periods.forEach(p => {
+                            let start_period_hour = moment(p.start_time).format(
+                                "HH:mm"
+                            );
+                            let end_period_hour = moment(p.end_time).format(
+                                "HH:mm"
+                            );
+
+                            minHour == null || start_period_hour < minHour
+                                ? (minHour = start_period_hour)
+                                : null;
+                            maxHour == null || end_period_hour > maxHour
+                                ? (maxHour = end_period_hour)
+                                : null;
+
+                            eventsParse.push({
+                                id: t.id,
+                                period_id: p.id,
+                                title: t.name,
+                                start: p.start_time,
+                                estimated_time: t.estimated_time,
+                                order: t.order,
+                                description: t.description,
+                                time_spent: t.time_spent,
+                                workarea_id: t.workarea_id,
+                                status: t.status,
+                                end: p.end_time,
+                                user_id: t.user_id,
+                                project_id: t.project_id,
+                                color: t.project.color
+                            });
+                        });
+                        // }
+                    });
+                }
+            } else if (this.$route.query.type === "workarea") {
+                if (this.tasksEvent !== []) {
+                    this.tasksEvent.forEach(t => {
+                        // if (
+                        //   t.workarea_id !== null &&
+                        //   (t.workarea_id.toString() === this.$route.query.id ||
+                        //     t.workarea_id === this.$route.query.id)
+                        // ) {
+
+                        t.periods.forEach(p => {
+                            let start_period_hour = moment(p.start_time).format(
+                                "HH:mm"
+                            );
+                            let end_period_hour = moment(p.end_time).format(
+                                "HH:mm"
+                            );
+
+                            minHour == null || start_period_hour < minHour
+                                ? (minHour = start_period_hour)
+                                : null;
+                            maxHour == null || end_period_hour > maxHour
+                                ? (maxHour = end_period_hour)
+                                : null;
+
+                            eventsParse.push({
+                                id: t.id,
+                                period_id: p.id,
+                                title: t.name,
+                                start: p.start_time,
+                                estimated_time: t.estimated_time,
+                                order: t.order,
+                                description: t.description,
+                                time_spent: t.time_spent,
+                                workarea_id: t.workarea_id,
+                                status: t.status,
+                                end: p.end_time,
+                                user_id: t.user_id,
+                                project_id: t.project_id,
+                                color: t.project.color
+                            });
+                        });
+                        // }
+                    });
+                }
+            }
+
+            // if(this.unavailableEvent != []){
+            //   console.log("unavailableEvent",this.unavailableEvent);
+            //   for(var i=1; i<this.unavailableEvent.length; i++){
+            //     if(this.unavailableEvent[i].task_id != null){
+            //       eventsParse.push({
+            //           start: this.unavailableEvent[i].start_time,
+            //           end: this.unavailableEvent[i].end_time,
+            //           color: "#808080",
+            //         });
+            //     }
+            //     //console.log("unavailable",this.unavailableEvent[i].task_id);
+            //   }
+
             // }
-          });
-        }
-      } else if (this.$route.query.type === "workarea") {
-        if (this.tasksEvent !== []) {
-          this.tasksEvent.forEach((t) => {
-            // if (
-            //   t.workarea_id !== null &&
-            //   (t.workarea_id.toString() === this.$route.query.id ||
-            //     t.workarea_id === this.$route.query.id)
-            // ) {
-            // Get project id
-            let project_id = null;
-            this.$store.state.projectManagement.projects.forEach((p) => {
-              p.tasks_bundles.forEach((tb) => {
-                if (t.tasks_bundle_id === tb.id) {
-                  project_id = tb.project_id;
+
+            this.minTime =
+                minHour && minHour >= "02:00"
+                    ? moment(minHour, "HH:mm")
+                          .subtract(2, "hour")
+                          .format("HH:mm")
+                    : "00:00";
+            this.maxTime =
+                maxHour && maxHour <= "22:00"
+                    ? moment(maxHour, "HH:mm")
+                          .add(2, "hour")
+                          .format("HH:mm")
+                    : "24:00";
+
+            this.$store.dispatch("scheduleManagement/addItems", eventsParse);
+
+            return eventsParse;
+        },
+        tasksEvent() {
+            return this.$store.state.taskManagement
+                ? this.$store.state.taskManagement.tasks
+                : [];
+        },
+        // unavailableEvent() {
+        //   return this.$store.state.projectManagement
+        //   ? this.$store.state.projectManagement.projects
+        //   : [];
+        // },
+        project_data() {
+            if (this.$route.query.type === "projects") {
+                return this.$store.getters["projectManagement/getItem"](
+                    parseInt(this.$route.query.id)
+                );
+            }
+            return null;
+        },
+        user_data() {
+            if (this.$route.query.type === "users") {
+                return this.$store.getters["userManagement/getItem"](
+                    parseInt(this.$route.query.id)
+                );
+            }
+            return null;
+        },
+        workarea_data() {
+            if (this.$route.query.type === "workarea") {
+                return this.$store.getters["workareaManagement/getItem"](
+                    parseInt(this.$route.query.id)
+                );
+            }
+            return null;
+        },
+        scheduleTitle() {
+            let title;
+            if (this.$route.query.type === "projects") {
+                if (this.project_data) {
+                    title = "Planning du projet : " + this.project_data.name;
                 }
-              });
-            });
-
-            t.periods.forEach((p) => {
-              let start_period_hour = moment(p.start_time).format("HH:mm");
-              let end_period_hour = moment(p.end_time).format("HH:mm");
-
-              minHour == null || start_period_hour < minHour
-                ? (minHour = start_period_hour)
-                : null;
-              maxHour == null || end_period_hour > maxHour
-                ? (maxHour = end_period_hour)
-                : null;
-
-              eventsParse.push({
-                id: t.id,
-                period_id: p.id,
-                title: t.name,
-                start: p.start_time,
-                estimated_time: t.estimated_time,
-                order: t.order,
-                description: t.description,
-                time_spent: t.time_spent,
-                workarea_id: t.workarea_id,
-                status: t.status,
-                end: p.end_time,
-                user_id: t.user_id,
-                project_id: project_id,
-                color: t.project.color,
-              });
-            });
-            // }
-          });
+            } else if (this.$route.query.type === "users") {
+                if (this.user_data) {
+                    title =
+                        "Planning de l'utilisateur : " +
+                        this.user_data.firstname +
+                        " " +
+                        this.user_data.lastname;
+                }
+            } else if (this.$route.query.type === "workarea") {
+                if (this.workarea_data) {
+                    title =
+                        "Planning du pôle de production : " +
+                        this.workarea_data.name;
+                }
+            }
+            return title;
         }
-      }     
-      
-      // if(this.unavailableEvent != []){
-      //   console.log("unavailableEvent",this.unavailableEvent);
-      //   for(var i=1; i<this.unavailableEvent.length; i++){
-      //     if(this.unavailableEvent[i].task_id != null){
-      //       eventsParse.push({
-      //           start: this.unavailableEvent[i].start_time,
-      //           end: this.unavailableEvent[i].end_time,
-      //           color: "#808080",
-      //         });
-      //     }
-      //     //console.log("unavailable",this.unavailableEvent[i].task_id);
-      //   }
-        
-        
-      // }
-      
-      this.minTime =
-        minHour && minHour >= "02:00"
-          ? moment(minHour, "HH:mm").subtract(2, "hour").format("HH:mm")
-          : "00:00";
-      this.maxTime =
-        maxHour && maxHour <= "22:00"
-          ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
-          : "24:00";
+    },
+    methods: {
+        toggleWeekends() {
+            this.calendarWeekends = !this.calendarWeekends; // update a property
+        },
+        gotoPast() {
+            let calendarApi = this.$refs.fullCalendar.getApi(); // from the ref="..."
+            calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
+        },
+        handleDateClick(arg) {
+            this.activeAddPrompt = true;
+            this.dateData = arg;
+        },
+        handleEventClick(arg) {
+            var targetEvent = this.calendarEvents.find(
+                event => event.id.toString() === arg.event.id
+            );
 
-      this.$store.dispatch("scheduleManagement/addItems", eventsParse);
+            this.$store
+                .dispatch("taskManagement/editItem", targetEvent)
+                .catch(err => {
+                    console.error(err);
+                });
+        },
+        handleEventDrop(arg) {
+            var itemTemp = this.calendarEvents.find(
+                e => e.id.toString() === arg.event.id
+            );
+            //Parse new item to update task
 
-      return eventsParse;
-    },
-    tasksEvent() {      
-      return this.$store.state.taskManagement
-        ? this.$store.state.taskManagement.tasks
-        : [];
-    },
-    // unavailableEvent() {
-    //   return this.$store.state.projectManagement 
-    //   ? this.$store.state.projectManagement.projects 
-    //   : [];
-    // },
-    project_data() {
-      if (this.$route.query.type === "projects") {
-        return this.$store.getters["projectManagement/getItem"](
-          parseInt(this.$route.query.id)
-        );
-      }
-      return null;
-    },
-    user_data() {      
-      var user_data = this.$store.state.userManagement.users.find(
-        (u) => u.id === this.$route.query.id
-      );
-      return user_data;
-    },
-    workarea_data() {
-      var workarea_data = this.$store.state.workareaManagement.workareas.find(
-        (w) => w.id === this.$route.query.id
-      );
-      return workarea_data;
-    },
-    scheduleTitle() {
-      let title;
-      if (this.$route.query.type === "projects") {
-        if (this.project_data) {
-          title = "Planning du projet : " + this.project_data.name;
-        }
-      } else if (this.$route.query.type === "users") {
-        if (this.user_data) {
-          title =
-            "Planning de l'utilisateur : " +
-            this.user_data.firstname +
-            " " +
-            this.user_data.lastname;
-        }
-      } else if (this.$route.query.type === "workarea") {
-        if (this.workarea_data) {
-          title = "Planning du pôle de production : " + this.workarea_data.name;
-        }
-      }
-      return title;
-    },
-  },
-  methods: {
-    toggleWeekends() {
-      this.calendarWeekends = !this.calendarWeekends; // update a property
-    },
-    gotoPast() {
-      let calendarApi = this.$refs.fullCalendar.getApi(); // from the ref="..."
-      calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
-    },
-    handleDateClick(arg) {
-      this.activeAddPrompt = true;
-      this.dateData = arg;
-    },
-    handleEventClick(arg) {
-      var targetEvent = this.calendarEvents.find(
-        (event) => event.id.toString() === arg.event.id
-      );
+            var itemToSave = {
+                id: itemTemp.id,
+                name: itemTemp.title,
+                date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                estimated_time: itemTemp.estimated_time,
+                order: itemTemp.order,
+                description: itemTemp.description,
+                time_spent: itemTemp.time_spent,
+                workarea_id: itemTemp.workarea_id,
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                status: itemTemp.status,
+                from: "schedule"
+            };
 
-      this.$store
-        .dispatch("taskManagement/editItem", targetEvent)
-        .catch((err) => {
-          console.error(err);
-        });
-    },
-    handleEventDrop(arg) {
-      var itemTemp = this.calendarEvents.find(
-        (e) => e.id.toString() === arg.event.id
-      );
-      //Parse new item to update task
+            this.$store
+                .dispatch("taskManagement/updateItem", itemToSave)
+                .then(data => {
+                    if (data && data.status === 200) {
+                        //this.refresh();
+                    } else {
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
+        handleEventResize(arg) {
+            var itemTemp = this.calendarEvents.find(
+                e => e.id.toString() === arg.event.id
+            );
 
-      var itemToSave = {
-        id: itemTemp.id,
-        name: itemTemp.title,
-        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-        estimated_time: itemTemp.estimated_time,
-        order: itemTemp.order,
-        description: itemTemp.description,
-        time_spent: itemTemp.time_spent,
-        workarea_id: itemTemp.workarea_id,
-        user_id: itemTemp.user_id,
-        project_id: itemTemp.project_id,
-        status: itemTemp.status,
-        from: "schedule",
-      };
+            //Parse new item to update task
 
-      this.$store
-        .dispatch("taskManagement/updateItem", itemToSave)
-        .then((data) => {
-          if (data && data.status === 200) {
+            var start = moment(arg.event.start);
+            var end = moment(arg.event.end);
+
+            var itemToSave = {
+                id: itemTemp.id,
+                name: itemTemp.title,
+                date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                estimated_time: end.diff(start, "hours"),
+                order: itemTemp.order,
+                description: itemTemp.description,
+                time_spent: itemTemp.time_spent,
+                workarea_id: itemTemp.workarea_id,
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                status: itemTemp.status,
+                from: "schedule"
+            };
+
+            this.$store
+                .dispatch("taskManagement/updateItem", itemToSave)
+                .then(data => {
+                    if (data && data.status === 200) {
+                        //this.refresh();
+                    } else {
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
+        handleClose() {
             //this.refresh();
-          } else {
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    },
-    handleEventResize(arg) {
-      var itemTemp = this.calendarEvents.find(
-        (e) => e.id.toString() === arg.event.id
-      );
+            (this.activeAddPrompt = false), (this.dateData = {});
+        },
+        authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
+        getBusinessHours() {
+            if (this.$route.query.type === "projects") {
+                console.log("project");
+                let businessHours = [];
+                var item = {
+                    id: this.$route.query.id,
+                    type: this.$route.query.type
+                };
+                this.$store
+                    .dispatch("projectManagement/workHoursPeriods", item)
 
-      //Parse new item to update task
+                    .then(data => {
+                        var dates = [];
+                        var hoursOtherProjects = [];
+                        dates.push(data.payload.dimanche);
+                        dates.push(data.payload.lundi);
+                        dates.push(data.payload.mardi);
+                        dates.push(data.payload.mercredi);
+                        dates.push(data.payload.jeudi);
+                        dates.push(data.payload.vendredi);
+                        dates.push(data.payload.samedi);
+                        //hoursOtherProjects.push(data.payload.otherProjects);
+                        console.log("dates", dates);
+                        //console.log('hoursOtherProjects',hoursOtherProjects);
 
-      var start = moment(arg.event.start);
-      var end = moment(arg.event.end);
+                        var days = [
+                            "dimanche",
+                            "lundi",
+                            "mardi",
+                            "mercredi",
+                            "jeudi",
+                            "vendredi",
+                            "samedi"
+                        ];
+                        //hoursOtherProjects=hoursOtherProjects[0];
+                        var i = 0;
+                        if (dates != []) {
+                            let businessHours = [];
+                            dates.forEach(day => {
+                                //hoursOtherProjects.forEach((period) => {
+                                //console.log(period.start_time);
+                                if (
+                                    (day[0] !== null || day[0] != "00:00:00") &&
+                                    (day[1] !== null || day[1] != "00:00:00")
+                                ) {
+                                    businessHours.push({
+                                        daysOfWeek: this.getDayNumber(days[i]),
+                                        startTime: day[0],
+                                        endTime: day[1]
+                                    });
+                                }
+                                if (
+                                    (day[2] !== null || day[2] != "00:00:00") &&
+                                    (day[3] !== null || day[3] != "00:00:00")
+                                ) {
+                                    businessHours.push({
+                                        daysOfWeek: this.getDayNumber(days[i]),
+                                        startTime: day[2],
+                                        endTime: day[3]
+                                    });
+                                }
+                                i = i + 1;
+                                //});
+                            });
+                            if (businessHours !== []) {
+                                let minHour = null;
+                                let maxHour = null;
+                                businessHours.forEach(bH => {
+                                    if (
+                                        bH.startTime != null &&
+                                        bH.endTime != null
+                                    ) {
+                                        if (
+                                            minHour === null ||
+                                            minHour > bH.startTime
+                                        ) {
+                                            minHour = bH.startTime;
+                                        }
+                                        if (
+                                            maxHour === null ||
+                                            maxHour < bH.endTime
+                                        ) {
+                                            maxHour = bH.endTime;
+                                        }
+                                    } else if (
+                                        bH.start != null &&
+                                        bH.end != null
+                                    ) {
+                                        let start = moment(bH.start).format(
+                                            "HH:mm"
+                                        );
+                                        let end = moment(bH.end).format(
+                                            "HH:mm"
+                                        );
+                                        if (
+                                            minHour === null ||
+                                            minHour > start
+                                        ) {
+                                            minHour = start;
+                                        }
+                                        if (maxHour === null || maxHour < end) {
+                                            maxHour = end;
+                                        }
+                                    }
+                                });
 
-      var itemToSave = {
-        id: itemTemp.id,
-        name: itemTemp.title,
-        date: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
-        estimated_time: end.diff(start, "hours"),
-        order: itemTemp.order,
-        description: itemTemp.description,
-        time_spent: itemTemp.time_spent,
-        workarea_id: itemTemp.workarea_id,
-        user_id: itemTemp.user_id,
-        project_id: itemTemp.project_id,
-        status: itemTemp.status,
-        from: "schedule",
-      };
+                                this.minTime =
+                                    minHour >= "02:00"
+                                        ? moment(minHour, "HH:mm")
+                                              .subtract(2, "hour")
+                                              .format("HH:mm")
+                                        : "00:00";
+                                this.maxTime =
+                                    maxHour <= "22:00"
+                                        ? moment(maxHour, "HH:mm")
+                                              .add(2, "hour")
+                                              .format("HH:mm")
+                                        : "24:00";
 
-      this.$store
-        .dispatch("taskManagement/updateItem", itemToSave)
-        .then((data) => {
-          if (data && data.status === 200) {
-            //this.refresh();
-          } else {
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    },
-    handleClose() {
-      //this.refresh();
-      (this.activeAddPrompt = false), (this.dateData = {});
-    },
-    authorizedTo(action, model = modelPlurial) {
-      return this.$store.getters.userHasPermissionTo(`${action} ${model}`);
-    },
-    getBusinessHours() {
-      if(this.$route.query.type === "projects"){
-        console.log("project");
-        let businessHours = [];
-        var item = {
-        id: this.$route.query.id,
-        type: this.$route.query.type
-        };
-        this.$store
-        .dispatch("projectManagement/workHoursPeriods", item)
-        
-        .then((data) => {   
-          var dates=[];
-          var hoursOtherProjects=[];
-          dates.push(data.payload.dimanche);
-          dates.push(data.payload.lundi);
-          dates.push(data.payload.mardi);
-          dates.push(data.payload.mercredi);
-          dates.push(data.payload.jeudi);
-          dates.push(data.payload.vendredi);
-          dates.push(data.payload.samedi);
-          //hoursOtherProjects.push(data.payload.otherProjects);
-          console.log('dates',dates);
-          //console.log('hoursOtherProjects',hoursOtherProjects);
-          
-          var days=['dimanche','lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-          //hoursOtherProjects=hoursOtherProjects[0];
-          var i=0;
-            if (dates != []) {
-              let businessHours = [];
-              dates.forEach((day) => {   
-                  //hoursOtherProjects.forEach((period) => {   
-                    //console.log(period.start_time);     
-                    if (
-                      (day[0] !== null || day[0] != "00:00:00") && (day[1] !== null || day[1] != "00:00:00" )
-                    ) {
-                      businessHours.push({
-                        daysOfWeek: this.getDayNumber(days[i]),
-                        startTime: day[0],
-                        endTime: day[1],                        
+                                this.businessHours = businessHours;
+                            } else {
+                                this.businessHours = false;
+                            }
+                        } else {
+                            this.businessHours = false;
+                        }
+                    });
+            } else if (this.$route.query.type === "users") {
+                this.$store
+                    .dispatch("userManagement/fetchItem", this.$route.query.id)
+                    .then(data => {
+                        let item = data.payload;
+                        if (item.work_hours.length > 0) {
+                            let businessHours = [];
+                            item.work_hours.forEach(wH => {
+                                if (wH.is_active === 1) {
+                                    if (
+                                        wH.morning_starts_at !== null &&
+                                        wH.morning_ends_at !== null
+                                    ) {
+                                        businessHours.push({
+                                            daysOfWeek: this.getDayNumber(
+                                                wH.day
+                                            ),
+                                            startTime: this.parseWorkHour(
+                                                wH.morning_starts_at
+                                            ),
+                                            endTime: this.parseWorkHour(
+                                                wH.morning_ends_at
+                                            )
+                                        });
+                                    }
+                                    if (
+                                        wH.afternoon_starts_at !== null &&
+                                        wH.afternoon_ends_at !== null
+                                    ) {
+                                        businessHours.push({
+                                            daysOfWeek: this.getDayNumber(
+                                                wH.day
+                                            ),
+                                            startTime: this.parseWorkHour(
+                                                wH.afternoon_starts_at
+                                            ),
+                                            endTime: this.parseWorkHour(
+                                                wH.afternoon_ends_at
+                                            )
+                                        });
+                                    }
+                                }
+                            });
+                            if (businessHours !== []) {
+                                let minHour = null;
+                                let maxHour = null;
+                                businessHours.forEach(bH => {
+                                    if (
+                                        minHour === null ||
+                                        minHour > bH.startTime
+                                    ) {
+                                        minHour = bH.startTime;
+                                    }
+                                    if (
+                                        maxHour === null ||
+                                        maxHour < bH.endTime
+                                    ) {
+                                        maxHour = bH.endTime;
+                                    }
+                                });
 
-                      });
-                    }
-                    if (
-                      (day[2] !== null || day[2] != "00:00:00") && (day[3] !== null || day[3] != "00:00:00")
-                    ) {
-                      businessHours.push({
-                        daysOfWeek: this.getDayNumber(days[i]),
-                        startTime: day[2],
-                        endTime: day[3],
-                      });
-                    }                
-                    i=i+1;
-                  //});
-              });              
-              if (businessHours !== []) {
-                let minHour = null;
-                let maxHour = null;
-                businessHours.forEach((bH) => {
-                  if(bH.startTime!=null && bH.endTime!=null){
-                    if (minHour === null || minHour > bH.startTime) {
-                    minHour = bH.startTime;
-                    }
-                    if (maxHour === null || maxHour < bH.endTime) {
-                      maxHour = bH.endTime;
-                    }
-                  }
-                  else if(bH.start!=null && bH.end!=null){
-                    let start=moment(bH.start).format("HH:mm");
-                    let end=moment(bH.end).format("HH:mm");
-                    if (minHour === null || minHour > start) {
-                    minHour = start;
-                    }
-                    if (maxHour === null || maxHour < end) {
-                      maxHour = end;
-                    }
-                  }                  
-                });
+                                this.minTime =
+                                    minHour >= "02:00"
+                                        ? moment(minHour, "HH:mm")
+                                              .subtract(2, "hour")
+                                              .format("HH:mm")
+                                        : "00:00";
+                                this.maxTime =
+                                    maxHour <= "22:00"
+                                        ? moment(maxHour, "HH:mm")
+                                              .add(2, "hour")
+                                              .format("HH:mm")
+                                        : "24:00";
 
-                this.minTime =
-                  minHour >= "02:00"
-                    ? moment(minHour, "HH:mm")
-                        .subtract(2, "hour")
-                        .format("HH:mm")
-                    : "00:00";
-                this.maxTime =
-                  maxHour <= "22:00"
-                    ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
-                    : "24:00";
+                                this.businessHours = businessHours;
+                            } else {
+                                this.businessHours = false;
+                            }
+                        } else {
+                            this.businessHours = false;
+                        }
+                    });
+            } else if (this.$route.query.type === "workarea") {
+                console.log("workarea");
+                let businessHours = [];
+                var item = {
+                    id: this.$route.query.id,
+                    type: this.$route.query.type
+                };
+                this.$store
+                    .dispatch("projectManagement/workHoursPeriods", item)
 
-                this.businessHours = businessHours;                
-              } else {
-                this.businessHours = false;
-              }
+                    .then(data => {
+                        var dates = [];
+                        dates.push(data.payload.dimanche);
+                        dates.push(data.payload.lundi);
+                        dates.push(data.payload.mardi);
+                        dates.push(data.payload.mercredi);
+                        dates.push(data.payload.jeudi);
+                        dates.push(data.payload.vendredi);
+                        dates.push(data.payload.samedi);
+                        console.log("dates", dates);
+                        var days = [
+                            "dimanche",
+                            "lundi",
+                            "mardi",
+                            "mercredi",
+                            "jeudi",
+                            "vendredi",
+                            "samedi"
+                        ];
+                        var i = 0;
+                        if (dates != []) {
+                            let businessHours = [];
+                            dates.forEach(day => {
+                                console.log("i", days[i]);
+                                //if (wH.is_active === 1) {
+                                if (
+                                    // wH.morning_starts_at !== null &&
+                                    // wH.morning_ends_at !== null
+                                    (day[0] !== null || day[0] != "00:00:00") &&
+                                    (day[1] !== null || day[1] != "00:00:00")
+                                ) {
+                                    businessHours.push({
+                                        daysOfWeek: this.getDayNumber(days[i]),
+                                        startTime: day[0],
+                                        endTime: day[1]
+                                    });
+                                }
+                                if (
+                                    (day[2] !== null || day[2] != "00:00:00") &&
+                                    (day[3] !== null || day[3] != "00:00:00")
+                                ) {
+                                    businessHours.push({
+                                        daysOfWeek: this.getDayNumber(days[i]),
+                                        startTime: day[2],
+                                        endTime: day[3]
+                                    });
+                                }
+                                //}
+                                i = i + 1;
+                            });
+                            if (businessHours !== []) {
+                                let minHour = null;
+                                let maxHour = null;
+                                businessHours.forEach(bH => {
+                                    if (
+                                        minHour === null ||
+                                        minHour > bH.startTime
+                                    ) {
+                                        minHour = bH.startTime;
+                                    }
+                                    if (
+                                        maxHour === null ||
+                                        maxHour < bH.endTime
+                                    ) {
+                                        maxHour = bH.endTime;
+                                    }
+                                });
+
+                                this.minTime =
+                                    minHour >= "02:00"
+                                        ? moment(minHour, "HH:mm")
+                                              .subtract(2, "hour")
+                                              .format("HH:mm")
+                                        : "00:00";
+                                this.maxTime =
+                                    maxHour <= "22:00"
+                                        ? moment(maxHour, "HH:mm")
+                                              .add(2, "hour")
+                                              .format("HH:mm")
+                                        : "24:00";
+
+                                this.businessHours = businessHours;
+                            } else {
+                                this.businessHours = false;
+                            }
+                        } else {
+                            this.businessHours = false;
+                        }
+                    });
             } else {
-              this.businessHours = false;
-            }
-         
-          
-        });
-        
-      }
-      
-      else if (this.$route.query.type === "users") {
-        this.$store
-          .dispatch("userManagement/fetchItem", this.$route.query.id)
-          .then((data) => {
-            let item = data.payload;
-            if (item.work_hours.length > 0) {
-              let businessHours = [];
-              item.work_hours.forEach((wH) => {
-                if (wH.is_active === 1) {
-                  if (
-                    wH.morning_starts_at !== null &&
-                    wH.morning_ends_at !== null
-                  ) {
-                    businessHours.push({
-                      daysOfWeek: this.getDayNumber(wH.day),
-                      startTime: this.parseWorkHour(wH.morning_starts_at),
-                      endTime: this.parseWorkHour(wH.morning_ends_at),
-                    });
-                  }
-                  if (
-                    wH.afternoon_starts_at !== null &&
-                    wH.afternoon_ends_at !== null
-                  ) {
-                    businessHours.push({
-                      daysOfWeek: this.getDayNumber(wH.day),
-                      startTime: this.parseWorkHour(wH.afternoon_starts_at),
-                      endTime: this.parseWorkHour(wH.afternoon_ends_at),
-                    });
-                  }
-                }
-              });
-              if (businessHours !== []) {
-                let minHour = null;
-                let maxHour = null;
-                businessHours.forEach((bH) => {
-                  if (minHour === null || minHour > bH.startTime) {
-                    minHour = bH.startTime;
-                  }
-                  if (maxHour === null || maxHour < bH.endTime) {
-                    maxHour = bH.endTime;
-                  }
-                });
-
-                this.minTime =
-                  minHour >= "02:00"
-                    ? moment(minHour, "HH:mm")
-                        .subtract(2, "hour")
-                        .format("HH:mm")
-                    : "00:00";
-                this.maxTime =
-                  maxHour <= "22:00"
-                    ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
-                    : "24:00";
-
-                this.businessHours = businessHours;
-              } else {
                 this.businessHours = false;
-              }
-            } else {
-              this.businessHours = false;
             }
-          });
-      } 
-      else if(this.$route.query.type === "workarea"){
-        console.log("workarea");
-        let businessHours = [];
-        var item = {
-        id: this.$route.query.id,
-        type: this.$route.query.type
-        };
-        this.$store
-        .dispatch("projectManagement/workHoursPeriods", item)
-        
-        .then((data) => {               
-          var dates=[];
-          dates.push(data.payload.dimanche);
-          dates.push(data.payload.lundi);
-          dates.push(data.payload.mardi);
-          dates.push(data.payload.mercredi);
-          dates.push(data.payload.jeudi);
-          dates.push(data.payload.vendredi);
-          dates.push(data.payload.samedi);
-          console.log('dates',dates);
-          var days=['dimanche','lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-          var i=0;
-            if (dates != []) {
-              let businessHours = [];
-              dates.forEach((day) => {
-                
-                
-                console.log("i",days[i]);
-                //if (wH.is_active === 1) {
-                  if (
-                    
-                    // wH.morning_starts_at !== null &&
-                    // wH.morning_ends_at !== null
-                    (day[0] !== null || day[0] != "00:00:00") && (day[1] !== null || day[1] != "00:00:00" )
-                  ) {
-                    
-                    businessHours.push({
-                      daysOfWeek: this.getDayNumber(days[i]),
-                      startTime: day[0],
-                      endTime: day[1],
-                    });
-                  }
-                  if (
-                    (day[2] !== null || day[2] != "00:00:00") && (day[3] !== null || day[3] != "00:00:00")
-                  ) {
-                    businessHours.push({
-                      daysOfWeek: this.getDayNumber(days[i]),
-                      startTime: day[2],
-                      endTime: day[3],
-                    });
-                  }
-                //}
-                i=i+1;
-              
-            });
-              if (businessHours !== []) {
-                let minHour = null;
-                let maxHour = null;
-                businessHours.forEach((bH) => {
-                  if (minHour === null || minHour > bH.startTime) {
-                    minHour = bH.startTime;
-                  }
-                  if (maxHour === null || maxHour < bH.endTime) {
-                    maxHour = bH.endTime;
-                  }
-                });
+        },
+        parseWorkHour(hour) {
+            let splitHour = hour.split(":");
+            let parseHour = splitHour[0] + ":" + splitHour[1];
+            return parseHour;
+        },
+        getDayNumber(day) {
+            let dayNumber = [];
+            switch (day) {
+                case "lundi":
+                    dayNumber.push(1);
+                    break;
+                case "mardi":
+                    dayNumber.push(2);
+                    break;
+                case "mercredi":
+                    dayNumber.push(3);
+                    break;
+                case "jeudi":
+                    dayNumber.push(4);
+                    break;
+                case "vendredi":
+                    dayNumber.push(5);
+                    break;
+                case "samedi":
+                    dayNumber.push(6);
+                    break;
+                case "dimanche":
+                    dayNumber.push(0);
+                    break;
 
-                this.minTime =
-                  minHour >= "02:00"
-                    ? moment(minHour, "HH:mm")
-                        .subtract(2, "hour")
-                        .format("HH:mm")
-                    : "00:00";
-                this.maxTime =
-                  maxHour <= "22:00"
-                    ? moment(maxHour, "HH:mm").add(2, "hour").format("HH:mm")
-                    : "24:00";
-
-                this.businessHours = businessHours;
-              } else {
-                this.businessHours = false;
-              }
-            } else {
-              this.businessHours = false;
+                default:
+                    dayNumber = [];
+                    break;
             }
-         
-          
-        });
-        
-      }
-
-      else {
-        this.businessHours = false;
-      }
-    },
-    parseWorkHour(hour) {
-      let splitHour = hour.split(":");
-      let parseHour = splitHour[0] + ":" + splitHour[1];
-      return parseHour;
-    },
-    getDayNumber(day) {
-      let dayNumber = [];
-      switch (day) {
-        case "lundi":
-          dayNumber.push(1);
-          break;
-        case "mardi":
-          dayNumber.push(2);
-          break;
-        case "mercredi":
-          dayNumber.push(3);
-          break;
-        case "jeudi":
-          dayNumber.push(4);
-          break;
-        case "vendredi":
-          dayNumber.push(5);
-          break;
-        case "samedi":
-          dayNumber.push(6);
-          break;
-        case "dimanche":
-          dayNumber.push(0);
-          break;
-
-        default:
-          dayNumber = [];
-          break;
-      }
-      return dayNumber;
-    },
-  },
-  created() {     
-      
-                
-    // Add store management
-    if (!moduleScheduleManagement.isRegistered) {
-      this.$store.registerModule(
-        "scheduleManagement",
-        moduleScheduleManagement
-      );
-      moduleScheduleManagement.isRegistered = true;
-    }
-    if (!moduleTaskManagement.isRegistered) {
-      let firstDate;
-      this.$store.registerModule("taskManagement", moduleTaskManagement);
-      moduleTaskManagement.isRegistered = true;
-      if(this.$store.state.taskManagement.tasks != null && this.$store.state.taskManagement.tasks[0] != null){
-      firstDate=this.$store.state.taskManagement.tasks[0].date;
-      this.$store.state.taskManagement.tasks.forEach((t) => {
-        console.log("store task",t.date);
-        if(t.date<firstDate){
-            
-          firstDate=t.date;
-            
+            return dayNumber;
         }
-      });
-    } 
-      
-    this.date=moment(firstDate).format("YYYY-MM-DD"); 
-    console.log("date",this.date);
-    }
-    if (!moduleProjectManagement.isRegistered) {
-      this.$store.registerModule("projectManagement", moduleProjectManagement);
-      moduleProjectManagement.isRegistered = true;
-    }
-    if (!moduleSkillManagement.isRegistered) {
-      this.$store.registerModule("skillManagement", moduleSkillManagement);
-      moduleSkillManagement.isRegistered = true;
-    }
-    if (!moduleUserManagement.isRegistered) {
-      this.$store.registerModule("userManagement", moduleUserManagement);
-      moduleUserManagement.isRegistered = true;
-    }
+    },
+    created() {
+        // Add store management
+        if (!moduleScheduleManagement.isRegistered) {
+            this.$store.registerModule(
+                "scheduleManagement",
+                moduleScheduleManagement
+            );
+            moduleScheduleManagement.isRegistered = true;
+        }
+        if (!moduleTaskManagement.isRegistered) {
+            this.$store.registerModule("taskManagement", moduleTaskManagement);
+            moduleTaskManagement.isRegistered = true;
+        }
+        if (!moduleProjectManagement.isRegistered) {
+            this.$store.registerModule(
+                "projectManagement",
+                moduleProjectManagement
+            );
+            moduleProjectManagement.isRegistered = true;
+        }
+        if (!moduleSkillManagement.isRegistered) {
+            this.$store.registerModule(
+                "skillManagement",
+                moduleSkillManagement
+            );
+            moduleSkillManagement.isRegistered = true;
+        }
+        if (!moduleUserManagement.isRegistered) {
+            this.$store.registerModule("userManagement", moduleUserManagement);
+            moduleUserManagement.isRegistered = true;
+        }
+        if (!moduleWorkareaManagement.isRegistered) {
+            this.$store.registerModule(
+                "workareaManagement",
+                moduleWorkareaManagement
+            );
+            moduleWorkareaManagement.isRegistered = true;
+        }
 
-    if (!moduleDocumentManagement.isRegistered) {
-      this.$store.registerModule(
-        "documentManagement",
-        moduleDocumentManagement
-      );
-      moduleDocumentManagement.isRegistered = true;
-    }
-    
-    //this.$store.state.taskManagement.tasks = [];
+        if (!moduleDocumentManagement.isRegistered) {
+            this.$store.registerModule(
+                "documentManagement",
+                moduleDocumentManagement
+            );
+            moduleDocumentManagement.isRegistered = true;
+        }
 
-    if (this.$route.query.type === "projects") {
-      if (this.authorizedTo("read", "projects")) {
-        this.$store
-          .dispatch("projectManagement/fetchItems")
-          .then((data) => {
-            var id_bundle = null;
-            this.$store.getters["projectManagement/getItems"].forEach((p) => {
-              p.tasks_bundles.forEach((t) => {
-                if (t.project_id === parseInt(this.$route.query.id)) {
-                  id_bundle = t.id;
-                }
-              });
+        //this.$store.state.taskManagement.tasks = [];
+
+        if (this.$route.query.type === "projects") {
+            this.$store.dispatch(
+                "projectManagement/fetchItem",
+                this.$route.query.id
+            );
+            this.$store.dispatch("taskManagement/fetchItems", {
+                project_id: this.$route.query.id
             });
-            if (id_bundle != null) {
-              this.$store.dispatch("taskManagement/fetchItems", {
-                tasks_bundle_id: id_bundle,
-              });
-            }
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-          // var item = {
-          //   id: this.$route.query.id,
-          //   type: this.$route.query.type
-          // };
-          // this.$store
-          //  .dispatch("projectManagement/unavailablePeriods", item)
-          //  console.log("store",this.$store.state);
-      }
-    } else if (this.$route.query.type === "users") {
-      this.$store.dispatch("taskManagement/fetchItems", {
-        user_id: this.$route.query.id,
-      });
-    } else if (this.$route.query.type === "workarea") {
-      this.$store.dispatch("taskManagement/fetchItems", {
-        workarea: this.$route.query.id,
-      });
-    }
+        } else if (this.$route.query.type === "users") {
+            this.$store.dispatch("taskManagement/fetchItems", {
+                user_id: this.$route.query.id
+            });
+        } else if (this.$route.query.type === "workarea") {
+            this.$store.dispatch("taskManagement/fetchItems", {
+                workarea_id: this.$route.query.id
+            });
+        }
 
-    this.$store.dispatch("skillManagement/fetchItems");
-    if (this.authorizedTo("read", "users")) {
-      this.$store.dispatch("userManagement/fetchItems");
+        if (this.authorizedTo("read", "workareas")) {
+            this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
+                console.error(err);
+            });
+        }
+        this.$store.dispatch("skillManagement/fetchItems");
+        if (this.authorizedTo("read", "users")) {
+            this.$store.dispatch("userManagement/fetchItems");
+        }
+        if (
+            this.$route.query.type === "users" ||
+            this.$route.query.type === "projects" ||
+            this.$route.query.type === "workarea"
+        ) {
+            this.getBusinessHours();
+        }
+    },
+    updated() {
+        // if (this.$route.query.type === "projects") {
+        //   var id_bundle = null;
+        //   this.$store.state.projectManagement.projects.forEach(p => {
+        //     p.tasks_bundles.forEach(t => {
+        //       if (t.project_id === this.$route.query.id) {
+        //         id_bundle = t.id;
+        //       }
+        //     });
+        //   });
+        //   if (id_bundle != null) {
+        //     this.$store
+        //       .dispatch("taskManagement/fetchItems", {tasks_bundle_id: id_bundle})
+        //       .catch(err => {
+        //         this.manageErrors(err);
+        //       });
+        //   }
+        // } else if (this.$route.query.type === "users") {
+        //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        //     this.manageErrors(err);
+        //   });
+        // } else if (this.$route.query.type === "workarea") {
+        //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        //     this.manageErrors(err);
+        //   });
+        // }
+        // this.$store.dispatch("skillManagement/fetchItems").catch(err => {
+        //   this.manageErrors(err);
+        // });
+    },
+    beforeDestroy() {
+        moduleScheduleManagement.isRegistered = false;
+        moduleTaskManagement.isRegistered = false;
+        moduleSkillManagement.isRegistered = false;
+        moduleDocumentManagement.isRegistered = false;
+        moduleProjectManagement.isRegistered = false;
+        moduleWorkareaManagement.isRegistered = false;
+        this.$store.unregisterModule("scheduleManagement");
+        this.$store.unregisterModule("taskManagement");
+        this.$store.unregisterModule("skillManagement");
+        this.$store.unregisterModule("documentManagement");
+        this.$store.unregisterModule("projectManagement");
+        this.$store.unregisterModule("workareaManagement");
     }
-    if (this.$route.query.type === "users" || this.$route.query.type === "projects" || this.$route.query.type === "workarea") {
-      this.getBusinessHours();
-    }
-  },
-  updated() {
-    // if (this.$route.query.type === "projects") {
-    //   var id_bundle = null;
-    //   this.$store.state.projectManagement.projects.forEach(p => {
-    //     p.tasks_bundles.forEach(t => {
-    //       if (t.project_id === this.$route.query.id) {
-    //         id_bundle = t.id;
-    //       }
-    //     });
-    //   });
-    //   if (id_bundle != null) {
-    //     this.$store
-    //       .dispatch("taskManagement/fetchItems", {tasks_bundle_id: id_bundle})
-    //       .catch(err => {
-    //         this.manageErrors(err);
-    //       });
-    //   }
-    // } else if (this.$route.query.type === "users") {
-    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-    //     this.manageErrors(err);
-    //   });
-    // } else if (this.$route.query.type === "workarea") {
-    //   this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-    //     this.manageErrors(err);
-    //   });
-    // }
-    // this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-    //   this.manageErrors(err);
-    // });
-  },
-  beforeDestroy() {
-    moduleScheduleManagement.isRegistered = false;
-    moduleTaskManagement.isRegistered = false;
-    moduleSkillManagement.isRegistered = false;
-    moduleDocumentManagement.isRegistered = false;
-    moduleProjectManagement.isRegistered = false;
-    this.$store.unregisterModule("scheduleManagement");
-    this.$store.unregisterModule("taskManagement");
-    this.$store.unregisterModule("skillManagement");
-    this.$store.unregisterModule("documentManagement");
-    this.$store.unregisterModule("projectManagement");
-  },
 };
 </script>
 
 <style>
 .demo-app {
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
-  font-size: 14px;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+    font-size: 14px;
 }
 .demo-app-top {
-  margin: 0 0 3em;
+    margin: 0 0 3em;
 }
 .demo-app-calendar {
-  margin: 0 auto;
-  max-width: 100%;
+    margin: 0 auto;
+    max-width: 100%;
 }
 
 .fc-timeGridDay-button {
-  background-color: rgb(55, 136, 216);
-  border-color: rgb(55, 136, 216);
+    background-color: rgb(55, 136, 216);
+    border-color: rgb(55, 136, 216);
 }
 
 .fc-button {
-  background-color: rgb(55, 136, 216);
-  border-color: rgb(55, 136, 216);
+    background-color: rgb(55, 136, 216);
+    border-color: rgb(55, 136, 216);
 }
 
 .fc-button-primary {
-  background-color: rgb(55, 136, 216);
-  border-color: rgb(55, 136, 216);
+    background-color: rgb(55, 136, 216);
+    border-color: rgb(55, 136, 216);
 }
 
 .fc-button-active {
-  background-color: rgb(32, 70, 168);
-  border-color: rgb(32, 71, 168);
+    background-color: rgb(32, 70, 168);
+    border-color: rgb(32, 71, 168);
 }
 
 .fc-button:hover {
-  background-color: rgb(40, 61, 116);
-  text-decoration: none;
+    background-color: rgb(40, 61, 116);
+    text-decoration: none;
 }
 
 .btnBack {
-  line-height: 2;
+    line-height: 2;
 }
 </style>
