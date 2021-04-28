@@ -7,6 +7,7 @@ use App\User;
 use App\Models\Unavailability;
 use App\Models\WorkHours;
 use App\Models\DealingHours;
+use App\Models\Hours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -100,6 +101,29 @@ class UnavailabilityController extends BaseApiController
         $Overtimes = DealingHoursController::getOvertimes($arrayRequest['user_id'], true);
         $OvertimesToUse = $Overtimes['overtimes'] - $Overtimes['usedOvertimes'] - $Overtimes['payedOvertimes'];
 
+        //hours worked verification
+        if ($arrayRequest['reason'] == 'Utilisation heures supplémentaires'){
+            $hoursWorked=Hours::where('user_id', $arrayRequest['user_id'])->get();
+            foreach($hoursWorked as $hourWorked){
+                $hourWorked_starts = Carbon::createFromFormat('Y-m-d H:i:s', $hourWorked['start_at'])->locale('fr_FR');
+                $hourWorked_ends = Carbon::createFromFormat('Y-m-d H:i:s', $hourWorked['end_at'])->locale('fr_FR');
+                if (($arrayRequest_starts->between($hourWorked_starts, $hourWorked_ends)
+                            && $arrayRequest_ends->between($hourWorked_starts, $hourWorked_ends))
+                        || ($hourWorked_starts->between($arrayRequest_starts, $arrayRequest_ends)
+                            && $hourWorked_ends->between($arrayRequest_starts, $arrayRequest_ends))
+                        || ($arrayRequest_starts == $hourWorked_starts->format('Y-m-d H:i')
+                            && $arrayRequest_ends == $hourWorked_ends->format('Y-m-d H:i')
+                        || ($arrayRequest_ends->gt($hourWorked_ends->format('Y-m-d H:i'))
+                            && ($arrayRequest_starts->between($hourWorked_starts, $hourWorked_ends)
+                                && $arrayRequest_starts->ne($hourWorked_ends)))
+                        || ($arrayRequest_starts->lt($hourWorked_starts->format('Y-m-d H:i')) 
+                            && ($arrayRequest_ends->between($hourWorked_starts, $hourWorked_ends) 
+                            && $arrayRequest_ends->ne($hourWorked_starts))))
+                    ){
+                        throw new ApiException("Vous ne pouvez pas prendre d'heures supplémentaires car vous avez déjà des heures de travail enregistrées sur cette période.");
+                    }
+            }
+        }
         if ($arrayRequest['reason'] == 'Utilisation heures supplémentaires' || $arrayRequest['reason'] == 'Heures supplémentaires payées') {
             if ($OvertimesToUse < $duration) {
                 throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires.");
@@ -150,7 +174,7 @@ class UnavailabilityController extends BaseApiController
         }
 
         // Ajouter l'indisponibilité
-        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés', 'Période de cours', 'Utilisation heures supplémentaires'])) {
+        if (in_array($arrayRequest['reason'], ['Congés payés', 'Jours fériés', 'Période de cours'])) {
             return $this->setPaidHolidays($arrayRequest, $arrayRequest_starts, $arrayRequest_ends);
         } else {
             return Unavailability::create([
@@ -172,6 +196,30 @@ class UnavailabilityController extends BaseApiController
 
         $unavailabilities = Unavailability::where('user_id', $arrayRequest['user_id'])->orderby('starts_at', 'asc')->get();
 
+        //hours worked verification
+        if ($arrayRequest['reason'] == 'Utilisation heures supplémentaires'){
+            $hoursWorked=Hours::where('user_id', $arrayRequest['user_id'])->get();
+            foreach($hoursWorked as $hourWorked){
+                $hourWorked_starts = Carbon::createFromFormat('Y-m-d H:i:s', $hourWorked['start_at'])->locale('fr_FR');
+                $hourWorked_ends = Carbon::createFromFormat('Y-m-d H:i:s', $hourWorked['end_at'])->locale('fr_FR');
+                if (($arrayRequest_starts->between($hourWorked_starts, $hourWorked_ends)
+                            && $arrayRequest_ends->between($hourWorked_starts, $hourWorked_ends))
+                        || ($hourWorked_starts->between($arrayRequest_starts, $arrayRequest_ends)
+                            && $hourWorked_ends->between($arrayRequest_starts, $arrayRequest_ends))
+                        || ($arrayRequest_starts == $hourWorked_starts->format('Y-m-d H:i')
+                            && $arrayRequest_ends == $hourWorked_ends->format('Y-m-d H:i')
+                        || ($arrayRequest_ends->gt($hourWorked_ends->format('Y-m-d H:i'))
+                            && ($arrayRequest_starts->between($hourWorked_starts, $hourWorked_ends)
+                                && $arrayRequest_starts->ne($hourWorked_ends)))
+                        || ($arrayRequest_starts->lt($hourWorked_starts->format('Y-m-d H:i')) 
+                            && ($arrayRequest_ends->between($hourWorked_starts, $hourWorked_ends) 
+                            && $arrayRequest_ends->ne($hourWorked_starts))))
+                    ){
+                        throw new ApiException("Vous ne pouvez pas prendre d'heures supplémentaires car vous avez déjà des heures de travail enregistrées sur cette période.");
+                    }
+            }
+        }
+        
         $passage = 0;
 
         foreach ($unavailabilities as $unavailability) {

@@ -618,6 +618,8 @@ class UserController extends BaseApiController
             'is_password_change' => false,
             'isTermsConditionAccepted' => $arrayRequest['terms_accepted'],
         ]);
+        //On ajoute des heures de travail par défaut ( 35H )
+        $this->addDefaultWorkHours($item->id);
 
         try {
             $role = Role::where('code', 'admin')->firstOrFail();

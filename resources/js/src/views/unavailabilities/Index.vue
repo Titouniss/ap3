@@ -44,12 +44,13 @@
                 v-if="isAdmin || isManager"
                 :id_user="user_id"
                 @on-submit="fetchOvertimes"
+                :fetchOvertimes="fetchOvertimes"
             />
         </div>
 
         <div class="mb-base">
             <h6 class="mb-4">Indisponibilités</h6>
-            <add-form :id_user="user_id" @on-submit="fetchOvertimes" />
+            <add-form :id_user="user_id" @on-submit="fetchOvertimes" :fetchOvertimes="fetchOvertimes" />
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
@@ -156,6 +157,7 @@
                 v-if="itemIdToEdit"
                 :itemId="itemIdToEdit"
                 @on-submit="fetchOvertimes"
+                :fetchOvertimes="fetchOvertimes"
             />
         </div>
     </div>
