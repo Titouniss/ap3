@@ -109,7 +109,8 @@ export default {
         itemId: {
             type: Number,
             required: true
-        }
+        },
+        fetchOvertimes: {}
     },
     data() {
         const itemLocal = this.$store.getters[
@@ -213,7 +214,8 @@ export default {
             item.ends_at = moment(item.ends_at).format("YYYY-MM-DD HH:mm");
             this.$store
                 .dispatch("unavailabilityManagement/updateItem", item)
-                .then(() => {
+                .then(data => {
+                    this.fetchOvertimes();
                     this.$emit("on-submit", data);
                     this.$vs.notify({
                         title: "Modification d'une indisponibilité",

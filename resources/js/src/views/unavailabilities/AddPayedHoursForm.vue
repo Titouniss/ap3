@@ -65,7 +65,12 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {},
-    props: ["id_user"],
+    props: {
+        id_user: {
+            required: true
+        },
+        fetchOvertimes: {}
+    },
     data() {
         return {
             activePrompt: false,
@@ -123,6 +128,7 @@ export default {
                     this.$store
                         .dispatch("unavailabilityManagement/addItem", item)
                         .then(data => {
+                            this.fetchOvertimes();
                             this.$emit("on-submit", data);
                             this.$vs.notify({
                                 title: "Ajout d'heures payées",
