@@ -375,9 +375,9 @@ export default {
             if (this.gridApi) this.gridApi.setQuickFilter(val);
         },
         momentTransform(date) {
-            return moment(date).format("DD MMMM YYYY") == "Invalid date"
+            return moment(date).format("DD MMMM YYYY - HH:mm") == "Invalid date"
                 ? ""
-                : moment(date).format("DD MMMM YYYY");
+                : moment(date).format("DD MMMM YYYY - HH:mm");
         },
         onResize(event) {
             if (this.gridApi) {

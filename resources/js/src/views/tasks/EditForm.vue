@@ -496,6 +496,7 @@ export default {
             )
         );
         item.skills = item.skills.map(skill => skill.id);
+        item.date = moment(item.date).format("DD-MM-YYYY HH:mm");
         return {
             configdateTimePicker: {
                 disableMobile: "true",
