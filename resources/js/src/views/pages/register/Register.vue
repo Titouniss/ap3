@@ -169,7 +169,7 @@ export default {
     return {
       firstname: "",
       lastname: "",
-      company: "",
+      company: this.$route.query.company != null ? this.$route.query.company : "" ,
       contact_function: "",
       email: "",
       contact_tel1: "",
@@ -177,6 +177,7 @@ export default {
       confirm_password: "",
       isTermsConditionAccepted: false,
       isCaptchaChecked: false,
+      isRegisterLink: this.$route.query.company != null ? true : false ,
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
         backgroundPosition: "center center",
@@ -244,6 +245,7 @@ export default {
         password: this.password,
         c_password: this.confirm_password,
         terms_accepted: this.isTermsConditionAccepted,
+        registerLink: this.isRegisterLink,
       };
       this.$store
         .dispatch("auth/register", payload)
