@@ -1405,21 +1405,6 @@ class ProjectController extends BaseApiController
 
     private function moveBeforeTaskMorningCreateTaskAfternoonBefore($p, $listDebutTaskPeriodIndispo, $taskPeriodToMove, $workHours, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete, $heureFinNewPeriod, $dureePeriodToMove, $heuresDisposMatin, $heuresDisposApresMidi, $heureDebutPeriodMatin, $heureFinPeriodMatin, $heureFinTravailMatin, $heureDebutPeriodApresMidi, $heureFinPeriodApresMidi)
     {
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('ok', ["pas assez de temps matin"]);
-
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
-
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('dureePeriodToMove', [$dureePeriodToMove]);
-
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('heureFinNewPeriod', [$heureFinNewPeriod]);
 
         //s'il reste du temps le matin on remplit la période sinon on crée une nouvelle task_period avec le temps total la veille après-midi
         if ($heuresDisposMatin > 0) {
@@ -1432,19 +1417,11 @@ class ProjectController extends BaseApiController
 
             $taskPeriodToMove['start_time'] = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->format('Y-m-d H:i:s');
 
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('start_time', [$taskPeriodToMove['start_time']]);
-
             $heureFinPeriodInt = Carbon::parse($heureFinNewPeriod)->floatDiffInHours(Carbon::parse("00:00:00"));
             $hoursFinPeriod = floor($heureFinPeriodInt);
             $minutesFinPeriod = ($heureFinPeriodInt - $hoursFinPeriod) * 60;
 
             $taskPeriodToMove['end_time'] = Carbon::parse($p)->startOfDay()->addHours($hoursFinPeriod)->addMinutes($minutesFinPeriod)->format('Y-m-d H:i:s');
-
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('end_time', [$taskPeriodToMove['end_time']]);
 
             array_push($listTaskPeriodToSave, $taskPeriodToMove['id']);
             array_push($listTaskPeriodToSave, $taskPeriodToMove['start_time']);
@@ -1455,9 +1432,6 @@ class ProjectController extends BaseApiController
             $heureDebutTaskPrecedente = $taskPeriodToMove['start_time'];
 
             $dureePeriodToMoveMatin = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('dureePeriodToMoveMatin après', [$dureePeriodToMoveMatin]);
         }
         //sinon on ajoute l'id de la task_period à la liste des tasks_period à supprimer
         else {
@@ -1466,23 +1440,11 @@ class ProjectController extends BaseApiController
             array_push($listTaskPeriodToDelete, $taskPeriodToMove['end_time']);
         }
 
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('dureePeriodToMove', [$dureePeriodToMove]);
-
         //on créé une task_period avec le temps restant ou total
         $nbJour = $this->nbDaysBeforeWorkDay($p, $workHours, $listDebutTaskPeriodIndispo);
 
         $hours = floor($heureFinPeriodApresMidi - $dureePeriodToMove);
         $minutes = ($heureFinPeriodApresMidi - $dureePeriodToMove - $hours) * 60;
-
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('hours', [$hours]);
-
-        $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('mins', [$minutes]);
 
         $newHour = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->format('H:i');
 
@@ -1492,9 +1454,6 @@ class ProjectController extends BaseApiController
 
         //si on dépasse avant l'heure de début de travail veille après midi, on remplit la veille après-midi et on créé une nouvelle task_period la veille matin avec le temps restant
         if ($newHour < $heureDebutPeriodApresMidi) {
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('ok', ["pas assez de temps matin et veille après-midi"]);
 
             $hoursDebutAM = floor($heureDebutPeriodApresMidi);
             $minutesDebutAM = ($heureDebutPeriodApresMidi - $hoursDebutAM) * 60;
@@ -3921,7 +3880,7 @@ class ProjectController extends BaseApiController
         $timeData = $this->calculTimeAvailable($users, $project, $users);
 
         if ($timeData['total_hours_available'] < $nbHoursRequired) {
-            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet.");
+            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Vueillez modifier la date de livraison du projet.");
         }
 
         return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
@@ -4735,6 +4694,7 @@ class ProjectController extends BaseApiController
 
             //On regarde si toute les tâches ont été plannifé
             $allPlanified = true;
+            $countPlanified = 0;
             $taskIds = [];
 
             foreach ($tasksTemp as $taskTemp) {
@@ -4742,13 +4702,14 @@ class ProjectController extends BaseApiController
 
                 if (!$taskTemp->date || !$taskTemp->date_end || !$taskTemp->user_id) {
                     $allPlanified = false;
+
                 }
             }
 
             // En cas d'erreur, on annule les changements et on retourne une erreur
             if (!$allPlanified) {
                 Task::whereIn('id', $taskIds)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
-                throw new Exception("Il n'y a pas assez de temps pour plannifier toutes les tâches. Veuillez reculer la date de livraison.");
+                throw new Exception("Les plages de travails disponibles sont insuffisantes pour démarrer le projet. Veuillez modifier la date de livraison.");
             }
 
             // Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
