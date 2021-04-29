@@ -32,7 +32,7 @@
             class="task-compose"
         >
             <div>
-                <form class="add-task-form" autocomplete="off">
+                <form class="addTaskForm" autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -692,8 +692,8 @@ export default {
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
 }
-.add-task-form {
-    max-height: 550px;
+.addTaskForm {
+    max-height: 450px;
     overflow-y: auto;
     overflow-x: hidden;
 }
