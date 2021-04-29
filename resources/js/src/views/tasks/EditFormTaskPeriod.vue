@@ -2,7 +2,7 @@
     <div class="p-3 mb-4 mr-4">
         <!-- :is-valid="validateForm" -->
         <vs-prompt
-            title="Mofidier une période d'une tâche"
+            title="Modifier une période d'une tâche"
             accept-text="Modifier"
             cancel-text="Annuler"
             button-cancel="border"
@@ -175,14 +175,16 @@ export default {
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
                 locale: FrenchLocale,
-                maxDate: this.end_at
+                maxDate: this.end_at,
+                monthSelectorType: 'static',
             },
             configEndsAtDateTimePicker: {
                 disableMobile: "true",
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
                 locale: FrenchLocale,
-                minDate: this.start_at
+                minDate: this.start_at,
+                monthSelectorType: 'static',
             },
             start: this.start_at,
             end: this.end_at,
@@ -407,11 +409,6 @@ export default {
                 });
         }
     },
-    mounted() {
-        console.log(this.itemId);
-        console.log(this.start_at);
-        console.log(this.end_at);
-    }
 };
 </script>
 <style>

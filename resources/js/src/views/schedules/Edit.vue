@@ -102,6 +102,7 @@ import moduleSkillManagement from "@/store/skill-management/moduleSkillManagemen
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 
 // Component
 import EditForm from "../tasks/EditForm.vue";
@@ -170,16 +171,6 @@ export default {
             let minHour = null;
             let maxHour = null;
             if (this.$route.query.type === "projects") {
-                if (
-                    this.tasksEvent !== [] &&
-                    this.tasksEvent[0] != null &&
-                    this.$refs.fullCalendar != null
-                ) {
-                    this.date = moment(this.tasksEvent[0].date).format(
-                        "YYYY-MM-DD"
-                    );
-                    this.$refs.fullCalendar.getApi().gotoDate(this.date);
-                }
                 if (this.tasksEvent !== []) {
                     var task;
                     this.tasksEvent.forEach(t => {
@@ -223,11 +214,6 @@ export default {
                     }
                 }
                 if (this.unavailableEvent != null) {
-                    console.log("unavailableEvent", this.unavailableEvent);
-                    console.log(
-                        "unavailableEvent.length",
-                        this.unavailableEvent.length
-                    );
                     for (var i = 0; i < this.unavailableEvent.length; i++) {
                         if (
                             this.unavailableEvent[i].date_end != null &&
@@ -414,9 +400,6 @@ export default {
                         }
                     }
                 }
-
-                console.log(minHour);
-                console.log(maxHour);
             } else if (this.$route.query.type === "users") {
                 if (this.tasksEvent !== []) {
                     var task;
@@ -475,12 +458,6 @@ export default {
                     }
                 }
                 if (this.unavailableEvent != null) {
-                    console.log("unavailableEvent", this.unavailableEvent);
-                    console.log(
-                        "unavailableEvent.length",
-                        this.unavailableEvent.length
-                    );
-                    //console.log("businessHours",this.$store.state.userManagement.users.find((u) => u.id == this.$route.query.id).work_hours);
                     for (var i = 0; i < this.unavailableEvent.length; i++) {
                         if (
                             this.unavailableEvent[i].date_end != null &&
@@ -613,7 +590,6 @@ export default {
                                     this.unavailableEvent[i].date_end
                                 ).format("HH:mm") <= heureFinMatin
                             ) {
-                                //console.log("< 12h",moment(this.unavailableEvent[i].date_end));
                                 eventsParse.push({
                                     start:
                                         moment(
@@ -625,7 +601,6 @@ export default {
                                     color: "#808080"
                                 });
                             } else {
-                                //console.log("> 12h",moment(this.unavailableEvent[i].date_end));
                                 eventsParse.push({
                                     start:
                                         moment(
@@ -685,7 +660,6 @@ export default {
                                     color: "#808080"
                                 });
                             } else {
-                                //console.log("> 12h",moment(this.unavailableEvent[i].date_end).format('YYYY-MM-DD')+" 08:00:00");
                                 eventsParse.push({
                                     start: this.unavailableEvent[i].date,
                                     end:
@@ -702,14 +676,35 @@ export default {
                 }
             } else if (this.$route.query.type === "workarea") {
                 if (this.tasksEvent !== []) {
+                    var task;
                     this.tasksEvent.forEach(t => {
+                        // if (
+                        //   t.user_id !== null &&
+                        //   (t.user_id.toString() === this.$route.query.id ||
+                        //     t.user_id === this.$route.query.id)
+                        // ) {
+                        // Get project id
+                        // let project_id = null;
+                        // this.$store.state.projectManagement.projects.forEach((p) => {
+                        //   p.tasks_bundles.forEach((tb) => {
+                        //     if (t.tasks_bundle_id === tb.id) {
+                        //       project_id = tb.project_id;
+                        //     }
+                        //   });
+                        // });
+                        if (t.id == this.$route.query.task_id) {
+                            task = t;
+                        }
+                    });
+                    if (task != null) {
+                    //this.tasksEvent.forEach(t => {
                         // if (
                         //   t.workarea_id !== null &&
                         //   (t.workarea_id.toString() === this.$route.query.id ||
                         //     t.workarea_id === this.$route.query.id)
                         // ) {
 
-                        t.periods.forEach(p => {
+                        task.periods.forEach(p => {
                             let start_period_hour = moment(p.start_time).format(
                                 "HH:mm"
                             );
@@ -725,24 +720,25 @@ export default {
                                 : null;
 
                             eventsParse.push({
-                                id: t.id,
+                                id: task.id,
                                 period_id: p.id,
-                                title: t.name,
+                                title: task.name,
                                 start: p.start_time,
-                                estimated_time: t.estimated_time,
-                                order: t.order,
-                                description: t.description,
-                                time_spent: t.time_spent,
-                                workarea_id: t.workarea_id,
-                                status: t.status,
+                                estimated_time: task.estimated_time,
+                                order: task.order,
+                                description: task.description,
+                                time_spent: task.time_spent,
+                                workarea_id: task.workarea_id,
+                                status: task.status,
                                 end: p.end_time,
-                                user_id: t.user_id,
-                                project_id: t.project_id,
-                                color: t.project.color
+                                user_id: task.user_id,
+                                project_id: task.project_id,
+                                color: task.project.color
                             });
                         });
                         // }
-                    });
+                    //});
+                    }
                 }
             }
 
@@ -855,14 +851,6 @@ export default {
                 "YYYY-MM-DD HH:mm:ss"
             );
             //Parse new item to update task
-            console.log(
-                "start",
-                moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss")
-            );
-            console.log(
-                "end",
-                moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss")
-            );
             var erreur = false;
             if (this.unavailableEvent != null) {
                 for (var i = 0; i < this.unavailableEvent.length; i++) {
@@ -871,11 +859,6 @@ export default {
                         this.unavailableEvent[i].date !=
                             this.unavailableEvent[i].date_end
                     ) {
-                        console.log("date", this.unavailableEvent[i].date);
-                        console.log(
-                            "date_end",
-                            this.unavailableEvent[i].date_end
-                        );
                         if (
                             startPeriodTask > this.unavailableEvent[i].date &&
                             endPeriodTask < this.unavailableEvent[i].date_end
@@ -940,14 +923,6 @@ export default {
                 "YYYY-MM-DD HH:mm:ss"
             );
             //Parse new item to update task
-            console.log(
-                "start",
-                moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss")
-            );
-            console.log(
-                "end",
-                moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss")
-            );
             var erreur = false;
             if (this.unavailableEvent != null) {
                 for (var i = 0; i < this.unavailableEvent.length; i++) {
@@ -956,11 +931,6 @@ export default {
                         this.unavailableEvent[i].date !=
                             this.unavailableEvent[i].date_end
                     ) {
-                        console.log("date", this.unavailableEvent[i].date);
-                        console.log(
-                            "date_end",
-                            this.unavailableEvent[i].date_end
-                        );
                         if (
                             startPeriodTask > this.unavailableEvent[i].date &&
                             endPeriodTask < this.unavailableEvent[i].date_end
@@ -1023,7 +993,6 @@ export default {
         },
         getBusinessHours() {
             if (this.$route.query.type === "projects") {
-                console.log("project");
                 let businessHours = [];
                 var item = {
                     id: this.$route.query.id,
@@ -1044,8 +1013,6 @@ export default {
                         dates.push(data.payload.vendredi);
                         dates.push(data.payload.samedi);
                         //hoursOtherProjects.push(data.payload.otherProjects);
-                        console.log("dates", dates);
-                        //console.log('hoursOtherProjects',hoursOtherProjects);
 
                         var days = [
                             "dimanche",
@@ -1062,7 +1029,6 @@ export default {
                             let businessHours = [];
                             dates.forEach(day => {
                                 //hoursOtherProjects.forEach((period) => {
-                                //console.log(period.start_time);
                                 if (
                                     (day[0] !== null || day[0] != "00:00:00") &&
                                     (day[1] !== null || day[1] != "00:00:00")
@@ -1232,7 +1198,6 @@ export default {
                         }
                     });
             } else if (this.$route.query.type === "workarea") {
-                console.log("workarea");
                 let businessHours = [];
                 var item = {
                     id: this.$route.query.id,
@@ -1251,7 +1216,6 @@ export default {
                         dates.push(data.payload.jeudi);
                         dates.push(data.payload.vendredi);
                         dates.push(data.payload.samedi);
-                        console.log("dates", dates);
                         var days = [
                             "dimanche",
                             "lundi",
@@ -1265,7 +1229,6 @@ export default {
                         if (dates != []) {
                             let businessHours = [];
                             dates.forEach(day => {
-                                console.log("i", days[i]);
                                 //if (wH.is_active === 1) {
                                 if (
                                     // wH.morning_starts_at !== null &&
@@ -1370,7 +1333,23 @@ export default {
                     break;
             }
             return dayNumber;
-        }
+        },
+        dateCalendar(){
+            if (
+                this.tasksEvent !== [] &&
+                this.tasksEvent[0] != null &&
+                this.$refs.fullCalendar != null
+            ) {
+                for(let i=0;i<this.tasksEvent.length;i++){
+                    if(this.tasksEvent[i].id==this.$route.query.task_id){
+                        this.date = moment(this.tasksEvent[i].date).format(
+                            "YYYY-MM-DD"
+                        );
+                        this.$refs.fullCalendar.getApi().gotoDate(this.date);
+                    }
+                }
+            }
+        },
     },
     created() {
         // Add store management
@@ -1403,7 +1382,13 @@ export default {
             this.$store.registerModule("userManagement", moduleUserManagement);
             moduleUserManagement.isRegistered = true;
         }
-
+        if (!moduleWorkareaManagement.isRegistered) {
+            this.$store.registerModule(
+                "workareaManagement",
+                moduleWorkareaManagement
+            );
+            moduleWorkareaManagement.isRegistered = true;
+        }
         if (!moduleDocumentManagement.isRegistered) {
             this.$store.registerModule(
                 "documentManagement",
@@ -1422,16 +1407,25 @@ export default {
         if (this.$route.query.type === "projects") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 project_id: item.id
+            })
+            .then(data => {
+                this.dateCalendar();
             });
             this.$store.dispatch("projectManagement/fetchItem", item.id);
         } else if (this.$route.query.type === "users") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 user_id: this.$route.query.id
+            })
+            .then(data => {
+                this.dateCalendar();
             });
             this.$store.dispatch("userManagement/fetchItem", item.id);
         } else if (this.$route.query.type === "workarea") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 workarea_id: this.$route.query.id
+            })
+            .then(data => {
+                this.dateCalendar();
             });
             this.$store.dispatch("workareaManagement/fetchItem", item.id);
         }

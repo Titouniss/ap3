@@ -169,16 +169,6 @@ export default {
             let minHour = null;
             let maxHour = null;
             if (this.$route.query.type === "projects") {
-                if (
-                    this.tasksEvent !== [] &&
-                    this.tasksEvent[0] != null &&
-                    this.$refs.fullCalendar != null
-                ) {
-                    this.date = moment(this.tasksEvent[0].date).format(
-                        "YYYY-MM-DD"
-                    );
-                    this.$refs.fullCalendar.getApi().gotoDate(this.date);
-                }
                 if (this.tasksEvent !== []) {
                     this.tasksEvent.forEach(t => {
                         t.periods.forEach(p => {
@@ -216,8 +206,6 @@ export default {
                     });
                 }
 
-                console.log(minHour);
-                console.log(maxHour);
             } else if (this.$route.query.type === "users") {
                 if (this.tasksEvent !== []) {
                     this.tasksEvent.forEach(t => {
@@ -307,22 +295,6 @@ export default {
                     });
                 }
             }
-
-            // if(this.unavailableEvent != []){
-            //   console.log("unavailableEvent",this.unavailableEvent);
-            //   for(var i=1; i<this.unavailableEvent.length; i++){
-            //     if(this.unavailableEvent[i].task_id != null){
-            //       eventsParse.push({
-            //           start: this.unavailableEvent[i].start_time,
-            //           end: this.unavailableEvent[i].end_time,
-            //           color: "#808080",
-            //         });
-            //     }
-            //     //console.log("unavailable",this.unavailableEvent[i].task_id);
-            //   }
-
-            // }
-
             this.minTime =
                 minHour && minHour >= "02:00"
                     ? moment(minHour, "HH:mm")
@@ -502,7 +474,6 @@ export default {
         },
         getBusinessHours() {
             if (this.$route.query.type === "projects") {
-                console.log("project");
                 let businessHours = [];
                 var item = {
                     id: this.$route.query.id,
@@ -521,10 +492,6 @@ export default {
                         dates.push(data.payload.jeudi);
                         dates.push(data.payload.vendredi);
                         dates.push(data.payload.samedi);
-                        //hoursOtherProjects.push(data.payload.otherProjects);
-                        console.log("dates", dates);
-                        //console.log('hoursOtherProjects',hoursOtherProjects);
-
                         var days = [
                             "dimanche",
                             "lundi",
@@ -534,13 +501,10 @@ export default {
                             "vendredi",
                             "samedi"
                         ];
-                        //hoursOtherProjects=hoursOtherProjects[0];
                         var i = 0;
                         if (dates != []) {
                             let businessHours = [];
                             dates.forEach(day => {
-                                //hoursOtherProjects.forEach((period) => {
-                                //console.log(period.start_time);
                                 if (
                                     (day[0] !== null || day[0] != "00:00:00") &&
                                     (day[1] !== null || day[1] != "00:00:00")
@@ -710,7 +674,6 @@ export default {
                         }
                     });
             } else if (this.$route.query.type === "workarea") {
-                console.log("workarea");
                 let businessHours = [];
                 var item = {
                     id: this.$route.query.id,
@@ -728,7 +691,6 @@ export default {
                         dates.push(data.payload.jeudi);
                         dates.push(data.payload.vendredi);
                         dates.push(data.payload.samedi);
-                        console.log("dates", dates);
                         var days = [
                             "dimanche",
                             "lundi",
@@ -742,11 +704,7 @@ export default {
                         if (dates != []) {
                             let businessHours = [];
                             dates.forEach(day => {
-                                console.log("i", days[i]);
-                                //if (wH.is_active === 1) {
                                 if (
-                                    // wH.morning_starts_at !== null &&
-                                    // wH.morning_ends_at !== null
                                     (day[0] !== null || day[0] != "00:00:00") &&
                                     (day[1] !== null || day[1] != "00:00:00")
                                 ) {
@@ -847,7 +805,19 @@ export default {
                     break;
             }
             return dayNumber;
-        }
+        },
+        dateCalendar(){
+            if (
+                this.tasksEvent !== [] &&
+                this.tasksEvent[0] != null &&
+                this.$refs.fullCalendar != null
+            ) {
+                this.date = moment(this.tasksEvent[0].date).format(
+                    "YYYY-MM-DD"
+                );
+                this.$refs.fullCalendar.getApi().gotoDate(this.date);
+            }
+        },
     },
     created() {
         // Add store management
@@ -905,15 +875,22 @@ export default {
             );
             this.$store.dispatch("taskManagement/fetchItems", {
                 project_id: this.$route.query.id
+            })
+            .then(data => {
+                this.dateCalendar();
             });
         } else if (this.$route.query.type === "users") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 user_id: this.$route.query.id
             });
+
+            this.$store.dispatch("projectManagement/fetchItems");
         } else if (this.$route.query.type === "workarea") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 workarea_id: this.$route.query.id
             });
+
+            this.$store.dispatch("projectManagement/fetchItems");
         }
 
         if (this.authorizedTo("read", "workareas")) {
