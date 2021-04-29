@@ -439,7 +439,7 @@
                     </div>
                 </form>
             </div>
-            <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end">
+            <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end" v-if="project_data && project_data.status != 'done'">
                 <vs-button
                     @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
@@ -448,7 +448,7 @@
                 >
                     Supprimer la tâche
                 </vs-button>
-                <vs-button v-on:click="goToEditView" class="ml-auto mt-2">
+                <vs-button v-on:click="goToEditView" class="ml-auto mt-2" v-if="project_data && project_data.status == 'doing'">
                     Déplacer la tâche
                 </vs-button>
             </vs-row>
