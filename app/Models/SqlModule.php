@@ -104,17 +104,11 @@ class SqlModule extends Model
                     array_push($rows, $row);
                 } catch (\Throwable $th) {
                     echo $th->getMessage() . "\n\r";
-                    $controllerLog = new Logger('SQLModule');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::ERROR);
-                    $controllerLog->error('SQLModule', [$th->getMessage()]);
                 }
             }
         } catch (\Throwable $th) {
             $rows = [];
             echo $th->getMessage() . "\n\r";
-            $controllerLog = new Logger('SQLModule');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::ERROR);
-            $controllerLog->error('SQLModule', [$th->getMessage()]);
         }
 
         return $rows;
