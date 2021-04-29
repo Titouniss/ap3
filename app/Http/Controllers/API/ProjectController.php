@@ -5057,26 +5057,36 @@ class ProjectController extends BaseApiController
     {
 
         $tasks_periods = [];
+
         $tasks = Task::where('user_id', $user->id)
-            ->where('date', 'like', '%' . $date->format('Y-m-d') . '%')
-            ->orWhere('date_end', 'like', '%' . $date->format('Y-m-d') . '%')
-            ->orWhere(function ($query) use ($date) {
-                $query->where('date', '<', $date);
-                $query->where('date_end', '>', $date);
+            ->where(function ($query) use ($date) {
+                $query->where('date', 'like', '%' . $date->format('Y-m-d') . '%');
+                $query->orWhere('date_end', 'like', '%' . $date->format('Y-m-d') . '%');
+                $query->orWhere(function ($query) use ($date) {
+                    $query->where('date', '<', $date);
+                    $query->where('date_end', '>', $date);
+                });
             })
             ->get();
 
         if (count($tasks) > 0) {
 
             foreach ($tasks as $task) {
+                if($task->periods){
 
-                $period = [
-                    'start_time' => Carbon::createFromFormat('Y-m-d H:i:s', $task->date),
-                    'end_time' => Carbon::createFromFormat('Y-m-d H:i:s', $task->date_end),
-                    'period' => CarbonPeriod::create($task->date, $task->date_end)
-                ];
+                    foreach($task->periods as $period){
+                        if(str_contains($period->start_time, $date->format('Y-m-d')) != false){
 
-                $tasks_periods[] = $period;
+                            $otherTaskPeriod = [
+                                'start_time' => Carbon::createFromFormat('Y-m-d H:i:s', $period->start_time),
+                                'end_time' => Carbon::createFromFormat('Y-m-d H:i:s', $period->end_time),
+                                'period' => CarbonPeriod::create($period->start_time, $period->end_time)
+                            ];
+
+                            $tasks_periods[] = $otherTaskPeriod;
+                        }
+                    }
+                }
             }
         }
 
@@ -5363,6 +5373,12 @@ class ProjectController extends BaseApiController
                 $unavailable_period = CarbonPeriod::create($unavailableHours['start_time'], $unavailableHours['end_time']);
 
                 // l'indispo est comprise dans le créneau
+                $testa = $unavailableHours['start_time']->toDateString();
+                $testb = $unavailableHours['end_time']->toDateString();
+
+                $test1 = $work_period->contains($unavailableHours['start_time']);
+                $test2 = $work_period->contains($unavailableHours['end_time']);
+
                 if ($work_period->contains($unavailableHours['start_time']) || $work_period->contains($unavailableHours['end_time'])) {
 
                     $old_period = $workHours;
@@ -5393,7 +5409,8 @@ class ProjectController extends BaseApiController
                 // le créneau est compris dans l'indispo : on retire le créneau
                 elseif ($unavailable_period->contains($workHours['start_time']) && $unavailable_period->contains($workHours['end_time'])) {
 
-                    // ne pas ajouter de créneau
+                    $test = 'test';
+                // ne pas ajouter de créneau
                 } else {
                     array_push($planning_temp, $workHours);
                 }
@@ -5577,6 +5594,9 @@ class ProjectController extends BaseApiController
             $lastKey = key(array_slice($unAvailablePeriods, -1, 1, true));
 
             foreach ($unAvailablePeriods as $key => $hour) {
+
+                $testa = $hour['start_time']->toDateString();
+                $testb = $hour['end_time']->toDateString();
 
                 //On regarde si la période peut être mixer
                 if (
