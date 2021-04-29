@@ -1,7 +1,7 @@
 <template>
     <div class="p-3 mb-4 mr-4">
         <vs-prompt
-            title="Mofidier une tâche"
+            title="Modifier une tâche"
             accept-text="Modifier"
             cancel-text="Annuler"
             button-cancel="border"
@@ -12,8 +12,8 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-            <div>
-                <form class="edit-task-form" autocomplete="off">
+            <div class="editTaskForm">
+                <form  autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -606,7 +606,7 @@ export default {
                 // from users/workareas type shedule read
                 let projectFind = undefined;
                 this.projectsData.forEach(p => {
-                    if (p.tasks.find(t => t.id === this.itemId) != undefined) {
+                    if (p.tasks!=null && p.tasks.find(t => t.id === this.itemId) != undefined) {
                         projectFind = p;
                     }
                 });
@@ -846,8 +846,8 @@ export default {
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
 }
-.edit-task-form {
-    max-height: 600px;
+.editTaskForm {
+    max-height: 450px;
     overflow-y: auto;
     overflow-x: hidden;
 }
