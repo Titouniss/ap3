@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
+use App\Models\Hours;
 use App\Models\Task;
 use App\Models\TaskPeriod;
 use App\Models\TasksBundle;
@@ -158,7 +159,12 @@ class TaskController extends BaseApiController
 
                 $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at);
                 $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at);
-
+                // Expected hours for this day
+                $day = $date->dayName;
+                $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $day);
+                if ($workDuration === 0) {
+                    throw new ApiException("L'utilisateur n'a pas d'heures de travail prévues pour " . $day . ".");
+                }
                 if (!$userAvailable && !$workareaAvailable) {
                     throw new ApiException('L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.');
                 } elseif (!$userAvailable) {
@@ -238,7 +244,7 @@ class TaskController extends BaseApiController
 
         $item->update([
             'name' => $arrayRequest['name'],
-            'description' => $arrayRequest['order'] ?? null,
+            'description' => $arrayRequest['description'] ?? null,
             'order' => $arrayRequest['order'] ?? null,
             'status' => $arrayRequest['status'],
             'date' => $arrayRequest['date'] ?? null,
@@ -252,9 +258,9 @@ class TaskController extends BaseApiController
             $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
         }
 
-        if ($project->status == 'doing') {
-            TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
-        }
+        // if ($project->status == 'doing') {
+        //     TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
+        // }
         if (isset($arrayRequest['token'])) {
             $this->storeDocumentsByToken($item, $arrayRequest['token'], $project->company);
         }

@@ -122,6 +122,9 @@ class ProjectController extends BaseApiController
     {
         $taskPeriod = TaskPeriod::where('id', $request->id)->get();
         $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
+        $bundle_id = $task[0]['tasks_bundle_id'];
+        $taskBundle = TasksBundle::where('id', $bundle_id)->get();
+        $projectId = $taskBundle[0]['project_id'];
         //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
         //si l'utilisateur n'a pas coché la case pour déplacer la date de livraison automatiquement
         //si la task_period doit être déplacée après la date originale
@@ -602,11 +605,28 @@ class ProjectController extends BaseApiController
             }
             $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
         } else {
-            TaskPeriod::where('id', $request->id)->update([
-                'start_time' => $request->start,
-                'end_time' => $request->end,
-            ]);
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+            $projectUpdated = Project::where('id',$projectId)->get();
+            //si avant la date de début du projet ou après la date de livraison -> erreur
+            if($request->start < $projectUpdated[0]['start_date']){
+                throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
+            }
+            else if($request->end > $projectUpdated[0]['date']){
+                throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");     
+            }
+            //sinon mettre à jour la task_period et la task
+            else{
+                TaskPeriod::where('id', $request->id)->update([
+                    'start_time' => $request->start,
+                    'end_time' => $request->end,
+                ]);
+                
+                $tasksPeriod = TaskPeriod::where('task_id',$taskPeriod[0]['task_id'])->orderBy('start_time','asc')->get();
+                Task::where('id', $taskPeriod[0]['task_id'])->update([
+                    'date' => $tasksPeriod[0]['start_time'],
+                    'date_end' => $tasksPeriod[sizeof($tasksPeriod)-1]['end_time'],
+                ]);
+                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+            }
         }
         try {
             return $this->successResponse($task[0], 'Chargement terminé avec succès.');
@@ -3961,7 +3981,7 @@ class ProjectController extends BaseApiController
     public function unavailablePeriods(Request $request)
     {
 
-        if ($request->type == "projects") {
+        if ($request->type == "projects" || $request->type == "workarea") {
             //ajouter dans la liste les périodes entre le début et la fin des tasks dépendantes
             //+ les périodes où le nombre de tasks en même temps sur l'ilot >= max_users
             $listTaskPeriods = $this->unavailabilities($request);
