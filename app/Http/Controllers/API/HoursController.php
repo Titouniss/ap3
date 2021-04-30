@@ -70,11 +70,6 @@ class HoursController extends BaseApiController
                     array_push($listUserIdProject, $hourProject['user_id']);
                 }
             }
-            //récupérer les indispos des utilisateurs qui ont enregistré des heures pour ce projet
-            $paidHolidays->whereIn('user_id', $listUserIdProject);
-            $schoolPeriods->whereIn('user_id', $listUserIdProject);
-            $publicHolidays->whereIn('user_id', $listUserIdProject);
-            $overtimesUsed->whereIn('user_id', $listUserIdProject);
         }
 
         if ($request->has('user_id')) {
@@ -129,7 +124,7 @@ class HoursController extends BaseApiController
 
         $stats['total'] = CarbonInterval::hours(0);
         // // Ajout des congés payés au nombre d'heures
-        if (!$paidHolidays->isEmpty()) {
+        if (!$paidHolidays->isEmpty() && !$request->has('project_id')) {
             foreach ($paidHolidays as $pH) {
                 $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::hours($hours));
@@ -140,7 +135,7 @@ class HoursController extends BaseApiController
         }
 
         // // Ajout des périodes de cours au nombre d'heures
-        if (!$schoolPeriods->isEmpty()) {
+        if (!$schoolPeriods->isEmpty() && !$request->has('project_id')) {
             foreach ($schoolPeriods as $pH) {
                 $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::hours($hours));
@@ -151,7 +146,7 @@ class HoursController extends BaseApiController
         }
 
         // // Ajout des jours fériés au nombre d'heures
-        if (!$publicHolidays->isEmpty()) {
+        if (!$publicHolidays->isEmpty() && !$request->has('project_id')) {
             foreach ($publicHolidays as $pH) {
                 $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::hours($hours));
@@ -162,7 +157,7 @@ class HoursController extends BaseApiController
         }
 
         // // Ajout des heures supplémentaires utilisées au nombre d'heures
-        if (!$overtimesUsed->isEmpty()) {
+        if (!$overtimesUsed->isEmpty() && !$request->has('project_id')) {
             foreach ($overtimesUsed as $pH) {
                 $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
                 $stats['total']->add(CarbonInterval::hours($hours));

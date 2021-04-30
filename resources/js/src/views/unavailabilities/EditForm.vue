@@ -240,7 +240,7 @@ export default {
         }
     },
     mounted() {
-        if (this.$store.state.AppActiveUser.is_admin) {
+        if (this.$store.state.AppActiveUser.is_admin || this.$store.state.AppActiveUser.is_manager) {
             this.reasons.unshift({ name: "Heures supplémentaires payées" });
         }
     }
