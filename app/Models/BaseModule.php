@@ -93,9 +93,6 @@ class BaseModule extends Model
         } catch (\Throwable $th) {
             echo $th->getMessage() . "\n\r";
             DB::rollBack();
-            $controllerLog = new Logger('BaseModule');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::ERROR);
-            $controllerLog->error('BaseModule', [$th->getMessage()]);
             return false;
         }
     }

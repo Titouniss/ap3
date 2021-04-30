@@ -67,16 +67,18 @@ class DealingHoursController extends Controller
                 foreach ($usedOrvertimes as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
                     $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
-
-                    $nbUsedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
+                    $hours = Carbon::create($parseEndsAt)->floatDiffInHours(Carbon::create($parseStartAt));
+                    $nbUsedOvertimes += $hours;
+                    //$nbUsedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
                 }
             }
             if (!$usedOvertimesPayed->isEmpty()) {
                 foreach ($usedOvertimesPayed as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
                     $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
-
-                    $nbPayedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
+                    $hours = Carbon::create($parseEndsAt)->floatDiffInHours(Carbon::create($parseStartAt));
+                    $nbPayedOvertimes += $hours;
+                    //$nbPayedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
                 }
             }
             $result = array(
