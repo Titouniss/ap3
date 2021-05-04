@@ -50,7 +50,11 @@
 
         <div class="mb-base">
             <h6 class="mb-4">Indisponibilités</h6>
-            <add-form :id_user="user_id" @on-submit="fetchOvertimes" :fetchOvertimes="fetchOvertimes" />
+            <add-form
+                :id_user="user_id"
+                @on-submit="fetchOvertimes"
+                :fetchOvertimes="fetchOvertimes"
+            />
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
@@ -273,7 +277,8 @@ export default {
                             ).format("DD/MM/YYYY [à] HH:mm")} au ${moment(
                                 data.ends_at
                             ).format("DD/MM/YYYY [à] HH:mm")}`,
-                        usesSoftDelete: false
+                        usesSoftDelete: false,
+                        onDelete: this.fetchOvertimes
                     }
                 }
             ],
