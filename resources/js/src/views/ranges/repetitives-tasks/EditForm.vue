@@ -1,7 +1,7 @@
 <template>
     <div class="p-3 mb-4 mr-4">
         <vs-prompt
-            title="Mofidier une tâche"
+            title="Modifier une tâche"
             accept-text="Modifier"
             cancel-text="Annuler"
             button-cancel="border"
@@ -13,7 +13,7 @@
             class="task-compose"
         >
             <div>
-                <form autocomplete="off">
+                <form class ="editTaskForm" autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -285,7 +285,7 @@ export default {
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
 }
-.edit-task-form {
+.editTaskForm {
     max-height: 450px;
     overflow-y: auto;
     overflow-x: hidden;

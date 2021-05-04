@@ -50,16 +50,30 @@
             @click="editRecord"
           >
           </vs-button>
-          <vs-button
-            type="border"
-            color="danger"
-            size="medium"
-            class="mr-4"
-            icon-pack="feather"
-            icon="icon-trash"
-            @click="confirmDeleteRecord"
-          >
-          </vs-button>
+          <div v-if="project_data.deleted_at">
+            <vs-button
+                type="border"
+                color="danger"
+                size="medium"
+                class="mr-4"
+                icon-pack="feather"
+                icon="icon-trash"
+                @click="confirmDeleteRecord('delete')"
+            >
+            </vs-button>
+          </div>
+          <div v-if="!project_data.deleted_at">
+            <vs-button
+                type="border"
+                color="warning"
+                size="medium"
+                class="mr-4"
+                icon-pack="feather"
+                icon="icon-archive"
+                @click="confirmDeleteRecord('archive')"
+            >
+            </vs-button>
+          </div>
         </div>
         <!-- Avatar -->
         <div class="vx-row">
@@ -321,33 +335,49 @@ export default {
           console.error(err);
         });
     },
-    confirmDeleteRecord() {
-      this.$vs.dialog({
-        type: "confirm",
-        color: "danger",
-        title: "Confirmer suppression",
-        text: `Voulez vous vraiment supprimer le projet "${this.project_data.name}"`,
-        accept: this.deleteRecord,
-        acceptText: "Supprimer",
-        cancelText: "Annuler",
-      });
-    },
-    deleteRecord() {
-      this.$store
-        .dispatch("projectManagement/removeItem", this.$route.params.id)
-        .then(() => {
-          this.showDeleteSuccess();
-        })
-        .catch((err) => {
-          console.error(err);
+    confirmDeleteRecord(type) {
+        this.$vs.dialog({
+            type: "confirm",
+            color: type === "delete" ? "danger" : "warning",
+            title:
+                type === "delete"
+                    ? "Confirmer suppression"
+                    : "Confirmer archivage",
+            text:
+                type === "delete" ? `Voulez vous vraiment supprimer le projet ${this.project_data.name} ?`
+                    : `Voulez vous vraiment archiver le projet ${this.project_data.name} ?`,
+            accept:
+                type === "delete" ? this.deleteRecord : this.archiveRecord,
+            acceptText: type === "delete" ? "Supprimer" : "Archiver",
+            cancelText: "Annuler"
         });
     },
-    showDeleteSuccess() {
-      this.$vs.notify({
-        color: "success",
-        title: modelTitle,
-        text: `Projet supprimé`,
-      });
+    deleteRecord() {
+        this.$store
+            .dispatch("projectManagement/forceRemoveItems", [this.project_data.id])
+            .then(data => { this.showDeleteSuccess("delete"); })
+            .catch(err => {
+                console.error(err);
+            });
+    },
+    archiveRecord() {
+        this.$store
+            .dispatch("projectManagement/removeItems", [this.project_data.id])
+            .then(data => { 
+                this.showDeleteSuccess("archive"); 
+                this.$router.push({ path: `/projects` });
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    },
+    showDeleteSuccess(type) {
+        this.$vs.notify({
+            color: "success",
+            title: "Projet",
+            text:
+                type === "delete" ? `Projet supprimé` : `Projet archivé`
+        });
     },
     refreshData() {
       this.$store
