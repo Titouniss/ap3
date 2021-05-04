@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\User;
@@ -70,6 +71,22 @@ class ProjectController extends BaseApiController
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
+
+        if ($request->has('order_by') && $request->order_by == 'status') {
+            try {
+                $query->getQuery()->orders = null;
+
+                $direction = 'asc';
+                if ($request->has('order_by_desc')) {
+                    $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
+                }
+
+                $query->orderByRaw("FIELD(status, \"doing\", \"todo\", \"done\") {$direction}");
+                $query->orderBy('name', $direction);
+            } catch (\Throwable $th) {
+                throw new ApiException("Paramètre 'order_by' n'est pas valide.");
+            }
+        }
     }
 
     protected function storeItem(array $arrayRequest)
@@ -103,9 +120,15 @@ class ProjectController extends BaseApiController
             'name' => $arrayRequest['name'],
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
-            'customer_id' => $arrayRequest['customer_id'],
-            'color' => $arrayRequest['color'],
         ]);
+
+        if (isset($arrayRequest['customer_id'])) {
+            $item->customer_id = $arrayRequest['customer_id'];
+        }
+        if (isset($arrayRequest['color'])) {
+            $item->color = $arrayRequest['color'];
+        }
+        $item->save();
 
         if (isset($arrayRequest['token'])) {
             $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
@@ -162,10 +185,10 @@ class ProjectController extends BaseApiController
                 $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodAfter($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('listTaskPeriodToMoveAndCreate',[$listTaskPeriodToMoveAndCreate]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
 
-               
+
                 if (count($listTaskPeriodToMoveAndCreate) == 0) {
                     $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
                     return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
@@ -383,9 +406,9 @@ class ProjectController extends BaseApiController
                 $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodBefore($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('listTaskPeriodToMoveAndCreate',[$listTaskPeriodToMoveAndCreate]);
-                
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
+
                 if (count($listTaskPeriodToMoveAndCreate) == 0) {
                     $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
                     return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
@@ -492,25 +515,24 @@ class ProjectController extends BaseApiController
             }
             $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
         } else {
-            $projectUpdated = Project::where('id',$projectId)->get();
+            $projectUpdated = Project::where('id', $projectId)->get();
             //si avant la date de début du projet ou après la date de livraison -> erreur
-            if($request->start < $projectUpdated[0]['start_date']){
+            if ($request->start < $projectUpdated[0]['start_date']) {
                 throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
-            }
-            else if($request->end > $projectUpdated[0]['date']){
-                throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");     
+            } else if ($request->end > $projectUpdated[0]['date']) {
+                throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
             }
             //sinon mettre à jour la task_period et la task
-            else{
+            else {
                 TaskPeriod::where('id', $request->id)->update([
                     'start_time' => $request->start,
                     'end_time' => $request->end,
                 ]);
-                
-                $tasksPeriod = TaskPeriod::where('task_id',$taskPeriod[0]['task_id'])->orderBy('start_time','asc')->get();
+
+                $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
                 Task::where('id', $taskPeriod[0]['task_id'])->update([
                     'date' => $tasksPeriod[0]['start_time'],
-                    'date_end' => $tasksPeriod[sizeof($tasksPeriod)-1]['end_time'],
+                    'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
                 ]);
                 $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
             }
@@ -582,28 +604,28 @@ class ProjectController extends BaseApiController
         $heureDebutTaskPrecedente = $request->start;
 
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('listTaskPeriodToMove',[$listTaskPeriodToMove]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('listTaskPeriodToMove', [$listTaskPeriodToMove]);
 
         $taskPeriodToMove = array_pop($listTaskPeriodToMove);
         $taskIdTaskPeriodToMove = $taskPeriodToMove['task_id'];
 
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('listDebutTaskPeriodIndispo',[$listDebutTaskPeriodIndispo]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('listDebutTaskPeriodIndispo', [$listDebutTaskPeriodIndispo]);
 
         for ($i = 0; $i < $newPeriod->count(); $i++) {
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('$taskPeriodToMove[id]',[$taskPeriodToMove['id']]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('$taskPeriodToMove[id]', [$taskPeriodToMove['id']]);
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('listTaskPeriodToSave',[$listTaskPeriodToSave]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('listTaskPeriodToSave', [$listTaskPeriodToSave]);
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('listTaskPeriodToDelete',[$listTaskPeriodToDelete]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('listTaskPeriodToDelete', [$listTaskPeriodToDelete]);
 
             if ((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete))) {
                 break;
@@ -611,8 +633,8 @@ class ProjectController extends BaseApiController
             $dateP = Carbon::createFromFormat('Y-m-d H:i:s', $newPeriod->getEndDate())->subDays($i)->format('Y-m-d');
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('dateP',[$dateP]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('dateP', [$dateP]);
 
             $p = Carbon::createFromFormat('Y-m-d H:i:s', $newPeriod->getEndDate())->subDays($i);
 
@@ -628,8 +650,8 @@ class ProjectController extends BaseApiController
             }
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('hoursWork',[$hoursWork]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('hoursWork', [$hoursWork]);
 
             $dureePeriodDispoMatin = Carbon::parse($hoursWork[0])->floatDiffInHours(Carbon::parse($hoursWork[1]));
             $dureePeriodDispoApresmidi = Carbon::parse($hoursWork[2])->floatDiffInHours(Carbon::parse($hoursWork[3]));
@@ -660,8 +682,8 @@ class ProjectController extends BaseApiController
                 $heuresDisposMatin = Carbon::parse($heureDebutTravailMatin)->floatDiffInHours($heureFinNewPeriod);
             }
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heuresDisposApresMidi',[$heuresDisposApresMidi]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heuresDisposApresMidi', [$heuresDisposApresMidi]);
 
             //s'il n'y a pas d'indispo pour ce jour de la période (ni matin ni après-midi)
             if (!in_array($dateP, $listDebutTaskPeriodIndispo)) {
@@ -670,39 +692,39 @@ class ProjectController extends BaseApiController
                 // }
                 //$taskPeriodToMove=array_pop($listTaskPeriodToMove);
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('ok',['ok']);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('ok', ['ok']);
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('taskPeriodToMove',[$taskPeriodToMove]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('taskPeriodToMove', [$taskPeriodToMove]);
 
                 $dureePeriodToMove = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-                
+
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('dureePeriodToMove',[$dureePeriodToMove]);
-                
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('dureePeriodToMove', [$dureePeriodToMove]);
+
                 $heureDebutPeriodMatin = Carbon::parse($hoursWork[0])->floatDiffInHours(Carbon::parse("00:00:00"));
                 $heureFinPeriodMatin = Carbon::parse($hoursWork[1])->floatDiffInHours(Carbon::parse("00:00:00"));
                 $heureDebutPeriodApresMidi = Carbon::parse($hoursWork[2])->floatDiffInHours(Carbon::parse("00:00:00"));
                 $heureFinPeriodApresMidi = Carbon::parse($hoursWork[3])->floatDiffInHours(Carbon::parse("00:00:00"));
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('heureDebutPeriodApresMidi',[$heureDebutPeriodApresMidi]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('heureDebutPeriodApresMidi', [$heureDebutPeriodApresMidi]);
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('heureFinNewPeriod',[$heureFinNewPeriod]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('heureFinNewPeriod', [$heureFinNewPeriod]);
 
                 //si la fin de la nouvelle période est compris dans les heures de travail du matin
                 // if (($heureFinNewPeriod >= $heureDebutTravailMatin && $heureFinNewPeriod <= $heureDebutTravailApresMidi && ($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00")) ||
                 //     ($heureFinNewPeriod >= $heureDebutTravailMatin && $heureFinNewPeriod <= $heureFinTravailMatin && ($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00"))) {
                 if ($heureFinNewPeriod >= $heureDebutTravailMatin && $heureFinNewPeriod <= $heureDebutTravailApresMidi) {
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('ok',['matin']);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('ok', ['matin']);
 
                     // if($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00"){
                     //     if ($heureFinNewPeriod >= $heureFinTravailMatin) {
@@ -719,28 +741,28 @@ class ProjectController extends BaseApiController
                     //}
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heuresDisposMatin ap',[$heuresDisposMatin]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heuresDisposMatin ap', [$heuresDisposMatin]);
 
                     $finJourVeille = Carbon::parse($p)->endOfDay()->subDays(1)->format("Y-m-d H:i:s");
 
                     while (($heuresDisposMatin >= 0) && ($heureDebutTaskPrecedente >= $finJourVeille)) :
-                    // while ((($heuresDisposMatin >= 0) && (($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00") && ($heureDebutTaskPrecedente >= $finJourVeille))) ||
-                    //         (($heuresDisposMatin >= 0 || ($heureDebutTaskPrecedente > $finJourVeille)) && (($hoursWork[2] == "00:00:00" || $hoursWork[3] == "00:00:00")))) :
-                        
-                        $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heuresDisposMatin av',[$heuresDisposMatin]);
+                        // while ((($heuresDisposMatin >= 0) && (($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00") && ($heureDebutTaskPrecedente >= $finJourVeille))) ||
+                        //         (($heuresDisposMatin >= 0 || ($heureDebutTaskPrecedente > $finJourVeille)) && (($hoursWork[2] == "00:00:00" || $hoursWork[3] == "00:00:00")))) :
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('dureePeriodToMove',[$dureePeriodToMove]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heuresDisposMatin av', [$heuresDisposMatin]);
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heureDebutTaskPrecedente',[$heureDebutTaskPrecedente]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('dureePeriodToMove', [$dureePeriodToMove]);
 
-                        
+                        $controllerLog = new Logger('hours');
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heureDebutTaskPrecedente', [$heureDebutTaskPrecedente]);
+
+
                         //s'il y a assez de temps pour déplacer la task_period entièrement le matin on la déplace dans la période du matin
                         if ($heuresDisposMatin >= $dureePeriodToMove) {
 
@@ -750,8 +772,8 @@ class ProjectController extends BaseApiController
                             $heureDebutTaskPrecedente = $arrayInfos["heureDebutTaskPrecedente"];
 
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('listTaskPeriodToMove',[$listTaskPeriodToMove]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('listTaskPeriodToMove', [$listTaskPeriodToMove]);
 
                             $newListTaskPeriod = $this->addInlistTaskPeriodToMoveAndCreate($arrayInfos, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete);
                             $listTaskPeriodToSave = $newListTaskPeriod["move"];
@@ -786,7 +808,6 @@ class ProjectController extends BaseApiController
 
                             $heureFinNewPeriod = Carbon::parse($heureDebutTaskPrecedente)->format('H:i');
                             $dureePeriodToMove = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-
                         }
 
                         //s'il n'y a pas assez de temps pour déplacer la task_period entièrement le matin, on la déplace dans la période pour remplir s'il reste du temps le matin et on crée une nouvelle task_period avec le temps restant l'après-midi' veille
@@ -804,8 +825,8 @@ class ProjectController extends BaseApiController
                             $listTaskPeriodToDelete = $newListTaskPeriod["delete"];
 
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('listTaskPeriodToMove ap',[$listTaskPeriodToMove]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('listTaskPeriodToMove ap', [$listTaskPeriodToMove]);
 
                             //s'il n'y a plus de task_period on sort de la boucle sinon on la déplace le matin car il n'y a pas d'indispo pour la journée
                             if (count($listTaskPeriodToMove) == 0) {
@@ -830,7 +851,6 @@ class ProjectController extends BaseApiController
 
                             $heureFinNewPeriod = Carbon::parse($heureDebutTaskPrecedente)->format('H:i');
                             $dureePeriodToMove = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-
                         }
                     endwhile;
 
@@ -838,8 +858,8 @@ class ProjectController extends BaseApiController
                     //s'il n'y a plus de temps disponible le matin on passe un tour pour aller au jour d'avant
                     if ($heuresDisposMatin == 0) {
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heureDebutTaskPrecedente ap',[$heureDebutTaskPrecedente]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heureDebutTaskPrecedente ap', [$heureDebutTaskPrecedente]);
 
                         //$heureFinNewPeriod = Carbon::createFromFormat('Y-m-d H:i:s', $heureDebutTaskPrecedente)->format('H:i');
                         $heureFinNewPeriod = Carbon::parse($heureDebutTaskPrecedente)->format('H:i');
@@ -893,7 +913,6 @@ class ProjectController extends BaseApiController
 
                             $heureFinNewPeriod = Carbon::parse($heureDebutTaskPrecedente)->format('H:i');
                             $dureePeriodToMove = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-
                         }
                         //s'il n'y a pas assez de temps pour déplacer la task_period entièrement l'apres-midi, on la déplace dans la période pour remplir s'il reste du temps
                         //et on créée une nouvelle task_period avec le temps restant le matin
@@ -992,7 +1011,6 @@ class ProjectController extends BaseApiController
 
                             $heureFinNewPeriod = Carbon::parse($heureDebutTaskPrecedente)->format('H:i');
                             $dureePeriodToMove = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-
                         }
 
                         //s'il n'y a pas assez de temps pour déplacer la task_period entièrement le matin, on la déplace dans la période pour remplir s'il reste du temps le matin et on crée une nouvelle task_period avec le temps restant l'après-midi' veille
@@ -1062,8 +1080,8 @@ class ProjectController extends BaseApiController
             //sinon voir si indispo matin ou après midi
             else {
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('ok',['indispo']);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('ok', ['indispo']);
 
                 //si indispo matin on déplace l'après-midi
                 foreach ($listDebutTaskPeriodIndispo as $dateDebutIndispo) {
@@ -1084,14 +1102,14 @@ class ProjectController extends BaseApiController
             // }
             //$heureFinNewPeriod = Carbon::createFromFormat('Y-m-d H:i:s', $heureDebutTaskPrecedente)->format('H:i');
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heureDebutTaskPrecedente ap',[$heureDebutTaskPrecedente]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heureDebutTaskPrecedente ap', [$heureDebutTaskPrecedente]);
 
             $heureFinNewPeriod = Carbon::parse($heureDebutTaskPrecedente)->format('H:i');
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heureFinNewPeriod ap',[$heureFinNewPeriod]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heureFinNewPeriod ap', [$heureFinNewPeriod]);
         }
         if (count($listTaskPeriodToMove) > 0) {
             array_push($listTaskPeriodToSave, "avant aujourd'hui");
@@ -1131,12 +1149,12 @@ class ProjectController extends BaseApiController
         array_push($listTaskPeriodToSave, $taskPeriodToMove['end_time']);
 
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('dureePeriodToMove',[$dureePeriodToMove]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('dureePeriodToMove', [$dureePeriodToMove]);
 
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
         $heuresDisposMatin -= $dureePeriodToMove;
 
@@ -1153,8 +1171,8 @@ class ProjectController extends BaseApiController
     private function moveBeforeTaskMorningCreateTaskAfternoonBefore($p, $listDebutTaskPeriodIndispo, $taskPeriodToMove, $workHours, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete, $heureFinNewPeriod, $dureePeriodToMove, $heuresDisposMatin, $heuresDisposApresMidi, $heureDebutPeriodMatin, $heureFinPeriodMatin, $heureFinTravailMatin, $heureDebutPeriodApresMidi, $heureFinPeriodApresMidi, $hoursWork)
     {
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
         //s'il reste du temps le matin on remplit la période sinon on crée une nouvelle task_period avec le temps total la veille après-midi
         if ($heuresDisposMatin > 0) {
@@ -1183,123 +1201,123 @@ class ProjectController extends BaseApiController
 
             $dureePeriodToMoveMatin = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
             $dureePeriodToMoveApresMidi = 0;
-        // }
-        // else if($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00" && $heuresDisposMatin == 0){
-        //     //on créé une task_period avec le temps restant ou total la veille matin
-        //     //$nbJour = $this->nbDaysBeforeWorkDay($p, $workHours, $listDebutTaskPeriodIndispo);
-            
-        //     $nbJour=0;
+            // }
+            // else if($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00" && $heuresDisposMatin == 0){
+            //     //on créé une task_period avec le temps restant ou total la veille matin
+            //     //$nbJour = $this->nbDaysBeforeWorkDay($p, $workHours, $listDebutTaskPeriodIndispo);
 
-        //     $hours = floor($heureFinPeriodMatin - $dureePeriodToMove);
-        //     $minutes = ($heureFinPeriodMatin - $dureePeriodToMove - $hours) * 60;
+            //     $nbJour=0;
 
-        //     $newHour = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->format('H:i');
+            //     $hours = floor($heureFinPeriodMatin - $dureePeriodToMove);
+            //     $minutes = ($heureFinPeriodMatin - $dureePeriodToMove - $hours) * 60;
 
-        //     $controllerLog = new Logger('hours');
-        //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //     $controllerLog->info('newHour',[$newHour]);
+            //     $newHour = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->format('H:i');
+
+            //     $controllerLog = new Logger('hours');
+            //     $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //     $controllerLog->info('newHour',[$newHour]);
 
 
-        //     //si on dépasse avant l'heure de début de travail veille matin, on remplit la veille matin et on créé une nouvelle task_period la veille matin avec le temps restant
-        //     if ($newHour < $heureDebutPeriodMatin) {
+            //     //si on dépasse avant l'heure de début de travail veille matin, on remplit la veille matin et on créé une nouvelle task_period la veille matin avec le temps restant
+            //     if ($newHour < $heureDebutPeriodMatin) {
 
-        //         $hoursDebutMatin = floor($heureDebutPeriodMatin);
-        //         $minutesDebutMatin = ($heureDebutPeriodMatin - $hoursDebutMatin) * 60;
+            //         $hoursDebutMatin = floor($heureDebutPeriodMatin);
+            //         $minutesDebutMatin = ($heureDebutPeriodMatin - $hoursDebutMatin) * 60;
 
-        //         $startTime = Carbon::parse($p)->startOfDay()->addHours($hoursDebutMatin)->addMinutes($minutesDebutMatin)->subDays($nbJour)->format('Y-m-d H:i:s');
+            //         $startTime = Carbon::parse($p)->startOfDay()->addHours($hoursDebutMatin)->addMinutes($minutesDebutMatin)->subDays($nbJour)->format('Y-m-d H:i:s');
 
-        //         $hoursFinMatin = floor($heureFinPeriodMatin);
-        //         $minutesFinMatin = ($heureFinPeriodMatin - $hoursFinMatin) * 60;
+            //         $hoursFinMatin = floor($heureFinPeriodMatin);
+            //         $minutesFinMatin = ($heureFinPeriodMatin - $hoursFinMatin) * 60;
 
-        //         $endTime = Carbon::parse($p)->startOfDay()->addHours($hoursFinMatin)->addMinutes($minutesFinMatin)->subDays($nbJour)->format('Y-m-d H:i:s');
+            //         $endTime = Carbon::parse($p)->startOfDay()->addHours($hoursFinMatin)->addMinutes($minutesFinMatin)->subDays($nbJour)->format('Y-m-d H:i:s');
 
-        //         array_push($listTaskPeriodToSave, $taskPeriodToMove['id']);
-        //         array_push($listTaskPeriodToSave, $startTime);
-        //         array_push($listTaskPeriodToSave, $endTime);
+            //         array_push($listTaskPeriodToSave, $taskPeriodToMove['id']);
+            //         array_push($listTaskPeriodToSave, $startTime);
+            //         array_push($listTaskPeriodToSave, $endTime);
 
-        //         $heureDebutTaskPrecedente = $startTime;
-        //         $heuresDisposMatin = 0;
-        //         $dureePeriodToMoveMatin = Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
-        //         $dureePeriodToMove -= Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
+            //         $heureDebutTaskPrecedente = $startTime;
+            //         $heuresDisposMatin = 0;
+            //         $dureePeriodToMoveMatin = Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
+            //         $dureePeriodToMove -= Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
 
-        //         //on créé une nouvelle task_period avec le temps restant la veille matin
+            //         //on créé une nouvelle task_period avec le temps restant la veille matin
 
-        //         //$p = Carbon::parse($p)->subDays(1);
-        //         $nbJour = $this->nbDaysBeforeWorkDay($p, $workHours, $listDebutTaskPeriodIndispo);
+            //         //$p = Carbon::parse($p)->subDays(1);
+            //         $nbJour = $this->nbDaysBeforeWorkDay($p, $workHours, $listDebutTaskPeriodIndispo);
 
-        //         $hours = floor($heureFinPeriodMatin - $dureePeriodToMove - $heuresDisposMatin);
-        //         $minutes = ($heureFinPeriodMatin - $dureePeriodToMove - $heuresDisposMatin - $hours) * 60;
+            //         $hours = floor($heureFinPeriodMatin - $dureePeriodToMove - $heuresDisposMatin);
+            //         $minutes = ($heureFinPeriodMatin - $dureePeriodToMove - $heuresDisposMatin - $hours) * 60;
 
-        //         $startTime = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->subDays($nbJour)->format('Y-m-d H:i:s');
+            //         $startTime = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->subDays($nbJour)->format('Y-m-d H:i:s');
 
-        //         $hoursFinMatin = floor($heureFinPeriodMatin);
-        //         $minutesFinMatin = ($heureFinPeriodMatin - $hoursFinMatin) * 60;
+            //         $hoursFinMatin = floor($heureFinPeriodMatin);
+            //         $minutesFinMatin = ($heureFinPeriodMatin - $hoursFinMatin) * 60;
 
-        //         $endTime = Carbon::parse($p)->startOfDay()->addHours($hoursFinMatin)->addMinutes($minutesFinMatin)->subDays($nbJour)->format('Y-m-d H:i:s');
+            //         $endTime = Carbon::parse($p)->startOfDay()->addHours($hoursFinMatin)->addMinutes($minutesFinMatin)->subDays($nbJour)->format('Y-m-d H:i:s');
 
-        //         $controllerLog = new Logger('hours');
-        //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //         $controllerLog->info('startTime',[$startTime]);
+            //         $controllerLog = new Logger('hours');
+            //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //         $controllerLog->info('startTime',[$startTime]);
 
-        //         $controllerLog = new Logger('hours');
-        //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //         $controllerLog->info('endTime',[$endTime]);
+            //         $controllerLog = new Logger('hours');
+            //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //         $controllerLog->info('endTime',[$endTime]);
 
-        //         array_push($listTaskPeriodToCreate, $taskPeriodToMove['task_id']);
-        //         array_push($listTaskPeriodToCreate, $startTime);
-        //         array_push($listTaskPeriodToCreate, $endTime);
+            //         array_push($listTaskPeriodToCreate, $taskPeriodToMove['task_id']);
+            //         array_push($listTaskPeriodToCreate, $startTime);
+            //         array_push($listTaskPeriodToCreate, $endTime);
 
-        //         $heureDebutTaskPrecedente = $startTime;
-        //         $heuresDisposApresMidi = 0;
-        //         $dureePeriodToMoveMatin = Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
-        //         $dureePeriodToMoveApresMidi = 0;
-        //     }
+            //         $heureDebutTaskPrecedente = $startTime;
+            //         $heuresDisposApresMidi = 0;
+            //         $dureePeriodToMoveMatin = Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
+            //         $dureePeriodToMoveApresMidi = 0;
+            //     }
 
-        //     //sinon on créé une nouvelle task_period avec le temps restant la veille matin
-        //     else {
+            //     //sinon on créé une nouvelle task_period avec le temps restant la veille matin
+            //     else {
 
-        //         $hours = floor($heureFinPeriodMatin - $dureePeriodToMove);
-        //         $minutes = ($heureFinPeriodMatin - $dureePeriodToMove - $hours) * 60;
+            //         $hours = floor($heureFinPeriodMatin - $dureePeriodToMove);
+            //         $minutes = ($heureFinPeriodMatin - $dureePeriodToMove - $hours) * 60;
 
-        //         $startTime = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->subDays($nbJour)->format('Y-m-d H:i:s');
+            //         $startTime = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->subDays($nbJour)->format('Y-m-d H:i:s');
 
-        //         $hours = floor($heureFinPeriodMatin);
-        //         $minutes = ($heureFinPeriodMatin - $hours) * 60;
+            //         $hours = floor($heureFinPeriodMatin);
+            //         $minutes = ($heureFinPeriodMatin - $hours) * 60;
 
-        //         $endTime = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->subDays($nbJour)->format('Y-m-d H:i:s');
+            //         $endTime = Carbon::parse($p)->startOfDay()->addHours($hours)->addMinutes($minutes)->subDays($nbJour)->format('Y-m-d H:i:s');
 
-        //         $controllerLog = new Logger('hours');
-        //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //         $controllerLog->info('startTime',[$startTime]);
+            //         $controllerLog = new Logger('hours');
+            //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //         $controllerLog->info('startTime',[$startTime]);
 
-        //         $controllerLog = new Logger('hours');
-        //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //         $controllerLog->info('endTime',[$endTime]);
+            //         $controllerLog = new Logger('hours');
+            //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //         $controllerLog->info('endTime',[$endTime]);
 
-        //         array_push($listTaskPeriodToSave, $taskPeriodToMove['id']);
-        //         array_push($listTaskPeriodToSave, $startTime);
-        //         array_push($listTaskPeriodToSave, $endTime);
+            //         array_push($listTaskPeriodToSave, $taskPeriodToMove['id']);
+            //         array_push($listTaskPeriodToSave, $startTime);
+            //         array_push($listTaskPeriodToSave, $endTime);
 
-        //         $heureDebutTaskPrecedente = $startTime;
-        //         $heuresDisposApresMidi = 0;
+            //         $heureDebutTaskPrecedente = $startTime;
+            //         $heuresDisposApresMidi = 0;
 
-        //         $startT=Carbon::createFromformat('Y-m-d H:i:s',$startTime)->format('H:i');
+            //         $startT=Carbon::createFromformat('Y-m-d H:i:s',$startTime)->format('H:i');
 
-        //         $start = Carbon::parse($startT)->floatDiffInHours(Carbon::parse("00:00:00"));
+            //         $start = Carbon::parse($startT)->floatDiffInHours(Carbon::parse("00:00:00"));
 
-        //         $controllerLog = new Logger('hours');
-        //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //         $controllerLog->info('start',[$start]);
+            //         $controllerLog = new Logger('hours');
+            //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //         $controllerLog->info('start',[$start]);
 
-        //         $heuresDisposMatin = $start-$heureDebutPeriodMatin;
-        //         //$dureePeriodToMoveMatin = Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
-        //         $dureePeriodToMoveApresMidi = 0;
-        //         $dureePeriodToMoveMatin = 0;
+            //         $heuresDisposMatin = $start-$heureDebutPeriodMatin;
+            //         //$dureePeriodToMoveMatin = Carbon::parse($endTime)->floatDiffInHours(Carbon::parse($startTime));
+            //         $dureePeriodToMoveApresMidi = 0;
+            //         $dureePeriodToMoveMatin = 0;
 
-        //         $controllerLog = new Logger('hours');
-        //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        //         $controllerLog->info('heuresDisposMatin ap',[$heuresDisposMatin]);
-        //     }
+            //         $controllerLog = new Logger('hours');
+            //         $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            //         $controllerLog->info('heuresDisposMatin ap',[$heuresDisposMatin]);
+            //     }
         }
         //sinon on ajoute l'id de la task_period à la liste des tasks_period à supprimer
         else {
@@ -1610,8 +1628,8 @@ class ProjectController extends BaseApiController
         $heureFinTaskPrecedente = $request->end;
 
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('listDebutTaskPeriodIndispo',[$listDebutTaskPeriodIndispo]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('listDebutTaskPeriodIndispo', [$listDebutTaskPeriodIndispo]);
 
         foreach ($newPeriod as $keyNewPeriod => $p) {
             if ((in_array($taskPeriodToMove['id'], $listTaskPeriodToSave)) || (in_array($taskPeriodToMove['id'], $listTaskPeriodToDelete))) {
@@ -1621,8 +1639,8 @@ class ProjectController extends BaseApiController
             $dateP = Carbon::createFromFormat('Y-m-d H:i:s', $p)->format('Y-m-d');
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('dateP',[$dateP]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('dateP', [$dateP]);
 
             $dayName = Carbon::create($dateP)->dayName;
             $hoursWork = $workHours[$dayName];
@@ -1635,8 +1653,8 @@ class ProjectController extends BaseApiController
             }
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('hoursWork',[$hoursWork]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('hoursWork', [$hoursWork]);
 
             $dureePeriodDispoMatin = Carbon::parse($hoursWork[0])->floatDiffInHours(Carbon::parse($hoursWork[1]));
             $dureePeriodDispoApresmidi = Carbon::parse($hoursWork[2])->floatDiffInHours(Carbon::parse($hoursWork[3]));
@@ -1646,14 +1664,14 @@ class ProjectController extends BaseApiController
             $heureDebutTravailApresMidi = Carbon::createFromFormat('H:i:s', $hoursWork[2])->format('H:i');
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heureDebutTravailApresMidi',[$heureDebutTravailApresMidi]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heureDebutTravailApresMidi', [$heureDebutTravailApresMidi]);
 
             $heureFinTravailApresMidi = Carbon::createFromFormat('H:i:s', $hoursWork[3])->format('H:i');
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heureFinTravailApresMidi',[$heureFinTravailApresMidi]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heureFinTravailApresMidi', [$heureFinTravailApresMidi]);
 
             $heuresDisposMatin = Carbon::parse($heureFinTravailMatin)->floatDiffInHours($heureDebutNewPeriod);
             // if($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00"){
@@ -1667,104 +1685,104 @@ class ProjectController extends BaseApiController
             }
             //}
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heuresDisposApresMidi',[$heuresDisposApresMidi]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heuresDisposApresMidi', [$heuresDisposApresMidi]);
 
             //s'il n'y a pas d'indispo pour ce jour de la période (ni matin ni après-midi)
             if (!in_array($dateP, $listDebutTaskPeriodIndispo)) {
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('ok',['ok']);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('ok', ['ok']);
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('taskPeriodToMove',[$taskPeriodToMove]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('taskPeriodToMove', [$taskPeriodToMove]);
 
                 $dureePeriodToMove = Carbon::parse($taskPeriodToMove['end_time'])->floatDiffInHours(Carbon::parse($taskPeriodToMove['start_time']));
-                
+
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('dureePeriodToMove',[$dureePeriodToMove]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('dureePeriodToMove', [$dureePeriodToMove]);
 
                 $heureDebutPeriodMatin = Carbon::parse($hoursWork[0])->floatDiffInHours(Carbon::parse("00:00:00"));
                 $heureFinPeriodMatin = Carbon::parse($hoursWork[1])->floatDiffInHours(Carbon::parse("00:00:00"));
                 $heureDebutPeriodApresMidi = Carbon::parse($hoursWork[2])->floatDiffInHours(Carbon::parse("00:00:00"));
 
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('heureDebutPeriodApresMidi',[$heureDebutPeriodApresMidi]);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('heureDebutPeriodApresMidi', [$heureDebutPeriodApresMidi]);
 
                 $heureFinPeriodApresMidi = Carbon::parse($hoursWork[3])->floatDiffInHours(Carbon::parse("00:00:00"));
 
                 //si le début de la nouvelle période est compris dans les heures de travail du matin
                 if ($heureDebutNewPeriod >= $heureDebutTravailMatin && $heureDebutNewPeriod < $heureFinTravailMatin) {
-                // if (($heureDebutNewPeriod >= $heureDebutTravailMatin && $heureDebutNewPeriod < $heureFinTravailMatin && ($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00")) ||
-                //     ($heureDebutNewPeriod >= $heureDebutTravailMatin && $heureDebutNewPeriod <= $heureFinTravailMatin && ($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00"))) {
+                    // if (($heureDebutNewPeriod >= $heureDebutTravailMatin && $heureDebutNewPeriod < $heureFinTravailMatin && ($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00")) ||
+                    //     ($heureDebutNewPeriod >= $heureDebutTravailMatin && $heureDebutNewPeriod <= $heureFinTravailMatin && ($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00"))) {
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('ok',['matin']);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('ok', ['matin']);
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heureDebutNewPeriod',[$heureDebutNewPeriod]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heureDebutNewPeriod', [$heureDebutNewPeriod]);
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heureFinTravailMatin',[$heureFinTravailMatin]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heureFinTravailMatin', [$heureFinTravailMatin]);
 
                     $heuresDisposMatin = Carbon::parse($heureFinTravailMatin)->floatDiffInHours($heureDebutNewPeriod);
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('hoursWork[1]',[$hoursWork[1]]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('hoursWork[1]', [$hoursWork[1]]);
 
                     $heureFinMatin = Carbon::parse($hoursWork[1])->floatDiffInHours(Carbon::parse("00:00:00"));
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heureFinMatin',[$heureFinMatin]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heureFinMatin', [$heureFinMatin]);
 
                     $finMatineeJourCourant = Carbon::parse($p)->startOfDay()->addHours($heureFinMatin)->format("Y-m-d H:i:s");
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('ok',['matin ap']);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('ok', ['matin ap']);
 
                     //on remplit jusqu'à la fin de la matinée
                     while (($heuresDisposMatin >= 0) && ($heureFinTaskPrecedente <= $finMatineeJourCourant)) :
-                    // while ((($heuresDisposMatin >= 0) && (($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00") && $heureFinTaskPrecedente <= $finMatineeJourCourant)) || 
-                    //         (($heuresDisposMatin > 0) && (($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00") && $heureFinTaskPrecedente < $finMatineeJourCourant))) :
+                        // while ((($heuresDisposMatin >= 0) && (($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00") && $heureFinTaskPrecedente <= $finMatineeJourCourant)) ||
+                        //         (($heuresDisposMatin > 0) && (($hoursWork[2] == "00:00:00" && $hoursWork[3] == "00:00:00") && $heureFinTaskPrecedente < $finMatineeJourCourant))) :
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heureFinTaskPrecedente',[$heureFinTaskPrecedente]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heureFinTaskPrecedente', [$heureFinTaskPrecedente]);
 
                         //s'il y a assez de temps pour déplacer la task_period entièrement le matin on la déplace dans la période du matin
                         if ($heuresDisposMatin >= $dureePeriodToMove) {
 
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
                             $arrayInfos = $this->moveAfterEntireTaskMorning($p, $taskPeriodToMove, $workHours, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete, $dureePeriodToMove, $heureDebutNewPeriod, $heuresDisposMatin, $heureDebutPeriodMatin, $heureFinPeriodMatin, $heureFinPeriodApresMidi);
 
                             //$heuresDisposMatin=$arrayInfos["heuresDisposMatin"];
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('ok',['ok ap']);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('ok', ['ok ap']);
 
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('listTaskPeriodToMove',[$listTaskPeriodToMove]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('listTaskPeriodToMove', [$listTaskPeriodToMove]);
 
                             $newListTaskPeriod = $this->addInlistTaskPeriodToMoveAndCreate($arrayInfos, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete);
                             $listTaskPeriodToSave = $newListTaskPeriod["move"];
@@ -1798,8 +1816,8 @@ class ProjectController extends BaseApiController
                             $heureFinTaskPrecedente = $arrayInfos["heureFinTaskPrecedente"];
 
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('heureFinTaskPrecedente ap',[$heureFinTaskPrecedente]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('heureFinTaskPrecedente ap', [$heureFinTaskPrecedente]);
 
                             $heureDebutNewPeriod = Carbon::parse($heureFinTaskPrecedente)->format('H:i');
 
@@ -1808,8 +1826,8 @@ class ProjectController extends BaseApiController
                         //s'il n'y a pas assez de temps pour déplacer la task_period entièrement le matin, on la déplace dans la période pour remplir et on crée une nouvelle task_period avec le temps restant sur l'après-midi
                         else {
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
                             $arrayInfos = $this->moveAfterTaskMorningCreateTaskAfternoon($p, $listDebutTaskPeriodIndispo, $taskPeriodToMove, $workHours, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete, $heureDebutNewPeriod, $dureePeriodToMove, $heuresDisposMatin, $heuresDisposApresMidi, $heureDebutPeriodMatin, $heureFinPeriodMatin, $heureDebutPeriodApresMidi, $heureFinPeriodApresMidi, $hoursWork);
 
@@ -1818,8 +1836,8 @@ class ProjectController extends BaseApiController
                             //$heuresDisposApresMidi=$arrayInfos["heuresDisposApresMidi"];
 
                             $controllerLog = new Logger('hours');
-                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                            $controllerLog->info('heureFinTaskPrecedente',[$heureFinTaskPrecedente]);
+                            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                            $controllerLog->info('heureFinTaskPrecedente', [$heureFinTaskPrecedente]);
 
 
                             $newListTaskPeriod = $this->addInlistTaskPeriodToMoveAndCreate($arrayInfos, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete);
@@ -1854,15 +1872,15 @@ class ProjectController extends BaseApiController
                     endwhile;
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heureFinTaskPrecedente',[$heureFinTaskPrecedente]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heureFinTaskPrecedente', [$heureFinTaskPrecedente]);
 
                     //$heureDebutNewPeriod = Carbon::createFromFormat('Y-m-d H:i:s', $heureFinTaskPrecedente)->format('H:i');
                     $heureDebutNewPeriod = Carbon::parse($heureFinTaskPrecedente)->format('H:i');
 
                     $controllerLog = new Logger('hours');
-                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                    $controllerLog->info('heureDebutNewPeriod',[$heureDebutNewPeriod]);
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('heureDebutNewPeriod', [$heureDebutNewPeriod]);
 
                     $debutJourLendemain = Carbon::parse($p)->startOfDay()->addDays(1)->format("Y-m-d H:i:s");
 
@@ -1877,16 +1895,16 @@ class ProjectController extends BaseApiController
                     while (($heuresDisposApresMidi >= 0) && ($heureFinTaskPrecedente <= $debutJourLendemain)) :
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heuresDisposApresMidi',[$heuresDisposApresMidi]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heuresDisposApresMidi', [$heuresDisposApresMidi]);
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('heureFinTaskPrecedente',[$heureFinTaskPrecedente]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('heureFinTaskPrecedente', [$heureFinTaskPrecedente]);
 
                         $controllerLog = new Logger('hours');
-                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                        $controllerLog->info('debutJourLendemain',[$debutJourLendemain]);
+                        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                        $controllerLog->info('debutJourLendemain', [$debutJourLendemain]);
 
                         //s'il y a assez de temps pour déplacer la task_period entièrement l'après-midi on la déplace dans la période de l'après-midi
                         if ($heuresDisposApresMidi >= $dureePeriodToMove) {
@@ -2077,8 +2095,8 @@ class ProjectController extends BaseApiController
             //sinon voir si indispo matin ou après midi
             else if (in_array($dateP, $listDebutTaskPeriodIndispo)) {
                 $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-                $controllerLog->info('ok',['indispo']);
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                $controllerLog->info('ok', ['indispo']);
 
                 //si indispo matin on déplace l'après-midi
                 foreach ($listDebutTaskPeriodIndispo as $dateDebutIndispo) {
@@ -2093,15 +2111,15 @@ class ProjectController extends BaseApiController
             //     break;
             // }
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heureFinTaskPrecedente',[$heureFinTaskPrecedente]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heureFinTaskPrecedente', [$heureFinTaskPrecedente]);
 
             //$heureDebutNewPeriod = Carbon::createFromFormat('Y-m-d H:i:s', $heureFinTaskPrecedente)->format('H:i');
             $heureDebutNewPeriod = Carbon::parse($heureFinTaskPrecedente)->format('H:i');
 
             $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('heureDebutNewPeriod',[$heureDebutNewPeriod]);
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+            $controllerLog->info('heureDebutNewPeriod', [$heureDebutNewPeriod]);
         }
         $listTaskPeriodToMoveAndCreate = array(
             "move" => $listTaskPeriodToSave,
@@ -2153,8 +2171,8 @@ class ProjectController extends BaseApiController
     private function moveAfterTaskMorningCreateTaskAfternoon($p, $listDebutTaskPeriodIndispo, $taskPeriodToMove, $workHours, $listTaskPeriodToSave, $listTaskPeriodToCreate, $listTaskPeriodToDelete, $heureDebutNewPeriod, $dureePeriodToMove, $heuresDisposMatin, $heuresDisposApresMidi, $heureDebutPeriodMatin, $heureFinPeriodMatin, $heureDebutPeriodApresMidi, $heureFinPeriodApresMidi, $hoursWork)
     {
         $controllerLog = new Logger('hours');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-        $controllerLog->info('heuresDisposMatin',[$heuresDisposMatin]);
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info('heuresDisposMatin', [$heuresDisposMatin]);
 
         //s'il reste du temps le matin on remplit la période sinon on crée une nouvelle task_period avec le temps total l'après-midi
         if ($heuresDisposMatin > 0) {
@@ -2447,7 +2465,7 @@ class ProjectController extends BaseApiController
             "listTaskPeriodToCreate" => $listTaskPeriodToCreate,
             "listTaskPeriodToDelete" => $listTaskPeriodToDelete,
         );
-        
+
         return $arrayInfos;
     }
 
@@ -3768,7 +3786,7 @@ class ProjectController extends BaseApiController
 
                                         foreach ($workareas as $workarea) {
                                             if (!$taskPlan) {
-                                                $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->whereNotNull('date_end')->where('status', '!=', 'done')->get();                                            
+                                                $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->whereNotNull('date_end')->where('status', '!=', 'done')->get();
 
                                                 //s'il y a plusieurs tasks sur le même ilôt
                                                 if (count($tasksWorkarea) > 0) {
@@ -3856,7 +3874,6 @@ class ProjectController extends BaseApiController
 
                 if (!$taskTemp->date || !$taskTemp->date_end || !$taskTemp->user_id) {
                     $allPlanified = false;
-
                 }
             }
 
@@ -4187,10 +4204,10 @@ class ProjectController extends BaseApiController
         if (count($tasks) > 0) {
 
             foreach ($tasks as $task) {
-                if($task->periods){
+                if ($task->periods) {
 
-                    foreach($task->periods as $period){
-                        if(str_contains($period->start_time, $date->format('Y-m-d')) != false){
+                    foreach ($task->periods as $period) {
+                        if (str_contains($period->start_time, $date->format('Y-m-d')) != false) {
 
                             $otherTaskPeriod = [
                                 'start_time' => Carbon::createFromFormat('Y-m-d H:i:s', $period->start_time),
@@ -4525,7 +4542,7 @@ class ProjectController extends BaseApiController
                 elseif ($unavailable_period->contains($workHours['start_time']) && $unavailable_period->contains($workHours['end_time'])) {
 
                     $test = 'test';
-                // ne pas ajouter de créneau
+                    // ne pas ajouter de créneau
                 } else {
                     array_push($planning_temp, $workHours);
                 }

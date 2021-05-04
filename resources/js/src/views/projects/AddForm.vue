@@ -164,8 +164,8 @@ export default {
             itemLocal: {
                 name: "",
                 date: new Date(),
-                customer: null,
-                company: !this.isAdmin
+                customer_id: null,
+                company_id: !this.isAdmin
                     ? this.$store.state.AppActiveUser.company_id
                     : null,
                 company: !this.isAdmin
@@ -202,8 +202,6 @@ export default {
                 this.$store.getters["customerManagement/getItems"]
             );
 
-            console.log(customers);
-
             return customers;
         },
         disabled() {
@@ -224,7 +222,7 @@ export default {
             this.itemLocal = {
                 name: "",
                 date: new Date(),
-                customer: null,
+                customer_id: null,
                 company_id: null,
                 company: null,
                 color: ""
