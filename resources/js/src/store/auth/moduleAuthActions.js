@@ -52,6 +52,7 @@ export default {
             c_password,
             terms_accepted,
             registerLink,
+            recaptcha
         } = user;
 
         return apiRequest(`${slug}/register`, 'post', (payload) => router.push("/pages/login"), {
@@ -65,6 +66,7 @@ export default {
             c_password,
             terms_accepted,
             registerLink,
+            recaptcha
         })
     },
     logout: ({ commit }) => {
