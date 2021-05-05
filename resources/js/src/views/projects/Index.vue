@@ -344,9 +344,7 @@ export default {
                 return [];
             }
 
-            return this.sortProjects(
-                this.$store.getters["projectManagement/getItems"]
-            );
+            return this.$store.getters["projectManagement/getItems"];
         },
         ganttProjectsData() {
             if (!this.projectsData || this.projectsData.length <= 0) {
@@ -404,7 +402,8 @@ export default {
                     with_trashed: true,
                     page: this.currentPage,
                     per_page: this.perPage,
-                    q: this.searchQuery || undefined
+                    q: this.searchQuery || undefined,
+                    order_by: "status"
                 })
                 .then(data => {
                     that.projectsLoaded = true;
@@ -572,24 +571,6 @@ export default {
                 // resize columns in the grid to fit the available space
                 this.gridApi.sizeColumnsToFit();
             }
-        },
-        sortProjects(projects = []) {
-            let todoProjects = projects
-                .filter(project => project.status == "todo")
-                .reverse();
-            let doingProjects = projects
-                .filter(project => project.status == "doing")
-                .reverse();
-            let doneProjects = projects
-                .filter(project => project.status == "done")
-                .reverse();
-
-            let response = [];
-            response = response.concat(todoProjects);
-            response = response.concat(doingProjects);
-            response = response.concat(doneProjects);
-
-            return response;
         }
     },
     mounted() {
