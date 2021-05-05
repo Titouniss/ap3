@@ -432,7 +432,9 @@ class UnavailabilityController extends BaseApiController
     {
 
         foreach ($unavailabilities as $unavailability) {
-
+            if(Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d') == '2001-01-01'){
+                throw new ApiException('Erreur date 2001-01-01.');
+            }
             $timeToAdd = Carbon::parse($unavailability->ends_at)->floatDiffInHours(Carbon::parse($unavailability->starts_at));
             $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
 
@@ -455,7 +457,9 @@ class UnavailabilityController extends BaseApiController
     {
 
         foreach ($unavailabilities as $unavailability) {
-
+            if(Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d') == '2001-01-01'){
+                throw new ApiException('Erreur date 2001-01-01.');
+            }
             $timeToDel = Carbon::parse($unavailability->ends_at)->floatDiffInHours(Carbon::parse($unavailability->starts_at));
             $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
 
