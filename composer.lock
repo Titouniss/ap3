@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2edc2fb848458d602e36bff44641dc19",
+    "content-hash": "8ac83691af148b697a520cb472aa7c81",
     "packages": [
         {
             "name": "biscolab/laravel-recaptcha",
-            "version": "4.1.0",
+            "version": "4.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/biscolab/laravel-recaptcha.git",
-                "reference": "9bfe22ffb78efaff005659af68867d1ba52c0a00"
+                "reference": "a9f5645aeac0747506cb75ccc3bb70e7fada5a7e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/biscolab/laravel-recaptcha/zipball/9bfe22ffb78efaff005659af68867d1ba52c0a00",
-                "reference": "9bfe22ffb78efaff005659af68867d1ba52c0a00",
+                "url": "https://api.github.com/repos/biscolab/laravel-recaptcha/zipball/a9f5645aeac0747506cb75ccc3bb70e7fada5a7e",
+                "reference": "a9f5645aeac0747506cb75ccc3bb70e7fada5a7e",
                 "shasum": ""
             },
             "require": {
-                "laravel/framework": "^5.5|^6.0|^7.0",
+                "laravel/framework": "^5.5|^6.0|^7.0|^8.0",
                 "php": "^7.1"
             },
             "require-dev": {
@@ -29,7 +29,7 @@
                 "phpunit/phpunit": "6.*|7.*"
             },
             "suggest": {
-                "biscolab/laravel-authlog": "Allows logged-in users management and forced log-out"
+                "biscolab/laravel-authlog": "It allows to handle logged-in users and force log-out if needed"
             },
             "type": "library",
             "extra": {
@@ -62,7 +62,7 @@
                     "role": "Developer"
                 }
             ],
-            "description": "Simple and painless Google reCAPTCHA package for Laravel 5, 6 and 7",
+            "description": "Simple and painless Google reCAPTCHA package for Laravel 5.5 or greater",
             "homepage": "https://biscolab.com/laravel-recaptcha",
             "keywords": [
                 "captcha",
@@ -72,9 +72,9 @@
             ],
             "support": {
                 "issues": "https://github.com/biscolab/laravel-recaptcha/issues",
-                "source": "https://github.com/biscolab/laravel-recaptcha/tree/master"
+                "source": "https://github.com/biscolab/laravel-recaptcha/tree/v4.4.0"
             },
-            "time": "2020-03-06T23:25:41+00:00"
+            "time": "2020-09-30T20:13:13+00:00"
         },
         {
             "name": "defuse/php-encryption",

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2017 - present
  * LaravelGoogleRecaptcha - recaptcha.php
@@ -78,15 +79,7 @@ return [
      * @since v3.6.0
      *
      */
-    'default_language'             => null,
-
-    /**
-     *
-     * The default form ID. Only for "invisible" reCAPTCHA
-     * @since v4.0.0
-     *
-     */
-    'default_form_id'              => 'biscolab-recaptcha-invisible-form',
+    'default_language'             => 'fr',
 
     /**
      *
