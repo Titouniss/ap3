@@ -590,6 +590,8 @@ class UserController extends BaseApiController
             'password' => 'required',
             'c_password' => 'required|same:password',
             'terms_accepted' => 'required',
+            'recaptcha'=>'required',
+             recaptchaFieldName() => recaptchaRuleName()
         ]);
         if ($validator->fails()) {
             return $this->errorResponse($validator->errors());
