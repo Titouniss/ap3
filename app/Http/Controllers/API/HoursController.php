@@ -454,6 +454,9 @@ class HoursController extends BaseApiController
             $listDealingHour[0]->delete();
             unset($listDealingHour[0]);
         } elseif ($exist) {
+            if($listDealingHour[0]['date'] == '2001-01-01'){
+                throw new ApiException('Erreur date 2001-01-01.');
+            }
             // Update dealing_hour with difference between nb_worked_hours and $workWeekHours for overtime column
             $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
         }
@@ -516,6 +519,9 @@ class HoursController extends BaseApiController
             $listDealingHour[0]->delete();
             unset($listDealingHour[0]);
         } elseif (!empty($listDealingHour[0])) {
+            if($listDealingHour[0]['date'] == '2001-01-01'){
+                throw new ApiException('Erreur date 2001-01-01.');
+            }
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
             $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
         } elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)) {
@@ -665,6 +671,9 @@ class HoursController extends BaseApiController
             unset($listDealingHour[0]);
             $listDealingHour[0]->delete();
         } elseif (!empty($listDealingHour[0])) {
+            if($listDealingHour[0]['date'] == '2001-01-01'){
+                throw new ApiException('Erreur date 2001-01-01.');
+            }
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
             $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
         } elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)) {
