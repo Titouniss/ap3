@@ -19,139 +19,142 @@
           <div class="vx-card__title">
             <h4 class="mb-8 text-center">Création de compte</h4>
           </div>
-          <div>
-            <vs-input
-              v-validate="'required|alpha_dash|min:3|max:255'"
-              name="lastname"
-              label-placeholder="Nom"
-              v-model="lastname"
-              class="w-full my-8"
-              :success="lastname.length > 0 && !errors.first('lastname')"
-              :danger="errors.has('lastname')"
-              :danger-text="errors.first('lastname')"
-            />
+          <form action="?" method="POST">
+            <div>
+              <vs-input
+                v-validate="'required|alpha_dash|min:3|max:255'"
+                name="lastname"
+                label-placeholder="Nom"
+                v-model="lastname"
+                class="w-full my-8"
+                :success="lastname.length > 0 && !errors.first('lastname')"
+                :danger="errors.has('lastname')"
+                :danger-text="errors.first('lastname')"
+              />
 
-            <vs-input
-              v-validate="'required|alpha_dash|min:3|max:255'"
-              name="firstname"
-              label-placeholder="Prénom"
-              v-model="firstname"
-              class="w-full my-8"
-              :success="firstname.length > 0 && !errors.first('firstname')"
-              :danger="errors.has('firstname')"
-              :danger-text="errors.first('firstname')"
-            />
+              <vs-input
+                v-validate="'required|alpha_dash|min:3|max:255'"
+                name="firstname"
+                label-placeholder="Prénom"
+                v-model="firstname"
+                class="w-full my-8"
+                :success="firstname.length > 0 && !errors.first('firstname')"
+                :danger="errors.has('firstname')"
+                :danger-text="errors.first('firstname')"
+              />
 
-            <vs-input
-              v-validate="'required|alpha_dash|min:3|max:255'"
-              name="company"
-              label-placeholder="Société"
-              v-model="company"
-              class="w-full my-8"
-              :success="company.length > 0 && !errors.first('company')"
-              :danger="errors.has('company')"
-              :danger-text="errors.first('company')"
-            />
+              <vs-input
+                v-validate="'required|alpha_dash|min:3|max:255'"
+                name="company"
+                label-placeholder="Société"
+                v-model="company"
+                class="w-full my-8"
+                :success="company.length > 0 && !errors.first('company')"
+                :danger="errors.has('company')"
+                :danger-text="errors.first('company')"
+              />
 
-            <vs-input
-              v-validate="'required|alpha_dash|min:3|max:255'"
-              name="contact_function"
-              label-placeholder="Fonction"
-              v-model="contact_function"
-              class="w-full my-8"
-              :success="
-                contact_function.length > 0 && !errors.first('contact_function')
-              "
-              :danger="errors.has('contact_function')"
-              :danger-text="errors.first('contact_function')"
-            />
+              <vs-input
+                v-validate="'required|alpha_dash|min:3|max:255'"
+                name="contact_function"
+                label-placeholder="Fonction"
+                v-model="contact_function"
+                class="w-full my-8"
+                :success="
+                  contact_function.length > 0 && !errors.first('contact_function')
+                "
+                :danger="errors.has('contact_function')"
+                :danger-text="errors.first('contact_function')"
+              />
 
-            <vs-input
-              v-validate="'required|email|max:255'"
-              name="email"
-              type="email"
-              label-placeholder="Email"
-              v-model="email"
-              class="w-full my-8"
-              :success="email.length > 0 && !errors.first('email')"
-              :danger="errors.has('email')"
-              :danger-text="errors.first('email')"
-            />
+              <vs-input
+                v-validate="'required|email|max:255'"
+                name="email"
+                type="email"
+                label-placeholder="Email"
+                v-model="email"
+                class="w-full my-8"
+                :success="email.length > 0 && !errors.first('email')"
+                :danger="errors.has('email')"
+                :danger-text="errors.first('email')"
+              />
 
-            <vs-input
-              v-validate="'required|min:8|max:255'"
-              name="contact_tel1"
-              label-placeholder="N° de téléphone"
-              v-model="contact_tel1"
-              class="w-full my-8"
-              :success="
-                contact_tel1.length > 0 && !errors.first('contact_tel1')
-              "
-              :danger="errors.has('contact_tel1')"
-              :danger-text="errors.first('contact_tel1')"
-            />
+              <vs-input
+                v-validate="'required|min:8|max:255'"
+                name="contact_tel1"
+                label-placeholder="N° de téléphone"
+                v-model="contact_tel1"
+                class="w-full my-8"
+                :success="
+                  contact_tel1.length > 0 && !errors.first('contact_tel1')
+                "
+                :danger="errors.has('contact_tel1')"
+                :danger-text="errors.first('contact_tel1')"
+              />
 
-            <vs-input
-              ref="password"
-              type="password"
-              v-validate="'required|min:8|max:50'"
-              name="password"
-              label-placeholder="Mot de passe"
-              v-model="password"
-              class="w-full my-8"
-              :success="password.length > 0 && !errors.first('password')"
-              :danger="errors.has('password')"
-              :danger-text="errors.first('password')"
-            />
+              <vs-input
+                ref="password"
+                type="password"
+                v-validate="'required|min:8|max:50'"
+                name="password"
+                label-placeholder="Mot de passe"
+                v-model="password"
+                class="w-full my-8"
+                :success="password.length > 0 && !errors.first('password')"
+                :danger="errors.has('password')"
+                :danger-text="errors.first('password')"
+              />
 
-            <vs-input
-              type="password"
-              v-validate="'required|min:8|max:50|confirmed:password'"
-              name="confirm_password"
-              label-placeholder="Confirmation mot de passe"
-              v-model="confirm_password"
-              class="w-full my-8"
-              :success="
-                confirm_password.length > 0 && !errors.first('confirm_password')
-              "
-              :danger="errors.has('confirm_password')"
-              :danger-text="errors.first('confirm_password')"
-            />
+              <vs-input
+                type="password"
+                v-validate="'required|min:8|max:50|confirmed:password'"
+                name="confirm_password"
+                label-placeholder="Confirmation mot de passe"
+                v-model="confirm_password"
+                class="w-full my-8"
+                :success="
+                  confirm_password.length > 0 && !errors.first('confirm_password')
+                "
+                :danger="errors.has('confirm_password')"
+                :danger-text="errors.first('confirm_password')"
+              />
 
-            <vs-row
-              vs-align="center"
-              vs-type="flex"
-              vs-justify="space-around"
-              class="mt-10"
-            >  
-              <vs-checkbox
-                v-model="isTermsConditionAccepted"
-                class="mt-6 text-center"
+              <vs-row
+                vs-align="center"
+                vs-type="flex"
+                vs-justify="space-around"
+                class="mt-10"
+              >  
+                <vs-checkbox
+                  v-model="isTermsConditionAccepted"
+                  class="mt-6 text-center"
+                >
+                </vs-checkbox>
+                <router-link to="register/cgu" @click="cgu" target="_blank"
+                    ><U>J'accepte les conditions<br> générales d'utilisation.</U>
+                </router-link>
+              </vs-row><br><br>
+              <div class="g-recaptcha" data-sitekey="6LdJEGcaAAAAAAcFT0BP6vo-QXnGq4CxKdzNKx10" data-callback="captchaChecked"></div><br>
+              <!--<div class="g-recaptcha" data-sitekey="6LfwGpIUAAAAAB_BNNxwXpr7MunyPbG2izN6WOLE"></div><br>-->
+              <vs-row
+                vs-align="center"
+                vs-type="flex"
+                vs-justify="space-around"
+                class="mt-10"
               >
-              </vs-checkbox>
-              <router-link to="register/cgu" @click="cgu" target="_blank"
-                  ><U>J'accepte les conditions<br> générales d'utilisation.</U>
-              </router-link>
-            </vs-row><br><br>
-            <div class="g-recaptcha" data-sitekey="6LfwGpIUAAAAAB_BNNxwXpr7MunyPbG2izN6WOLE" data-callback="captchaChecked"></div><br>
-            <vs-row
-              vs-align="center"
-              vs-type="flex"
-              vs-justify="space-around"
-              class="mt-10"
-            >
-              <router-link to="login" @click="goLogin" class="ml-2 mr-2"
-                >retour</router-link
-              >
-              <vs-button
-                color="primary"
-                text-color="white"
-                @click="register"
-                :disabled="!validateForm"
-                >S'inscrire</vs-button
-              >
-            </vs-row>
-          </div>
+                <router-link to="login" @click="goLogin" class="ml-2 mr-2"
+                  >retour</router-link
+                >
+                <vs-button
+                  color="primary"
+                  text-color="white"
+                  @click="register"
+                  :disabled="!validateForm"
+                  >S'inscrire</vs-button
+                >
+              </vs-row>
+            </div>
+          </form>
         </div>
       </vx-card>
     </div>
@@ -177,6 +180,7 @@ export default {
       confirm_password: "",
       isTermsConditionAccepted: false,
       isCaptchaChecked: false,
+      captcha: null,
       isRegisterLink: this.$route.query.company != null ? true : false ,
       cssProps: {
         backgroundImage: `url(${require("../../../../../assets/images/login/background_workshop.jpeg")})`,
@@ -210,7 +214,15 @@ export default {
   },
   methods: {    
     captchaChecked() {      
-      this.isCaptchaChecked = grecaptcha && grecaptcha.getResponse().length !== 0 ? true : false;      
+      
+      this.isCaptchaChecked = grecaptcha && grecaptcha.getResponse().length !== 0 ? true : false;
+      if(grecaptcha){
+        this.captcha = grecaptcha.getResponse();
+        grecaptcha.render('g-recaptcha', {
+          'sitekey' : '6LdJEGcaAAAAAAcFT0BP6vo-QXnGq4CxKdzNKx10'
+        });
+        
+      }      
     },
     checkLogin() {
       // If user is already logged in notify
@@ -246,6 +258,7 @@ export default {
         c_password: this.confirm_password,
         terms_accepted: this.isTermsConditionAccepted,
         registerLink: this.isRegisterLink,
+        recaptcha: this.captcha
       };
       this.$store
         .dispatch("auth/register", payload)

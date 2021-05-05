@@ -13,7 +13,7 @@
             class="task-compose"
         >
             <div class="editTaskForm">
-                <form  autocomplete="off">
+                <form autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -439,7 +439,12 @@
                     </div>
                 </form>
             </div>
-            <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end" >
+            <vs-row
+                class="mt-5"
+                vs-type="flex"
+                vs-justify="flex-end"
+                v-if="project_data && project_data.status != 'done'"
+            >
                 <vs-button
                     @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
@@ -448,7 +453,11 @@
                 >
                     Supprimer la tâche
                 </vs-button>
-                <vs-button v-on:click="goToEditView" class="ml-auto mt-2" >
+                <vs-button
+                    v-on:click="goToEditView"
+                    class="ml-auto mt-2"
+                    v-if="project_data && project_data.status == 'doing'"
+                >
                     Déplacer la tâche
                 </vs-button>
             </vs-row>
@@ -606,7 +615,10 @@ export default {
                 // from users/workareas type shedule read
                 let projectFind = undefined;
                 this.projectsData.forEach(p => {
-                    if (p.tasks!=null && p.tasks.find(t => t.id === this.itemId) != undefined) {
+                    if (
+                        p.tasks != null &&
+                        p.tasks.find(t => t.id === this.itemId) != undefined
+                    ) {
                         projectFind = p;
                     }
                 });
@@ -639,8 +651,8 @@ export default {
             this.$router.push({
                 path: `/schedules/schedules-edit`,
                 query: {
-                    id: this.$route.query.id,
-                    type: this.$route.query.type,
+                    id: this.$route.query.id || this.project_data.id,
+                    type: this.$route.query.type || "projects",
                     task_id: this.itemId
                 }
             });
