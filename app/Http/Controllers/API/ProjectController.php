@@ -516,6 +516,9 @@ class ProjectController extends BaseApiController
             $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
         } else {
             $projectUpdated = Project::where('id', $projectId)->get();
+            if ($projectUpdated==null) {
+                throw new Exception("Pas de projet associé.");
+            }
             //si avant la date de début du projet ou après la date de livraison -> erreur
             if ($request->start < $projectUpdated[0]['start_date']) {
                 throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
@@ -524,12 +527,35 @@ class ProjectController extends BaseApiController
             }
             //sinon mettre à jour la task_period et la task
             else {
+                if ($request->id==null || $request->start==null || $request->end==null) {
+                    throw new Exception("Pb requête.");
+                }
+                $item=TaskPeriod::where('id', $request->id);
+                if ($item==null) {
+                    throw new Exception("Pas de task period.");
+                }
                 TaskPeriod::where('id', $request->id)->update([
                     'start_time' => $request->start,
                     'end_time' => $request->end,
                 ]);
 
                 $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
+                if ($tasksPeriod==null) {
+                    throw new Exception("Pas de task period.");
+                }
+
+                if ($taskPeriod[0]['task_id']==null) {
+                    throw new Exception("Pas de task_id.");
+                }
+
+                else if ($tasksPeriod[0]['start_time']==null) {
+                    throw new Exception("Pas de start_time.");
+                }
+
+                else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time']==null) {
+                    throw new Exception("Pas de end_time.");
+                }
+
                 Task::where('id', $taskPeriod[0]['task_id'])->update([
                     'date' => $tasksPeriod[0]['start_time'],
                     'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
@@ -3615,21 +3641,23 @@ class ProjectController extends BaseApiController
                     $id = $request->id;
                     $project = Project::find($id);
                     $arrayRequest = $request->all();
-                    $date = Carbon::createFromFormat("Y-m-d H:i:s", $project["start_date"]);
-                    $project->start_date = $date->format("Y-m-d");
 
                     //skills des tâches du projet :
                     $tasks_bundle = TasksBundle::where('project_id', $id)->get();
-                    $tasks = Task::where('tasks_bundle_id', $tasks_bundle[0]->id)->whereNotNull('date')->whereNotNull('date_end')->get();
+                    $tasks = Task::where('tasks_bundle_id', $tasks_bundle[0]->id)->get();
                     $listUserId = array();
                     $listTaskIdProject = array();
                     $skills = array();
 
-                    //liste des id des utilisateurs du projet
-                    array_push($listUserId, $tasks->first()->user_id);
-                    foreach ($tasks as $task) {
-                        if (!in_array($task->user_id, $listUserId)) {
-                            array_push($listUserId, $task->user_id);
+                    if($tasks !=null){
+                        //liste des id des utilisateurs du projet
+                        if($tasks->first()->user_id != null){
+                            array_push($listUserId, $tasks->first()->user_id);
+                        }
+                        foreach ($tasks as $task) {
+                            if (!in_array($task->user_id, $listUserId) && $task->user_id != null) {
+                                array_push($listUserId, $task->user_id);
+                            }
                         }
                     }
                 } else if ($request->type == "workarea") {
@@ -3662,7 +3690,9 @@ class ProjectController extends BaseApiController
                     $listUserId = array();
 
                     //liste des id des utilisateurs du projet
-                    array_push($listUserId, $taskCourante[0]['user_id']);
+                    if($taskCourante[0]['user_id'] != null){
+                        array_push($listUserId, $taskCourante[0]['user_id']);
+                    }
                 } else if ($request->type == "workarea") {
                     //horaires en commun des utilisateurs qui ont les compétences du workarea
                     $id = $request->id;

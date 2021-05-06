@@ -63,12 +63,11 @@ class ProjectObserver
         foreach ($taskBundles as $taskBundle) {
             $taskBundle->restore();
         }
-
-        foreach ($project->tasksBundles as $t) {
-            $tasks = Task::where('tasks_bundle_id', $t->id)->get();
-            foreach ($tasks as $task) {
-                $task->restore();
-            }
+        $taskBundle=TasksBundle::where('project_id',$project->id)->get();
+        $taskBundleId=$taskBundle[0]['id'];
+        $tasks = Task::withTrashed()->where('tasks_bundle_id', $taskBundleId)->get();
+        foreach ($tasks as $task) {
+            $task->restore();
         }
     }
 
