@@ -78,5 +78,11 @@ export default [
         name: "Modules",
         slug: "modules",
         icon: "PackageIcon"
+    },
+    {
+        url: "/bugs",
+        name: "Remontées de bugs",
+        slug: "bugs",
+        icon: "TerminalIcon"
     }
 ];
