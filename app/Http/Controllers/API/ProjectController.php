@@ -544,6 +544,18 @@ class ProjectController extends BaseApiController
                     throw new Exception("Pas de task period.");
                 }
 
+                if ($taskPeriod[0]['task_id']==null) {
+                    throw new Exception("Pas de task_id.");
+                }
+
+                else if ($tasksPeriod[0]['start_time']==null) {
+                    throw new Exception("Pas de start_time.");
+                }
+
+                else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time']==null) {
+                    throw new Exception("Pas de end_time.");
+                }
+
                 Task::where('id', $taskPeriod[0]['task_id'])->update([
                     'date' => $tasksPeriod[0]['start_time'],
                     'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
