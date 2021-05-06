@@ -143,74 +143,188 @@ class ProjectController extends BaseApiController
 
     protected function updateTaskPeriod(Request $request)
     {
-        $taskPeriod = TaskPeriod::where('id', $request->id)->get();
-        $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
-        $bundle_id = $task[0]['tasks_bundle_id'];
-        $taskBundle = TasksBundle::where('id', $bundle_id)->get();
-        $projectId = $taskBundle[0]['project_id'];
-        //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
-        //si l'utilisateur n'a pas coché la case pour déplacer la date de livraison automatiquement
-        //si la task_period doit être déplacée après la date originale
-        if ($request->moveChecked == "true" && $request->moveDateEndChecked == "false" && ($request->start > $taskPeriod[0]['start_time'])) {
-            //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
-            $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "next");
-            $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
-            $list = $arrayPeriodIndispo["list"];
-            $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
-            $dateLivraison = $arrayPeriodIndispo["date"];
+        try {
+            $taskPeriod = TaskPeriod::where('id', $request->id)->get();
+            $task = Task::where('id', $taskPeriod[0]['task_id'])->get();
+            $bundle_id = $task[0]['tasks_bundle_id'];
+            $taskBundle = TasksBundle::where('id', $bundle_id)->get();
+            $projectId = $taskBundle[0]['project_id'];
+            //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
+            //si l'utilisateur n'a pas coché la case pour déplacer la date de livraison automatiquement
+            //si la task_period doit être déplacée après la date originale
+            if ($request->moveChecked == "true" && $request->moveDateEndChecked == "false" && ($request->start > $taskPeriod[0]['start_time'])) {
+                //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
+                $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "next");
+                $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
+                $list = $arrayPeriodIndispo["list"];
+                $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
+                $dateLivraison = $arrayPeriodIndispo["date"];
 
-            $erreur = false;
-            //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec une task period occupée
-            foreach ($list as $period) {
-                //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
-                if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
-                    ($request->start <= $period['start_time'] && $request->end >= $period['end_time']) ||
-                    ($request->start >= $period['start_time'] && $request->end <= $period['end_time']) ||
-                    ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
-                ) {
+                $erreur = false;
+                //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec une task period occupée
+                foreach ($list as $period) {
+                    //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
+                    if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
+                        ($request->start <= $period['start_time'] && $request->end >= $period['end_time']) ||
+                        ($request->start >= $period['start_time'] && $request->end <= $period['end_time']) ||
+                        ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
+                    ) {
 
-                    $erreur = true;
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    // try {
-                    //     return $this->successResponse($task[0], '');
-                    // } catch (\Throwable $th) {
-                    return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
-                    //}
+                        $erreur = true;
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        // try {
+                        //     return $this->successResponse($task[0], '');
+                        // } catch (\Throwable $th) {
+                        return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
+                        //}
+                    }
                 }
+
+                //si on peut déplacer la task period à la nouvelle date car l'ilot et l'utilisateur sont dispos -> maj taskPeriod
+                if (!$erreur) {
+                    //algo pour déplacer et créer les tasks_period
+                    $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodAfter($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
+
+                    $controllerLog = new Logger('hours');
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
+
+
+                    if (count($listTaskPeriodToMoveAndCreate) == 0) {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                    }
+
+                    //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
+                    else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
+                    }
+
+                    //on calcule la date de fin de la dernière task_period déplacée pour savoir si elle se trouve après la date de livraison
+
+                    //si la dernière date est après la date de livraison, erreur
+                    if (end($listTaskPeriodToMoveAndCreate["move"]) > $dateLivraison || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) > $dateLivraison)) {
+
+                        return $this->errorResponse("La date de livraison est dépassée, il faut déplacer la date de livraison plus tard ou cocher la case pour changer automatiquement la date de livraison.", static::$response_codes['error_server']);
+                    }
+                    //sinon on met à jour et on crées les tasks_period
+                    else {
+
+                        $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
+                        //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
+                        $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
+                        $firstTaskPeriod = $listTaskPeriodModified->first();
+                        $dateDebut = $firstTaskPeriod['start_time'];
+                        $dateFin = $firstTaskPeriod['end_time'];
+                        foreach ($listTaskPeriodModified as $taskPeriodModified) {
+                            if ($taskPeriodModified['start_time'] < $dateDebut) {
+                                $dateDebut = $taskPeriodModified['start_time'];
+                            }
+                            if ($taskPeriodModified['end_time'] > $dateFin) {
+                                $dateFin = $taskPeriodModified['end_time'];
+                            }
+                        }
+
+                        Task::where('id', $task[0]['id'])->update([
+                            'date' => $dateDebut,
+                            'date_end' => $dateFin,
+                        ]);
+
+                        //on met à jour la date de début et de fin des tasks dépendantes s'il y en a
+                        if ($listIdTaskDependant != null) {
+                            for ($id = 0; $id < count($listIdTaskDependant); $id++) {
+                                $firstTaskPeriodTaskDependant = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
+                                $firstTaskPeriodTaskDependant = $firstTaskPeriodTaskDependant->first();
+
+                                $dateDebut = $firstTaskPeriodTaskDependant['start_time'];
+                                $dateFin = $firstTaskPeriodTaskDependant['end_time'];
+
+                                $taskPeriodModified = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
+
+                                for ($i = 0; $i < count($taskPeriodModified); $i++) {
+                                    if ($taskPeriodModified[$i]['start_time'] < $dateDebut) {
+                                        $dateDebut = $taskPeriodModified[$i]['start_time'];
+                                    }
+                                    if ($taskPeriodModified[$i]['end_time'] > $dateFin) {
+                                        $dateFin = $taskPeriodModified[$i]['end_time'];
+                                    }
+                                }
+
+                                Task::where('id', $listIdTaskDependant[$id])->update([
+                                    'date' => $dateDebut,
+                                    'date_end' => $dateFin,
+                                ]);
+                            }
+                        }
+                    }
+                }
+                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
             }
 
-            //si on peut déplacer la task period à la nouvelle date car l'ilot et l'utilisateur sont dispos -> maj taskPeriod
-            if (!$erreur) {
-                //algo pour déplacer et créer les tasks_period
-                $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodAfter($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
+            //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
+            //si l'utilisateur a coché la case pour déplacer la date de livraison automatiquement
+            //si la task_period doit être déplacée après la date originale
+            else if ($request->moveChecked == "true" && $request->moveDateEndChecked == "true" && ($request->start > $taskPeriod[0]['start_time'])) {
+                //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
+                $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "next");
+                $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
+                $list = $arrayPeriodIndispo["list"];
+                $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
+                $dateLivraison = $arrayPeriodIndispo["date"];
 
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
+                $erreur = false;
+                //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
+                foreach ($list as $period) {
+                    //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
+                    if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
+                        ($request->start <= $period['start_time'] && $request->end >= $period['end_time']) ||
+                        ($request->start >= $period['start_time'] && $request->end <= $period['end_time']) ||
+                        ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
+                    ) {
 
-
-                if (count($listTaskPeriodToMoveAndCreate) == 0) {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                        $erreur = true;
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        // try {
+                        //     return $this->successResponse($task[0], '');
+                        // } catch (\Throwable $th) {
+                        return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
+                        //}
+                    }
                 }
 
-                //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
-                else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
-                }
+                //si on peut déplacer la task period à la nouvelle date car l'ilot et l'utilisateur sont dispos -> maj taskPeriod
+                if (!$erreur) {
+                    //algo pour déplacer et créer les tasks_period
+                    $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodAfter($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
 
-                //on calcule la date de fin de la dernière task_period déplacée pour savoir si elle se trouve après la date de livraison
+                    if (count($listTaskPeriodToMoveAndCreate) == 0) {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                    }
 
-                //si la dernière date est après la date de livraison, erreur
-                if (end($listTaskPeriodToMoveAndCreate["move"]) > $dateLivraison || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) > $dateLivraison)) {
+                    //si le tableau retourné contient on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
+                    else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
+                    }
 
-                    return $this->errorResponse("La date de livraison est dépassée, il faut déplacer la date de livraison plus tard ou cocher la case pour changer automatiquement la date de livraison.", static::$response_codes['error_server']);
-                }
-                //sinon on met à jour et on crées les tasks_period
-                else {
+                    //si la dernière date des tasks_period déplacées ou créées est après la date de livraison, on met à jour la date de livraison
+                    if (end($listTaskPeriodToMoveAndCreate["move"]) > $dateLivraison || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) > $dateLivraison)) {
 
+                        if ($listTaskPeriodToMoveAndCreate["create"] != null) {
+                            $newDateLivraison = end($listTaskPeriodToMoveAndCreate["move"]) >= end($listTaskPeriodToMoveAndCreate["create"]) ?
+                                end($listTaskPeriodToMoveAndCreate["move"]) : end($listTaskPeriodToMoveAndCreate["create"]);
+                        } else {
+                            $newDateLivraison = end($listTaskPeriodToMoveAndCreate["move"]);
+                        }
+
+                        Project::where('id', $projectId)->update([
+                            'date' => $newDateLivraison,
+                        ]);
+                    }
                     $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
+
                     //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
                     $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
                     $firstTaskPeriod = $listTaskPeriodModified->first();
@@ -232,13 +346,13 @@ class ProjectController extends BaseApiController
 
                     //on met à jour la date de début et de fin des tasks dépendantes s'il y en a
                     if ($listIdTaskDependant != null) {
+
                         for ($id = 0; $id < count($listIdTaskDependant); $id++) {
                             $firstTaskPeriodTaskDependant = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
                             $firstTaskPeriodTaskDependant = $firstTaskPeriodTaskDependant->first();
 
                             $dateDebut = $firstTaskPeriodTaskDependant['start_time'];
                             $dateFin = $firstTaskPeriodTaskDependant['end_time'];
-
                             $taskPeriodModified = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
 
                             for ($i = 0; $i < count($taskPeriodModified); $i++) {
@@ -257,313 +371,203 @@ class ProjectController extends BaseApiController
                         }
                     }
                 }
-            }
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-        }
-
-        //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
-        //si l'utilisateur a coché la case pour déplacer la date de livraison automatiquement
-        //si la task_period doit être déplacée après la date originale
-        else if ($request->moveChecked == "true" && $request->moveDateEndChecked == "true" && ($request->start > $taskPeriod[0]['start_time'])) {
-            //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
-            $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "next");
-            $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
-            $list = $arrayPeriodIndispo["list"];
-            $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
-            $dateLivraison = $arrayPeriodIndispo["date"];
-
-            $erreur = false;
-            //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
-            foreach ($list as $period) {
-                //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
-                if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
-                    ($request->start <= $period['start_time'] && $request->end >= $period['end_time']) ||
-                    ($request->start >= $period['start_time'] && $request->end <= $period['end_time']) ||
-                    ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
-                ) {
-
-                    $erreur = true;
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    // try {
-                    //     return $this->successResponse($task[0], '');
-                    // } catch (\Throwable $th) {
-                    return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
-                    //}
-                }
-            }
-
-            //si on peut déplacer la task period à la nouvelle date car l'ilot et l'utilisateur sont dispos -> maj taskPeriod
-            if (!$erreur) {
-                //algo pour déplacer et créer les tasks_period
-                $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodAfter($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
-
-                if (count($listTaskPeriodToMoveAndCreate) == 0) {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
-                }
-
-                //si le tableau retourné contient on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
-                else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
-                }
-
-                //si la dernière date des tasks_period déplacées ou créées est après la date de livraison, on met à jour la date de livraison
-                if (end($listTaskPeriodToMoveAndCreate["move"]) > $dateLivraison || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) > $dateLivraison)) {
-
-                    if ($listTaskPeriodToMoveAndCreate["create"] != null) {
-                        $newDateLivraison = end($listTaskPeriodToMoveAndCreate["move"]) >= end($listTaskPeriodToMoveAndCreate["create"]) ?
-                            end($listTaskPeriodToMoveAndCreate["move"]) : end($listTaskPeriodToMoveAndCreate["create"]);
-                    } else {
-                        $newDateLivraison = end($listTaskPeriodToMoveAndCreate["move"]);
-                    }
-
-                    Project::where('id', $projectId)->update([
-                        'date' => $newDateLivraison,
-                    ]);
-                }
-                $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
-
-                //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
-                $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
-                $firstTaskPeriod = $listTaskPeriodModified->first();
-                $dateDebut = $firstTaskPeriod['start_time'];
-                $dateFin = $firstTaskPeriod['end_time'];
-                foreach ($listTaskPeriodModified as $taskPeriodModified) {
-                    if ($taskPeriodModified['start_time'] < $dateDebut) {
-                        $dateDebut = $taskPeriodModified['start_time'];
-                    }
-                    if ($taskPeriodModified['end_time'] > $dateFin) {
-                        $dateFin = $taskPeriodModified['end_time'];
-                    }
-                }
-
-                Task::where('id', $task[0]['id'])->update([
-                    'date' => $dateDebut,
-                    'date_end' => $dateFin,
-                ]);
-
-                //on met à jour la date de début et de fin des tasks dépendantes s'il y en a
-                if ($listIdTaskDependant != null) {
-
-                    for ($id = 0; $id < count($listIdTaskDependant); $id++) {
-                        $firstTaskPeriodTaskDependant = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
-                        $firstTaskPeriodTaskDependant = $firstTaskPeriodTaskDependant->first();
-
-                        $dateDebut = $firstTaskPeriodTaskDependant['start_time'];
-                        $dateFin = $firstTaskPeriodTaskDependant['end_time'];
-                        $taskPeriodModified = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
-
-                        for ($i = 0; $i < count($taskPeriodModified); $i++) {
-                            if ($taskPeriodModified[$i]['start_time'] < $dateDebut) {
-                                $dateDebut = $taskPeriodModified[$i]['start_time'];
-                            }
-                            if ($taskPeriodModified[$i]['end_time'] > $dateFin) {
-                                $dateFin = $taskPeriodModified[$i]['end_time'];
-                            }
-                        }
-
-                        Task::where('id', $listIdTaskDependant[$id])->update([
-                            'date' => $dateDebut,
-                            'date_end' => $dateFin,
-                        ]);
-                    }
-                }
-            }
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-        } else if ($request->moveChecked == "true" && ($request->start < $taskPeriod[0]['start_time'])) {
-
-            //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
-            $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "before");
-            $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
-            $list = $arrayPeriodIndispo["list"];
-            $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
-            $dateDebutProjet = $arrayPeriodIndispo["date"];
-            $dateDemain = Carbon::now()->addDays(1)->format("Y-m-d H:i:s");
-
-            $erreur = false;
-            //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
-            foreach ($list as $period) {
-                //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
-                if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
-                    ($request->start <= $period['start_time'] && $request->end >= $period['end_time']) ||
-                    ($request->start >= $period['start_time'] && $request->end <= $period['end_time']) ||
-                    ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
-                ) {
-                    $erreur = true;
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    // try {
-                    //     return $this->successResponse($task[0], '');
-                    // } catch (\Throwable $th) {
-                    return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
-                    //}
-                }
-            }
-
-            //si on peut déplacer la task period à la nouvelle date car l'ilot et l'utilisateur sont dispos -> maj taskPeriod
-            if (!$erreur) {
-                //algo pour déplacer et créer les tasks_period
-                $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodBefore($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
-
-                $controllerLog = new Logger('hours');
-                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-                $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
-
-                if (count($listTaskPeriodToMoveAndCreate) == 0) {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
-                }
-
-                //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
-                else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("La nouvelle date de début n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
-                }
-                //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
-                else if (end($listTaskPeriodToMoveAndCreate) == "avant aujourd'hui") {
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    return $this->errorResponse("Impossible de déplacer les périodes avant aujourd'hui.", static::$response_codes['error_server']);
-                }
-
-                //si la première date dans le temps des tasks_period déplacées ou créées est avant demain -> erreur
-                if (
-                    end($listTaskPeriodToMoveAndCreate["move"]) < $dateDemain ||
-                    ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDemain)
-                ) {
-
-                    return $this->errorResponse("Les périodes ne peuvent pas être déplacées avant demain.", static::$response_codes['error_server']);
-                }
-
-                //si l'utilisateur n'a pas coché la case pour avancer la date de début de projet
-                //et que la première date dans le temps des tasks_period déplacées ou créées est avant la date de début de projet -> erreur
-                else if (
-                    $request->moveDateStartChecked == "false" &&
-                    ((end($listTaskPeriodToMoveAndCreate["move"]) < $dateDebutProjet) ||
-                        ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDebutProjet))
-                ) {
-
-                    return $this->errorResponse("Toutes les périodes ne peuvent pas être déplacées après la date de début du projet. Vous pouvez cocher la case pour déplacer automatiquement la date de début du projet.", static::$response_codes['error_server']);
-                }
-
-                //si l'utilisateur a accepté d'avancer la date de début du projet, on met à jour le champs date_end dans la bdd
-                else /*if($request->moveDateStartChecked == "true")*/ {
-                    //si le tableau retourné est vide, on renvoie une erreur pour dire à l'utilisateur qu'il n'y a pas d'autres tasks_period liées
-
-                    //si la première date des tasks_period déplacées ou créées est avant la date de commencement du projet, on met à jour la date de commencement du projet
-                    if (end($listTaskPeriodToMoveAndCreate["move"]) < $dateDebutProjet || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDebutProjet)) {
-
-                        if ($listTaskPeriodToMoveAndCreate["create"] != null) {
-                            $newDateProjet = end($listTaskPeriodToMoveAndCreate["move"]) <= end($listTaskPeriodToMoveAndCreate["create"]) ?
-                                end($listTaskPeriodToMoveAndCreate["move"]) : end($listTaskPeriodToMoveAndCreate["create"]);
-                        } else {
-                            $newDateProjet = end($listTaskPeriodToMoveAndCreate["move"]);
-                        }
-
-                        Project::where('id', $projectId)->update([
-                            'start_date' => $newDateProjet,
-                        ]);
-                    }
-                }
-
-                $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
-
-                //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
-                $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
-                $firstTaskPeriod = $listTaskPeriodModified->first();
-                $dateDebut = $firstTaskPeriod['start_time'];
-                $dateFin = $firstTaskPeriod['end_time'];
-                foreach ($listTaskPeriodModified as $taskPeriodModified) {
-                    if ($taskPeriodModified['start_time'] < $dateDebut) {
-                        $dateDebut = $taskPeriodModified['start_time'];
-                    }
-                    if ($taskPeriodModified['end_time'] > $dateFin) {
-                        $dateFin = $taskPeriodModified['end_time'];
-                    }
-                }
-
-                Task::where('id', $task[0]['id'])->update([
-                    'date' => $dateDebut,
-                    'date_end' => $dateFin,
-                ]);
-
-                //on met à jour la date de début et de fin des tasks dépendantes s'il y en a
-                if ($listIdTaskDependant != null) {
-
-                    for ($id = 0; $id < count($listIdTaskDependant); $id++) {
-                        $firstTaskPeriodTaskDependant = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
-                        $firstTaskPeriodTaskDependant = $firstTaskPeriodTaskDependant->first();
-
-                        $dateDebut = $firstTaskPeriodTaskDependant['start_time'];
-                        $dateFin = $firstTaskPeriodTaskDependant['end_time'];
-                        $taskPeriodModified = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
-
-                        for ($i = 0; $i < count($taskPeriodModified); $i++) {
-                            if ($taskPeriodModified[$i]['start_time'] < $dateDebut) {
-                                $dateDebut = $taskPeriodModified[$i]['start_time'];
-                            }
-                            if ($taskPeriodModified[$i]['end_time'] > $dateFin) {
-                                $dateFin = $taskPeriodModified[$i]['end_time'];
-                            }
-                        }
-
-                        Task::where('id', $listIdTaskDependant[$id])->update([
-                            'date' => $dateDebut,
-                            'date_end' => $dateFin,
-                        ]);
-                    }
-                }
-            }
-            $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-        } else {
-            $projectUpdated = Project::where('id', $projectId)->get();
-            if ($projectUpdated == null) {
-                throw new Exception("Pas de projet associé.");
-            }
-            //si avant la date de début du projet ou après la date de livraison -> erreur
-            if ($request->start < $projectUpdated[0]['start_date']) {
-                throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
-            } else if ($request->end > $projectUpdated[0]['date']) {
-                throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
-            }
-            //sinon mettre à jour la task_period et la task
-            else {
-                if ($request->id == null || $request->start == null || $request->end == null) {
-                    throw new Exception("Pb requête.");
-                }
-                $item = TaskPeriod::where('id', $request->id);
-                if ($item == null) {
-                    throw new Exception("Pas de task period.");
-                }
-                TaskPeriod::where('id', $request->id)->update([
-                    'start_time' => $request->start,
-                    'end_time' => $request->end,
-                ]);
-
-                $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
-                if ($tasksPeriod == null) {
-                    throw new Exception("Pas de task period.");
-                }
-
-                if ($taskPeriod[0]['task_id'] == null) {
-                    throw new Exception("Pas de task_id.");
-                } else if ($tasksPeriod[0]['start_time'] == null) {
-                    throw new Exception("Pas de start_time.");
-                } else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'] == null) {
-                    throw new Exception("Pas de end_time.");
-                }
-
-                Task::where('id', $taskPeriod[0]['task_id'])->update([
-                    'date' => $tasksPeriod[0]['start_time'],
-                    'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
-                ]);
                 $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+            } else if ($request->moveChecked == "true" && ($request->start < $taskPeriod[0]['start_time'])) {
+
+                //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
+                $arrayPeriodIndispo = $this->listDebutPeriodIndispo($taskPeriod, $task, "before");
+                $listDebutTaskPeriodIndispo = $arrayPeriodIndispo["listDebutTaskPeriodIndispo"];
+                $list = $arrayPeriodIndispo["list"];
+                $listIdTaskDependant = $arrayPeriodIndispo["listIdTaskDependant"];
+                $dateDebutProjet = $arrayPeriodIndispo["date"];
+                $dateDemain = Carbon::now()->addDays(1)->format("Y-m-d H:i:s");
+
+                $erreur = false;
+                //on parcours toutes les task periods occupées et on regarde si les nouvelles dates de la tak period se superpose avec un task period occupée
+                foreach ($list as $period) {
+                    //si l'utilisateur veut déplacer la task period sur une autre task period qui utilise le même ilot ou le même utilisateur -> pas maj
+                    if (($request->start <= $period['start_time'] && $request->end <= $period['end_time'] && $request->end > $period['start_time']) ||
+                        ($request->start <= $period['start_time'] && $request->end >= $period['end_time']) ||
+                        ($request->start >= $period['start_time'] && $request->end <= $period['end_time']) ||
+                        ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
+                    ) {
+                        $erreur = true;
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        // try {
+                        //     return $this->successResponse($task[0], '');
+                        // } catch (\Throwable $th) {
+                        return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
+                        //}
+                    }
+                }
+
+                //si on peut déplacer la task period à la nouvelle date car l'ilot et l'utilisateur sont dispos -> maj taskPeriod
+                if (!$erreur) {
+                    //algo pour déplacer et créer les tasks_period
+                    $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodBefore($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
+
+                    $controllerLog = new Logger('hours');
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+                    $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
+
+                    if (count($listTaskPeriodToMoveAndCreate) == 0) {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                    }
+
+                    //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
+                    else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("La nouvelle date de début n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
+                    }
+                    //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
+                    else if (end($listTaskPeriodToMoveAndCreate) == "avant aujourd'hui") {
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        return $this->errorResponse("Impossible de déplacer les périodes avant aujourd'hui.", static::$response_codes['error_server']);
+                    }
+
+                    //si la première date dans le temps des tasks_period déplacées ou créées est avant demain -> erreur
+                    if (
+                        end($listTaskPeriodToMoveAndCreate["move"]) < $dateDemain ||
+                        ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDemain)
+                    ) {
+
+                        return $this->errorResponse("Les périodes ne peuvent pas être déplacées avant demain.", static::$response_codes['error_server']);
+                    }
+
+                    //si l'utilisateur n'a pas coché la case pour avancer la date de début de projet
+                    //et que la première date dans le temps des tasks_period déplacées ou créées est avant la date de début de projet -> erreur
+                    else if (
+                        $request->moveDateStartChecked == "false" &&
+                        ((end($listTaskPeriodToMoveAndCreate["move"]) < $dateDebutProjet) ||
+                            ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDebutProjet))
+                    ) {
+
+                        return $this->errorResponse("Toutes les périodes ne peuvent pas être déplacées après la date de début du projet. Vous pouvez cocher la case pour déplacer automatiquement la date de début du projet.", static::$response_codes['error_server']);
+                    }
+
+                    //si l'utilisateur a accepté d'avancer la date de début du projet, on met à jour le champs date_end dans la bdd
+                    else /*if($request->moveDateStartChecked == "true")*/ {
+                        //si le tableau retourné est vide, on renvoie une erreur pour dire à l'utilisateur qu'il n'y a pas d'autres tasks_period liées
+
+                        //si la première date des tasks_period déplacées ou créées est avant la date de commencement du projet, on met à jour la date de commencement du projet
+                        if (end($listTaskPeriodToMoveAndCreate["move"]) < $dateDebutProjet || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDebutProjet)) {
+
+                            if ($listTaskPeriodToMoveAndCreate["create"] != null) {
+                                $newDateProjet = end($listTaskPeriodToMoveAndCreate["move"]) <= end($listTaskPeriodToMoveAndCreate["create"]) ?
+                                    end($listTaskPeriodToMoveAndCreate["move"]) : end($listTaskPeriodToMoveAndCreate["create"]);
+                            } else {
+                                $newDateProjet = end($listTaskPeriodToMoveAndCreate["move"]);
+                            }
+
+                            Project::where('id', $projectId)->update([
+                                'start_date' => $newDateProjet,
+                            ]);
+                        }
+                    }
+
+                    $this->mergeTaskPeriod($listTaskPeriodToMoveAndCreate);
+
+                    //on met à jour la date de début et de fin de la task modifiée avec la date de début de la première task period et la date de fin de la dernière task_period de la task
+                    $listTaskPeriodModified = TaskPeriod::where('task_id', $task[0]['id'])->get();
+                    $firstTaskPeriod = $listTaskPeriodModified->first();
+                    $dateDebut = $firstTaskPeriod['start_time'];
+                    $dateFin = $firstTaskPeriod['end_time'];
+                    foreach ($listTaskPeriodModified as $taskPeriodModified) {
+                        if ($taskPeriodModified['start_time'] < $dateDebut) {
+                            $dateDebut = $taskPeriodModified['start_time'];
+                        }
+                        if ($taskPeriodModified['end_time'] > $dateFin) {
+                            $dateFin = $taskPeriodModified['end_time'];
+                        }
+                    }
+
+                    Task::where('id', $task[0]['id'])->update([
+                        'date' => $dateDebut,
+                        'date_end' => $dateFin,
+                    ]);
+
+                    //on met à jour la date de début et de fin des tasks dépendantes s'il y en a
+                    if ($listIdTaskDependant != null) {
+
+                        for ($id = 0; $id < count($listIdTaskDependant); $id++) {
+                            $firstTaskPeriodTaskDependant = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
+                            $firstTaskPeriodTaskDependant = $firstTaskPeriodTaskDependant->first();
+
+                            $dateDebut = $firstTaskPeriodTaskDependant['start_time'];
+                            $dateFin = $firstTaskPeriodTaskDependant['end_time'];
+                            $taskPeriodModified = TaskPeriod::where('task_id', $listIdTaskDependant[$id])->get();
+
+                            for ($i = 0; $i < count($taskPeriodModified); $i++) {
+                                if ($taskPeriodModified[$i]['start_time'] < $dateDebut) {
+                                    $dateDebut = $taskPeriodModified[$i]['start_time'];
+                                }
+                                if ($taskPeriodModified[$i]['end_time'] > $dateFin) {
+                                    $dateFin = $taskPeriodModified[$i]['end_time'];
+                                }
+                            }
+
+                            Task::where('id', $listIdTaskDependant[$id])->update([
+                                'date' => $dateDebut,
+                                'date_end' => $dateFin,
+                            ]);
+                        }
+                    }
+                }
+                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+            } else {
+                $projectUpdated = Project::where('id', $projectId)->get();
+                if ($projectUpdated == null) {
+                    throw new Exception("Pas de projet associé.");
+                }
+                //si avant la date de début du projet ou après la date de livraison -> erreur
+                if ($request->start < $projectUpdated[0]['start_date']) {
+                    throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
+                } else if ($request->end > $projectUpdated[0]['date']) {
+                    throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
+                }
+                //sinon mettre à jour la task_period et la task
+                else {
+                    if ($request->id == null || $request->start == null || $request->end == null) {
+                        throw new Exception("Pb requête.");
+                    }
+                    $item = TaskPeriod::where('id', $request->id);
+                    if ($item == null) {
+                        throw new Exception("Pas de task period.");
+                    }
+                    TaskPeriod::where('id', $request->id)->update([
+                        'start_time' => $request->start,
+                        'end_time' => $request->end,
+                    ]);
+
+                    $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
+                    if ($tasksPeriod == null) {
+                        throw new Exception("Pas de task period.");
+                    }
+
+                    if ($taskPeriod[0]['task_id'] == null) {
+                        throw new Exception("Pas de task_id.");
+                    } else if ($tasksPeriod[0]['start_time'] == null) {
+                        throw new Exception("Pas de start_time.");
+                    } else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'] == null) {
+                        throw new Exception("Pas de end_time.");
+                    }
+
+                    Task::where('id', $taskPeriod[0]['task_id'])->update([
+                        'date' => $tasksPeriod[0]['start_time'],
+                        'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
+                    ]);
+                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                }
             }
-        }
-        try {
-            return $this->successResponse($task[0], 'Chargement terminé avec succès.');
+            try {
+                return $this->successResponse($task[0], 'Chargement terminé avec succès.');
+            } catch (\Throwable $th) {
+                return $this->errorResponse($th, static::$response_codes['error_server']);
+                // return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+            }
         } catch (\Throwable $th) {
             return $this->errorResponse($th, static::$response_codes['error_server']);
-            // return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
     }
 
