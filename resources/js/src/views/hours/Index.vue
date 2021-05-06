@@ -244,34 +244,18 @@
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="this.confirmDeleteRecord"
-                                    v-if="authorizedTo('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="hours"
+                            model-plurial="hours"
+                            :uses-soft-delete="false"
+                            :items="selectedItems"
+                            @on-action="
+                                () => {
+                                    this.onAction();
+                                    this.refreshData();
+                                }
+                            "
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -335,6 +319,7 @@
                 :animateRows="true"
                 :floatingFilter="false"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -364,7 +349,12 @@ import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 // Unavailabilities
 import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
 
+// Components
 import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 import moment from "moment";
 import _ from "lodash";
@@ -376,6 +366,7 @@ var modelTitle = "Heures";
 moment.locale("fr");
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
         vSelect,
@@ -385,7 +376,10 @@ export default {
         CellRendererRelations,
         //Unavailabilities
         UnavailabilitiesIndex,
-        InfiniteScrollSelect
+
+        // Components
+        InfiniteScrollSelect,
+        MultipleActions
     },
     data() {
         return {
@@ -781,53 +775,6 @@ export default {
         },
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
-        },
-        confirmDeleteRecord() {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleHour = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces heures ?`
-                        : singleHour.duration == "01:00:00"
-                        ? `Voulez vous vraiment supprimer l'heure du ${
-                              singleHour.start_at.split(" ")[0]
-                          } pour le projet ${singleHour.project} ?`
-                        : `Voulez vous vraiment supprimer les ${
-                              singleHour.duration.split(":")[0]
-                          } heures du ${
-                              singleHour.start_at.split(" ")[0]
-                          } pour le projet ${singleHour.project.name} ?`,
-                accept: this.deleteRecord,
-                acceptText: "Supprimer",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("hoursManagement/removeItems", [selectRow.id])
-                    .then(data => {
-                        this.showDeleteSuccess();
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-        },
-        showDeleteSuccess() {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Heures supprimés`
-                        : `Heure supprimé`
-            });
         },
         onResize(event) {
             if (this.gridApi) {

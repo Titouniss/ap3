@@ -106,30 +106,24 @@
                                         this.type != 'workarea'
                                 "
                             >
-                                <small class="date-label">Compétences</small>
-                                <vs-select
-                                    v-on:change="updateUsersAndWorkareasList"
+                                <small class="date-label"> Compétences </small>
+                                <v-select
+                                    v-validate="'required'"
+                                    class="w-full"
+                                    name="skills"
+                                    label="name"
                                     v-model="itemLocal.skills"
                                     :reduce="skill => skill.id"
-                                    class="w-full"
+                                    :options="skillsData"
                                     multiple
-                                    autocomplete
-                                    v-validate="'required'"
-                                    name="skills"
+                                    @input="updateUsersAndWorkareasList"
                                 >
-                                    <vs-select-item
-                                        :key="index"
-                                        :value="item.id"
-                                        :text="item.name"
-                                        v-for="(item, index) in skillsData"
-                                    />
-                                </vs-select>
+                                </v-select>
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('skills')"
+                                    >{{ errors.first("skills") }}</span
                                 >
-                                    {{ errors.first("skills") }}
-                                </span>
                             </div>
 
                             <span

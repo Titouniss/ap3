@@ -111,13 +111,9 @@
                                 :key="`item-${index}`"
                                 :index="index"
                                 :to="
-                                    item.slug !== 'external' &&
-                                    !isAdmin &&
-                                    item.name == 'Sociétés'
-                                        ? '/companies/company-edit/' + companyId
-                                        : item.slug !== 'external'
-                                        ? item.url
-                                        : null
+                                    item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/' + companyId
+                                        : item.slug !== 'external' && !isAdmin && item.name == 'Remontées de bugs' ? '/bugs/bug-add/' 
+                                        : item.slug !== 'external' ? item.url : null
                                 "
                                 :href="
                                     item.slug === 'external' ? item.url : null
@@ -131,8 +127,8 @@
                                     v-show="!verticalNavMenuItemsMin"
                                     class="truncate"
                                     >{{
-                                        !isAdmin && item.name == "Sociétés"
-                                            ? "Ma société"
+                                        !isAdmin && item.name == "Sociétés" ? "Ma société"
+                                            : !isAdmin && item.name == "Remontées de bugs" ? "Remonter un bug" 
                                             : item.name
                                     }}</span
                                 >
@@ -154,6 +150,7 @@
                                     :open="isGroupActive(item)"
                                 />
                             </template>
+
                             <!-- /Nav-Group -->
                         </template>
                     </template>
