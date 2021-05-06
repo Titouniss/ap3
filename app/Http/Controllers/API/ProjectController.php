@@ -516,7 +516,7 @@ class ProjectController extends BaseApiController
             $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
         } else {
             $projectUpdated = Project::where('id', $projectId)->get();
-            if ($projectUpdated==null) {
+            if ($projectUpdated == null) {
                 throw new Exception("Pas de projet associé.");
             }
             //si avant la date de début du projet ou après la date de livraison -> erreur
@@ -527,11 +527,11 @@ class ProjectController extends BaseApiController
             }
             //sinon mettre à jour la task_period et la task
             else {
-                if ($request->id==null || $request->start==null || $request->end==null) {
+                if ($request->id == null || $request->start == null || $request->end == null) {
                     throw new Exception("Pb requête.");
                 }
-                $item=TaskPeriod::where('id', $request->id);
-                if ($item==null) {
+                $item = TaskPeriod::where('id', $request->id);
+                if ($item == null) {
                     throw new Exception("Pas de task period.");
                 }
                 TaskPeriod::where('id', $request->id)->update([
@@ -540,19 +540,15 @@ class ProjectController extends BaseApiController
                 ]);
 
                 $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
-                if ($tasksPeriod==null) {
+                if ($tasksPeriod == null) {
                     throw new Exception("Pas de task period.");
                 }
 
-                if ($taskPeriod[0]['task_id']==null) {
+                if ($taskPeriod[0]['task_id'] == null) {
                     throw new Exception("Pas de task_id.");
-                }
-
-                else if ($tasksPeriod[0]['start_time']==null) {
+                } else if ($tasksPeriod[0]['start_time'] == null) {
                     throw new Exception("Pas de start_time.");
-                }
-
-                else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time']==null) {
+                } else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'] == null) {
                     throw new Exception("Pas de end_time.");
                 }
 
@@ -566,7 +562,8 @@ class ProjectController extends BaseApiController
         try {
             return $this->successResponse($task[0], 'Chargement terminé avec succès.');
         } catch (\Throwable $th) {
-            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+            return $this->errorResponse($th, static::$response_codes['error_server']);
+            // return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
     }
 
@@ -3649,9 +3646,9 @@ class ProjectController extends BaseApiController
                     $listTaskIdProject = array();
                     $skills = array();
 
-                    if($tasks !=null){
+                    if ($tasks != null) {
                         //liste des id des utilisateurs du projet
-                        if($tasks->first()->user_id != null){
+                        if ($tasks->first()->user_id != null) {
                             array_push($listUserId, $tasks->first()->user_id);
                         }
                         foreach ($tasks as $task) {
@@ -3690,7 +3687,7 @@ class ProjectController extends BaseApiController
                     $listUserId = array();
 
                     //liste des id des utilisateurs du projet
-                    if($taskCourante[0]['user_id'] != null){
+                    if ($taskCourante[0]['user_id'] != null) {
                         array_push($listUserId, $taskCourante[0]['user_id']);
                     }
                 } else if ($request->type == "workarea") {
