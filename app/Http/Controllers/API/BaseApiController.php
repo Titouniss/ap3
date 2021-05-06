@@ -548,6 +548,7 @@ abstract class BaseApiController extends Controller
     protected function permissionErrors(string $perm, $item = null)
     {
         $user = Auth::user();
+
         if (!$user || $user->cant($perm, $item ?? $this->model)) {
             return $this->unauthorizedResponse();
         }

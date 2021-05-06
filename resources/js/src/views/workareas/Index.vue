@@ -231,7 +231,7 @@ export default {
                     cellRendererFramework: "CellRendererRelationSkills"
                 },
                 {
-                    headerName: "Maximum opérateurs",
+                    headerName: "Max opérateurs",
                     field: "max_users",
                     filter: true,
                     width: 110
