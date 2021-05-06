@@ -137,6 +137,7 @@ export default {
             activeAddPrompt: false,
             dateData: {},
             taskBundle: null,
+            tasksPeriod: null,
             calendarWeekends: true,
             customButtons: {
                 AddEventBtn: {
@@ -1058,9 +1059,16 @@ export default {
                         this.unavailableEvent[i].date !=
                             this.unavailableEvent[i].date_end
                     ) {
-                        if (
-                            startPeriodTask > this.unavailableEvent[i].date &&
-                            endPeriodTask < this.unavailableEvent[i].date_end
+                        if ((moment(startPeriodTask).isAfter(moment(this.unavailableEvent[i].date)) &&
+                            moment(startPeriodTask).isBefore(moment(this.unavailableEvent[i].date_end))) ||
+
+                            (moment(endPeriodTask).isAfter(moment(this.unavailableEvent[i].date)) &&
+                            moment(endPeriodTask).isBefore(moment(this.unavailableEvent[i].date_end))) ||   
+
+                            (((moment(startPeriodTask).isBefore(moment(this.unavailableEvent[i].date))) || 
+                            moment(startPeriodTask).isSame(moment(this.unavailableEvent[i].date))) &&
+                            (moment(endPeriodTask).isAfter(moment(this.unavailableEvent[i].date_end)) || 
+                            (moment(endPeriodTask).isSame(moment(this.unavailableEvent[i].date_end)))))               
                         ) {
                             erreur = true;
                             this.$vs.notify({
@@ -1071,6 +1079,49 @@ export default {
                                 icon: "icon-alert-circle",
                                 color: "danger"
                             });
+                        }
+                    }
+                }
+            }
+            if (this.tasksEvent != null && !this.moveAccepted) {
+                for(var i = 0; i < this.tasksEvent.length; i++){
+                    if(this.tasksEvent[i].id==this.$route.query.task_id){
+                        for(var j=0;j<this.tasksEvent[i].periods.length;j++){
+                            if(this.tasksEvent[i].periods[j].id==arg.event._def.extendedProps.period_id){
+                                this.tasksPeriod=this.tasksEvent[i].periods;
+                            }
+                        }
+                    }
+                    
+                }
+                if (this.tasksPeriod != null) {
+                    for (var i = 0; i < this.tasksPeriod.length; i++) {
+                        if (
+                            this.tasksPeriod[i].start_time != null &&
+                            this.tasksPeriod[i].end_time != null &&
+                            this.tasksPeriod[i].id != arg.event._def.extendedProps.period_id
+                        ) {
+                            if ((moment(startPeriodTask).isAfter(moment(this.tasksPeriod[i].start_time)) &&
+                                moment(startPeriodTask).isBefore(moment(this.tasksPeriod[i].end_time))) ||
+
+                                (moment(endPeriodTask).isAfter(moment(this.tasksPeriod[i].start_time)) &&
+                                moment(endPeriodTask).isBefore(moment(this.tasksPeriod[i].end_time))) ||   
+
+                                (((moment(startPeriodTask).isBefore(moment(this.tasksPeriod[i].start_time))) || 
+                                moment(startPeriodTask).isSame(moment(this.tasksPeriod[i].start_time))) &&
+                                (moment(endPeriodTask).isAfter(moment(this.tasksPeriod[i].end_time)) || 
+                                (moment(endPeriodTask).isSame(moment(this.tasksPeriod[i].end_time)))))               
+                            ) {
+                                erreur = true;
+                                this.$vs.notify({
+                                    title: "Erreur",
+                                    text:
+                                        "Vous ne pouvez pas déplacer cette période ici car il y a déjà une période planifiée.",
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "danger"
+                                });
+                            }
                         }
                     }
                 }
@@ -1087,6 +1138,7 @@ export default {
                 this.$store
                     .dispatch("taskManagement/updateTaskPeriod", itemToSave)
                     .then(data => {
+                        this.tasksPeriod=data.payload.periods;
                         this.$vs.notify({
                             title: "Modification d'une période",
                             text: `modifiée avec succès`,
@@ -1130,9 +1182,16 @@ export default {
                         this.unavailableEvent[i].date !=
                             this.unavailableEvent[i].date_end
                     ) {
-                        if (
-                            startPeriodTask > this.unavailableEvent[i].date &&
-                            endPeriodTask < this.unavailableEvent[i].date_end
+                        if ((moment(startPeriodTask).isAfter(moment(this.unavailableEvent[i].date)) &&
+                            moment(startPeriodTask).isBefore(moment(this.unavailableEvent[i].date_end))) ||
+
+                            (moment(endPeriodTask).isAfter(moment(this.unavailableEvent[i].date)) &&
+                            moment(endPeriodTask).isBefore(moment(this.unavailableEvent[i].date_end))) ||   
+
+                            (((moment(startPeriodTask).isBefore(moment(this.unavailableEvent[i].date))) || 
+                            moment(startPeriodTask).isSame(moment(this.unavailableEvent[i].date))) &&
+                            (moment(endPeriodTask).isAfter(moment(this.unavailableEvent[i].date_end)) || 
+                            (moment(endPeriodTask).isSame(moment(this.unavailableEvent[i].date_end)))))               
                         ) {
                             erreur = true;
                             this.$vs.notify({
@@ -1143,6 +1202,49 @@ export default {
                                 icon: "icon-alert-circle",
                                 color: "danger"
                             });
+                        }
+                    }
+                }
+            }
+            if (this.tasksEvent != null && !this.moveAccepted) {
+                for(var i = 0; i < this.tasksEvent.length; i++){
+                    if(this.tasksEvent[i].id==this.$route.query.task_id){
+                        for(var j=0;j<this.tasksEvent[i].periods.length;j++){
+                            if(this.tasksEvent[i].periods[j].id==arg.event._def.extendedProps.period_id){
+                                this.tasksPeriod=this.tasksEvent[i].periods;
+                            }
+                        }
+                    }
+                    
+                }
+                if (this.tasksPeriod != null) {
+                    for (var i = 0; i < this.tasksPeriod.length; i++) {
+                        if (
+                            this.tasksPeriod[i].start_time != null &&
+                            this.tasksPeriod[i].end_time != null &&
+                            this.tasksPeriod[i].id != arg.event._def.extendedProps.period_id
+                        ) {
+                            if ((moment(startPeriodTask).isAfter(moment(this.tasksPeriod[i].start_time)) &&
+                                moment(startPeriodTask).isBefore(moment(this.tasksPeriod[i].end_time))) ||
+
+                                (moment(endPeriodTask).isAfter(moment(this.tasksPeriod[i].start_time)) &&
+                                moment(endPeriodTask).isBefore(moment(this.tasksPeriod[i].end_time))) ||   
+
+                                (((moment(startPeriodTask).isBefore(moment(this.tasksPeriod[i].start_time))) || 
+                                moment(startPeriodTask).isSame(moment(this.tasksPeriod[i].start_time))) &&
+                                (moment(endPeriodTask).isAfter(moment(this.tasksPeriod[i].end_time)) || 
+                                (moment(endPeriodTask).isSame(moment(this.tasksPeriod[i].end_time)))))               
+                            ) {
+                                erreur = true;
+                                this.$vs.notify({
+                                    title: "Erreur",
+                                    text:
+                                        "Vous ne pouvez pas déplacer cette période ici car il y a déjà une période planifiée.",
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "danger"
+                                });
+                            }
                         }
                     }
                 }
@@ -1159,6 +1261,7 @@ export default {
                 this.$store
                     .dispatch("taskManagement/updateTaskPeriod", itemToSave)
                     .then(data => {
+                        this.tasksPeriod=data.payload.periods;
                         this.$vs.notify({
                             title: "Modification d'une période",
                             text: `modifiée avec succès`,

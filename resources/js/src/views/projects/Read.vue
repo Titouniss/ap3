@@ -331,6 +331,7 @@ export default {
     editRecord() {
       this.$store
         .dispatch("projectManagement/editItem", this.project_data)
+        .then(this.refreshData())
         .catch((err) => {
           console.error(err);
         });
