@@ -72,6 +72,7 @@
             />
             <edit-form
                 :itemId="itemIdToEdit"
+                :project_data="this.project_data"
                 :tasks_list="tasksEvent"
                 :type="this.$route.query.type"
                 :idType="parseInt(this.$route.query.id, 10)"
@@ -506,8 +507,8 @@ export default {
                             let businessHours = [];
                             dates.forEach(day => {
                                 if (
-                                    (day[0] !== null || day[0] != "00:00:00") &&
-                                    (day[1] !== null || day[1] != "00:00:00")
+                                    (day[0] !== null && day[0] != "00:00:00") &&
+                                    (day[1] !== null && day[1] != "00:00:00")
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -516,8 +517,8 @@ export default {
                                     });
                                 }
                                 if (
-                                    (day[2] !== null || day[2] != "00:00:00") &&
-                                    (day[3] !== null || day[3] != "00:00:00")
+                                    (day[2] !== null && day[2] != "00:00:00") &&
+                                    (day[3] !== null && day[3] != "00:00:00")
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -705,8 +706,8 @@ export default {
                             let businessHours = [];
                             dates.forEach(day => {
                                 if (
-                                    (day[0] !== null || day[0] != "00:00:00") &&
-                                    (day[1] !== null || day[1] != "00:00:00")
+                                    (day[0] !== null && day[0] != "00:00:00") &&
+                                    (day[1] !== null && day[1] != "00:00:00")
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -715,8 +716,8 @@ export default {
                                     });
                                 }
                                 if (
-                                    (day[2] !== null || day[2] != "00:00:00") &&
-                                    (day[3] !== null || day[3] != "00:00:00")
+                                    (day[2] !== null && day[2] != "00:00:00") &&
+                                    (day[3] !== null && day[3] != "00:00:00")
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),

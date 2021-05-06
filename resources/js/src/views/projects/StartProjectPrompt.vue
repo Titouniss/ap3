@@ -7,7 +7,7 @@
       gradient-color-secondary="#175435"
       icon-pack="feather"
       icon="icon-play"
-      @click="activePrompt = true"
+      @click="display"
     >
       Démarrer le projet
     </vs-button>
@@ -101,6 +101,10 @@ export default {
     },
   },
   methods: {
+    display(){
+      this.activePrompt = true;
+      this.$set(this.configStartsAtDateTimePicker, "maxDate", this.project_data.date);
+    },
     clearFields() {
       Object.assign(this.itemLocal, {
         start_at: "",

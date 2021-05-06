@@ -201,6 +201,7 @@ export default {
             current_time_spent: 0,
 
             previousTasks: [],
+            tasksPeriod: null,
             deleteWarning: false,
             orderDisplay: false,
             descriptionDisplay: false,
@@ -282,6 +283,7 @@ export default {
 
             // item.token = this.token;
             var erreur = false;
+            //indispos -> bloquer le déplacement sur les événements grisés
             if (this.unavailabilities_list != null && !this.moveAccepted) {
                 for (var i = 0; i < this.unavailabilities_list.length; i++) {
                     if (
@@ -289,9 +291,16 @@ export default {
                         this.unavailabilities_list[i].date !=
                             this.unavailabilities_list[i].date_end
                     ) {
-                        if (
-                            this.start > this.unavailabilities_list[i].date &&
-                            this.end < this.unavailabilities_list[i].date_end
+                        if ((moment(this.start).isAfter(moment(this.unavailabilities_list[i].date)) &&
+                            moment(this.start).isBefore(moment(this.unavailabilities_list[i].date_end))) ||
+
+                            (moment(this.end).isAfter(moment(this.unavailabilities_list[i].date)) &&
+                            moment(this.end).isBefore(moment(this.unavailabilities_list[i].date_end))) ||
+
+                            (((moment(this.start).isBefore(this.unavailabilities_list[i].date)) || 
+                            moment(this.start).isSame(this.unavailabilities_list[i].date)) &&
+                            (moment(this.end).isAfter(moment(this.unavailabilities_list[i].date_end)) || 
+                            (moment(this.end).isSame(moment(this.unavailabilities_list[i].date_end))))) 
                         ) {
                             erreur = true;
                             this.$vs.notify({
@@ -300,8 +309,92 @@ export default {
                                     "Vous ne pouvez pas déplacer cette période ici car il n'y a pas de ressources nécessaires.",
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
-                                color: "danger"
+                                color: "danger",
+                                time: 10000,
                             });
+                        }
+                    }
+                }
+            }
+            //bloquer le déplacement si task dépendantes
+            let order=null;
+            if (this.tasks_list != null && !this.moveAccepted) {
+                for(var i = 0; i < this.tasks_list.length; i++){
+                    if(this.tasks_list[i].id==this.$route.query.task_id){
+                        order=this.tasks_list[i].order;
+                    }
+                }
+                for(var i = 0; i < this.tasks_list.length; i++){
+                    if(this.tasks_list[i].id!=this.$route.query.task_id){
+                        //task dépendante après
+                        if (order !=null && this.tasks_list[i].order > order &&
+                            moment(this.end).isAfter(moment(this.tasks_list[i].date))) {
+                            erreur = true;
+                            this.$vs.notify({
+                                title: "Erreur",
+                                text:
+                                    `Vous ne pouvez pas déplacer cette période ici car cette tâche est dépendante et doit être faite avant la suivante ("${this.tasks_list[i].date}")`,
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "danger",
+                                time: 10000,
+                            });
+                        }
+                        //task dépendante avant
+                        else if(order !=null && this.tasks_list[i].order < order &&
+                                moment(this.start).isBefore(moment(this.tasks_list[i].date_end))){
+                            erreur = true;
+                            this.$vs.notify({
+                                title: "Erreur",
+                                text:
+                                    `Vous ne pouvez pas déplacer cette période ici car cette tâche est dépendante et doit être faite après la prédécente ("${this.tasks_list[i].date_end}")`,
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "danger",
+                                time: 10000,
+                            });
+                        }
+                    }
+                    //récupérer les tasks_period de la task courante
+                    else if(this.tasks_list[i].id==this.$route.query.task_id){
+                        for(var j=0;j<this.tasks_list[i].periods.length;j++){
+                            if(this.tasks_list[i].periods[j].id==this.itemId){
+                                this.tasksPeriod=this.tasks_list[i].periods;
+                            }
+                        }
+                    }
+                    
+                }
+                //bloquer le déplacement de la task_period sur une autre task_period de la task courante
+                if(this.tasksPeriod != null){
+                    for (var i = 0; i < this.tasksPeriod.length; i++) {
+                        if (
+                            this.tasksPeriod[i].start_time != null &&
+                            this.tasksPeriod[i].end_time != null &&
+                            this.tasksPeriod[i].id != this.itemId
+                        ) {
+                            if ((moment(this.start).isAfter(moment(this.tasksPeriod[i].start_time)) &&
+                                moment(this.start).isBefore(moment(this.tasksPeriod[i].end_time))) ||
+    
+                                (moment(this.end).isAfter(moment(this.tasksPeriod[i].start_time)) &&
+                                moment(this.end).isBefore(moment(this.tasksPeriod[i].end_time))) ||   
+    
+                                (((moment(this.start).isBefore(moment(this.tasksPeriod[i].start_time))) || 
+                                moment(this.start).isSame(moment(this.tasksPeriod[i].start_time))) &&
+                                (moment(this.end).isAfter(moment(this.tasksPeriod[i].end_time)) || 
+                                (moment(this.end).isSame(moment(this.tasksPeriod[i].end_time)))))               
+                            ) {
+                                erreur = true;
+                                this.$vs.notify({
+                                    title: "Erreur",
+                                    text:
+                                        "Vous ne pouvez pas déplacer cette période ici car il y a déjà une période planifiée.",
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "danger",
+                                    time: 10000,
+                                });
+                            }
                         }
                     }
                 }
@@ -321,6 +414,7 @@ export default {
                 this.$store
                     .dispatch("taskManagement/updateTaskPeriod", itemToSave)
                     .then(data => {
+                        this.tasksPeriod=data.payload.periods;
                         this.$vs.notify({
                             title: "Modification d'une période",
                             text: `modifiée avec succès`,

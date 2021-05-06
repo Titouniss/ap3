@@ -40,46 +40,12 @@
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('archive')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="ArchiveIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Archiver</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="workarea"
+                            model-plurial="workareas"
+                            :items="selectedItems"
+                            @on-action="onAction"
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -160,6 +126,7 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -196,10 +163,15 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 var modelTitle = "Pôle de production";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
         vSelect,
@@ -214,7 +186,8 @@ export default {
         CellRendererRelationSkills,
 
         // Components
-        RefreshModule
+        RefreshModule,
+        MultipleActions
     },
     data() {
         return {
@@ -323,90 +296,6 @@ export default {
         },
         addRecord() {
             this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-        },
-        confirmDeleteRecord(type) {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleWorkarea = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title:
-                    type === "delete"
-                        ? "Confirmer suppression"
-                        : "Confirmer archivage",
-                text:
-                    type === "delete" &&
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces pôles de production ?`
-                        : type === "delete" &&
-                          this.gridApi.getSelectedRows().length === 1
-                        ? `Voulez vous vraiment supprimer le pôle de production ${singleWorkarea.name} ?`
-                        : this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment archiver ces pôles de production ?`
-                        : `Voulez vous vraiment archiver le pôle de production ${singleWorkarea.name} ?`,
-                accept:
-                    type === "delete" ? this.deleteRecord : this.archiveRecord,
-                acceptText: type === "delete" ? "Supprimer" : "Archiver",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch(
-                        "workareaManagement/forceRemoveItem",
-                        selectRow.id
-                    )
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess("delete", selectedRowLength);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("delete", selectedRowLength);
-            }
-        },
-        archiveRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("workareaManagement/removeItem", selectRow.id)
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess(
-                                "archive",
-                                selectedRowLength
-                            );
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("archive", selectedRowLength);
-            }
-        },
-        showDeleteSuccess(type, selectedRowLength) {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    type === "delete" && selectedRowLength > 1
-                        ? `pôles de production supprimés`
-                        : type === "delete" && selectedRowLength === 1
-                        ? `pôle de production supprimé`
-                        : selectedRowLength > 1
-                        ? `pôles de production archivés`
-                        : `pôle de production archivé`
-            });
         },
         onResize(event) {
             if (this.gridApi) {

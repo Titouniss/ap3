@@ -50,41 +50,29 @@
 
         <div class="mb-base">
             <h6 class="mb-4">Indisponibilités</h6>
-            <add-form :id_user="user_id" @on-submit="fetchOvertimes" :fetchOvertimes="fetchOvertimes" />
+            <add-form
+                :id_user="user_id"
+                @on-submit="fetchOvertimes"
+                :fetchOvertimes="fetchOvertimes"
+            />
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="this.confirmDeleteRecord"
-                                    v-if="authorizedTo('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="unavailability"
+                            model-plurial="unavailabilities"
+                            :uses-soft-delete="false"
+                            :items="selectedItems"
+                            @on-action="
+                                () => {
+                                    this.onAction();
+                                    this.fetchOvertimes();
+                                }
+                            "
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -149,6 +137,7 @@
                 :floatingFilter="false"
                 :enableRtl="$vs.rtl"
                 @firstDataRendered="onResize"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -179,6 +168,13 @@ import moduleDealingHoursManagement from "@/store/dealing-hours-management/modul
 
 // Cell Renderer
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+
+// Components
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
+
 import moment from "moment";
 import _ from "lodash";
 
@@ -187,6 +183,7 @@ var modelPlurial = "unavailabilities";
 var modelTitle = "Indisponibilité";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
         vSelect,
@@ -195,7 +192,10 @@ export default {
 
         // Cell Renderer
         CellRendererActions,
-        AddPayedHoursForm
+        AddPayedHoursForm,
+
+        // Components
+        MultipleActions
     },
     props: {
         filters: {
@@ -273,7 +273,8 @@ export default {
                             ).format("DD/MM/YYYY [à] HH:mm")} au ${moment(
                                 data.ends_at
                             ).format("DD/MM/YYYY [à] HH:mm")}`,
-                        usesSoftDelete: false
+                        usesSoftDelete: false,
+                        onDelete: this.fetchOvertimes
                     }
                 }
             ],
@@ -417,47 +418,6 @@ export default {
             let hour = dateTime.split(" ")[1];
             hour = hour.split(":")[0] + ":" + hour.split(":")[1];
             return date + " à " + hour;
-        },
-        confirmDeleteRecord() {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleUnavailabilities = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces indisponibilités ?`
-                        : `Voulez vous vraiment supprimer l'indisponibilité du
-              ${this.parseDateTime(
-                  singleUnavailabilities.starts_at
-              )} au ${this.parseDateTime(singleUnavailabilities.ends_at)} ?`,
-                accept: this.deleteRecord,
-                acceptText: "Supprimer",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("unavailabilityManagement/removeItems", [
-                        selectRow.id
-                    ])
-                    .then(() => {
-                        this.showDeleteSuccess();
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-        },
-        showDeleteSuccess() {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text: `${modelTitle} supprimée`
-            });
         },
         onResize(event) {
             if (this.gridApi) {
