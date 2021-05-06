@@ -1,52 +1,73 @@
 <template>
-    <vs-dropdown vs-trigger-click class="cursor-pointer">
-        <div
-            class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+    <div>
+        <vs-dropdown vs-trigger-click class="cursor-pointer">
+            <div
+                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
+            >
+                <span class="mr-2 leading-none">Actions</span>
+                <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+            </div>
+
+            <vs-dropdown-menu>
+                <vs-dropdown-item
+                    v-if="canRestore"
+                    @click="confirmAction('restore')"
+                >
+                    <span class="flex items-center">
+                        <feather-icon
+                            icon="ArchiveIcon"
+                            svgClasses="h-4 w-4"
+                            class="mr-2"
+                        />
+                        <span>Restaurer</span>
+                    </span>
+                </vs-dropdown-item>
+
+                <vs-dropdown-item
+                    v-if="canArchive"
+                    @click="confirmAction('archive')"
+                >
+                    <span class="flex items-center">
+                        <feather-icon
+                            icon="ArchiveIcon"
+                            svgClasses="h-4 w-4"
+                            class="mr-2"
+                        />
+                        <span>Archiver</span>
+                    </span>
+                </vs-dropdown-item>
+                <vs-dropdown-item
+                    v-if="canDelete"
+                    @click="confirmAction('delete')"
+                >
+                    <span class="flex items-center">
+                        <feather-icon
+                            icon="TrashIcon"
+                            svgClasses="h-4 w-4"
+                            class="mr-2"
+                        />
+                        <span>Supprimer</span>
+                    </span>
+                </vs-dropdown-item>
+            </vs-dropdown-menu>
+        </vs-dropdown>
+
+        <vs-prompt
+            type="confirm"
+            :active.sync="dialogOpen"
+            :color="dialogColors[dialogType]"
+            :title="`Confirmer ${dialogTitles[dialogType]}`"
+            :acceptText="dialogDisplayActions[dialogType]"
+            cancelText="Annuler"
+            @accept="performAction"
+            @cancel="dialogOpen = false"
         >
-            <span class="mr-2 leading-none">Actions</span>
-            <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
-        </div>
-
-        <vs-dropdown-menu>
-            <vs-dropdown-item
-                v-if="canRestore"
-                @click="confirmAction('restore')"
-            >
-                <span class="flex items-center">
-                    <feather-icon
-                        icon="ArchiveIcon"
-                        svgClasses="h-4 w-4"
-                        class="mr-2"
-                    />
-                    <span>Restaurer</span>
-                </span>
-            </vs-dropdown-item>
-
-            <vs-dropdown-item
-                v-if="canArchive"
-                @click="confirmAction('archive')"
-            >
-                <span class="flex items-center">
-                    <feather-icon
-                        icon="ArchiveIcon"
-                        svgClasses="h-4 w-4"
-                        class="mr-2"
-                    />
-                    <span>Archiver</span>
-                </span>
-            </vs-dropdown-item>
-            <vs-dropdown-item v-if="canDelete" @click="confirmAction('delete')">
-                <span class="flex items-center">
-                    <feather-icon
-                        icon="TrashIcon"
-                        svgClasses="h-4 w-4"
-                        class="mr-2"
-                    />
-                    <span>Supprimer</span>
-                </span>
-            </vs-dropdown-item>
-        </vs-dropdown-menu>
-    </vs-dropdown>
+            <div>
+                <div>{{ dialogText }}</div>
+                <small v-if="footNote" class="mt-3">{{ footNote }}</small>
+            </div>
+        </vs-prompt>
+    </div>
 </template>
 
 <script>
@@ -67,33 +88,57 @@ export default {
         usesSoftDelete: {
             type: Boolean,
             default: true
+        },
+        footNotes: {
+            type: Object,
+            default: null
         }
     },
     data() {
         return {
-            restore: {
-                color: "success",
-                title: "restauration",
-                action: "restoreItems",
-                displayAction: "restaurer"
+            dialogType: "",
+            dialogOpen: false,
+            dialogColors: {
+                restore: "success",
+                archive: "warning",
+                delete: "danger"
             },
-            archive: {
-                color: "warning",
-                title: "archivage",
-                action: "removeItems",
-                displayAction: "archiver"
+            dialogTitles: {
+                restore: "restauration",
+                archive: "archivage",
+                delete: "suppression"
             },
-            delete: {
-                color: "danger",
-                title: "suppression",
-                action: this.usesSoftDelete
-                    ? "forceRemoveItems"
-                    : "removeItems",
-                displayAction: "supprimer"
+            dialogActions: {
+                restore: "restoreItems",
+                archive: "removeItems",
+                delete: this.usesSoftDelete ? "forceRemoveItems" : "removeItems"
+            },
+            dialogDisplayActions: {
+                restore: "restaurer",
+                archive: "archiver",
+                delete: "supprimer"
             }
         };
     },
     computed: {
+        dialogText() {
+            const {
+                items,
+                dialogDisplayActions: { [this.dialogType]: displayAction }
+            } = this;
+            const multiple = items.length !== 1;
+
+            return `Voulez vous vraiment ${displayAction} ce${
+                multiple ? `s ${items.length} ` : "t "
+            } élément${items.length === 1 ? "" : "s"} ?`;
+        },
+        footNote() {
+            return (
+                this.footNotes &&
+                this.footNotes[this.dialogType] &&
+                this.footNotes[this.dialogType](this.items.length > 1)
+            );
+        },
         canRestore() {
             return (
                 this.usesSoftDelete &&
@@ -123,7 +168,7 @@ export default {
         confirmAction(type) {
             const {
                 items,
-                [type]: { color, title, displayAction }
+                dialogTitles: { [type]: title }
             } = this;
 
             if (items.length === 0) {
@@ -135,25 +180,17 @@ export default {
                 return;
             }
 
-            const multiple = items.length !== 1;
-            this.$vs.dialog({
-                color,
-                title: `Confirmer ${title}`,
-                text: `Voulez vous vraiment ${displayAction} ce${
-                    multiple ? `s ${items.length} ` : "t "
-                } élément${items.length === 1 ? "" : "s"} ?`,
-                acceptText: displayAction,
-                accept: () => this.performAction(type)
-            });
+            this.dialogType = type;
+            this.dialogOpen = true;
         },
-        async performAction(type) {
+        async performAction() {
             const {
                 items,
-                [type]: { title, action }
+                dialogActions: { [this.dialogType]: action }
             } = this;
 
             try {
-                await this.$store.dispatch(
+                const response = await this.$store.dispatch(
                     `${this.model}Management/${action}`,
                     items.map(item => item.id)
                 );
@@ -163,9 +200,7 @@ export default {
                 this.$vs.notify({
                     color: "success",
                     title: "Succès",
-                    text: `${title} terminé${
-                        type !== "archive" ? "e" : ""
-                    } avec succès`
+                    text: response.message
                 });
             } catch (error) {
                 this.$vs.notify({

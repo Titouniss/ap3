@@ -220,14 +220,14 @@ export default {
                     cellRendererParams: {
                         model: "customer",
                         modelPlurial: "customers",
-                        name: data => `le client ${data.lastname}`,
+                        name: data => `le client ${data.name}`,
                         footNotes: {
                             restore:
-                                "Si vous restaurez le client ses projets seront également restauré.",
+                                "Si vous restaurez le client ses projets seront également restaurés.",
                             archive:
-                                "Si vous archivez le client ses projets seront également archivé.",
+                                "Si vous archivez le client ses projets seront également archivés.",
                             delete:
-                                "Si vous supprimez le client ses projets seront également supprimé."
+                                "Si vous supprimez le client ses projets seront également supprimés."
                         }
                     }
                 }
