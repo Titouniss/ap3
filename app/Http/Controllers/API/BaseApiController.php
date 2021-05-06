@@ -164,7 +164,7 @@ abstract class BaseApiController extends Controller
                 } catch (\Throwable $th) {
                     throw new ApiException("Paramètre 'loads' n'est pas valide.");
                 }
-            } else {
+            } else if (static::$index_load) {
                 $query->with(static::$index_load);
             }
 
@@ -190,6 +190,7 @@ abstract class BaseApiController extends Controller
         } catch (ApiException $th) {
             return $this->errorResponse($th->getMessage(), $th->getHttpCode());
         } catch (\Throwable $th) {
+            return $this->errorResponse($th, static::$response_codes['error_server']);
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
     }
