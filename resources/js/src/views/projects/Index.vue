@@ -306,11 +306,11 @@ export default {
                         withPrompt: true,
                         footNotes: {
                             restore:
-                                "Si vous restaurez le projet ses tâches seront également restauré.",
+                                "Si vous restaurez le projet ses tâches seront également restaurées.",
                             archive:
-                                "Si vous archivez le projet ses tâches seront également archivé.",
+                                "Si vous archivez le projet ses tâches seront également archivées.",
                             delete:
-                                "Si vous supprimez le projet ses tâches seront également supprimé."
+                                "Si vous supprimez le projet ses tâches seront également supprimées."
                         }
                     }
                 }
