@@ -175,7 +175,7 @@ class ProjectController extends BaseApiController
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
-                            throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.")
+                        throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
                         //}
                     }
                 }
@@ -287,7 +287,7 @@ class ProjectController extends BaseApiController
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
-                            throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
+                        throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
                         //}
                     }
                 }
@@ -395,7 +395,7 @@ class ProjectController extends BaseApiController
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
-                            throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
+                        throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
                         //}
                     }
                 }
@@ -513,34 +513,32 @@ class ProjectController extends BaseApiController
                 }
                 $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
             } else {
-                    $projectUpdated = Project::where('id', $projectId)->get();
-                    //si avant la date de début du projet ou après la date de livraison -> erreur
-                    if ($request->start < $projectUpdated[0]['start_date']) {
-                        throw new ApiException("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
-                    } else if ($request->end > $projectUpdated[0]['date']) {
-                        throw new ApiException("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
-                    }
-                    //sinon mettre à jour la task_period et la task
-                    else {
-                        $item = TaskPeriod::where('id', $request->id);
-                        TaskPeriod::where('id', $request->id)->update([
-                            'start_time' => $request->start,
-                            'end_time' => $request->end,
-                        ]);
-                        $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
-                        Task::where('id', $taskPeriod[0]['task_id'])->update([
-                            'date' => $tasksPeriod[0]['start_time'],
-                            'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
-                        ]);
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                    }
-
+                $projectUpdated = Project::where('id', $projectId)->get();
+                //si avant la date de début du projet ou après la date de livraison -> erreur
+                if ($request->start < $projectUpdated[0]['start_date']) {
+                    throw new ApiException("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
+                } else if ($request->end > $projectUpdated[0]['date']) {
+                    throw new ApiException("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
+                }
+                //sinon mettre à jour la task_period et la task
+                else {
+                    $item = TaskPeriod::where('id', $request->id);
+                    TaskPeriod::where('id', $request->id)->update([
+                        'start_time' => $request->start,
+                        'end_time' => $request->end,
+                    ]);
+                    $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
+                    Task::where('id', $taskPeriod[0]['task_id'])->update([
+                        'date' => $tasksPeriod[0]['start_time'],
+                        'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
+                    ]);
+                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                }
             }
             return $this->successResponse($task[0], 'Chargement terminé avec succès.');
         } catch (ApiException $th) {
             return $this->errorResponse($th->getMessage(), $th->getHttpCode());
-        }
-        catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             return $this->errorResponse($th, static::$response_codes['error_server']);
         }
     }
