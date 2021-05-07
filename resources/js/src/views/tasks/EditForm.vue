@@ -12,7 +12,7 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-            <div class="editTaskForm">
+            <div>
                 <form autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
@@ -874,11 +874,6 @@ export default {
 }
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
-}
-.editTaskForm {
-    max-height: 450px;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 .no-comments {
     font-size: 0.9em;
