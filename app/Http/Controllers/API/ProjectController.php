@@ -175,7 +175,7 @@ class ProjectController extends BaseApiController
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
-                        return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
+                            throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.")
                         //}
                     }
                 }
@@ -192,21 +192,20 @@ class ProjectController extends BaseApiController
 
                     if (count($listTaskPeriodToMoveAndCreate) == 0) {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                        throw new ApiException("Il n'y a aucune période dépendante à déplacer.");
                     }
 
                     //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
+                        throw new ApiException("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.");
                     }
 
                     //on calcule la date de fin de la dernière task_period déplacée pour savoir si elle se trouve après la date de livraison
 
                     //si la dernière date est après la date de livraison, erreur
                     if (end($listTaskPeriodToMoveAndCreate["move"]) > $dateLivraison || ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) > $dateLivraison)) {
-
-                        return $this->errorResponse("La date de livraison est dépassée, il faut déplacer la date de livraison plus tard ou cocher la case pour changer automatiquement la date de livraison.", static::$response_codes['error_server']);
+                        throw new ApiException("La date de livraison est dépassée, il faut déplacer la date de livraison plus tard ou cocher la case pour changer automatiquement la date de livraison.");
                     }
                     //sinon on met à jour et on crées les tasks_period
                     else {
@@ -288,7 +287,7 @@ class ProjectController extends BaseApiController
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
-                        return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
+                            throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
                         //}
                     }
                 }
@@ -300,13 +299,13 @@ class ProjectController extends BaseApiController
 
                     if (count($listTaskPeriodToMoveAndCreate) == 0) {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                        throw new ApiException("Il n'y a aucune période dépendante à déplacer.");
                     }
 
                     //si le tableau retourné contient on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
+                        throw new ApiException("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.");
                     }
 
                     //si la dernière date des tasks_period déplacées ou créées est après la date de livraison, on met à jour la date de livraison
@@ -396,7 +395,7 @@ class ProjectController extends BaseApiController
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
-                        return $this->errorResponse("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.", static::$response_codes['error_server']);
+                            throw new ApiException("Vous ne pouvez pas déplacer la période ici car l'utilisateur ou le pôle de production n'est pas disponible.");
                         //}
                     }
                 }
@@ -412,18 +411,18 @@ class ProjectController extends BaseApiController
 
                     if (count($listTaskPeriodToMoveAndCreate) == 0) {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("Il n'y a aucune période dépendante à déplacer.", static::$response_codes['error_server']);
+                        throw new ApiException("Il n'y a aucune période dépendante à déplacer.");
                     }
 
                     //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("La nouvelle date de début n'est pas dans les heures de travail des utilisateurs.", static::$response_codes['error_server']);
+                        throw new ApiException("La nouvelle date de début n'est pas dans les heures de travail des utilisateurs.");
                     }
                     //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "avant aujourd'hui") {
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                        return $this->errorResponse("Impossible de déplacer les périodes avant aujourd'hui.", static::$response_codes['error_server']);
+                        throw new ApiException("Impossible de déplacer les périodes avant aujourd'hui.");
                     }
 
                     //si la première date dans le temps des tasks_period déplacées ou créées est avant demain -> erreur
@@ -431,8 +430,7 @@ class ProjectController extends BaseApiController
                         end($listTaskPeriodToMoveAndCreate["move"]) < $dateDemain ||
                         ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDemain)
                     ) {
-
-                        return $this->errorResponse("Les périodes ne peuvent pas être déplacées avant demain.", static::$response_codes['error_server']);
+                        throw new ApiException("Les périodes ne peuvent pas être déplacées avant demain.");
                     }
 
                     //si l'utilisateur n'a pas coché la case pour avancer la date de début de projet
@@ -442,8 +440,7 @@ class ProjectController extends BaseApiController
                         ((end($listTaskPeriodToMoveAndCreate["move"]) < $dateDebutProjet) ||
                             ($listTaskPeriodToMoveAndCreate["create"] != null && end($listTaskPeriodToMoveAndCreate["create"]) < $dateDebutProjet))
                     ) {
-
-                        return $this->errorResponse("Toutes les périodes ne peuvent pas être déplacées après la date de début du projet. Vous pouvez cocher la case pour déplacer automatiquement la date de début du projet.", static::$response_codes['error_server']);
+                        throw new ApiException("Toutes les périodes ne peuvent pas être déplacées après la date de début du projet. Vous pouvez cocher la case pour déplacer automatiquement la date de début du projet.");
                     }
 
                     //si l'utilisateur a accepté d'avancer la date de début du projet, on met à jour le champs date_end dans la bdd
@@ -516,13 +513,12 @@ class ProjectController extends BaseApiController
                 }
                 $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
             } else {
-                try {
                     $projectUpdated = Project::where('id', $projectId)->get();
                     //si avant la date de début du projet ou après la date de livraison -> erreur
                     if ($request->start < $projectUpdated[0]['start_date']) {
-                        throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
+                        throw new ApiException("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
                     } else if ($request->end > $projectUpdated[0]['date']) {
-                        throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
+                        throw new ApiException("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
                     }
                     //sinon mettre à jour la task_period et la task
                     else {
@@ -538,18 +534,13 @@ class ProjectController extends BaseApiController
                         ]);
                         $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
                     }
-                } catch (\Throwable $th) {
-                    return $this->errorResponse($th, static::$response_codes['error_server']);
-                }
-                
+
             }
-            try {
-                return $this->successResponse($task[0], 'Chargement terminé avec succès.');
-            } catch (\Throwable $th) {
-                return $this->errorResponse($th, static::$response_codes['error_server']);
-                // return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
-            }
-        } catch (\Throwable $th) {
+            return $this->successResponse($task[0], 'Chargement terminé avec succès.');
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        }
+        catch (\Throwable $th) {
             return $this->errorResponse($th, static::$response_codes['error_server']);
         }
     }
