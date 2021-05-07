@@ -12,7 +12,7 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-            <div class="editTaskForm">
+            <div>
                 <form autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
@@ -106,7 +106,6 @@
                                         this.type != 'workarea'
                                 "
                             >
-                                <small class="date-label"> Compétences </small>
                                 <v-select
                                     v-validate="'required'"
                                     class="w-full"
@@ -118,6 +117,11 @@
                                     multiple
                                     @input="updateUsersAndWorkareasList"
                                 >
+                                    <template #header>
+                                        <div class="vs-select--label">
+                                            Compétences
+                                        </div>
+                                    </template>
                                 </v-select>
                                 <span
                                     class="text-danger text-sm"
@@ -126,20 +130,17 @@
                                 >
                             </div>
 
-                            <span
+                            <div
                                 v-if="
-                                    itemLocal.skills &&
-                                        itemLocal.skills.length > 0 &&
-                                        usersDataFiltered.length == 0 &&
-                                        checkProjectStatus &&
-                                        this.type != 'users' &&
-                                        this.type != 'workarea'
+                                    type !== 'users' &&
+                                        type !== 'workarea' &&
+                                        !hasAvailableUsers
                                 "
                                 class="text-danger text-sm"
                             >
                                 Attention, aucun utilisateur ne possède cette
                                 combinaison de compétences
-                            </span>
+                            </div>
 
                             <div
                                 class="my-3"
@@ -152,9 +153,7 @@
                                     this.type != 'users' &&
                                         this.type != 'workarea' &&
                                         checkProjectStatus &&
-                                        itemLocal.skills &&
-                                        itemLocal.skills.length > 0 &&
-                                        usersDataFiltered.length > 0
+                                        hasAvailableUsers
                                 "
                             >
                                 <v-select
@@ -181,20 +180,17 @@
                                 </v-select>
                             </div>
 
-                            <span
+                            <div
                                 v-if="
-                                    itemLocal.skills &&
-                                        itemLocal.skills.length > 0 &&
-                                        workareasDataFiltered.length == 0 &&
-                                        checkProjectStatus &&
-                                        this.type != 'users' &&
-                                        this.type != 'workarea'
+                                    type !== 'users' &&
+                                        type !== 'workarea' &&
+                                        !hasAvailableWorkareas
                                 "
                                 class="text-danger text-sm"
                             >
                                 Attention, aucun pôle de production ne possède
                                 cette combinaison de compétences
-                            </span>
+                            </div>
 
                             <div
                                 class="my-3"
@@ -207,8 +203,7 @@
                                     this.type !== 'workarea' &&
                                         itemLocal.skills &&
                                         checkProjectStatus &&
-                                        itemLocal.skills.length > 0 &&
-                                        workareasDataFiltered.length > 0
+                                        hasAvailableWorkareas
                                 "
                             >
                                 <v-select
@@ -545,12 +540,40 @@ export default {
             return this.$store.state.AppActiveUser.is_admin;
         },
         validateForm() {
+            const {
+                name,
+                estimated_time,
+                date,
+                skills,
+                workarea_id,
+                user_id
+            } = this.itemLocal;
+
             return (
                 !this.errors.any() &&
-                this.itemLocal.name != "" &&
-                this.itemLocal.date != "" &&
-                this.itemLocal.estimated_time != "" &&
-                this.itemLocal.skills.length > 0
+                name != "" &&
+                date != "" &&
+                estimated_time != "" &&
+                skills.length > 0 &&
+                (this.type === "users" ||
+                    this.type === "workarea" ||
+                    (this.hasAvailableUsers && this.hasAvailableWorkareas)) &&
+                ((this.project_data && this.project_data.status === "todo") ||
+                    (workarea_id !== null && user_id !== null))
+            );
+        },
+        hasAvailableUsers() {
+            return (
+                this.itemLocal.skills.length === 0 ||
+                (this.itemLocal.skills.length > 0 &&
+                    this.usersDataFiltered.length > 0)
+            );
+        },
+        hasAvailableWorkareas() {
+            return (
+                this.itemLocal.skills.length === 0 ||
+                (this.itemLocal.skills.length > 0 &&
+                    this.workareasDataFiltered.length > 0)
             );
         },
         activePrompt: {
@@ -851,11 +874,6 @@ export default {
 }
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
-}
-.editTaskForm {
-    max-height: 450px;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 .no-comments {
     font-size: 0.9em;

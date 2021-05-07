@@ -32,7 +32,7 @@
             class="task-compose"
         >
             <div>
-                <form class="addTaskForm" autocomplete="off">
+                <form autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -95,27 +95,26 @@
                                 />
                             </div>
 
-                            <div class="my-3">
-                                <vs-select
-                                    v-if="
-                                        this.type !== 'projects' &&
-                                            projectsData.length > 0 &&
-                                            hideProjectInput == false
-                                    "
+                            <div
+                                v-if="
+                                    this.type !== 'projects' &&
+                                        projectsData.length > 0 &&
+                                        hideProjectInput == false
+                                "
+                                class="my-3"
+                            >
+                                <small class="date-label"> Projets </small>
+                                <v-select
+                                    class="w-full"
                                     v-validate="'required'"
                                     name="projectId"
-                                    label="Projet"
+                                    label="name"
                                     v-model="itemLocal.project_id"
-                                    class="w-full"
+                                    :reduce="project => project.id"
+                                    :options="projectsData"
                                     autocomplete
                                 >
-                                    <vs-select-item
-                                        :key="index"
-                                        :value="item.id"
-                                        :text="item.name"
-                                        v-for="(item, index) in projectsData"
-                                    />
-                                </vs-select>
+                                </v-select>
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('projectId')"
@@ -125,7 +124,6 @@
                             </div>
 
                             <div class="my-3">
-                                <small class="date-label"> Compétences </small>
                                 <v-select
                                     v-validate="'required'"
                                     class="w-full"
@@ -137,19 +135,22 @@
                                     multiple
                                     @input="updateUsersAndWorkareasList"
                                 >
+                                    <template #header>
+                                        <div class="vs-select--label">
+                                            Compétences
+                                        </div>
+                                    </template>
                                 </v-select>
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('skills')"
-                                    >{{ errors.first("skills") }}</span
                                 >
+                                    {{ errors.first("skills") }}
+                                </span>
                             </div>
 
                             <span
-                                v-if="
-                                    itemLocal.skills.length > 0 &&
-                                        usersDataFiltered.length == 0
-                                "
+                                v-if="!hasAvailableUsers"
                                 class="text-danger text-sm"
                             >
                                 Attention, aucun utilisateur ne possède cette
@@ -162,8 +163,7 @@
                                         this.type !== 'users' &&
                                             usersData.length > 0 &&
                                             checkProjectStatus &&
-                                            itemLocal.skills.length > 0 &&
-                                            usersDataFiltered.length > 0
+                                            hasAvailableUsers
                                     "
                                     v-validate="'required'"
                                     name="user_id"
@@ -197,10 +197,7 @@
                             </div>
 
                             <span
-                                v-if="
-                                    itemLocal.skills.length > 0 &&
-                                        workareasDataFiltered.length == 0
-                                "
+                                v-if="!hasAvailableWorkareas"
                                 class="text-danger text-sm"
                             >
                                 Attention, aucun pôle de production ne possède
@@ -212,8 +209,7 @@
                                 v-if="
                                     this.type !== 'workarea' &&
                                         checkProjectStatus &&
-                                        itemLocal.skills.length > 0 &&
-                                        workareasDataFiltered.length > 0
+                                        hasAvailableWorkareas
                                 "
                             >
                                 <v-select
@@ -423,11 +419,37 @@ export default {
             return this.$store.state.AppActiveUser.is_admin;
         },
         validateForm() {
+            const {
+                name,
+                estimated_time,
+                skills,
+                workarea_id,
+                user_id
+            } = this.itemLocal;
+
             return (
                 !this.errors.any() &&
-                this.itemLocal.name != "" &&
-                this.itemLocal.estimated_time != "" &&
-                this.itemLocal.skills.length > 0
+                name != "" &&
+                estimated_time != "" &&
+                skills.length > 0 &&
+                this.hasAvailableUsers &&
+                this.hasAvailableWorkareas &&
+                ((this.project_data && this.project_data.status === "todo") ||
+                    (workarea_id !== null && user_id !== null))
+            );
+        },
+        hasAvailableUsers() {
+            return (
+                this.itemLocal.skills.length === 0 ||
+                (this.itemLocal.skills.length > 0 &&
+                    this.usersDataFiltered.length > 0)
+            );
+        },
+        hasAvailableWorkareas() {
+            return (
+                this.itemLocal.skills.length === 0 ||
+                (this.itemLocal.skills.length > 0 &&
+                    this.workareasDataFiltered.length > 0)
             );
         },
         workareasData() {
@@ -609,7 +631,6 @@ export default {
             }
         },
         updateUsersAndWorkareasList(ids) {
-            console.log(ids);
             this.updateWorkareasList(ids);
             this.updateUsersList(ids);
         },
@@ -689,11 +710,6 @@ export default {
 <style>
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
-}
-.addTaskForm {
-    max-height: 450px;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 .inputNumber {
     justify-content: start;
