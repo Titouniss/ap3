@@ -516,49 +516,32 @@ class ProjectController extends BaseApiController
                 }
                 $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
             } else {
-                $projectUpdated = Project::where('id', $projectId)->get();
-                if ($projectUpdated == null) {
-                    throw new Exception("Pas de projet associé.");
+                try {
+                    $projectUpdated = Project::where('id', $projectId)->get();
+                    //si avant la date de début du projet ou après la date de livraison -> erreur
+                    if ($request->start < $projectUpdated[0]['start_date']) {
+                        throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
+                    } else if ($request->end > $projectUpdated[0]['date']) {
+                        throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
+                    }
+                    //sinon mettre à jour la task_period et la task
+                    else {
+                        $item = TaskPeriod::where('id', $request->id);
+                        TaskPeriod::where('id', $request->id)->update([
+                            'start_time' => $request->start,
+                            'end_time' => $request->end,
+                        ]);
+                        $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
+                        Task::where('id', $taskPeriod[0]['task_id'])->update([
+                            'date' => $tasksPeriod[0]['start_time'],
+                            'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
+                        ]);
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                    }
+                } catch (\Throwable $th) {
+                    return $this->errorResponse($th, static::$response_codes['error_server']);
                 }
-                //si avant la date de début du projet ou après la date de livraison -> erreur
-                if ($request->start < $projectUpdated[0]['start_date']) {
-                    throw new Exception("Vous ne pouvez pas déplacer la période avant la date de début du projet.");
-                } else if ($request->end > $projectUpdated[0]['date']) {
-                    throw new Exception("Vous ne pouvez pas déplacer la période après la date de livraison. Veuillez reculer la date de livraison.");
-                }
-                //sinon mettre à jour la task_period et la task
-                else {
-                    if ($request->id == null || $request->start == null || $request->end == null) {
-                        throw new Exception("Pb requête.");
-                    }
-                    $item = TaskPeriod::where('id', $request->id);
-                    if ($item == null) {
-                        throw new Exception("Pas de task period.");
-                    }
-                    TaskPeriod::where('id', $request->id)->update([
-                        'start_time' => $request->start,
-                        'end_time' => $request->end,
-                    ]);
-
-                    $tasksPeriod = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->orderBy('start_time', 'asc')->get();
-                    if ($tasksPeriod == null) {
-                        throw new Exception("Pas de task period.");
-                    }
-
-                    if ($taskPeriod[0]['task_id'] == null) {
-                        throw new Exception("Pas de task_id.");
-                    } else if ($tasksPeriod[0]['start_time'] == null) {
-                        throw new Exception("Pas de start_time.");
-                    } else if ($tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'] == null) {
-                        throw new Exception("Pas de end_time.");
-                    }
-
-                    Task::where('id', $taskPeriod[0]['task_id'])->update([
-                        'date' => $tasksPeriod[0]['start_time'],
-                        'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
-                    ]);
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
-                }
+                
             }
             try {
                 return $this->successResponse($task[0], 'Chargement terminé avec succès.');
