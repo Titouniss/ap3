@@ -49,34 +49,13 @@
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
                     <vs-row vs-type="flex">
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
+                        <multiple-actions
+                            model="user"
+                            model-plurial="users"
+                            :items="selectedItems"
+                            @on-action="onAction"
+                        />
 
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="this.confirmDeleteRecord"
-                                    v-if="authorizedTo('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
                             class="ml-5"
@@ -158,6 +137,7 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -185,6 +165,10 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 var model = "user";
 var modelPlurial = "users";
@@ -250,6 +234,7 @@ var columnDef = [
 ];
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
         vSelect,
@@ -259,7 +244,8 @@ export default {
         CellRendererActions,
 
         // Components
-        RefreshModule
+        RefreshModule,
+        MultipleActions
     },
     data() {
         return {
@@ -402,46 +388,6 @@ export default {
         },
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
-        },
-        confirmDeleteRecord() {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleUser = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces utilisateurs ?`
-                        : `Voulez vous vraiment supprimer l'utilisateur
-              ${singleUser.firstname} ${singleUser.lastname} ?`,
-                accept: this.deleteRecord,
-                acceptText: "Supprimer",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("userManagement/forceRemoveItems", [selectRow.id])
-                    .then(data => {
-                        this.showDeleteSuccess();
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-        },
-        showDeleteSuccess() {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Utilisateurs supprimés?`
-                        : `Utilisateur supprimé`
-            });
         },
         onResize(event) {
             if (this.gridApi) {

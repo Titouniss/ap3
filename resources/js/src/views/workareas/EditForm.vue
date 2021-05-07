@@ -20,43 +20,54 @@
                             class="w-full mb-4 mt-5"
                             placeholder="Nom"
                             v-model="itemLocal.name"
-                            :color="validateForm ? 'success' : 'danger'"
+                            :success="
+                                itemLocal.name.length > 0 && !errors.has('name')
+                            "
+                            :danger="errors.has('name')"
+                            :danger-text="errors.first('name')"
                         />
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('name')"
-                            >{{ errors.first("name") }}</span
-                        >
 
-                        <small class="ml-1 mb-2" for
-                            >Nombre d'opérateur maximum</small
-                        >
-                        <vs-row vs-w="12">
-                            <vs-col vs-w="6">
-                                <vs-input-number
-                                    min="1"
-                                    max="25"
-                                    name="max_users"
-                                    class="inputNumber"
-                                    v-model="itemLocal.max_users"
-                                />
-                            </vs-col>
-                        </vs-row>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('max_users')"
-                            >{{ errors.first("max_users") }}</span
-                        >
-
-                        <div v-if="itemLocal.company_id">
+                        <div class="ml-1 mb-2">
+                            <small>
+                                Nombre d'opérateur maximum
+                            </small>
+                            <vs-row vs-w="12">
+                                <vs-col vs-w="6">
+                                    <vs-input-number
+                                        min="1"
+                                        max="25"
+                                        name="max_users"
+                                        class="inputNumber"
+                                        v-model="itemLocal.max_users"
+                                    />
+                                </vs-col>
+                            </vs-row>
+                            <span
+                                class="text-danger text-sm"
+                                v-show="errors.has('max_users')"
+                                >{{ errors.first("max_users") }}</span
+                            >
+                        </div>
+                        <div v-if="itemLocal.company_id" class="mt-5">
+                            <div v-if="skillsData.length === 0">
+                                <span class="msgTxt">
+                                    Aucune compétences trouvées.
+                                </span>
+                                <router-link to="/skills">
+                                    <span class="linkTxt">
+                                        Ajouter une compétence
+                                    </span>
+                                </router-link>
+                            </div>
                             <v-select
+                                v-else
                                 v-validate="'required'"
-                                name="skill"
+                                name="skills"
                                 label="name"
                                 :multiple="true"
                                 v-model="itemLocal.skills"
                                 :reduce="skill => skill.id"
-                                class="w-full mt-5"
+                                class="w-full"
                                 autocomplete
                                 :options="skillsData"
                             >
@@ -65,15 +76,13 @@
                                         Compétences
                                     </div>
                                 </template>
-                                <template #option="skill">
-                                    <span>{{ `${skill.name}` }}</span>
-                                </template>
                             </v-select>
                             <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('company_id')"
-                                >{{ errors.first("company_id") }}</span
+                                class="text-danger con-text-validation"
+                                v-show="errors.has('skills')"
                             >
+                                {{ errors.first("skills") }}
+                            </span>
                         </div>
 
                         <div class="vx-row mt-4" v-if="!disabled">
@@ -86,8 +95,9 @@
                                     />
                                     <span
                                         class="font-medium text-lg leading-none"
-                                        >Admin</span
                                     >
+                                        Admin
+                                    </span>
                                 </div>
                                 <vs-divider />
                                 <div>
@@ -115,10 +125,11 @@
                                         </template>
                                     </v-select>
                                     <span
-                                        class="text-danger text-sm"
+                                        class="text-danger con-text-validation"
                                         v-show="errors.has('company_id')"
-                                        >{{ errors.first("company_id") }}</span
                                     >
+                                        {{ errors.first("company_id") }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -157,10 +168,8 @@ export default {
         FileInput
     },
     data() {
-        const item = JSON.parse(
-            JSON.stringify(
-                this.$store.getters["workareaManagement/getItem"](this.itemId)
-            )
+        const item = this.$store.getters["workareaManagement/getItem"](
+            this.itemId
         );
         item.skills = item.skills.map(skill => skill.id);
         return {
@@ -211,7 +220,12 @@ export default {
             }
         },
         validateForm() {
-            return !this.errors.any() && this.itemLocal.name != "";
+            return (
+                !this.errors.any() &&
+                this.itemLocal.skills &&
+                this.itemLocal.skills.length > 0 &&
+                this.itemLocal.name != ""
+            );
         }
     },
     methods: {

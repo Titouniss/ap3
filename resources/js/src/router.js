@@ -348,7 +348,38 @@ const router = new Router({
                         rule: "admin",
                         requiresAuth: true
                     }
-                }
+                },
+                {
+                    path: "/bugs",
+                    name: "bugs",
+                    component: () => import("./views/bugs/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/bugs/bug-add/",
+                    name: "bugs-bug-add",
+                    component: () => import("./views/bugs/Add.vue"),
+                    meta: {
+                        parent: "bugs",
+                        rule: "admin",
+                        pageTitle: "Remonté d'un bug",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/bugs/bug-edit/:id",
+                    name: "bugs-bug-edit",
+                    component: () => import("./views/bugs/Edit.vue"),
+                    meta: {
+                        parent: "bugs",
+                        pageTitle: "Édition d'un bug",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
             ]
         },
         // =============================================================================

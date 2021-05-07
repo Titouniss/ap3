@@ -1,8 +1,8 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button @click="activePrompt = true" class="w-full"
-            >Ajouter un pôle de production</vs-button
-        >
+        <vs-button @click="activePrompt = true" class="w-full">
+            Ajouter un pôle de production
+        </vs-button>
         <vs-prompt
             title="Ajouter un pôle de production"
             accept-text="Ajouter"
@@ -24,60 +24,73 @@
                                 class="w-full mb-4 mt-5"
                                 placeholder="Nom"
                                 v-model="itemLocal.name"
+                                :success="
+                                    itemLocal.name.length > 0 &&
+                                        !errors.has('name')
+                                "
+                                :danger="errors.has('name')"
+                                :danger-text="errors.first('name')"
                             />
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('name')"
-                                >{{ errors.first("name") }}</span
-                            >
 
-                            <small class="ml-1 mb-2" for
-                                >Nombre d'opérateur maximum</small
-                            >
-                            <vs-row vs-w="12">
-                                <vs-col vs-w="6">
-                                    <vs-input-number
-                                        min="1"
-                                        max="25"
-                                        name="max_users"
-                                        class="inputNumber"
-                                        v-model="itemLocal.max_users"
-                                    />
-                                </vs-col>
-                            </vs-row>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('max_users')"
-                                >{{ errors.first("max_users") }}</span
-                            >
+                            <div class="ml-1 mb-2">
+                                <small>
+                                    Nombre d'opérateur maximum
+                                </small>
+                                <vs-row vs-w="12">
+                                    <vs-col vs-w="6">
+                                        <vs-input-number
+                                            min="1"
+                                            max="25"
+                                            name="max_users"
+                                            class="inputNumber"
+                                            v-model="itemLocal.max_users"
+                                        />
+                                    </vs-col>
+                                </vs-row>
+                                <span
+                                    class="text-danger text-sm"
+                                    v-show="errors.has('max_users')"
+                                    >{{ errors.first("max_users") }}</span
+                                >
+                            </div>
 
                             <div v-if="itemLocal.company_id" class="mt-5">
-                                <span
-                                    v-if="skillsData.length == 0"
-                                    class="msgTxt"
-                                    >Aucune compétences trouvées.</span
-                                >
-                                <span
-                                    v-if="skillsData.length == 0"
-                                    class="linkTxt"
-                                    >Ajouter une compétence</span
-                                >
-                                <vs-select
-                                    v-if="skillsData.length > 0"
+                                <div v-if="skillsData.length === 0">
+                                    <span class="msgTxt">
+                                        Aucune compétences trouvées.
+                                    </span>
+                                    <router-link to="/skills">
+                                        <span class="linkTxt">
+                                            Ajouter une compétence
+                                        </span>
+                                    </router-link>
+                                </div>
+                                <v-select
+                                    v-else
                                     v-validate="'required'"
-                                    label="Compétences"
-                                    v-model="itemLocal.skills"
+                                    name="skills"
+                                    label="name"
                                     class="w-full"
+                                    v-model="itemLocal.skills"
+                                    :reduce="skill => skill.id"
+                                    :options="skillsData"
                                     multiple
                                     autocomplete
                                 >
-                                    <vs-select-item
-                                        :key="index"
-                                        :value="item.id"
-                                        :text="item.name"
-                                        v-for="(item, index) in skillsData"
-                                    />
-                                </vs-select>
+                                    <template #header>
+                                        <div
+                                            style="opacity: .8 font-size: .85rem"
+                                        >
+                                            Compétences
+                                        </div>
+                                    </template>
+                                </v-select>
+                                <span
+                                    class="text-danger con-text-validation"
+                                    v-show="errors.has('skills')"
+                                >
+                                    {{ errors.first("skills") }}
+                                </span>
                             </div>
                             <div class="vx-row mt-4" v-if="!disabled">
                                 <div class="vx-col w-full">
@@ -89,8 +102,9 @@
                                         />
                                         <span
                                             class="font-medium text-lg leading-none"
-                                            >Admin</span
                                         >
+                                            Admin
+                                        </span>
                                     </div>
                                     <vs-divider />
                                     <div>
@@ -98,12 +112,12 @@
                                             v-validate="'required'"
                                             name="company"
                                             label="name"
-                                            :multiple="false"
-                                            v-model="itemLocal.company_id"
-                                            :reduce="name => name.id"
                                             class="w-full mt-5"
-                                            autocomplete
+                                            v-model="itemLocal.company_id"
+                                            :reduce="company => company.id"
                                             :options="companiesData"
+                                            autocomplete
+                                            @input="itemLocal.skills = []"
                                         >
                                             <template #header>
                                                 <div
@@ -112,19 +126,13 @@
                                                     Société
                                                 </div>
                                             </template>
-                                            <template #option="company">
-                                                <span>{{
-                                                    `${company.name}`
-                                                }}</span>
-                                            </template>
                                         </v-select>
                                         <span
-                                            class="text-danger text-sm"
+                                            class="text-danger con-text-validation"
                                             v-show="errors.has('company_id')"
-                                            >{{
-                                                errors.first("company_id")
-                                            }}</span
                                         >
+                                            {{ errors.first("company_id") }}
+                                        </span>
                                     </div>
                                     <!-- <div v-if="itemLocal.company_id" class="mt-5">
                     <span v-if="companySkills.length == 0" class="msgTxt"
@@ -241,6 +249,8 @@ export default {
             return (
                 !this.errors.any() &&
                 this.itemLocal.name != "" &&
+                this.itemLocal.skills &&
+                this.itemLocal.skills.length > 0 &&
                 this.itemLocal.company_id != null
             );
         }

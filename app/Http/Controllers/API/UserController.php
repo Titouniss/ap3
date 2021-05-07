@@ -491,14 +491,14 @@ class UserController extends BaseApiController
         }
 
         //on récupère la company de l'admin authentifié
-        $companyId=$item["company_id"];
-        $company=Company::where('id', $companyId)->get();
-        $companyName=$company[0]['name'];
+        $companyId = $item["company_id"];
+        $company = Company::where('id', $companyId)->get();
+        $companyName = $company[0]['name'];
 
         try {
             $item->SendEmailRegistrationLinkNotification($arrayRequest["email"], $companyName);
         } catch (\Throwable $th) {
-           return $this->errorResponse("Impossible d'envoyer le mail avec le lien d'inscription.");
+            return $this->errorResponse("Impossible d'envoyer le mail avec le lien d'inscription.");
         }
 
         return $this->successResponse(true, "Émail envoyé.");
@@ -590,8 +590,7 @@ class UserController extends BaseApiController
             'password' => 'required',
             'c_password' => 'required|same:password',
             'terms_accepted' => 'required',
-            'recaptcha'=>'required',
-             recaptchaFieldName() => recaptchaRuleName()
+            'g-recaptcha-response' => 'required|recaptcha',
         ]);
         if ($validator->fails()) {
             return $this->errorResponse($validator->errors());
@@ -635,22 +634,20 @@ class UserController extends BaseApiController
             return $this->errorResponse($th->getMessage());
             return $this->errorResponse("Erreur serveur.", static::$response_codes['error_server']);
         }
-        if($arrayRequest['registerLink'] != null){
+        if ($arrayRequest['registerLink'] != null) {
             if (Company::where('name', $arrayRequest['company_name'])->doesntExist()) {
                 throw new ApiException("La société n'existe pas.");
             }
             $company = Company::where([
                 'name' => $arrayRequest['company_name'],
             ])->get();
-            $company=$company[0];
+            $company = $company[0];
             $item->company()->associate($company);
-
-        }
-        else{
+        } else {
             $company = Company::create([
                 'name' => $arrayRequest['company_name'],
             ]);
-    
+
             $company->details()->update([
                 'contact_firstname' => $arrayRequest['firstname'],
                 'contact_lastname' => $arrayRequest['lastname'],

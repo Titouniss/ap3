@@ -238,6 +238,19 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /***********************************************************************************/
+    /************************************   Bugs   *************************************/
+    /***********************************************************************************/
+    Route::prefix('bug-management')->group(function () {
+        Route::get('index', 'API\BugController@index');
+        Route::get('show/{id}', 'API\BugController@show');
+        Route::post('store', 'API\BugController@store');
+        Route::put('update/{id}', 'API\BugController@update');
+        Route::put('restore/{id?}', 'API\BugController@restore');
+        Route::put('destroy/{id?}', 'API\BugController@destroy');
+        Route::put('force-destroy/{id?}', 'API\BugController@forceDestroy');
+    });
+
+    /***********************************************************************************/
     /***********************************   Modules   *************************************/
     /***********************************************************************************/
     Route::prefix('module-management')->group(function () {
