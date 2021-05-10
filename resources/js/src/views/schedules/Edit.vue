@@ -1102,11 +1102,19 @@ export default {
             }
             //bloquer le déplacement si task dépendantes
             let order=null;
+            let taskCourante=null;
             if (this.tasksEvent != null && !this.moveAccepted) {
                 for(var i = 0; i < this.tasksEvent.length; i++){
                     if(this.tasksEvent[i].id==this.$route.query.task_id){
                         order=this.tasksEvent[i].order;
+                        taskCourante=this.tasksEvent[i];
                     }
+                }
+                //si avant la date de début ou après la date de livraison
+                if(taskCourante != null && (moment(startPeriodTask).isBefore(moment(taskCourante.project.start_date)) ||
+                                            moment(endPeriodTask).isAfter(moment(taskCourante.project.date)))){
+                    //on remet la task_period à sa date originale
+                    arg.event.setDates(taskPeriod.start_time, taskPeriod.end_time);
                 }
                 for(var i = 0; i < this.tasksEvent.length; i++){
                     if(this.tasksEvent[i].id!=this.$route.query.task_id){
@@ -1189,41 +1197,93 @@ export default {
                     }
                 }
             }
-            if (!erreur) {
-                var itemToSave = {
-                    id: itemTemp.period_id,
-                    start: startPeriodTask,
-                    end: endPeriodTask,
+            //bloquer le déplacement si en dehors des heures de travail
+            var item = {
+                    id: this.$route.query.id,
                     type: this.$route.query.type,
                     task_id: this.$route.query.task_id
                 };
-                this.$vs.loading();
-                this.$store
-                    .dispatch("taskManagement/updateTaskPeriod", itemToSave)
-                    .then(data => {
-                        this.tasksPeriod=data.payload.periods;
-                        this.$vs.notify({
-                            title: "Modification d'une période",
-                            text: `modifiée avec succès`,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "success"
-                        });
-                    })
-                    .catch(error => {
+            let workHoursDay=null;
+            this.$store
+                .dispatch("projectManagement/workHoursPeriods", item)
+                .then(data => {
+                    moment.locale('fr');
+                    workHoursDay=data.payload[moment(arg.event.start).format('dddd')];
+                    if(((workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
+                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null) &&
+                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
+                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
+                        moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[1])._i) &&
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i))) ||
+
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[1])._i) &&
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i<=(moment(workHoursDay[2])._i))) ||
+
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
+                        moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[2])._i))) ||
+
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i) &&
+                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
+                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
+
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
+                        (workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
+                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null)) ||
+
+                        moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[0])._i) ||
+
+                        moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[3])._i)){
+                        erreur = true;
+                        //on remet la task_period à sa date originale
+                        arg.event.setDates(taskPeriod.start_time, taskPeriod.end_time);
                         this.$vs.notify({
                             title: "Erreur",
-                            text: error.message,
+                            text:
+                                "Vous ne pouvez pas déplacer cette période ici car l'utilisateur ne travaille pas.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 10000
+                            time: 10000,
                         });
-                    })
-                    .finally(() => {
-                        this.$vs.loading.close();
-                    });
-            }
+                    }
+                    if (!erreur) {
+                        var itemToSave = {
+                            id: itemTemp.period_id,
+                            start: startPeriodTask,
+                            end: endPeriodTask,
+                            type: this.$route.query.type,
+                            task_id: this.$route.query.task_id
+                        };
+                        this.$vs.loading();
+                        this.$store
+                            .dispatch("taskManagement/updateTaskPeriod", itemToSave)
+                            .then(data => {
+                                this.tasksPeriod=data.payload.periods;
+                                this.$vs.notify({
+                                    title: "Modification d'une période",
+                                    text: `modifiée avec succès`,
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "success"
+                                });
+                            })
+                            .catch(error => {
+                                this.$vs.notify({
+                                    title: "Erreur",
+                                    text: error.message,
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "danger",
+                                    time: 10000
+                                });
+                            })
+                            .finally(() => {
+                                this.$vs.loading.close();
+                            });
+                    }
+                });
         },
         handleEventResize(arg) {
             var itemTemp = this.calendarEvents.find(
@@ -1288,11 +1348,19 @@ export default {
             }
             //bloquer le déplacement si task dépendantes
             let order=null;
+            let taskCourante=null;
             if (this.tasksEvent != null && !this.moveAccepted) {
                 for(var i = 0; i < this.tasksEvent.length; i++){
                     if(this.tasksEvent[i].id==this.$route.query.task_id){
                         order=this.tasksEvent[i].order;
+                        taskCourante=this.tasksEvent[i];
                     }
+                }
+                //si avant la date de début ou après la date de livraison
+                if(taskCourante != null && (moment(startPeriodTask).isBefore(moment(taskCourante.project.start_date)) ||
+                                            moment(endPeriodTask).isAfter(moment(taskCourante.project.date)))){
+                    //on remet la task_period à sa date originale
+                    arg.event.setDates(taskPeriod.start_time, taskPeriod.end_time);
                 }
                 for(var i = 0; i < this.tasksEvent.length; i++){
                     if(this.tasksEvent[i].id!=this.$route.query.task_id){
@@ -1375,40 +1443,92 @@ export default {
                     }
                 }
             }
-            if (!erreur) {
-                var itemToSave = {
-                    id: itemTemp.period_id,
-                    start: startPeriodTask,
-                    end: endPeriodTask,
+            //bloquer le déplacement si en dehors des heures de travail
+            var item = {
+                    id: this.$route.query.id,
                     type: this.$route.query.type,
                     task_id: this.$route.query.task_id
                 };
-                this.$vs.loading();
-                this.$store
-                    .dispatch("taskManagement/updateTaskPeriod", itemToSave)
-                    .then(data => {
-                        this.tasksPeriod=data.payload.periods;
-                        this.$vs.notify({
-                            title: "Modification d'une période",
-                            text: `modifiée avec succès`,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "success"
-                        });
-                    })
-                    .catch(error => {
+            let workHoursDay=null;
+            this.$store
+                .dispatch("projectManagement/workHoursPeriods", item)
+                .then(data => {
+                    moment.locale('fr');
+                    workHoursDay=data.payload[moment(arg.event.start).format('dddd')];
+                    if(((workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
+                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null) &&
+                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
+                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
+                        moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[1])._i) &&
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i))) ||
+
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[1])._i) &&
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i<=(moment(workHoursDay[2])._i))) ||
+
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
+                        moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[2])._i))) ||
+
+                        (moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i) &&
+                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
+                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
+
+                        (moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
+                        (workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
+                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null)) ||
+
+                        moment(moment(arg.event.start).format('HH:mm:ss'))._i<(moment(workHoursDay[0])._i) ||
+
+                        moment(moment(arg.event.end).format('HH:mm:ss'))._i>(moment(workHoursDay[3])._i)){
+                        erreur = true;
+                        //on remet la task_period à sa date originale
+                        arg.event.setDates(taskPeriod.start_time, taskPeriod.end_time);
                         this.$vs.notify({
                             title: "Erreur",
-                            text: error.message,
+                            text:
+                                "Vous ne pouvez pas déplacer cette période ici car l'utilisateur ne travaille pas.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
-                            color: "danger"
+                            color: "danger",
+                            time: 10000,
                         });
-                    })
-                    .finally(() => {
-                        this.$vs.loading.close();
-                    });
-            }
+                    }
+                    if (!erreur) {
+                        var itemToSave = {
+                            id: itemTemp.period_id,
+                            start: startPeriodTask,
+                            end: endPeriodTask,
+                            type: this.$route.query.type,
+                            task_id: this.$route.query.task_id
+                        };
+                        this.$vs.loading();
+                        this.$store
+                            .dispatch("taskManagement/updateTaskPeriod", itemToSave)
+                            .then(data => {
+                                this.tasksPeriod=data.payload.periods;
+                                this.$vs.notify({
+                                    title: "Modification d'une période",
+                                    text: `modifiée avec succès`,
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "success"
+                                });
+                            })
+                            .catch(error => {
+                                this.$vs.notify({
+                                    title: "Erreur",
+                                    text: error.message,
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "danger"
+                                });
+                            })
+                            .finally(() => {
+                                this.$vs.loading.close();
+                            });
+                    }
+                });
         },
         handleClose() {
             //this.refresh();
