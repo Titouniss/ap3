@@ -47,12 +47,12 @@ class UnavailabilityController extends BaseApiController
 
     protected function filterIndexQuery(Request $request, $query)
     {
-        if ($request->has('hours_taken_name')) {
-            $query->where('reason', $request->hours_taken_name);
+        if ($request->has('hours_taken')) {
+            $query->where('reason', $request->hours_taken);
         }
         if ($request->has('date')) {
             try {
-                $date = Carbon::createFromFormat('d-m-Y', $request->date);
+                $date = Carbon::parse($request->date);
                 switch ($request->period_type) {
                     case 'week':
                         $query->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
