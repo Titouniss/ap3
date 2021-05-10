@@ -265,6 +265,16 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                /////---Unavailabilities---/////
+                {
+                    path: "/unavailabilities",
+                    name: "unavailabilities",
+                    component: () => import("./views/unavailabilities/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Schedules---/////
                 {
                     path: "/schedules",
