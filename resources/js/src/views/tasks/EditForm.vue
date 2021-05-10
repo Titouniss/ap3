@@ -432,7 +432,7 @@
                 class="mt-5"
                 vs-type="flex"
                 vs-justify="flex-end"
-                v-if="project_data && project_data.status != 'done'"
+                v-if="itemLocal.project.status != 'done'"
             >
                 <vs-button
                     @click="() => confirmDeleteTask(itemLocal.id)"
@@ -445,7 +445,7 @@
                 <vs-button
                     v-on:click="goToEditView"
                     class="ml-auto mt-2"
-                    v-if="project_data && project_data.status == 'doing'"
+                    v-if="itemLocal.project.status == 'doing'"
                 >
                     Déplacer la tâche
                 </vs-button>
