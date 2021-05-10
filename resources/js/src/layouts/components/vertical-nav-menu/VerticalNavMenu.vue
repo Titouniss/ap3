@@ -113,6 +113,8 @@
                                 :to="
                                     item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/' + companyId
                                         : item.slug !== 'external' && !isAdmin && item.name == 'Remontées de bugs' ? '/bugs/bug-add/' 
+                                        : item.slug !== 'external' && item.name == 'Gérer mes heures' || item.name == 'Gérer les heures' ? '/hours/hours-view/'
+                                        : item.slug !== 'external' && item.name == 'Gérer mes indisponibilités' || item.name == 'Gérer les indisponibilités' ? '/unavailabilities/' 
                                         : item.slug !== 'external' ? item.url : null
                                 "
                                 :href="
@@ -129,6 +131,8 @@
                                     >{{
                                         !isAdmin && item.name == "Sociétés" ? "Ma société"
                                             : !isAdmin && item.name == "Remontées de bugs" ? "Remonter un bug" 
+                                            : !isAdmin && !isManager && item.name == "Gérer les heures" ? "Gérer mes heures" 
+                                            : !isAdmin && !isManager && item.name == "Gérer les indisponibilités" ? "Gérer mes indisponibilités" 
                                             : item.name
                                     }}</span
                                 >
@@ -229,6 +233,9 @@ export default {
     computed: {
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
+        },
+        isManager() {
+            return this.$store.state.AppActiveUser.is_manager;
         },
         companyId() {
             return this.$store.state.AppActiveUser.company_id;

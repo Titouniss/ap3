@@ -1,7 +1,141 @@
 <template>
     <div>
+        <div class="vx-card p-6">
+            <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+                <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
+                <h4 class="ml-3">Filtres</h4>
+            </div>
+            <div class="flex flex-wrap justify-center items-end">
+                <div
+                    style="min-width: 15em"
+                    class="cursor-pointer mx-4"
+                >
+                    <v-select
+                        label="name"
+                        v-model="filters.hours_taken"
+                        :options="hours_type_names"
+                        @search:focus="clearRefreshDataTimeout"
+                        class="w-full"
+                    >
+                        <template #header>
+                            <div style="opacity: 0.8">Heures prises</div>
+                        </template>
+                    </v-select>
+                </div>
+                
+                <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
+                    <div
+                        class="p-3 rounded-lg border border-solid d-theme-border-grey-light cursor-pointer flex items-center justify-between text-lg font-medium w-32"
+                    >
+                        <span class="mx-2 leading-none">
+                            {{ period_types[filters.period_type].name }}
+                        </span>
+                        <feather-icon
+                            icon="ChevronDownIcon"
+                            svgClasses="h-4 w-4"
+                        />
+                    </div>
+
+                    <vs-dropdown-menu>
+                        <vs-dropdown-item
+                            v-for="period_type in period_type_names"
+                            :key="period_type"
+                            @click="setPeriodType(period_type)"
+                        >
+                            <span class="flex items-center">
+                                {{ period_types[period_type].name }}
+                            </span>
+                        </vs-dropdown-item>
+                    </vs-dropdown-menu>
+                </vs-dropdown>
+                <div style="min-width: 15em">
+                    <v-select
+                        v-if="authorizedTo('show', 'users')"
+                        label="lastname"
+                        :options="users"
+                        v-model="filters.user_id"
+                        :reduce="user => user.id"
+                        @search:focus="clearRefreshDataTimeout"
+                        class="w-full"
+                    >
+                        <template #header>
+                            <div style="opacity: 0.8">Utilisateur</div>
+                        </template>
+                        <template #option="user">
+                            <span>
+                                {{ `${user.lastname} ${user.firstname}` }}
+                            </span>
+                        </template>
+                    </v-select>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center">
+                <vs-row
+                    v-if="!isFullFilter"
+                    vs-justify="center"
+                    vs-align="center"
+                    vs-type="flex"
+                    vs-w="12"
+                    class="mt-6"
+                >
+                    <vs-col
+                        vs-w="12"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <vs-button
+                            v-if="isPeriodFilter"
+                            radius
+                            color="primary"
+                            type="border"
+                            icon-pack="feather"
+                            icon="icon-chevron-left"
+                            @click="removeFromFilterDate"
+                        ></vs-button>
+                        <div class="m-3 flex" style="width: 300px">
+                            <vs-row vs-type="flex" vs-justify="center">
+                                <vs-col vs-type="flex" vs-justify="center">
+                                    <h5 v-if="isPeriodFilter">
+                                        {{ filterDate }}
+                                    </h5>
+                                </vs-col>
+                                <vs-col vs-type="flex" vs-justify="center">
+                                    <h5
+                                        class="mt-1"
+                                        v-if="
+                                            this.filters.period_type === 'week'
+                                        "
+                                    >
+                                        {{ currentWeek }}
+                                    </h5>
+                                </vs-col>
+                                <vs-col vs-type="flex" vs-justify="center">
+                                    <flat-pickr
+                                        v-if="!isPeriodFilter"
+                                        :config="configDatePicker()"
+                                        placeholder="Date"
+                                        v-model="filters.date"
+                                        @on-open="clearRefreshDataTimeout"
+                                    />
+                                </vs-col>
+                            </vs-row>
+                        </div>
+                        <vs-button
+                            v-if="isPeriodFilter"
+                            radius
+                            color="primary"
+                            type="border"
+                            icon-pack="feather"
+                            icon="icon-chevron-right"
+                            @click="addToFilterDate"
+                        ></vs-button>
+                    </vs-col>
+                </vs-row>
+            </div>
+        </div>
         <div class="mb-base">
-            <h6 class="mb-4">Heures supplémentaires</h6>
+            <br><h6 class="mb-4">Heures supplémentaires</h6>
             <div class="flex items-center mb-4">
                 <span class="ml-4">Total :</span>
                 <span class="ml-4"
@@ -165,12 +299,21 @@ import EditForm from "./EditForm.vue";
 // Store Module
 import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
 import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement.js";
+import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
+import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+
+// FlatPickr import
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // Cell Renderer
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 // Components
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
 
 // Mixins
 import { multipleActionsMixin } from "@/mixins/lists";
@@ -182,6 +325,8 @@ var model = "unavailabilitie";
 var modelPlurial = "unavailabilities";
 var modelTitle = "Indisponibilité";
 
+moment.locale("fr");
+
 export default {
     mixins: [multipleActionsMixin],
     components: {
@@ -189,24 +334,14 @@ export default {
         vSelect,
         AddForm,
         EditForm,
-
+        flatPickr,
         // Cell Renderer
         CellRendererActions,
         AddPayedHoursForm,
 
         // Components
+        InfiniteScrollSelect,
         MultipleActions
-    },
-    props: {
-        filters: {
-            type: Object,
-            default: () => ({
-                user_id: null,
-                date: moment(),
-                period_type: "month",
-                hours_taken: null
-            })
-        }
     },
     data() {
         return {
@@ -282,7 +417,70 @@ export default {
             // Cell Renderer Components
             components: {
                 CellRendererActions
-            }
+            },
+            // Filters
+            filters: {
+                project_id: null,
+                user_id: null,
+                date: moment(),
+                period_type: "month",
+                hours_taken: null
+            },
+            hours_type_names: [
+                "Heures supplémentaires payées",
+                "Utilisation heures supplémentaires",
+                "Jours fériés",
+                "Rendez-vous privé",
+                "Congés payés",
+                "Période de cours",
+                "Arrêt de travail",
+                "Autre..."
+            ],
+            period_type_names: ["date", "day", "week", "month", "year", "full"],
+            period_types: {
+                date: {
+                    name: "Date",
+                    symbol: "d",
+                    format: "D MMMM YYYY"
+                },
+                day: {
+                    name: "Jour",
+                    symbol: "d",
+                    format: "D MMMM YYYY"
+                },
+                week: {
+                    name: "Semaine",
+                    symbol: "w",
+                    format: "[Semaine] w, YYYY"
+                },
+                month: {
+                    name: "Mois",
+                    symbol: "M",
+                    format: "MMMM YYYY"
+                },
+                year: {
+                    name: "Année",
+                    symbol: "y",
+                    format: "YYYY"
+                },
+                full: {
+                    name: "Total",
+                    symbol: null,
+                    format: null
+                }
+            },
+            currentWeek: "",
+            configDatePicker: () => ({
+                disableMobile: "true",
+                enableTime: false,
+                locale: FrenchLocale,
+                altFormat: "j F Y",
+                altInput: true
+            }),
+            refreshDataTimeout: null,
+
+            // Stats
+            stats: { total: 0 }
         };
     },
     watch: {
@@ -302,6 +500,21 @@ export default {
                 }
             },
             deep: true
+        },
+        filterParams: {
+            handler(value, prev) {
+                if (!_.isEqual(value, prev)) {
+                    this.clearRefreshDataTimeout();
+                    this.refreshDataTimeout = setTimeout(() => {
+                        this.page = 1;
+                        this.refreshData();
+                        if (value.user_id !== prev.user_id) {
+                            this.fetchOvertimes();
+                        }
+                    }, 1500);
+                }
+            },
+            deep: true
         }
     },
     computed: {
@@ -310,6 +523,46 @@ export default {
         },
         isManager() {
             return this.$store.state.AppActiveUser.is_manager;
+        },
+        isFullFilter() {
+            return this.filters.period_type === "full";
+        },
+        isPeriodFilter() {
+            return this.filters.period_type !== "date";
+        },
+        filterDate() {
+            moment.locale("fr");
+            if (this.filters.period_type === "week") {
+                let startWeek = moment(this.filters.date)
+                    .startOf("isoWeek")
+                    .format("dddd D MMM");
+
+                let endWeek = moment(this.filters.date)
+                    .endOf("isoWeek")
+                    .format("dddd D MMM");
+
+                this.currentWeek = startWeek + " - " + endWeek;
+            }
+
+            return moment(this.filters.date).format(
+                this.period_types[this.filters.period_type].format
+            );
+        },
+        filterParams() {
+            const filter = {};
+            if (this.filters.hours_taken) {
+                filter.hours_taken = this.filters.hours_taken;
+            }
+            if (this.filters.user_id) {
+                filter.user_id = this.filters.user_id;
+            }
+            if (this.filters.date) {
+                filter.date = moment(this.filters.date).format("DD-MM-YYYY");
+                if (this.isPeriodFilter) {
+                    filter.period_type = this.filters.period_type;
+                }
+            }
+            return filter;
         },
         unavailabilitiesData() {
             return this.$store.getters["unavailabilityManagement/getItems"];
@@ -324,6 +577,9 @@ export default {
             return this.isAdmin || this.isManager
                 ? this.filters.user_id
                 : this.$store.state.AppActiveUser.id;
+        },
+        users() {
+            return this.$store.getters["userManagement/getItems"];
         },
         itemsPerPage: {
             get() {
@@ -427,7 +683,56 @@ export default {
                 // resize columns in the grid to fit the available space
                 this.gridApi.sizeColumnsToFit();
             }
-        }
+        },
+        setColumnFilter(column, val) {
+            const filter = this.gridApi.getFilterInstance(column);
+            let modelObj = null;
+
+            if (val !== "all") {
+                modelObj = { type: "equals", filter: val };
+            }
+
+            filter.setModel(modelObj);
+            this.gridApi.onFilterChanged();
+        },
+        resetColFilters() {
+            // Reset Grid Filter
+            this.gridApi.setFilterModel(null);
+            this.gridApi.onFilterChanged();
+
+            // Reset Filter Options
+            this.hoursFilter = this.statusFilter = this.isVerifiedFilter = this.departmentFilter = {
+                label: "All",
+                value: "all"
+            };
+
+            this.$refs.filterCard.removeRefreshAnimation();
+        },
+        updateSearchQuery(val) {
+            this.gridApi.setQuickFilter(val);
+        },
+        clearRefreshDataTimeout() {
+            if (this.refreshDataTimeout) {
+                clearTimeout(this.refreshDataTimeout);
+            }
+        },
+        addToFilterDate() {
+            this.filters.date = moment(this.filters.date).add(
+                1,
+                this.period_types[this.filters.period_type].symbol
+            );
+        },
+        removeFromFilterDate() {
+            this.filters.date = moment(this.filters.date).subtract(
+                1,
+                this.period_types[this.filters.period_type].symbol
+            );
+        },
+        setPeriodType(type) {
+            this.filters.period_type = type;
+            this.filters.date =
+                type === "date" || type === "full" ? null : moment();
+        },
     },
     mounted() {
         this.fetchOvertimes();
@@ -473,12 +778,42 @@ export default {
             );
             moduleDealingHoursManagement.isRegistered = true;
         }
+        if (!moduleHoursManagement.isRegistered) {
+            this.$store.registerModule(
+                "hoursManagement",
+                moduleHoursManagement
+            );
+            moduleHoursManagement.isRegistered = true;
+        }
+        if (!moduleProjectManagement.isRegistered) {
+            this.$store.registerModule(
+                "projectManagement",
+                moduleProjectManagement
+            );
+            moduleProjectManagement.isRegistered = true;
+        }
+        if (!moduleUserManagement.isRegistered) {
+            this.$store.registerModule("userManagement", moduleUserManagement);
+            moduleUserManagement.isRegistered = true;
+        }
+
+        if (this.authorizedTo("read", "users")) {
+            this.$store.dispatch("userManagement/fetchItems");
+        } else {
+            this.filters.user_id = this.$store.state.AppActiveUser.id;
+        }
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
         moduleUnavailabilityManagement.isRegistered = false;
         moduleDealingHoursManagement.isRegistered = false;
+        moduleProjectManagement.isRegistered = false;
+        moduleUserManagement.isRegistered = false;
+        moduleHoursManagement.isRegistered = false;
+        this.$store.unregisterModule("hoursManagement");
+        this.$store.unregisterModule("projectManagement");
+        this.$store.unregisterModule("userManagement");
         this.$store.unregisterModule("unavailabilityManagement");
         this.$store.unregisterModule("dealingHoursManagement");
     }

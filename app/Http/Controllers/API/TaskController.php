@@ -117,7 +117,7 @@ class TaskController extends BaseApiController
             }
 
             $query->join('tasks_skills', function ($join) use ($request) {
-                $join->on('tasks_skills.task_id', '=', 'task.id')
+                $join->on('tasks_skills.task_id', '=', 'tasks.id')
                     ->whereIn('tasks_skills.skill_id', $request->skill_ids);
             });
         }

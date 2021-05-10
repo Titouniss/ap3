@@ -386,7 +386,7 @@ abstract class BaseApiController extends Controller
                 $items->each->append(static::$show_append);
             }
 
-            return $this->successResponse($items, "Restauration terminé avec succès.");
+            return $this->successResponse($items, "Restauration terminée avec succès.");
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }

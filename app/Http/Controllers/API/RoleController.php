@@ -101,6 +101,7 @@ class RoleController extends BaseApiController
             }
         }
 
+        $permissionIds = array_merge($permissionIds, Permission::whereIn('name_fr', ['bugs'])->pluck('id')->toArray());
         $item->syncPermissions($permissionIds);
     }
 }

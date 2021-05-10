@@ -37,7 +37,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['customers', 'clients', true],
             ['modules', 'modules', false],
             ['subscriptions', 'abonnements', false],
-            ['bugs', 'bugs', true],
+            ['bugs', 'bugs', false],
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
