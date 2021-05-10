@@ -6,36 +6,7 @@
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div class="cursor-pointer mx-4">
-                    <vs-button
-                        :class="{ active: modeIndispo }"
-                        @click="modeIndispo = !modeIndispo"
-                    >
-                        {{
-                            modeIndispo
-                                ? "Gérer les heures"
-                                : "Gérer les indisponibilités"
-                        }}
-                    </vs-button>
-                </div>
-                <div
-                    style="min-width: 15em"
-                    class="cursor-pointer mx-4"
-                    v-if="modeIndispo"
-                >
-                    <v-select
-                        label="name"
-                        v-model="filters.hours_taken"
-                        :options="hours_type_names"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Heures prises</div>
-                        </template>
-                    </v-select>
-                </div>
-                <div style="min-width: 15em" v-if="!modeIndispo">
+                <div style="min-width: 15em" >
                     <infinite-scroll-select
                         model="project"
                         label="name"
@@ -158,10 +129,7 @@
                 </vs-row>
             </div>
         </div>
-        <div class="p-6 mt-1 vx-card" v-if="modeIndispo">
-            <UnavailabilitiesIndex class="mt-4" :filters="filterParams" />
-        </div>
-        <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
+        <div class="vx-card p-6 mt-1">
             <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
                 <feather-icon icon="BarChart2Icon" svgClasses="h-6 w-6" />
                 <h4 class="ml-3">Résumé</h4>
@@ -211,13 +179,33 @@
             >
             </vs-row>
         </div>
-        <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
+        <div class="vx-card p-6 mt-1">
             <div
                 class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
             >
-                <div class="flex flex-row justify-start items-center">
+            <vs-row
+                v-if="showSummary"
+                vs-justify="center"
+                vs-align="center"
+                vs-type="flex"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-w="4"
+                    vs-type="flex"
+                    vs-justify="center"
+                    vs-align="center"
+                >
                     <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
                     <h4 class="ml-3">Heures effectuées</h4>
+                </vs-col>
+                <!-- v-if="stats.overtime" -->
+                <vs-col
+                    vs-w="4"
+                    vs-type="flex"
+                    vs-justify="center"
+                    vs-align="center"
+                >
                     <div class="px-6 py-2" v-if="authorizedTo('publish')">
                         <vs-button @click="readRecord">
                             {{
@@ -227,8 +215,14 @@
                             }}
                         </vs-button>
                     </div>
-                </div>
-                <vs-button type="border" @click="onExport">
+                </vs-col>
+                <vs-col
+                    vs-w="4"
+                    vs-type="flex"
+                    vs-justify="center"
+                    vs-align="center"
+                >
+                    <vs-button type="border" @click="onExport">
                     <div class="flex flex-row">
                         <feather-icon
                             icon="DownloadIcon"
@@ -238,6 +232,8 @@
                         Exporter
                     </div>
                 </vs-button>
+                </vs-col>
+            </vs-row>
             </div>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
@@ -390,7 +386,6 @@ export default {
             total: 0,
 
             id_user: null,
-            modeIndispo: false,
             // AgGrid
             gridApi: null,
             gridOptions: {
@@ -558,7 +553,7 @@ export default {
     watch: {
         filterParams: {
             handler(value, prev) {
-                if (!this.modeIndispo && !_.isEqual(value, prev)) {
+                if (!_.isEqual(value, prev)) {
                     this.clearRefreshDataTimeout();
                     this.refreshDataTimeout = setTimeout(() => {
                         this.page = 1;
@@ -623,15 +618,12 @@ export default {
         },
         filterParams() {
             const filter = {};
-            if (this.modeIndispo) {
-                if (this.filters.hours_taken) {
-                    filter.hours_taken_name = this.filters.hours_taken;
-                }
-            } else {
-                if (this.filters.project_id) {
-                    filter.project_id = this.filters.project_id;
-                }
+            
+            
+            if (this.filters.project_id) {
+                filter.project_id = this.filters.project_id;
             }
+            
             if (this.filters.user_id) {
                 filter.user_id = this.filters.user_id;
             }
