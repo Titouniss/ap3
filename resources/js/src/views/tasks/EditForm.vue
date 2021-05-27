@@ -872,7 +872,7 @@ export default {
     pointer-events: none;
     opacity: 0.6;
 }
-.con-vs-dialog.task-compose .vs-dialog {
+.task-compose .vs-dialog {
     max-width: 700px;
 }
 .no-comments {
