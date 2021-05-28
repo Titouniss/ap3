@@ -19,41 +19,13 @@
                             label="name"
                             v-model="itemLocal.project_id"
                             :filters="{
-                                company_id: company.id
+                                company_id: itemLocal.user.company_id
                             }"
                         >
                             <template #header>
                                 <div style="opacity: 0.8">Projet</div>
                             </template>
                         </infinite-scroll-select>
-
-                        <!-- <v-select
-                            v-validate="'required'"
-                            name="user_id"
-                            label="lastname"
-                            :multiple="false"
-                            v-model="itemLocal.user_id"
-                            :reduce="lastname => lastname.id"
-                            class="w-full"
-                            autocomplete
-                            :options="usersData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .60rem">
-                                    Utilisateur
-                                </div>
-                            </template>
-                            <template #option="user">
-                                <span>{{
-                                    `${user.firstname} ${user.lastname}`
-                                }}</span>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('user_id')"
-                            >{{ errors.first("user_id") }}</span
-                        > -->
 
                         <p class="mt-5">Date</p>
                         <flat-pickr
@@ -69,8 +41,9 @@
                         <span
                             class="text-danger text-sm"
                             v-show="errors.has('startDate')"
-                            >{{ errors.first("startDate") }}</span
                         >
+                            {{ errors.first("startDate") }}
+                        </span>
 
                         <div class="vx-row">
                             <div class="vx-col flex-1">
@@ -90,8 +63,9 @@
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('startHour')"
-                                    >{{ errors.first("startHour") }}</span
                                 >
+                                    {{ errors.first("startHour") }}
+                                </span>
                             </div>
                             <div class="vx-col flex-1">
                                 <p class="mt-5">Heure de fin</p>
@@ -110,8 +84,9 @@
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('endHour')"
-                                    >{{ errors.first("endHour") }}</span
                                 >
+                                    {{ errors.first("endHour") }}
+                                </span>
                             </div>
                         </div>
 
@@ -167,10 +142,6 @@ export default {
     props: {
         itemId: {
             type: Number,
-            required: true
-        },
-        company: {
-            type: Object,
             required: true
         }
     },

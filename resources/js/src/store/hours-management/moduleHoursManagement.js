@@ -28,8 +28,8 @@ getters.getItem = currentState => id => {
 getters.getSelectedItem = currentState => {
     const item = gettersCopy.getSelectedItem(currentState);
     if (item && Object.keys(item).length !== 0) {
-        let arrayStart = item.start.split(" ");
-        let arrayEnd = item.end.split(" ");
+        let arrayStart = (item.start || item.start_at).split(" ");
+        let arrayEnd = (item.end || item.end_at).split(" ");
 
         item.date = arrayStart[0];
         item.startHour = arrayStart[1];
