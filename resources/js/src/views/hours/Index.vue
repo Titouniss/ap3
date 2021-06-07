@@ -6,7 +6,7 @@
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div style="min-width: 15em" >
+                <div style="min-width: 15em">
                     <infinite-scroll-select
                         model="project"
                         label="name"
@@ -183,57 +183,57 @@
             <div
                 class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
             >
-            <vs-row
-                v-if="showSummary"
-                vs-justify="center"
-                vs-align="center"
-                vs-type="flex"
-                vs-w="12"
-            >
-                <vs-col
-                    vs-w="4"
-                    vs-type="flex"
+                <vs-row
+                    v-if="showSummary"
                     vs-justify="center"
                     vs-align="center"
-                >
-                    <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
-                    <h4 class="ml-3">Heures effectuées</h4>
-                </vs-col>
-                <!-- v-if="stats.overtime" -->
-                <vs-col
-                    vs-w="4"
                     vs-type="flex"
-                    vs-justify="center"
-                    vs-align="center"
+                    vs-w="12"
                 >
-                    <div class="px-6 py-2" v-if="authorizedTo('publish')">
-                        <vs-button @click="readRecord">
-                            {{
-                                isAdmin
-                                    ? "Gérer les heures"
-                                    : "Gérer mes heures"
-                            }}
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
+                        <h4 class="ml-3">Heures effectuées</h4>
+                    </vs-col>
+                    <!-- v-if="stats.overtime" -->
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <div class="px-6 py-2" v-if="authorizedTo('publish')">
+                            <vs-button @click="readRecord">
+                                {{
+                                    isAdmin
+                                        ? "Gérer les heures"
+                                        : "Gérer mes heures"
+                                }}
+                            </vs-button>
+                        </div>
+                    </vs-col>
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <vs-button type="border" @click="onExport">
+                            <div class="flex flex-row">
+                                <feather-icon
+                                    icon="DownloadIcon"
+                                    svgClasses="h-5 w-5"
+                                    class="mr-2"
+                                />
+                                Exporter
+                            </div>
                         </vs-button>
-                    </div>
-                </vs-col>
-                <vs-col
-                    vs-w="4"
-                    vs-type="flex"
-                    vs-justify="center"
-                    vs-align="center"
-                >
-                    <vs-button type="border" @click="onExport">
-                    <div class="flex flex-row">
-                        <feather-icon
-                            icon="DownloadIcon"
-                            svgClasses="h-5 w-5"
-                            class="mr-2"
-                        />
-                        Exporter
-                    </div>
-                </vs-button>
-                </vs-col>
-            </vs-row>
+                    </vs-col>
+                </vs-row>
             </div>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
@@ -320,6 +320,8 @@
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
         </div>
+
+        <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
     </div>
 </template>
 
@@ -327,6 +329,8 @@
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
+
+import EditForm from "./EditForm.vue";
 
 // Store Module
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
@@ -367,6 +371,7 @@ export default {
         AgGridVue,
         vSelect,
         flatPickr,
+        EditForm,
         // Cell Renderer
         CellRendererActions,
         CellRendererRelations,
@@ -446,7 +451,7 @@ export default {
                         model: "hours",
                         modelPlurial: "hours",
                         usesSoftDelete: false,
-                        canEdit: () => false,
+                        withPrompt: true,
                         name: data =>
                             data.duration == "01:00:00"
                                 ? `l'heure du ${
@@ -618,12 +623,11 @@ export default {
         },
         filterParams() {
             const filter = {};
-            
-            
+
             if (this.filters.project_id) {
                 filter.project_id = this.filters.project_id;
             }
-            
+
             if (this.filters.user_id) {
                 filter.user_id = this.filters.user_id;
             }
