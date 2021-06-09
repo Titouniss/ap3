@@ -399,43 +399,93 @@ export default {
                     }
                 }
             }
-            if (!erreur) {
-                var itemToSave = {
-                    id: this.itemId,
-                    start: this.start,
-                    end: this.end,
-                    moveChecked: this.moveAccepted,
-                    moveDateEndChecked: this.moveDateEndAccepted,
-                    moveDateStartChecked: this.moveDateStartAccepted,
+            //bloquer le déplacement si en dehors des heures de travail
+            var item = {
+                    id: this.$route.query.id,
                     type: this.$route.query.type,
                     task_id: this.$route.query.task_id
                 };
-                this.$vs.loading();
-                this.$store
-                    .dispatch("taskManagement/updateTaskPeriod", itemToSave)
-                    .then(data => {
-                        this.tasksPeriod=data.payload.periods;
-                        this.$vs.notify({
-                            title: "Modification d'une période",
-                            text: `modifiée avec succès`,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "success"
-                        });
-                    })
-                    .catch(error => {
+            let workHoursDay=null;
+            this.$store
+                .dispatch("projectManagement/workHoursPeriods", item)
+                .then(data => {
+                    moment.locale('fr');
+                    workHoursDay=data.payload[moment(this.start).format('dddd')];
+                    if(((workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
+                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null) &&
+                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
+                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
+                        (moment(moment(this.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
+                        moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[1])._i) &&
+                        (moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i))) ||
+
+                        (moment(moment(this.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[1])._i) &&
+                        (moment(moment(this.end).format('HH:mm:ss'))._i<=(moment(workHoursDay[2])._i))) ||
+
+                        (moment(moment(this.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
+                        moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
+                        (moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[2])._i))) ||
+
+                        (moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i) &&
+                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
+                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
+
+                        (moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
+                        (workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
+                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null)) ||
+
+                        moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[0])._i) ||
+
+                        moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[3])._i)){
+                        erreur = true;
                         this.$vs.notify({
                             title: "Erreur",
-                            text: error.message,
+                            text:
+                                "Vous ne pouvez pas déplacer cette période ici car l'utilisateur ne travaille pas.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
-                            color: "danger"
+                            color: "danger",
+                            time: 10000,
                         });
-                    })
-                    .finally(() => {
-                        this.$vs.loading.close();
-                    });
-            }
+                    }
+                    if (!erreur) {
+                        var itemToSave = {
+                            id: this.itemId,
+                            start: this.start,
+                            end: this.end,
+                            moveChecked: this.moveAccepted,
+                            moveDateEndChecked: this.moveDateEndAccepted,
+                            moveDateStartChecked: this.moveDateStartAccepted,
+                            type: this.$route.query.type,
+                            task_id: this.$route.query.task_id
+                        };
+                        this.$vs.loading();
+                        this.$store
+                            .dispatch("taskManagement/updateTaskPeriod", itemToSave)
+                            .then(data => {
+                                this.tasksPeriod=data.payload.periods;
+                                this.$vs.notify({
+                                    title: "Modification d'une période",
+                                    text: `modifiée avec succès`,
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "success"
+                                });
+                            })
+                            .catch(error => {
+                                this.$vs.notify({
+                                    title: "Erreur",
+                                    text: error.message,
+                                    iconPack: "feather",
+                                    icon: "icon-alert-circle",
+                                    color: "danger"
+                                });
+                            })
+                            .finally(() => {
+                                this.$vs.loading.close();
+                            });
+                    }
+                });
         },
 
         filterItemsAdmin(items) {

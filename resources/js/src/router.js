@@ -359,6 +359,7 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                 /////---Bugs---/////
                 {
                     path: "/bugs",
                     name: "bugs",
@@ -386,6 +387,27 @@ const router = new Router({
                     meta: {
                         parent: "bugs",
                         pageTitle: "Édition d'un bug",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                 /////---Doc---/////
+                {
+                    path: "/doc",
+                    name: "doc",
+                    component: () => import("./views/doc/Index.vue"),
+                    meta: {
+                        pageTitle: "Documentation Plannigo",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/doc/project",
+                    name: "doc-project",
+                    component: () => import("./views/doc/ProjectView.vue"),
+                    meta: {
+                        pageTitle: "Documentation Projet",
                         rule: "admin",
                         requiresAuth: true
                     }
