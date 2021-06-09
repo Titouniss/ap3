@@ -364,26 +364,38 @@ class UnavailabilityController extends BaseApiController
                     $morning_starts_at = Carbon::parse($d . " " . $dayWorkingHours->morning_starts_at);
                     $morning_ends_at = Carbon::parse($d . " " . $dayWorkingHours->morning_ends_at);
 
-                    //Si la periode est comprise et ou englobe le matin on ajoute une indispo
-                    if ($datetime_start <= $morning_starts_at) {
+                    if($arrayRequest['reason']=='Jours fériés'){
                         $new_request["starts_at"] = $morning_starts_at;
-                    } else if ($datetime_start < $morning_ends_at) {
-                        $new_request["starts_at"] = $datetime_start;
-                    }
-
-                    if ($datetime_end >= $morning_ends_at) {
                         $new_request["ends_at"] = $morning_ends_at;
-                    } else if ($datetime_end > $morning_starts_at) {
-                        $new_request["ends_at"] = $datetime_end;
-                    }
-
-                    if (isset($new_request['starts_at']) && isset($new_request['ends_at'])) {
                         $new_request['user_id'] =  $arrayRequest['user_id'];
                         $new_request['reason'] =  $arrayRequest['reason'];
 
                         $item = Unavailability::create($new_request);
                         array_push($items, $item);
                         array_push($itemIds, $item->id);
+                    }
+                    else{
+                        //Si la periode est comprise et ou englobe le matin on ajoute une indispo
+                        if ($datetime_start <= $morning_starts_at) {
+                            $new_request["starts_at"] = $morning_starts_at;
+                        } else if ($datetime_start < $morning_ends_at) {
+                            $new_request["starts_at"] = $datetime_start;
+                        }
+
+                        if ($datetime_end >= $morning_ends_at) {
+                            $new_request["ends_at"] = $morning_ends_at;
+                        } else if ($datetime_end > $morning_starts_at) {
+                            $new_request["ends_at"] = $datetime_end;
+                        }
+
+                        if (isset($new_request['starts_at']) && isset($new_request['ends_at'])) {
+                            $new_request['user_id'] =  $arrayRequest['user_id'];
+                            $new_request['reason'] =  $arrayRequest['reason'];
+
+                            $item = Unavailability::create($new_request);
+                            array_push($items, $item);
+                            array_push($itemIds, $item->id);
+                        }
                     }
                 }
 
@@ -394,26 +406,39 @@ class UnavailabilityController extends BaseApiController
                     $afternoon_starts_at = Carbon::parse($d . " " . $dayWorkingHours->afternoon_starts_at);
                     $afternoon_ends_at = Carbon::parse($d . " " . $dayWorkingHours->afternoon_ends_at);
 
-                    //Si la periode est comprise et ou englobe le matin on ajoute une indispo
-                    if ($datetime_start <= $afternoon_starts_at) {
+                    if($arrayRequest['reason']=='Jours fériés'){
                         $new_request["starts_at"] = $afternoon_starts_at;
-                    } else if ($datetime_start < $afternoon_ends_at) {
-                        $new_request["starts_at"] = $datetime_start;
-                    }
-
-                    if ($datetime_end >= $afternoon_ends_at) {
                         $new_request["ends_at"] = $afternoon_ends_at;
-                    } else if ($datetime_end > $afternoon_starts_at) {
-                        $new_request["ends_at"] = $datetime_end;
-                    }
-
-                    if (isset($new_request['starts_at']) && isset($new_request['ends_at'])) {
                         $new_request['user_id'] =  $arrayRequest['user_id'];
                         $new_request['reason'] =  $arrayRequest['reason'];
 
                         $item = Unavailability::create($new_request);
                         array_push($items, $item);
                         array_push($itemIds, $item->id);
+                    }
+
+                    else{
+                        //Si la periode est comprise et ou englobe le matin on ajoute une indispo
+                        if ($datetime_start <= $afternoon_starts_at) {
+                            $new_request["starts_at"] = $afternoon_starts_at;
+                        } else if ($datetime_start < $afternoon_ends_at) {
+                            $new_request["starts_at"] = $datetime_start;
+                        }
+
+                        if ($datetime_end >= $afternoon_ends_at) {
+                            $new_request["ends_at"] = $afternoon_ends_at;
+                        } else if ($datetime_end > $afternoon_starts_at) {
+                            $new_request["ends_at"] = $datetime_end;
+                        }
+
+                        if (isset($new_request['starts_at']) && isset($new_request['ends_at'])) {
+                            $new_request['user_id'] =  $arrayRequest['user_id'];
+                            $new_request['reason'] =  $arrayRequest['reason'];
+
+                            $item = Unavailability::create($new_request);
+                            array_push($items, $item);
+                            array_push($itemIds, $item->id);
+                        }
                     }
                 }
             }
