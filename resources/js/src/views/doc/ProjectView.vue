@@ -7,33 +7,68 @@
             <vs-row vs-type="flex" vs-justify="flex-start">
                <ul>
                    <li>
-                       <a href="" class="titleDoc"><span style="color: #1c7ef1"><span style="color: #1c7ef1"># </span></span>Mes projets</a>
+                       <a @click="scrollMeTo('project')" class="titleSummaryDoc"><span style="color: #1c7ef1"># </span>Mes projets</a>
                        <ul>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"><span style="color: #1c7ef1"># </span></span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"><span style="color: #1c7ef1"># </span></span>Indicateurs</a>
+                           <a @click="scrollMeTo('project-sub-1')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project-sub-2')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
                        </ul>
                    </li>
                    <li>
-                       <a href="" class="titleDoc"><span style="color: #1c7ef1"><span style="color: #1c7ef1"># </span></span>Ajouter un projet</a>
+                       <a @click="scrollMeTo('add-project')" class="titleSummaryDoc"><span style="color: #1c7ef1"># </span>Ajouter un projet</a>
                        <ul>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"><span style="color: #1c7ef1"># </span></span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project-sub-3')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project-sub-4')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project-sub-5')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
                        </ul>
                    </li>
                     <li>
-                       <a href="" class="titleDoc"><span style="color: #1c7ef1"># </span>Modifier un projet</a>
+                       <a  class="titleSummaryDoc"><span style="color: #1c7ef1"># </span>Modifier un projet</a>
                        <ul>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
-                           <a href="" class="subtitleDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
+                           <a @click="scrollMeTo('project')" class="subtitleSummaryDoc"><span style="color: #1c7ef1"># </span>Indicateurs</a>
                        </ul>
                    </li>
                </ul>
                 
             </vs-row>
+
+            <div class="containerDoc">
+
+                <div ref="project" class="titleDoc"> <span style="color: #1c7ef1"># </span> Mes projets </div>
+                
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit. Quisque a aliquam mi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vivamus pellentesque velit eu fermentum malesuada. Sed felis magna, placerat in erat ac, pellentesque luctus urna. In at egestas arcu. Suspendisse semper, velit id pulvinar tristique, velit augue suscipit nibh, ac dictum ligula purus nec tellus. Suspendisse placerat, tortor vitae dapibus ornare, eros velit porta justo, porta varius massa ex vel nisl. Integer eu tortor nec tortor tincidunt scelerisque. In sit amet faucibus dolor.</p>
+                <p> Quisque dignissim eu ex sit amet fermentum. Etiam mattis nisl tellus, at iaculis lacus bibendum eget. Suspendisse neque justo, finibus vel ligula id, rhoncus egestas nunc. Aenean in iaculis est. Duis dictum tellus pharetra, sodales dolor in, posuere lorem. Quisque rutrum, ante vitae pellentesque ornare, nunc augue lacinia velit, vel aliquam est quam eu elit. Etiam finibus augue id diam blandit, et accumsan sem volutpat. In varius quam ut mattis interdum. Donec at varius magna, nec semper risus. Maecenas convallis tellus at nisi suscipit, at varius nisi placerat. Phasellus fringilla vulputate sapien, in viverra nisi ornare sed. Integer facilisis in orci ac posuere. Ut eu lectus nec ante fringilla gravida et id erat. Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
+            
+            
+                <div ref="project-sub-1" class="subtitleDoc"> <span style="color: #1c7ef1"># </span> Mes Indicateurs 1 </div>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+
+                <div ref="project-sub-2" class="subtitleDoc"> <span style="color: #1c7ef1"># </span> Mes Indicateurs 2 </div>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+
+
+
+                <div ref="add-project" class="titleDoc"> <span style="color: #1c7ef1"># </span> Ajouter un projet </div>
+                
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit. Quisque a aliquam mi. Integer eu tortor nec tortor tincidunt scelerisque. In sit amet faucibus dolor.</p>
+                <p> Quisque dignissim eu ex sit amet fermentum. Etiam mattis nisl tellus, at iaculis lacus bibendum eget. Suspendisse neque justo, finibus vel ligula id, rhoncus egestas nunc. Aenean in iaculis est. Duis dictum tellus pharetra, sodales dolor in, posuere lorem. Quisque rutrum, ante vitae pellentesque ornare, nunc augue lacinia velit, vel aliquam est quam eu elit. Etiam finibus augue id diam blandit, et accumsan sem volutpat. In varius quam ut mattis interdum. Donec at varius magna, nec semper risus. Maecenas . Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
+            
+                <div ref="project-sub-3" class="subtitleDoc"> <span style="color: #1c7ef1"># </span> Mes Indicateurs 3 </div>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+            
+                <div ref="project-sub-4" class="subtitleDoc"> <span style="color: #1c7ef1"># </span> Mes Indicateurs 4 </div>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+
+                <div ref="project-sub-5" class="subtitleDoc"> <span style="color: #1c7ef1"># </span> Mes Indicateurs 5 </div>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo eget nisi id ullamcorper. Donec vitae ligula sodales, dignissim dui et, euismod elit.</p>
+            
+            </div>
         </div>
     </div>
 </template>
@@ -50,6 +85,12 @@ export default {
     computed: {
     },
     methods: {
+         scrollMeTo(refName) {
+            var element = this.$refs[refName];
+            var top = element.offsetTop;
+
+            window.scrollTo(0, top);
+        }
     },
     created() {
     }
@@ -57,39 +98,34 @@ export default {
 </script>
 
 <style lang="scss">
-.moduleDocContainer{
-    background-color: rgb(247, 247, 247);
-    padding: 10px 15px;
-    border-radius: 5px;
-    border: 1px solid silver;    
-    text-align: center;
-    width: 20%;
-    max-width: 250px;
-    margin: 15px 2%;
-    transform: scale(1); 
-    transition: all 200ms ease-in;
+.containerDoc{
+    margin: 50px 20px;
 }
-.moduleDocContainer:hover{ 
-    cursor: pointer; 
-    transform: scale(1.1); 
-    z-index: 2; 
-    transition: all 200ms ease-in; 
-    background: linear-gradient(118deg, rgba(var(--vs-primary), 1), rgba(var(--vs-primary), 0.7));
-    box-shadow: 0px 0px 10px 1px rgba(var(--vs-primary), 0.7);  
-    color: #fff;
-    border: none;    
-    }
 .titleDoc{
+    margin: 25px 0 20px 0;
+    font-size: 20px;
+    color: #000 !important;
+    font-weight: 600;
+}
+.subtitleDoc{
+    margin: 15px 0 10px 0;
+    font-size: 16px;
+    color: #000 !important;
+    font-weight: 400;
+}
+.titleSummaryDoc{
     text-decoration: none;
     color: #000 !important;
     font-weight: 600;
-    margin: 20px 0 0 10px;
+    margin: 20px 0 0 50px;
 }
-.subtitleDoc{
+.titleSummaryDoc:hover { cursor: pointer;}
+.subtitleSummaryDoc{
     text-decoration: none;
     color: #000 !important;
     font-weight: 400;
     display: block;
-    margin: 0 0 5px 20px;
+    margin: 0 0 12px 100px;
 }
+.subtitleSummaryDoc:hover { cursor: pointer;}
 </style>
