@@ -23,7 +23,7 @@
                 <div class="p-8 login-tabs-container">
                     <div class="vx-card__title mb-4">
                         <h4 class="mb-4 text-center">
-                            Bienvenue sur votre outil de plannification
+                            Bienvenue sur votre outil de planification
                         </h4>
                         <p class="text-center">Connexion</p>
                     </div>
@@ -128,7 +128,7 @@ export default {
             if (this.$store.getters["auth.isUserLoggedIn"]) {
                 this.$vs.notify({
                     title: "Connexion",
-                    text: "Vous êtes déjà connecté!",
+                    text: "Vous êtes déjà connecté !",
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "warning"

@@ -98,7 +98,7 @@ export default {
       if (this.$store.getters["auth.isUserLoggedIn"]) {
         this.$vs.notify({
           title: "Connexion",
-          text: "Vous êtes déjà connecté!",
+          text: "Vous êtes déjà connecté !",
           iconPack: "feather",
           icon: "icon-alert-circle",
           color: "warning",
