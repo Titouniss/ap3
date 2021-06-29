@@ -265,6 +265,16 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                /////---Unavailabilities---/////
+                {
+                    path: "/unavailabilities",
+                    name: "unavailabilities",
+                    component: () => import("./views/unavailabilities/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Schedules---/////
                 {
                     path: "/schedules",
@@ -348,7 +358,60 @@ const router = new Router({
                         rule: "admin",
                         requiresAuth: true
                     }
-                }
+                },
+                 /////---Bugs---/////
+                {
+                    path: "/bugs",
+                    name: "bugs",
+                    component: () => import("./views/bugs/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/bugs/bug-add/",
+                    name: "bugs-bug-add",
+                    component: () => import("./views/bugs/Add.vue"),
+                    meta: {
+                        parent: "bugs",
+                        rule: "admin",
+                        pageTitle: "Remonté d'un bug",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/bugs/bug-edit/:id",
+                    name: "bugs-bug-edit",
+                    component: () => import("./views/bugs/Edit.vue"),
+                    meta: {
+                        parent: "bugs",
+                        pageTitle: "Édition d'un bug",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                 /////---Doc---/////
+                {
+                    path: "/doc",
+                    name: "doc",
+                    component: () => import("./views/doc/Index.vue"),
+                    meta: {
+                        pageTitle: "Documentation Plannigo",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/doc/project",
+                    name: "doc-project",
+                    component: () => import("./views/doc/ProjectView.vue"),
+                    meta: {
+                        pageTitle: "Documentation Projet",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
             ]
         },
         // =============================================================================

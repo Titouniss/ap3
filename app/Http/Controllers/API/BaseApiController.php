@@ -164,7 +164,7 @@ abstract class BaseApiController extends Controller
                 } catch (\Throwable $th) {
                     throw new ApiException("Paramètre 'loads' n'est pas valide.");
                 }
-            } else {
+            } else if (static::$index_load) {
                 $query->with(static::$index_load);
             }
 
@@ -386,7 +386,7 @@ abstract class BaseApiController extends Controller
                 $items->each->append(static::$show_append);
             }
 
-            return $this->successResponse($items, "Restauration terminé avec succès.");
+            return $this->successResponse($items, "Restauration terminée avec succès.");
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
@@ -547,6 +547,7 @@ abstract class BaseApiController extends Controller
     protected function permissionErrors(string $perm, $item = null)
     {
         $user = Auth::user();
+
         if (!$user || $user->cant($perm, $item ?? $this->model)) {
             return $this->unauthorizedResponse();
         }

@@ -29,7 +29,7 @@
  * @import "components/buttons";
  * @import "components/forms";
  */
- @tailwind components;
+@tailwind components;
 
 /**
  * This injects all of Tailwind's utility classes, generated based on your
@@ -57,3 +57,16 @@
  * @import "utilities/background-patterns";
  * @import "utilities/skew-transforms";
  */
+
+.con-vs-dialog {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.con-vs-dialog .vs-dialog-dark {
+    position: fixed !important;
+}
+
+.con-vs-dialog .vs-dialog {
+    margin: auto 0;
+}

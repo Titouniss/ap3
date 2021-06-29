@@ -12,8 +12,8 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-            <div class="editTaskForm">
-                <form  autocomplete="off">
+            <div>
+                <form autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -106,46 +106,41 @@
                                         this.type != 'workarea'
                                 "
                             >
-                                <small class="date-label">Compétences</small>
-                                <vs-select
-                                    v-on:change="updateUsersAndWorkareasList"
+                                <v-select
+                                    v-validate="'required'"
+                                    class="w-full"
+                                    name="skills"
+                                    label="name"
                                     v-model="itemLocal.skills"
                                     :reduce="skill => skill.id"
-                                    class="w-full"
+                                    :options="skillsData"
                                     multiple
-                                    autocomplete
-                                    v-validate="'required'"
-                                    name="skills"
+                                    @input="updateUsersAndWorkareasList"
                                 >
-                                    <vs-select-item
-                                        :key="index"
-                                        :value="item.id"
-                                        :text="item.name"
-                                        v-for="(item, index) in skillsData"
-                                    />
-                                </vs-select>
+                                    <template #header>
+                                        <div class="vs-select--label">
+                                            Compétences
+                                        </div>
+                                    </template>
+                                </v-select>
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('skills')"
+                                    >{{ errors.first("skills") }}</span
                                 >
-                                    {{ errors.first("skills") }}
-                                </span>
                             </div>
 
-                            <span
+                            <div
                                 v-if="
-                                    itemLocal.skills &&
-                                        itemLocal.skills.length > 0 &&
-                                        usersDataFiltered.length == 0 &&
-                                        checkProjectStatus &&
-                                        this.type != 'users' &&
-                                        this.type != 'workarea'
+                                    type !== 'users' &&
+                                        type !== 'workarea' &&
+                                        !hasAvailableUsers
                                 "
                                 class="text-danger text-sm"
                             >
                                 Attention, aucun utilisateur ne possède cette
                                 combinaison de compétences
-                            </span>
+                            </div>
 
                             <div
                                 class="my-3"
@@ -158,9 +153,7 @@
                                     this.type != 'users' &&
                                         this.type != 'workarea' &&
                                         checkProjectStatus &&
-                                        itemLocal.skills &&
-                                        itemLocal.skills.length > 0 &&
-                                        usersDataFiltered.length > 0
+                                        hasAvailableUsers
                                 "
                             >
                                 <v-select
@@ -187,20 +180,17 @@
                                 </v-select>
                             </div>
 
-                            <span
+                            <div
                                 v-if="
-                                    itemLocal.skills &&
-                                        itemLocal.skills.length > 0 &&
-                                        workareasDataFiltered.length == 0 &&
-                                        checkProjectStatus &&
-                                        this.type != 'users' &&
-                                        this.type != 'workarea'
+                                    type !== 'users' &&
+                                        type !== 'workarea' &&
+                                        !hasAvailableWorkareas
                                 "
                                 class="text-danger text-sm"
                             >
                                 Attention, aucun pôle de production ne possède
                                 cette combinaison de compétences
-                            </span>
+                            </div>
 
                             <div
                                 class="my-3"
@@ -213,8 +203,7 @@
                                     this.type !== 'workarea' &&
                                         itemLocal.skills &&
                                         checkProjectStatus &&
-                                        itemLocal.skills.length > 0 &&
-                                        workareasDataFiltered.length > 0
+                                        hasAvailableWorkareas
                                 "
                             >
                                 <v-select
@@ -439,7 +428,12 @@
                     </div>
                 </form>
             </div>
-            <vs-row class="mt-5" vs-type="flex" vs-justify="flex-end" v-if="project_data && project_data.status != 'done'">
+            <vs-row
+                class="mt-5"
+                vs-type="flex"
+                vs-justify="flex-end"
+                v-if="itemLocal.project.status != 'done'"
+            >
                 <vs-button
                     @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
@@ -448,7 +442,11 @@
                 >
                     Supprimer la tâche
                 </vs-button>
-                <vs-button v-on:click="goToEditView" class="ml-auto mt-2" v-if="project_data && project_data.status == 'doing'">
+                <vs-button
+                    v-on:click="goToEditView"
+                    class="ml-auto mt-2"
+                    v-if="itemLocal.project.status == 'doing'"
+                >
                     Déplacer la tâche
                 </vs-button>
             </vs-row>
@@ -542,12 +540,40 @@ export default {
             return this.$store.state.AppActiveUser.is_admin;
         },
         validateForm() {
+            const {
+                name,
+                estimated_time,
+                date,
+                skills,
+                workarea_id,
+                user_id
+            } = this.itemLocal;
+
             return (
                 !this.errors.any() &&
-                this.itemLocal.name != "" &&
-                this.itemLocal.date != "" &&
-                this.itemLocal.estimated_time != "" &&
-                this.itemLocal.skills.length > 0
+                name != "" &&
+                date != "" &&
+                estimated_time != "" &&
+                skills.length > 0 &&
+                (this.type === "users" ||
+                    this.type === "workarea" ||
+                    (this.hasAvailableUsers && this.hasAvailableWorkareas)) &&
+                ((this.project_data && this.project_data.status === "todo") ||
+                    (workarea_id !== null && user_id !== null))
+            );
+        },
+        hasAvailableUsers() {
+            return (
+                this.itemLocal.skills.length === 0 ||
+                (this.itemLocal.skills.length > 0 &&
+                    this.usersDataFiltered.length > 0)
+            );
+        },
+        hasAvailableWorkareas() {
+            return (
+                this.itemLocal.skills.length === 0 ||
+                (this.itemLocal.skills.length > 0 &&
+                    this.workareasDataFiltered.length > 0)
             );
         },
         activePrompt: {
@@ -606,7 +632,10 @@ export default {
                 // from users/workareas type shedule read
                 let projectFind = undefined;
                 this.projectsData.forEach(p => {
-                    if (p.tasks!=null && p.tasks.find(t => t.id === this.itemId) != undefined) {
+                    if (
+                        p.tasks != null &&
+                        p.tasks.find(t => t.id === this.itemId) != undefined
+                    ) {
                         projectFind = p;
                     }
                 });
@@ -639,8 +668,8 @@ export default {
             this.$router.push({
                 path: `/schedules/schedules-edit`,
                 query: {
-                    id: this.$route.query.id,
-                    type: this.$route.query.type,
+                    id: this.$route.query.id || this.project_data.id,
+                    type: this.$route.query.type || "projects",
                     task_id: this.itemId
                 }
             });
@@ -843,13 +872,8 @@ export default {
     pointer-events: none;
     opacity: 0.6;
 }
-.con-vs-dialog.task-compose .vs-dialog {
+.task-compose .vs-dialog {
     max-width: 700px;
-}
-.editTaskForm {
-    max-height: 450px;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 .no-comments {
     font-size: 0.9em;

@@ -72,6 +72,7 @@
             />
             <edit-form
                 :itemId="itemIdToEdit"
+                :project_data="this.project_data"
                 :tasks_list="tasksEvent"
                 :type="this.$route.query.type"
                 :idType="parseInt(this.$route.query.id, 10)"

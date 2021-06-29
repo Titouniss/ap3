@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
+use App\Models\Skill;
 use App\Models\Workarea;
 use App\Traits\StoresDocuments;
 
@@ -47,7 +49,7 @@ class WorkareaController extends BaseApiController
             'max_users' => $arrayRequest['max_users'],
         ]);
 
-        $item->skills()->sync($arrayRequest['skills']);
+        $this->setSkills($item, $arrayRequest['skills']);
 
         if (isset($arrayRequest['token'])) {
             $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
@@ -64,7 +66,7 @@ class WorkareaController extends BaseApiController
             'max_users' => $arrayRequest['max_users']
         ]);
 
-        $item->skills()->sync($arrayRequest['skills']);
+        $this->setSkills($item, $arrayRequest['skills']);
 
         if (isset($arrayRequest['token'])) {
             $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
@@ -75,5 +77,24 @@ class WorkareaController extends BaseApiController
         }
 
         return $item;
+    }
+
+    /**
+     * Sets the skills of the role.
+     */
+    protected function setSkills(Workarea $item, array $skillIds)
+    {
+        $ids = collect($skillIds);
+        foreach ($ids as $id) {
+            $skill = Skill::find($id);
+            if (!$skill) {
+                throw new ApiException("Compétence '{$id}' inconnue.");
+            }
+            if ($item->company_id != $skill->company_id) {
+                throw new ApiException("Accès non autorisé à la compétence {$id}.");
+            }
+        }
+
+        $item->skills()->sync($skillIds);
     }
 }

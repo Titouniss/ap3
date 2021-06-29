@@ -10,6 +10,7 @@ use App\Models\Hours;
 use App\Models\Project;
 use App\Models\Range;
 use App\Models\Role;
+use App\Models\Bug;
 use App\Models\Skill;
 use App\Models\Subscription;
 use App\Models\Task;
@@ -24,6 +25,7 @@ use App\Policies\PermissionPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\RangePolicy;
 use App\Policies\RolePolicy;
+use App\Policies\BugPolicy;
 use App\Policies\SkillPolicy;
 use App\Policies\SubscriptionPolicy;
 use App\Policies\TaskPolicy;
@@ -54,6 +56,7 @@ class AuthServiceProvider extends ServiceProvider
         Project::class => ProjectPolicy::class,
         Range::class => RangePolicy::class,
         Role::class => RolePolicy::class,
+        Bug::class => BugPolicy::class,
         Skill::class => SkillPolicy::class,
         Subscription::class => SubscriptionPolicy::class,
         Task::class => TaskPolicy::class,

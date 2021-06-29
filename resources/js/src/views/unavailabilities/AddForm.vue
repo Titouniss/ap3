@@ -81,7 +81,7 @@
                                         custom_reason !== '') ||
                                         (itemLocal.reason !== '' &&
                                             itemLocal.reason !== 'Autre...' &&
-                                            itemLocal.starts_at)
+                                            itemLocal.starts_at && itemLocal.reason != 'Jours fériés')
                                 "
                                 name="ends_at"
                                 class="w-full mb-2 mt-5"
@@ -167,7 +167,15 @@ export default {
                     this.itemLocal.reason !== "" &&
                     this.custom_reason !== ""
                 );
-            } else {
+            }else if (this.itemLocal.reason === "Jours fériés"){
+                this.$set(this.configStartsAtDateTimePicker, "enableTime", false);
+                return (
+                    !this.errors.any() &&
+                    this.itemLocal.starts_at &&
+                    this.itemLocal.reason !== ""
+                );
+            } 
+            else {
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
@@ -213,12 +221,20 @@ export default {
                     if (this.itemLocal.reason === "Autre...") {
                         item.reason = this.custom_reason;
                     }
+                    if(this.itemLocal.reason === "Jours fériés"){
+                        item.ends_at=moment(item.starts_at).format(
+                        "YYYY-MM-DD HH:mm"
+                        );
+                    }
+                    else{
+                        item.ends_at = moment(item.ends_at).format(
+                        "YYYY-MM-DD HH:mm"
+                        );
+                    }
                     item.starts_at = moment(item.starts_at).format(
                         "YYYY-MM-DD HH:mm"
                     );
-                    item.ends_at = moment(item.ends_at).format(
-                        "YYYY-MM-DD HH:mm"
-                    );
+                    
                     item.user_id = this.id_user;
                     this.$store
                         .dispatch("unavailabilityManagement/addItem", item)

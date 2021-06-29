@@ -6,36 +6,7 @@
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div class="cursor-pointer mx-4">
-                    <vs-button
-                        :class="{ active: modeIndispo }"
-                        @click="modeIndispo = !modeIndispo"
-                    >
-                        {{
-                            modeIndispo
-                                ? "Gérer les heures"
-                                : "Gérer les indisponibilités"
-                        }}
-                    </vs-button>
-                </div>
-                <div
-                    style="min-width: 15em"
-                    class="cursor-pointer mx-4"
-                    v-if="modeIndispo"
-                >
-                    <v-select
-                        label="name"
-                        v-model="filters.hours_taken"
-                        :options="hours_type_names"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Heures prises</div>
-                        </template>
-                    </v-select>
-                </div>
-                <div style="min-width: 15em" v-if="!modeIndispo">
+                <div style="min-width: 15em">
                     <infinite-scroll-select
                         model="project"
                         label="name"
@@ -158,10 +129,7 @@
                 </vs-row>
             </div>
         </div>
-        <div class="p-6 mt-1 vx-card" v-if="modeIndispo">
-            <UnavailabilitiesIndex class="mt-4" :filters="filterParams" />
-        </div>
-        <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
+        <div class="vx-card p-6 mt-1">
             <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
                 <feather-icon icon="BarChart2Icon" svgClasses="h-6 w-6" />
                 <h4 class="ml-3">Résumé</h4>
@@ -211,67 +179,79 @@
             >
             </vs-row>
         </div>
-        <div class="vx-card p-6 mt-1" v-if="!modeIndispo">
+        <div class="vx-card p-6 mt-1">
             <div
                 class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
             >
-                <div class="flex flex-row justify-start items-center">
-                    <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
-                    <h4 class="ml-3">Heures effectuées</h4>
-                    <div class="px-6 py-2" v-if="authorizedTo('publish')">
-                        <vs-button @click="readRecord">
-                            {{
-                                isAdmin
-                                    ? "Gérer les heures"
-                                    : "Gérer mes heures"
-                            }}
+                <vs-row
+                    v-if="showSummary"
+                    vs-justify="center"
+                    vs-align="center"
+                    vs-type="flex"
+                    vs-w="12"
+                >
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
+                        <h4 class="ml-3">Heures effectuées</h4>
+                    </vs-col>
+                    <!-- v-if="stats.overtime" -->
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <div class="px-6 py-2" v-if="authorizedTo('publish')">
+                            <vs-button @click="readRecord">
+                                {{
+                                    isAdmin
+                                        ? "Gérer les heures"
+                                        : "Gérer mes heures"
+                                }}
+                            </vs-button>
+                        </div>
+                    </vs-col>
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <vs-button type="border" @click="onExport">
+                            <div class="flex flex-row">
+                                <feather-icon
+                                    icon="DownloadIcon"
+                                    svgClasses="h-5 w-5"
+                                    class="mr-2"
+                                />
+                                Exporter
+                            </div>
                         </vs-button>
-                    </div>
-                </div>
-                <vs-button type="border" @click="onExport">
-                    <div class="flex flex-row">
-                        <feather-icon
-                            icon="DownloadIcon"
-                            svgClasses="h-5 w-5"
-                            class="mr-2"
-                        />
-                        Exporter
-                    </div>
-                </vs-button>
+                    </vs-col>
+                </vs-row>
             </div>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="this.confirmDeleteRecord"
-                                    v-if="authorizedTo('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="hours"
+                            model-plurial="hours"
+                            :uses-soft-delete="false"
+                            :items="selectedItems"
+                            @on-action="
+                                () => {
+                                    this.onAction();
+                                    this.refreshData();
+                                }
+                            "
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -335,10 +315,13 @@
                 :animateRows="true"
                 :floatingFilter="false"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
         </div>
+
+        <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
     </div>
 </template>
 
@@ -346,6 +329,8 @@
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import vSelect from "vue-select";
+
+import EditForm from "./EditForm.vue";
 
 // Store Module
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
@@ -364,7 +349,12 @@ import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 // Unavailabilities
 import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
 
+// Components
 import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 import moment from "moment";
 import _ from "lodash";
@@ -376,16 +366,21 @@ var modelTitle = "Heures";
 moment.locale("fr");
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
         vSelect,
         flatPickr,
+        EditForm,
         // Cell Renderer
         CellRendererActions,
         CellRendererRelations,
         //Unavailabilities
         UnavailabilitiesIndex,
-        InfiniteScrollSelect
+
+        // Components
+        InfiniteScrollSelect,
+        MultipleActions
     },
     data() {
         return {
@@ -396,7 +391,6 @@ export default {
             total: 0,
 
             id_user: null,
-            modeIndispo: false,
             // AgGrid
             gridApi: null,
             gridOptions: {
@@ -457,7 +451,7 @@ export default {
                         model: "hours",
                         modelPlurial: "hours",
                         usesSoftDelete: false,
-                        canEdit: () => false,
+                        withPrompt: true,
                         name: data =>
                             data.duration == "01:00:00"
                                 ? `l'heure du ${
@@ -564,7 +558,7 @@ export default {
     watch: {
         filterParams: {
             handler(value, prev) {
-                if (!this.modeIndispo && !_.isEqual(value, prev)) {
+                if (!_.isEqual(value, prev)) {
                     this.clearRefreshDataTimeout();
                     this.refreshDataTimeout = setTimeout(() => {
                         this.page = 1;
@@ -629,15 +623,11 @@ export default {
         },
         filterParams() {
             const filter = {};
-            if (this.modeIndispo) {
-                if (this.filters.hours_taken) {
-                    filter.hours_taken_name = this.filters.hours_taken;
-                }
-            } else {
-                if (this.filters.project_id) {
-                    filter.project_id = this.filters.project_id;
-                }
+
+            if (this.filters.project_id) {
+                filter.project_id = this.filters.project_id;
             }
+
             if (this.filters.user_id) {
                 filter.user_id = this.filters.user_id;
             }
@@ -781,53 +771,6 @@ export default {
         },
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
-        },
-        confirmDeleteRecord() {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleHour = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces heures ?`
-                        : singleHour.duration == "01:00:00"
-                        ? `Voulez vous vraiment supprimer l'heure du ${
-                              singleHour.start_at.split(" ")[0]
-                          } pour le projet ${singleHour.project} ?`
-                        : `Voulez vous vraiment supprimer les ${
-                              singleHour.duration.split(":")[0]
-                          } heures du ${
-                              singleHour.start_at.split(" ")[0]
-                          } pour le projet ${singleHour.project.name} ?`,
-                accept: this.deleteRecord,
-                acceptText: "Supprimer",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("hoursManagement/removeItems", [selectRow.id])
-                    .then(data => {
-                        this.showDeleteSuccess();
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-        },
-        showDeleteSuccess() {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Heures supprimés`
-                        : `Heure supprimé`
-            });
         },
         onResize(event) {
             if (this.gridApi) {

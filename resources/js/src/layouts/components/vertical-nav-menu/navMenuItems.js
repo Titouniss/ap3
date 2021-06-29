@@ -74,9 +74,33 @@ export default [
         icon: "ClockIcon"
     },
     {
+        url: "/hours",
+        name: "Gérer les heures",
+        slug: "hours",
+        icon: "ClockIcon"
+    },
+    {
+        url: "/hours",
+        name: "Gérer les indisponibilités",
+        slug: "hours",
+        icon: "ClockIcon"
+    },
+    {
         url: "/modules",
         name: "Modules",
         slug: "modules",
         icon: "PackageIcon"
+    },
+    {
+        url: "/doc",
+        name: "Documentation",
+        slug: "doc",
+        icon: "BookIcon"
+    },
+    {
+        url: "/bugs",
+        name: "Remontées de bugs",
+        slug: "bugs",
+        icon: "TerminalIcon"
     }
 ];

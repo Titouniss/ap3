@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
-use Exception;
 use Spatie\Permission\Models\Permission;
 
 class RoleController extends BaseApiController
@@ -92,15 +92,16 @@ class RoleController extends BaseApiController
         foreach ($ids as $id) {
             $permission = Permission::find($id);
             if (!$permission) {
-                throw new Exception("Permission inconnue.");
+                throw new ApiException("Permission '{$id}' inconnue.");
             }
             if (!$user->permissions->contains(function ($perm) use ($id) {
                 return $perm->id == $id;
             })) {
-                throw new Exception("Accès non autorisé à la permission {$id}.");
+                throw new ApiException("Accès non autorisé à la permission {$id}.");
             }
         }
 
+        $permissionIds = array_merge($permissionIds, Permission::whereIn('name_fr', ['bugs'])->pluck('id')->toArray());
         $item->syncPermissions($permissionIds);
     }
 }
