@@ -27,8 +27,8 @@
   à tout moment le contenu des présentes CGU. </p><br><br>
   <B> ARTICLE 1 : Mentions légales</B><br><br>
   <p>L'édition du site Plannigo est assurée par la Société Numidev SARL au capital de 10 000€ ,
-  immatriculée au RCS de Laval sous le numéro 839 098 076 dont le siège social est situé au 12 bis rue
-  du val de Mayenne 53 000 LAVAL, : 0243538697, contact@numidev.fr. N° de TVA intracommunautaire
+  immatriculée au RCS de Laval sous le numéro 839 098 076 dont le siège social est situé au Batiment H -
+  rue Louis de Broglie 53 810 Changé, : 06.43.94.43.77, contact@numidev.fr. N° de TVA intracommunautaire
   : FR01839098076 <br><br>
   Le Directeur de la publication est Alexis Lepage. Si l’édition du site est assurée par une personne
   physique : L’édition et la direction de la publication de la plateforme Plannigo est assurée par
@@ -77,7 +77,7 @@
   droit d'accès, de rectification, de suppression et d'opposition de ses données personnelles.<br><br>
   L'utilisateur exerce ce droit :<br><br>
   • par mail à contact@numidev.fr<br><br>
-  • par voie postale, 12 bis rue du val de Mayenne 53 000 LAVAL<br><br>
+  • par voie postale, Batiment H - rue Louis de Broglie 53 810 Changé<br><br>
   • via un formulaire de contact ;<br><br>
   • via son espace personnel<br><br>
   <B>ARTICLE 4 : Propriété intellectuelle</B><br><br>

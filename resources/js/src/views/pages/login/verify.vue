@@ -31,7 +31,7 @@
         />
         <div class="flex justify-center my-3 ml-auto mr-auto">
           <router-link to="/pages/login" class="mb-2 text-center"
-            >Vous avez déjà un lien de vérification?</router-link
+            >Vous avez déjà un lien de vérification ?</router-link
           >
         </div>
         <div class="flex justify-center my-3 ml-auto mr-auto">

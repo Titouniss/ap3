@@ -8,9 +8,35 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Hash;
 
-class MailVerifyEmailNotification extends Notification
+class MailNewUserNotification extends Notification
 {
+
+     /**
+     * The user id
+     * @var string
+     */
+    public $firstname;
+    public $lastname;
+    public $email;
+    public $company_name;
+    public $contact_tel1;
+
+    /**
+     * Create a new notification instance.
+     *
+     * @return void
+     */
+    public function __construct($firstname, $lastname, $email, $company_name, $contact_tel1)
+    {
+        $this->firstname = $firstname;
+        $this->lastname = $lastname;
+        $this->email = $email;
+        $this->company_name = $company_name;
+        $this->contact_tel1 = $contact_tel1;
+    }
+
     /**
      * The callback that should be used to build the mail message.
      *
@@ -37,23 +63,12 @@ class MailVerifyEmailNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        $verificationUrl = $this->verificationUrl($notifiable);
-
-        if (static::$toMailCallback) {
-            return call_user_func(static::$toMailCallback, $notifiable, $verificationUrl);
-        }
-
-        // $link = url( "/pages/reset-password/".$this->token."/".$notifiable->getEmailForVerification() );
-
         return (new MailMessage)
-            ->subject(Lang::get('Verification de votre adresse e-mail'))
-            ->greeting('Bonjour '.$notifiable->firstname.' '.$notifiable->lastname.' !')
-            ->line('Afin de vous connecter vous devrez utiliser votre identifiant :')
-            ->line($notifiable->login)
-            ->line('Vous pourrez le modifier une fois connecté.')
-            ->line(Lang::get('Cliquez sur le lien ci-dessous afin de confirmer votre adresse e-mail.'))
-            ->action(Lang::get('Vérifier l\'adresse e-mail'), $verificationUrl)
-            ->line(Lang::get('Si vous n\'avez pas fait de demande ignorer ce message.'));
+            ->subject('Inscription nouvelle société !')
+            ->greeting('Bonjour ')
+            ->line("La société".$this->company_name." vient de s'inscrire à l'application Plannigo.")  // TODO le texte avant bouton clique
+            ->line("L'utilisateur est : ".$this->firstname." ".$this->lastname)
+            ->line("L'adresse e-mail est : ".$this->email." et le numéro de téléphone est : ".$this->contact_tel1);
     }
 
     /**
