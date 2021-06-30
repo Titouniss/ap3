@@ -65,28 +65,11 @@ class MailNewUserNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Inscription nouvelle société !')
-            ->greeting('Bonjour ')
-            ->line("La société".$this->company_name." vient de s'inscrire à l'application Plannigo.")  // TODO le texte avant bouton clique
+            ->cc('arlenegautre@numidev.fr')
+            ->greeting('Bonjour,')
+            ->line("La société ".$this->company_name." vient de s'inscrire à l'application Plannigo.")  // TODO le texte avant bouton clique
             ->line("L'utilisateur est : ".$this->firstname." ".$this->lastname)
             ->line("L'adresse e-mail est : ".$this->email." et le numéro de téléphone est : ".$this->contact_tel1);
-    }
-
-    /**
-     * Get the verification URL for the given notifiable.
-     *
-     * @param  mixed  $notifiable
-     * @return string
-     */
-    protected function verificationUrl($notifiable)
-    {
-        return URL::temporarySignedRoute(
-            'api.verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
-            [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->getEmailForVerification()),
-            ]
-        );
     }
 
     /**
