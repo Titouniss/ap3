@@ -5,9 +5,9 @@
                 <p>Commencez ici pour apprendre les bases de l'applications Plannigo. Sélectionner un modules pour en savoir plus.</p>
             </vs-row>
             <vs-row vs-type="flex" vs-justify="flex-start">
-                <div class="moduleDocContainer">
+                <div class="moduleDocContainer" @click="$router.push('/doc/project/').catch(() => {})">
                     <feather-icon icon="ActivityIcon" svgClasses="h-7 w-7" class="ml-1" />
-                    <p><a href="/doc/project/" style="text-decoration: none;color: inherit;">Projets</a></p>
+                    <p>Projets</p>
                 </div>
                 <div class="moduleDocContainer">
                     <feather-icon icon="ClipboardIcon" svgClasses="h-7 w-7" class="ml-1" />
@@ -48,17 +48,7 @@
 import moment from "moment";
 
 export default {
-    components: {
-    },
-    data() {
-    },
-    computed: {
-    },
-    methods: {
-    },
-    created() {
-    }
-};
+}
 </script>
 
 <style lang="scss">

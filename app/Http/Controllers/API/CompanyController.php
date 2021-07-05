@@ -374,7 +374,7 @@ class CompanyController extends BaseApiController
                                     $newUser->save();
                                 }
                                 else{
-                                    $newUser->syncRoles(Role::where('name', $user->role->id)->where('company_id')->withTrashed()->pluck('id'));
+                                    $newUser->syncRoles(Role::where('name', $user->role->name)->where('company_id', $newCompany->id)->withTrashed()->pluck('id'));
                                     $newUser->save();
                                 }
                             }
