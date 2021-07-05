@@ -220,7 +220,6 @@ export default {
         }
     },
     data() {
-        console.log(this.data);
         return {
             activePrompt: false,
             nbAddress: 0,

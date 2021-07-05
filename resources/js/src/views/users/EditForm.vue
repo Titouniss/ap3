@@ -479,7 +479,6 @@ export default {
     sendVerificationEmail() {
       // Loading
       this.$vs.loading();
-      console.log("email",this.itemLocal.email);
       this.$store
         .dispatch("auth/verify", { email: this.itemLocal.email })
         .catch((error) => {

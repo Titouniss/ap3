@@ -664,7 +664,6 @@ export default {
             return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
         },
         goToEditView() {
-            console.log("id", this.itemId);
             this.$router.push({
                 path: `/schedules/schedules-edit`,
                 query: {
@@ -810,7 +809,6 @@ export default {
         addPreviousTask(taskIds) {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];
-            console.log(taskIds);
 
             taskIds.forEach(id => {
                 let task = this.tasks_list.filter(t => t.id == id);

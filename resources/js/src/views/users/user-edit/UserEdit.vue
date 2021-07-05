@@ -118,7 +118,6 @@ export default {
     },
   },
   created() {
-    console.log("this.$route.query", this.$route.query);
 
     // Register Module UserManagement Module
     if (!moduleUserManagement.isRegistered) {
