@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use Carbon\CarbonPeriod;
 
 class UnavailabilityController extends BaseApiController
 {
@@ -463,17 +464,24 @@ class UnavailabilityController extends BaseApiController
             $timeToAdd = Carbon::parse($unavailability->ends_at)->floatDiffInHours(Carbon::parse($unavailability->starts_at));
             $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
 
+            // How many new hour user worked this week
+            $nb_worked_hours = 0;
+            $premierJour = Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d H:i');
+            $dernierJour = Carbon::parse($unavailability->starts_at)->endOfWeek()->format('Y-m-d H:i');
+            $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
+            foreach ($periodWeek as $day) {
+                $nb_worked_hours += UnavailabilityController::getNbWorkedHours($unavailability->user_id, 0, $day->format('Y-m-d'));
+            }
             if (!$weekOvertimes) {
                 $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
-                $workWeekHours = WorkHours::where('user_id', $unavailability->user_id)->where('is_active', 1)->get()->map(function ($day) {
-                    $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
-                    $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
-                    return $morning->add($afternoon)->totalHours;
-                })->sum();
-
-                $weekOvertimes->overtimes=-$workWeekHours;
             }
-            $weekOvertimes->overtimes += $timeToAdd;
+            $workWeekHours = WorkHours::where('user_id', $unavailability->user_id)->where('is_active', 1)->get()->map(function ($day) {
+                $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+                $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                return $morning->add($afternoon)->totalHours;
+            })->sum();
+
+            $weekOvertimes->overtimes=-$workWeekHours+$nb_worked_hours;
             $weekOvertimes->update();
         }
     }
@@ -488,11 +496,67 @@ class UnavailabilityController extends BaseApiController
             $timeToDel = Carbon::parse($unavailability->ends_at)->floatDiffInHours(Carbon::parse($unavailability->starts_at));
             $weekOvertimes = DealingHours::where('user_id', $unavailability->user_id)->where('date', Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d'))->first();
 
+            // How many new hour user worked this week
+            $nb_worked_hours = 0;
+            $premierJour = Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d H:i');
+            $dernierJour = Carbon::parse($unavailability->starts_at)->endOfWeek()->format('Y-m-d H:i');
+            $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
+            foreach ($periodWeek as $day) {
+                $nb_worked_hours += UnavailabilityController::getNbWorkedHours($unavailability->user_id, 0, $day->format('Y-m-d'));
+            }
+
             if (!$weekOvertimes) {
                 $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
             }
-            $weekOvertimes->overtimes -= $timeToDel;
+            $workWeekHours = WorkHours::where('user_id', $unavailability->user_id)->where('is_active', 1)->get()->map(function ($day) {
+                $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+                $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                return $morning->add($afternoon)->totalHours;
+            })->sum();
+
+            $weekOvertimes->overtimes=-$workWeekHours+$nb_worked_hours-$timeToDel;
             $weekOvertimes->update();
         }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @param  float  $duration
+     * @param  string  $date
+     * @return \Illuminate\Http\Response
+     */
+    private static function getNbWorkedHours($user_id, $duration, $date)
+    {
+        // How many hour user worked this day
+        $worked_hours = $date ? Hours::where([['user_id', $user_id], ['start_at', 'LIKE', '%' . $date . '%']])->get() : [];
+
+        // add some Unavailability ou plusieurs 
+        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Congés payés"]])
+            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Jours fériés"]])
+            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Période de cours"]])
+            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Utilisation heures supplémentaires"]])->get() : [];
+
+        $nb_worked_hours = 0;
+
+        if (!$worked_unavailabilities->isEmpty()) {
+
+            foreach ($worked_unavailabilities as $wu) {
+                $nb_worked_hours += Carbon::create($wu->ends_at)->floatDiffInHours(Carbon::create($wu->starts_at));
+            }
+        }
+
+        if (!$worked_hours->isEmpty()) {
+
+            foreach ($worked_hours as $wh) {
+                $nb_worked_hours += $wh->durationInFloatHour;
+            }
+            // Add current insert work hours
+            return $nb_worked_hours += $duration;
+        } else {
+            return $nb_worked_hours += $duration;
+        }
+        
     }
 }

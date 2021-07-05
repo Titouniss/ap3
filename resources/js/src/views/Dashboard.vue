@@ -124,7 +124,7 @@
                         <div
                             class="w-1/2 border border-solid d-theme-border-grey-light border-r-0 border-b-0"
                         >
-                            <p class="mt-4">Tâches plannifiées aujourd'hui</p>
+                            <p class="mt-4">Tâches planifiées aujourd'hui</p>
                             <p class="text-3xl font-semibold text-warning">
                                 {{ tasksToday.length }}
                             </p>
