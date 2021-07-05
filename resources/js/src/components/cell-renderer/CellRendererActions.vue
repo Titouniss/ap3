@@ -210,6 +210,11 @@ export default {
       }
     },
     confirmActionRecord (type) {
+      console.log(this.isAdmin && this.params.model === 'company')
+      console.log(this.isAdmin)
+      console.log(this.params.model)
+      console.log(this.params)
+      
       if (this.blockDelete && type === this.dialogTypes.delete) {
         this.$vs.dialog({
           color: 'danger',
