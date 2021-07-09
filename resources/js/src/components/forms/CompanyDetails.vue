@@ -1,5 +1,6 @@
 <template>
   <div class="w-full">
+    <span style="font-size: 10px;">* : Champs obligatoires | Au moins un des deux téléphone est obligatoire</span>
     <div class="pt-6 px-3 flex items-end">
       <feather-icon svgClasses="w-6 h-6" icon="BriefcaseIcon" class="mr-2" />
       <span class="font-medium text-lg leading-none"> Société </span>
@@ -11,7 +12,7 @@
           v-validate="'max:255|alpha_dash|required'"
           name="name"
           class="w-full"
-          label="Nom"
+          label="Nom *"
           v-model="itemLocal.name"
           :success="itemLocal.name != '' && !errors.first('name')"
           :danger="errors.has('name')"
@@ -20,7 +21,7 @@
       </vs-col>
       <vs-col vs-w="6" vs-xs="12" class="pt-3 px-3">
         <vs-input
-          v-validate="'required|numeric|min:14|max:14'"
+          v-validate="'numeric|min:14|max:14'"
           name="siret"
           class="w-full"
           label="Siret"
@@ -66,7 +67,7 @@
           v-validate="'max:255|required'"
           name="contact_firstname"
           class="w-full"
-          label="Prénom"
+          label="Prénom *"
           v-model="itemLocal.contact_firstname"
           :success="
             itemLocal.contact_firstname != '' &&
@@ -81,7 +82,7 @@
           v-validate="'max:255|required'"
           name="contact_lastname"
           class="w-full"
-          label="Nom"
+          label="Nom *"
           v-model="itemLocal.contact_lastname"
           :success="
             itemLocal.contact_lastname != '' && !errors.has('contact_lastname')
@@ -95,7 +96,7 @@
           v-validate="'max:255|required'"
           name="contact_function"
           class="w-full"
-          label="Fonction"
+          label="Fonction *"
           v-model="itemLocal.contact_function"
           :success="
             itemLocal.contact_function != '' && !errors.has('contact_function')
@@ -109,7 +110,7 @@
           v-validate="'max:255|email|required'"
           name="contact_email"
           class="w-full"
-          label="Émail"
+          label="Email *"
           v-model="itemLocal.contact_email"
           :success="
             itemLocal.contact_email != '' && !errors.has('contact_email')
@@ -154,7 +155,7 @@
           v-validate="'max:10|required'"
           name="street_number"
           class="w-full"
-          label="Numéro"
+          label="Numéro *"
           v-model="itemLocal.street_number"
           :success="
             itemLocal.street_number != '' && !errors.has('street_number')
@@ -168,7 +169,7 @@
           v-validate="'max:255|required'"
           name="street_name"
           class="w-full"
-          label="Rue"
+          label="Rue *"
           v-model="itemLocal.street_name"
           :success="itemLocal.street_name != '' && !errors.has('street_name')"
           :danger="errors.has('street_name')"
@@ -180,7 +181,7 @@
           v-validate="'max:15|required'"
           name="postal_code"
           class="w-full"
-          label="Code postal"
+          label="Code postal *"
           v-model="itemLocal.postal_code"
           :success="itemLocal.postal_code != '' && !errors.has('postal_code')"
           :danger="errors.has('postal_code')"
@@ -192,7 +193,7 @@
           v-validate="'max:255|required'"
           name="city"
           class="w-full"
-          label="Ville"
+          label="Ville *"
           v-model="itemLocal.city"
           :success="itemLocal.city != '' && !errors.has('city')"
           :danger="errors.has('city')"
@@ -204,7 +205,7 @@
           v-validate="'max:255|required'"
           name="country"
           class="w-full"
-          label="Pays"
+          label="Pays *"
           v-model="itemLocal.country"
           :success="itemLocal.country != '' && !errors.has('country')"
           :danger="errors.has('country')"

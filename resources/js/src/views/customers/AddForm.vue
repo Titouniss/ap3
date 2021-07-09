@@ -114,8 +114,15 @@ export default {
       return (
         !this.errors.any() &&
         this.itemLocal.name !== "" &&
-        this.itemLocal.contact_tel1 !== "" &&
+        this.itemLocal.contact_firstname !== "" &&
+        this.itemLocal.contact_lastname !== "" &&
+        this.itemLocal.contact_function !== "" &&
         this.itemLocal.contact_email !== "" &&
+        (this.itemLocal.contact_tel1 !== "" || this.itemLocal.contact_tel2 !== "" )&&
+        this.itemLocal.street_number !== "" &&
+        this.itemLocal.street_name !== "" &&
+        this.itemLocal.postal_code !== "" &&
+        this.itemLocal.country !== "" &&
         this.itemLocal.company_id !== ""
       );
     },
