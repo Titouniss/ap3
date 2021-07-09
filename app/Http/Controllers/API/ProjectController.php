@@ -2507,13 +2507,13 @@ class ProjectController extends BaseApiController
         //récupérer toutes les tasks avec le même workarea_id
         $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
         $listTaskId = array();
-        //s'il y a au moins une task sur le même ilôt
+        //s'il y a au moins une task sur le même îlot
         if (count($tasksWorkarea) > 0) {
-            //on récupère le max_users de l'ilôt
+            //on récupère le max_users de l'îlot
             $workArea = Workarea::where('id', $workarea_id)->get();
             $max_users = $workArea[0]['max_users'];
 
-            //on compte le nombre de tasks en même temps et sur le même ilôt
+            //on compte le nombre de tasks en même temps et sur le même îlot
             $nbTasksTogether = 1;
             $maxNbTasksTogether = 0;
             $listTaskTogether = array();
@@ -2538,7 +2538,7 @@ class ProjectController extends BaseApiController
                 }
             }
             $nbTasksTogether = $maxNbTasksTogether;
-            //si le nombre de tasks en même temps sur l'ilôt < max_users, on enlève la task de la liste des tasks avec le même workarea car période dispo
+            //si le nombre de tasks en même temps sur l'îlot < max_users, on enlève la task de la liste des tasks avec le même workarea car période dispo
             $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end');
             if ($nbTasksTogether < $max_users) {
                 foreach ($listTaskTogether as $taskTogether) {
@@ -3783,7 +3783,7 @@ class ProjectController extends BaseApiController
 
                                     if ($previousOk) {
 
-                                        //On regarde si un ilôt est disponible pendant la période
+                                        //On regarde si un îlot est disponible pendant la période
                                         $workareaOk = null;
                                         $workareas = $this->getWorkareasBySkills($task->skills, $project->company_id);
 
@@ -3791,12 +3791,12 @@ class ProjectController extends BaseApiController
                                             if (!$taskPlan) {
                                                 $tasksWorkarea = Task::where('workarea_id', $workarea->id)->whereNotNull('date')->whereNotNull('date_end')->where('status', '!=', 'done')->get();
 
-                                                //s'il y a plusieurs tasks sur le même ilôt
+                                                //s'il y a plusieurs tasks sur le même îlot
                                                 if (count($tasksWorkarea) > 0) {
-                                                    //on récupère le max_users de l'ilôt
+                                                    //on récupère le max_users de l'îlot
                                                     $workArea = Workarea::where('id', $workarea->id)->get();
                                                     $max_users = $workArea[0]['max_users'];
-                                                    //on compte le nombre de tasks en même temps et sur le même ilôt
+                                                    //on compte le nombre de tasks en même temps et sur le même îlot
                                                     $nbTasksTogether = 1;
                                                     $maxNbTasksTogether = 0;
                                                     foreach ($tasksWorkarea as $taskWorkarea) {
@@ -3812,7 +3812,7 @@ class ProjectController extends BaseApiController
                                                         }
                                                     }
                                                     $nbTasksTogether = $maxNbTasksTogether;
-                                                    //si le nombre de tasks en même temps sur l'ilôt >= max_users, on planifie en dehors des périodes où il y a déjà des tasks sur l'ilôt
+                                                    //si le nombre de tasks en même temps sur l'îlot >= max_users, on planifie en dehors des périodes où il y a déjà des tasks sur l'îlot
                                                     if ($nbTasksTogether >= $max_users) {
                                                         //return array de periods || null
                                                         $newPeriods = $this->getNewPeriodsWorkareaTasksLess($tasksWorkarea, $period);
@@ -4771,7 +4771,7 @@ class ProjectController extends BaseApiController
 
                 $unchanged = false;
 
-                //On transforme la periode pour prendre en compte les taches de l'ilôt afin d'avoir les dispo
+                //On transforme la periode pour prendre en compte les taches de l'îlot afin d'avoir les dispo
                 $temp_periods = $periods;
                 foreach ($temp_periods as $key => $period) {
 
