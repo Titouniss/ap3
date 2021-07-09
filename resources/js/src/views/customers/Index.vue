@@ -368,7 +368,7 @@ export default {
         }
 
         this.$store
-            .dispatch("customerManagement/fetchItems", { with_trashed: true })
+            .dispatch("customerManagement/fetchItems", { with_trashed: true,  order_by: "name" })
             .catch(err => {
                 console.error(err);
             });
