@@ -193,7 +193,7 @@ class TaskController extends BaseApiController
         ]);
 
         if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
+            $this->replaceTimeSpent($item->id, $arrayRequest['time_spent']);
         }
 
         if ($project->status == 'doing') {
@@ -255,7 +255,7 @@ class TaskController extends BaseApiController
         ]);
 
         if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
+            $this->replaceTimeSpent($item->id, $arrayRequest['time_spent']);
         }
 
         // if ($project->status == 'doing') {
@@ -332,7 +332,7 @@ class TaskController extends BaseApiController
             return $this->errorResponse($validator->errors());
         }
 
-        $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
+        $this->replaceTimeSpent($item->id, $arrayRequest['time_spent']);
 
         if (isset($arrayRequest['comment'])) {
             $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
@@ -463,7 +463,7 @@ class TaskController extends BaseApiController
         }
     }
 
-    private function addTimeSpent(int $taskId, float $duration)
+    private function replaceTimeSpent(int $taskId, float $duration)
     {
         if ($duration != 0) {
             $timeSpent = TaskTimeSpent::firstOrCreate([
@@ -472,9 +472,9 @@ class TaskController extends BaseApiController
                 'task_id' => $taskId,
             ]);
 
-            if (($newDuration = $duration + $timeSpent->duration) != 0) {
+            if ($duration != 0) {
                 $timeSpent->update([
-                    'duration' => $newDuration
+                    'duration' => $duration
                 ]);
             } else {
                 $timeSpent->delete();
