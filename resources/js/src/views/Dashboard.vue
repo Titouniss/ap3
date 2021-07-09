@@ -305,7 +305,12 @@
                                             <span class="text-left mb-1">
                                                 {{ project.name }}
                                             </span>
-                                            <h4>{{ project.progress }}%</h4>
+                                            <div>
+                                                <h4>{{ project.progress['task_percent'] }}%<small> tâches réalisées</small></h4>
+                                                <span :class="parseInt(project.progress['task_percent']) < 75 ? 'valueProgress1' : 'valueProgress2'">
+                                                    {{ project.progress['nb_task_done'] }} / {{ project.progress['nb_task'] }}
+                                                </span>
+                                            </div>
                                         </div>
                                         <feather-icon
                                             icon="ExternalLinkIcon"
@@ -315,7 +320,24 @@
                                     </div>
                                     <vs-progress
                                         :height="10"
-                                        :percent="project.progress"
+                                        :percent="project.progress['task_percent']"
+                                    ></vs-progress>
+                                    <div
+                                        class="flex justify-between items-start"
+                                    >
+                                        <div class="flex flex-col items-start">
+                                            <div>
+
+                                            <h4>{{ project.progress['task_time_percent'] }}%<small> heures réalisées</small></h4>
+                                            <span :class="parseInt(project.progress['task_time_percent']) < 75 ? 'valueProgress1' : 'valueProgress2'">
+                                                {{ project.progress['nb_task_time_done'] }} / {{ project.progress['nb_task_time'] }}
+                                            </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <vs-progress
+                                        :height="10"
+                                        :percent="project.progress['task_time_percent']"
                                     ></vs-progress>
                                 </vs-button>
                             </div>
@@ -694,4 +716,6 @@ export default {
     transform: translateX(10px);
     opacity: 0;
 }
+.valueProgress1{ position : absolute; right: 5px; z-index: 150; font-size: 11px; margin-top: 2px;  }
+.valueProgress2{ position : absolute; left: 5px; z-index: 150; font-size: 11px; margin-top: 2px; color: white }
 </style>

@@ -18,10 +18,23 @@ class Project extends Model
 
     public function getProgressAttribute()
     {
+        $progress = [];
         $tasks = $this->hasManyThrough(Task::class, TasksBundle::class, 'project_id', 'tasks_bundle_id')->get();
-        return floor(100 * ($tasks->isNotEmpty() ? $tasks->filter(function ($task) {
-            return $task->status === "done";
-        })->count() / $tasks->count() : 0));
+        $tasks->load('taskTimeSpent');
+
+        $progress['nb_task'] = $tasks->count();
+        $progress['nb_task_done'] = $tasks->isNotEmpty() ? $tasks->filter(function ($task) { return $task->status === "done"; })->count() : 0;
+        $progress['task_percent'] = floor(100 * $progress['nb_task_done'] / $tasks->count());
+
+        $progress['nb_task_time'] = 0;
+        $progress['nb_task_time_done'] = 0;
+        foreach($tasks as $task){
+            $progress['nb_task_time'] += $task->estimated_time;
+            $progress['nb_task_time_done'] += $task->time_spent;
+        }
+        $progress['task_time_percent'] = floor(100 * $progress['nb_task_time_done'] / $progress['nb_task_time']);
+
+        return $progress;
     }
 
     public function customer()

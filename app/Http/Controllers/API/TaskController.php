@@ -166,11 +166,11 @@ class TaskController extends BaseApiController
                     throw new ApiException("L'utilisateur n'a pas d'heures de travail prévues pour " . $day . ".");
                 }
                 if (!$userAvailable && !$workareaAvailable) {
-                    throw new ApiException('L\'utilisateur et l\'îlot ne sont pas disponibles durant cette période.');
+                    throw new ApiException('L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.');
                 } elseif (!$userAvailable) {
                     throw new ApiException('L\'utilisateur n\'est pas disponible durant cette période.');
                 } elseif (!$workareaAvailable) {
-                    throw new ApiException('L\'îlot n\'est pas disponible durant cette période.');
+                    throw new ApiException('L\'ilôt n\'est pas disponible durant cette période.');
                 }
                 break;
             default:
@@ -193,7 +193,7 @@ class TaskController extends BaseApiController
         ]);
 
         if (isset($arrayRequest['time_spent'])) {
-            $this->replaceTimeSpent($item->id, $arrayRequest['time_spent']);
+            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
         }
 
         if ($project->status == 'doing') {
@@ -231,11 +231,11 @@ class TaskController extends BaseApiController
                 $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $item->id);
 
                 if (!$userAvailable && !$workareaAvailable) {
-                    throw new ApiException('L\'utilisateur et l\'îlot ne sont pas disponibles durant cette période.');
+                    throw new ApiException('L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.');
                 } elseif (!$userAvailable) {
                     throw new ApiException('L\'utilisateur n\'est pas disponible durant cette période.');
                 } elseif (!$workareaAvailable) {
-                    throw new ApiException('L\'îlot n\'est pas disponible durant cette période.');
+                    throw new ApiException('L\'ilôt n\'est pas disponible durant cette période.');
                 }
                 break;
             default:
@@ -255,7 +255,7 @@ class TaskController extends BaseApiController
         ]);
 
         if (isset($arrayRequest['time_spent'])) {
-            $this->replaceTimeSpent($item->id, $arrayRequest['time_spent']);
+            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
         }
 
         // if ($project->status == 'doing') {
@@ -332,7 +332,7 @@ class TaskController extends BaseApiController
             return $this->errorResponse($validator->errors());
         }
 
-        $this->replaceTimeSpent($item->id, $arrayRequest['time_spent']);
+        $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
 
         if (isset($arrayRequest['comment'])) {
             $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
@@ -365,13 +365,11 @@ class TaskController extends BaseApiController
                     foreach ($task->periods as $task_period) {
 
                         $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
-                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) || 
-                            ($period->contains($end_at) && $period->getStartDate() != $end_at) || 
-                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) || 
-                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)) {
-                                $available = false;
-                                break;
-                            }
+
+                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
+                            $available = false;
+                            break;
+                        }
                     }
                 }
             }
@@ -386,41 +384,20 @@ class TaskController extends BaseApiController
 
         $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
             : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
-        $workarea = Workarea::where('id',$workarea_id)->get();
-        $max_users = $workarea[0]['max_users'];
-        $nb_tasks=0;
 
         if (count($workareaTasks) > 0) {
-            if($max_users==1){
-                foreach ($workareaTasks as $task) {
-                    if ($available) {
-                        foreach ($task->periods as $task_period) {
-                            $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
-                            if (($period->contains($start_at) && $period->getEndDate() != $start_at) || 
-                                ($period->contains($end_at) && $period->getStartDate() != $end_at) || 
-                                ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) || 
-                                ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)) {
-                                    $available = false;
-                                    break;
-                            }
+
+            foreach ($workareaTasks as $task) {
+                if ($available) {
+                    foreach ($task->periods as $task_period) {
+
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+
+                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
+                            $available = false;
+                            break;
                         }
                     }
-                }
-            }
-            else{
-                foreach ($workareaTasks as $task) {
-                        foreach ($task->periods as $task_period) {
-                            $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
-                            if (($period->contains($start_at) && $period->getEndDate() != $start_at) || 
-                                ($period->contains($end_at) && $period->getStartDate() != $end_at) || 
-                                ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) || 
-                                ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)) {
-                                    $nb_tasks++;
-                            }
-                        }
-                }
-                if($nb_tasks>=$max_users){
-                    $available=false;
                 }
             }
         }
@@ -486,7 +463,7 @@ class TaskController extends BaseApiController
         }
     }
 
-    private function replaceTimeSpent(int $taskId, float $duration)
+    private function addTimeSpent(int $taskId, float $duration)
     {
         if ($duration != 0) {
             $timeSpent = TaskTimeSpent::firstOrCreate([
@@ -495,9 +472,9 @@ class TaskController extends BaseApiController
                 'task_id' => $taskId,
             ]);
 
-            if ($duration != 0) {
+            if (($newDuration = $duration + $timeSpent->duration) != 0) {
                 $timeSpent->update([
-                    'duration' => $duration
+                    'duration' => $newDuration
                 ]);
             } else {
                 $timeSpent->delete();
