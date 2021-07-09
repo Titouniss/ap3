@@ -307,7 +307,7 @@
                                             </span>
                                             <div>
                                                 <h4>{{ project.progress['task_percent'] }}%<small> tâches réalisées</small></h4>
-                                                <span :class="parseInt(project.progress['task_percent']) < 75 ? 'valueProgress1' : 'valueProgress2'">
+                                                <span :class="parseInt(project.progress['task_percent']) < 85 ? 'valueProgress1' : 'valueProgress2'">
                                                     {{ project.progress['nb_task_done'] }} / {{ project.progress['nb_task'] }}
                                                 </span>
                                             </div>
@@ -329,7 +329,7 @@
                                             <div>
 
                                             <h4>{{ project.progress['task_time_percent'] }}%<small> heures réalisées</small></h4>
-                                            <span :class="parseInt(project.progress['task_time_percent']) < 75 ? 'valueProgress1' : 'valueProgress2'">
+                                            <span :class="parseInt(project.progress['task_time_percent']) < 85 ? 'valueProgress1' : 'valueProgress2'">
                                                 {{ project.progress['nb_task_time_done'] }} / {{ project.progress['nb_task_time'] }}
                                             </span>
                                             </div>

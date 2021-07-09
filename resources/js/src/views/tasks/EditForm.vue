@@ -682,7 +682,7 @@ export default {
 
             const item = JSON.parse(JSON.stringify(this.itemLocal));
             if (this.totalTimeSpent != item.time_spent) {
-                item.time_spent = this.totalTimeSpent;
+                item.time_spent = this.current_time_spent
             }
 
             if (this.project_data != null) {

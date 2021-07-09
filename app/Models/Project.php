@@ -24,7 +24,7 @@ class Project extends Model
 
         $progress['nb_task'] = $tasks->count();
         $progress['nb_task_done'] = $tasks->isNotEmpty() ? $tasks->filter(function ($task) { return $task->status === "done"; })->count() : 0;
-        $progress['task_percent'] = floor(100 * $progress['nb_task_done'] / $tasks->count());
+        $progress['task_percent'] = $progress['nb_task'] ? floor(100 * $progress['nb_task_done'] / $tasks->count()) : 0;
 
         $progress['nb_task_time'] = 0;
         $progress['nb_task_time_done'] = 0;
@@ -32,7 +32,7 @@ class Project extends Model
             $progress['nb_task_time'] += $task->estimated_time;
             $progress['nb_task_time_done'] += $task->time_spent;
         }
-        $progress['task_time_percent'] = floor(100 * $progress['nb_task_time_done'] / $progress['nb_task_time']);
+        $progress['task_time_percent'] = $progress['nb_task_time'] ? floor(100 * $progress['nb_task_time_done'] / $progress['nb_task_time']) : 0;
 
         return $progress;
     }
