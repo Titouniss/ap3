@@ -672,6 +672,9 @@ class UserController extends BaseApiController
 
         if (App::environment('production')) {
             $item->sendEmailVerificationNotification();
+            $adminNumidev=new User();
+            $adminNumidev->email='contact@plannigo.fr';
+            $adminNumidev->sendEmailNewUserNotification($item->firstname, $item->lastname, $item->email, $item->company->name, $company->contact_tel1);
         }
 
         $token = $item->createToken('ProjetX');

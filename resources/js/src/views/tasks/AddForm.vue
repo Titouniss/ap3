@@ -708,7 +708,7 @@ export default {
 };
 </script>
 <style>
-.con-vs-dialog.task-compose .vs-dialog {
+.task-compose .vs-dialog {
     max-width: 700px;
 }
 .inputNumber {

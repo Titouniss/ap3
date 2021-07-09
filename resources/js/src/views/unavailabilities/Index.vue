@@ -165,7 +165,7 @@
                 <span class="ml-4">Reste à utiliser :</span>
                 <span class="ml-4"
                     >{{
-                        (overtimes - usedOvertimes - payedOvertimes).toFixed(2)
+                        overtimes > 0 ? (overtimes - usedOvertimes - payedOvertimes).toFixed(2) : 0
                     }}
                     {{
                         overtimes - (usedOvertimes - payedOvertimes) > 1

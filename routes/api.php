@@ -99,6 +99,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('restore/{id?}', 'API\CompanyController@restore');
         Route::put('destroy/{id?}', 'API\CompanyController@destroy');
         Route::put('force-destroy/{id?}', 'API\CompanyController@forceDestroy');
+        Route::put('duplicate/{id?}', 'API\CompanyController@duplicate');
     });
 
     /***********************************************************************************/

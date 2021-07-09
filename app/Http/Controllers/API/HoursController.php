@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Auth;
 
 class HoursController extends BaseApiController
 {
-    protected static $index_load = ['project:projects.id,name,color', 'user:users.id,firstname,lastname,email'];
+    protected static $index_load = ['project:projects.id,name,color', 'user:users.id,firstname,lastname,email,company_id'];
     protected static $index_append = null;
-    protected static $show_load = ['project:projects.id,name,color', 'user:users.id,firstname,lastname,email'];
+    protected static $show_load = ['project:projects.id,name,color', 'user:users.id,firstname,lastname,email,company_id'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
@@ -454,7 +454,7 @@ class HoursController extends BaseApiController
             $listDealingHour[0]->delete();
             unset($listDealingHour[0]);
         } elseif ($exist) {
-            if($listDealingHour[0]['date'] == '2001-01-01'){
+            if ($listDealingHour[0]['date'] == '2001-01-01') {
                 throw new ApiException('Erreur date 2001-01-01.');
             }
             // Update dealing_hour with difference between nb_worked_hours and $workWeekHours for overtime column
@@ -519,7 +519,7 @@ class HoursController extends BaseApiController
             $listDealingHour[0]->delete();
             unset($listDealingHour[0]);
         } elseif (!empty($listDealingHour[0])) {
-            if($listDealingHour[0]['date'] == '2001-01-01'){
+            if ($listDealingHour[0]['date'] == '2001-01-01') {
                 throw new ApiException('Erreur date 2001-01-01.');
             }
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
@@ -671,7 +671,7 @@ class HoursController extends BaseApiController
             unset($listDealingHour[0]);
             $listDealingHour[0]->delete();
         } elseif (!empty($listDealingHour[0])) {
-            if($listDealingHour[0]['date'] == '2001-01-01'){
+            if ($listDealingHour[0]['date'] == '2001-01-01') {
                 throw new ApiException('Erreur date 2001-01-01.');
             }
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column

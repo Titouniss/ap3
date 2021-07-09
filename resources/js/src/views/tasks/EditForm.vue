@@ -432,7 +432,7 @@
                 class="mt-5"
                 vs-type="flex"
                 vs-justify="flex-end"
-                v-if="project_data && project_data.status != 'done'"
+                v-if="itemLocal.project.status != 'done'"
             >
                 <vs-button
                     @click="() => confirmDeleteTask(itemLocal.id)"
@@ -445,7 +445,7 @@
                 <vs-button
                     v-on:click="goToEditView"
                     class="ml-auto mt-2"
-                    v-if="project_data && project_data.status == 'doing'"
+                    v-if="itemLocal.project.status == 'doing'"
                 >
                     Déplacer la tâche
                 </vs-button>
@@ -664,7 +664,6 @@ export default {
             return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
         },
         goToEditView() {
-            console.log("id", this.itemId);
             this.$router.push({
                 path: `/schedules/schedules-edit`,
                 query: {
@@ -810,7 +809,6 @@ export default {
         addPreviousTask(taskIds) {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];
-            console.log(taskIds);
 
             taskIds.forEach(id => {
                 let task = this.tasks_list.filter(t => t.id == id);
@@ -872,7 +870,7 @@ export default {
     pointer-events: none;
     opacity: 0.6;
 }
-.con-vs-dialog.task-compose .vs-dialog {
+.task-compose .vs-dialog {
     max-width: 700px;
 }
 .no-comments {

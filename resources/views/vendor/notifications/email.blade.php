@@ -60,7 +60,7 @@
                 <tr>
                     <td style="text-align: left; padding-right: 10px;">
                         <h3>À propos</h3>
-                        <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéréssé ?  Contactez-nous pour échanger.</p>
+                        <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéressé ? Contactez-nous pour échanger.</p>
                     </td> 
                 </tr>
             </table>
@@ -70,8 +70,8 @@
                 <tr>
                     <td style="text-align: left; padding-left: 5px; padding-right: 5px;">
                         <h3>Contact</h3>
-                        <p>12 Rue du Val de Mayenne, 53000 Laval<p>
-                        <p style="font-size: 0.8em; margin-top: -15px">02 43 53 86 97</p>
+                        <p>Batiment H - rue Louis de Broglie, 53810 Changé<p>
+                        <p style="font-size: 0.8em; margin-top: -15px">06.43.94.43.77</p>
                     </td>
                 </tr>
             </table>

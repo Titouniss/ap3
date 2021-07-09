@@ -92,6 +92,12 @@ export default [
         icon: "PackageIcon"
     },
     {
+        url: "/doc",
+        name: "Documentation",
+        slug: "doc",
+        icon: "BookIcon"
+    },
+    {
         url: "/bugs",
         name: "Remontées de bugs",
         slug: "bugs",

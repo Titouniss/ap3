@@ -19,7 +19,6 @@ const apiRequest = (url, method = 'get', onSuccess = null, payload = null) => {
     return new Promise((resolve, reject) => {
         axios[method](`/api/${url}`, localPayload)
             .then(response => {
-                console.log(response)
                 if (response && response.data && response.data.success) {
                     if (onSuccess) {
                         onSuccess(JSON.parse(JSON.stringify(response.data.payload)));
