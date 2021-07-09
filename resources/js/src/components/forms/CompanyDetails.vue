@@ -9,7 +9,7 @@
     <vs-row vs-justify="center" vs-type="flex" vs-w="12" class="mb-6">
       <vs-col vs-w="6" vs-xs="12" class="pt-3 px-3">
         <vs-input
-          v-validate="'max:255|alpha_dash|required'"
+          v-validate="'max:255|required'"
           name="name"
           class="w-full"
           label="Nom *"
