@@ -253,7 +253,17 @@ export default {
                 {
                     headerName: "Avancement",
                     field: "status",
-                    filter: true
+                    filter: true,
+                    cellRenderer: data => {
+                        switch (data.value) {
+                            case "doing":
+                                return "En cours";
+                            case "done":
+                                return "Terminé";
+                            default:
+                                return "À faire"; // todo
+                        }
+                    }
                 },
                 {
                     headerName: "Société",

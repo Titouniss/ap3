@@ -27,7 +27,7 @@ export default [
     },
     {
         url: "/workareas",
-        name: "Pôles de productions",
+        name: "Pôles de production",
         slug: "workareas",
         icon: "ArchiveIcon"
     },

@@ -269,7 +269,8 @@ const router = new Router({
                 {
                     path: "/unavailabilities",
                     name: "unavailabilities",
-                    component: () => import("./views/unavailabilities/Index.vue"),
+                    component: () =>
+                        import("./views/unavailabilities/Index.vue"),
                     meta: {
                         rule: "admin",
                         requiresAuth: true
@@ -359,7 +360,7 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
-                 /////---Bugs---/////
+                /////---Bugs---/////
                 {
                     path: "/bugs",
                     name: "bugs",
@@ -376,7 +377,7 @@ const router = new Router({
                     meta: {
                         parent: "bugs",
                         rule: "admin",
-                        pageTitle: "Remonté d'un bug",
+                        pageTitle: "Remontée d'un bug",
                         requiresAuth: true
                     }
                 },
@@ -391,7 +392,7 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
-                 /////---Doc---/////
+                /////---Doc---/////
                 {
                     path: "/doc",
                     name: "doc",
@@ -411,7 +412,7 @@ const router = new Router({
                         rule: "admin",
                         requiresAuth: true
                     }
-                },
+                }
             ]
         },
         // =============================================================================

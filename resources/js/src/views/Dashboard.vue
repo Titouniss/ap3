@@ -306,9 +306,37 @@
                                                 {{ project.name }}
                                             </span>
                                             <div>
-                                                <h4>{{ project.progress['task_percent'] }}%<small> tâches réalisées</small></h4>
-                                                <span :class="parseInt(project.progress['task_percent']) < 85 ? 'valueProgress1' : 'valueProgress2'">
-                                                    {{ project.progress['nb_task_done'] }} / {{ project.progress['nb_task'] }}
+                                                <h4>
+                                                    {{
+                                                        project.progress[
+                                                            "task_percent"
+                                                        ]
+                                                    }}%<small>
+                                                        tâches réalisées</small
+                                                    >
+                                                </h4>
+                                                <span
+                                                    :class="
+                                                        parseInt(
+                                                            project.progress[
+                                                                'task_percent'
+                                                            ]
+                                                        ) < 85
+                                                            ? 'valueProgress1'
+                                                            : 'valueProgress2'
+                                                    "
+                                                >
+                                                    {{
+                                                        project.progress[
+                                                            "nb_task_done"
+                                                        ]
+                                                    }}
+                                                    /
+                                                    {{
+                                                        project.progress[
+                                                            "nb_task"
+                                                        ]
+                                                    }}
                                                 </span>
                                             </div>
                                         </div>
@@ -320,24 +348,57 @@
                                     </div>
                                     <vs-progress
                                         :height="10"
-                                        :percent="project.progress['task_percent']"
+                                        :percent="
+                                            project.progress['task_percent']
+                                        "
                                     ></vs-progress>
                                     <div
                                         class="flex justify-between items-start"
                                     >
                                         <div class="flex flex-col items-start">
                                             <div>
-
-                                            <h4>{{ project.progress['task_time_percent'] }}%<small> heures réalisées</small></h4>
-                                            <span :class="parseInt(project.progress['task_time_percent']) < 85 ? 'valueProgress1' : 'valueProgress2'">
-                                                {{ project.progress['nb_task_time_done'] }} / {{ project.progress['nb_task_time'] }}
-                                            </span>
+                                                <h4>
+                                                    {{
+                                                        project.progress[
+                                                            "task_time_percent"
+                                                        ]
+                                                    }}%<small>
+                                                        heures réalisées</small
+                                                    >
+                                                </h4>
+                                                <span
+                                                    :class="
+                                                        parseInt(
+                                                            project.progress[
+                                                                'task_time_percent'
+                                                            ]
+                                                        ) < 85
+                                                            ? 'valueProgress1'
+                                                            : 'valueProgress2'
+                                                    "
+                                                >
+                                                    {{
+                                                        project.progress[
+                                                            "nb_task_time_done"
+                                                        ]
+                                                    }}
+                                                    /
+                                                    {{
+                                                        project.progress[
+                                                            "nb_task_time"
+                                                        ]
+                                                    }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                     <vs-progress
                                         :height="10"
-                                        :percent="project.progress['task_time_percent']"
+                                        :percent="
+                                            project.progress[
+                                                'task_time_percent'
+                                            ]
+                                        "
                                     ></vs-progress>
                                 </vs-button>
                             </div>
@@ -377,7 +438,7 @@
                                 svgClasses="h-6 w-6"
                                 class="mr-3"
                             />
-                            <h3 class="text-dark">Remontés d'opérateurs</h3>
+                            <h3 class="text-dark">Remontées d'opérateurs</h3>
                         </vs-col>
                     </vs-row>
                     <vs-row slot="no-body">
@@ -716,6 +777,19 @@ export default {
     transform: translateX(10px);
     opacity: 0;
 }
-.valueProgress1{ position : absolute; right: 5px; z-index: 150; font-size: 11px; margin-top: 2px;  }
-.valueProgress2{ position : absolute; left: 5px; z-index: 150; font-size: 11px; margin-top: 2px; color: white }
+.valueProgress1 {
+    position: absolute;
+    right: 5px;
+    z-index: 150;
+    font-size: 11px;
+    margin-top: 2px;
+}
+.valueProgress2 {
+    position: absolute;
+    left: 5px;
+    z-index: 150;
+    font-size: 11px;
+    margin-top: 2px;
+    color: white;
+}
 </style>
