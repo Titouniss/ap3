@@ -111,11 +111,28 @@
                                 :key="`item-${index}`"
                                 :index="index"
                                 :to="
-                                    item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/' + companyId
-                                        : item.slug !== 'external' && !isAdmin && item.name == 'Remontées de bugs' ? '/bugs/bug-add/' 
-                                        : item.slug !== 'external' && item.name == 'Gérer mes heures' || item.name == 'Gérer les heures' ? '/hours/hours-view/'
-                                        : item.slug !== 'external' && item.name == 'Gérer mes indisponibilités' || item.name == 'Gérer les indisponibilités' ? '/unavailabilities/' 
-                                        : item.slug !== 'external' ? item.url : null
+                                    item.slug !== 'external' &&
+                                    !isAdmin &&
+                                    item.name == 'Sociétés'
+                                        ? '/companies/company-edit/' + companyId
+                                        : item.slug !== 'external' &&
+                                          !isAdmin &&
+                                          item.name == 'Remontées de bugs'
+                                        ? '/bugs/bug-add/'
+                                        : (item.slug !== 'external' &&
+                                              item.name ==
+                                                  'Gérer mes heures') ||
+                                          item.name == 'Gérer les heures'
+                                        ? '/hours/hours-view/'
+                                        : (item.slug !== 'external' &&
+                                              item.name ==
+                                                  'Gérer mes indisponibilités') ||
+                                          item.name ==
+                                              'Gérer les indisponibilités'
+                                        ? '/unavailabilities/'
+                                        : item.slug !== 'external'
+                                        ? item.url
+                                        : null
                                 "
                                 :href="
                                     item.slug === 'external' ? item.url : null
@@ -129,10 +146,20 @@
                                     v-show="!verticalNavMenuItemsMin"
                                     class="truncate"
                                     >{{
-                                        !isAdmin && item.name == "Sociétés" ? "Ma société"
-                                            : !isAdmin && item.name == "Remontées de bugs" ? "Remonter un bug" 
-                                            : !isAdmin && !isManager && item.name == "Gérer les heures" ? "Gérer mes heures" 
-                                            : !isAdmin && !isManager && item.name == "Gérer les indisponibilités" ? "Gérer mes indisponibilités" 
+                                        !isAdmin && item.name == "Sociétés"
+                                            ? "Ma société"
+                                            : !isAdmin &&
+                                              item.name == "Remontées de bugs"
+                                            ? "Remonter un bug"
+                                            : !isAdmin &&
+                                              !isManager &&
+                                              item.name == "Gérer les heures"
+                                            ? "Gérer mes heures"
+                                            : !isAdmin &&
+                                              !isManager &&
+                                              item.name ==
+                                                  "Gérer les indisponibilités"
+                                            ? "Gérer mes indisponibilités"
                                             : item.name
                                     }}</span
                                 >
@@ -174,7 +201,7 @@
                             <a
                                 style="text-decoration: none"
                                 class="text-white"
-                                href="https://drive.google.com/file/d/1WccVYF5XYspiG9uYHfVhm2BBDoRbJ7it/view"
+                                href="https://drive.google.com/file/d/1fciNA6MtuzBA2oCQbTCuWQy-PMlkdkrQ/view"
                                 >Télécharger l'application</a
                             >
                         </vs-row>

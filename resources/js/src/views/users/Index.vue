@@ -174,65 +174,6 @@ var model = "user";
 var modelPlurial = "users";
 var modelTitle = "Utilisateurs";
 
-var columnDef = [
-    {
-        width: 40,
-        filter: false,
-        checkboxSelection: true,
-        headerCheckboxSelectionFilteredOnly: true,
-        headerCheckboxSelection: true,
-        resizable: true
-    },
-    {
-        headerName: "Nom",
-        field: "lastname",
-        filter: true,
-        resizable: true
-    },
-    {
-        headerName: "Prénom",
-        field: "firstname",
-        filter: true,
-        resizable: true
-    },
-    {
-        headerName: "Email",
-        field: "email",
-        filter: true,
-        resizable: true
-    },
-    {
-        headerName: "Rôle",
-        field: "role",
-        filter: true,
-        cellRendererFramework: "CellRendererRelations",
-        resizable: true
-    },
-    {
-        headerName: "Société",
-        field: "company",
-        filter: true,
-        cellRendererFramework: "CellRendererRelations",
-        resizable: true
-    },
-    {
-        headerName: "Actions",
-        field: "transactions",
-        type: "numericColumn",
-        cellRendererFramework: "CellRendererActions",
-        cellRendererParams: {
-            model: "user",
-            modelPlurial: "users",
-            name: data => `l'utilisateur ${data.firstname} ${data.lastname}`,
-            disabled: data => data.is_admin,
-            footNotes: {
-                archive:
-                    "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
-            }
-        }
-    }
-];
-
 export default {
     mixins: [multipleActionsMixin],
     components: {
@@ -352,16 +293,6 @@ export default {
                 `${action} ${model}`
             );
         },
-        getColumnDef() {
-            if (this.isAdmin) {
-                return columnDef;
-            } else {
-                let withoutCompany = columnDef
-                    .slice(0, 5)
-                    .concat(columnDef.slice(-1));
-                return withoutCompany;
-            }
-        },
         setColumnFilter(column, val) {
             const filter = this.gridApi.getFilterInstance(column);
             let modelObj = null;
@@ -403,6 +334,75 @@ export default {
         },
         refreshDataUsers() {
             this.filters.user = null;
+        },
+        getColumnDef() {
+            const columns = [
+                {
+                    width: 40,
+                    filter: false,
+                    checkboxSelection: true,
+                    headerCheckboxSelectionFilteredOnly: true,
+                    headerCheckboxSelection: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Nom",
+                    field: "lastname",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Prénom",
+                    field: "firstname",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Email",
+                    field: "email",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Rôle",
+                    field: "role",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                    resizable: true
+                },
+                {
+                    headerName: "Société",
+                    field: "company",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                    resizable: true
+                },
+                {
+                    headerName: "Actions",
+                    field: "transactions",
+                    type: "numericColumn",
+                    cellRendererFramework: "CellRendererActions",
+                    cellRendererParams: {
+                        model: "user",
+                        modelPlurial: "users",
+                        name: data =>
+                            `l'utilisateur ${data.firstname} ${data.lastname}`,
+                        disabled: data => data.is_admin,
+                        canArchive: data =>
+                            data.id !== this.$store.getters.AppActiveUser.id,
+                        canDelete: data =>
+                            data.id !== this.$store.getters.AppActiveUser.id,
+                        footNotes: {
+                            archive:
+                                "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
+                        }
+                    }
+                }
+            ];
+
+            return this.isAdmin
+                ? columns
+                : columns.slice(0, 5).concat(columns.slice(-1));
         }
     },
     mounted() {
