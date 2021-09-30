@@ -192,7 +192,7 @@
                                                     ? 'En retard'
                                                     : 'À terminer'
                                             "
-                                            delay=".5s"
+                                            delay="5000s"
                                         >
                                             <feather-icon
                                                 :icon="
