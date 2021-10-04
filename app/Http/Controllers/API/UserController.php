@@ -713,6 +713,7 @@ class UserController extends BaseApiController
         $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
         $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
         $parsed = preg_replace('#Ý#', 'Y', $parsed);
+        $parsed = preg_replace('/\s/', '_', $parsed);
 
         return ($parsed);
     }

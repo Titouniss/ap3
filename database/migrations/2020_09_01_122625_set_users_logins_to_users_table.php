@@ -28,7 +28,7 @@ class SetUsersLoginsToUsersTable extends Migration
                 $company_name = preg_replace("/ /", "_", $company_name);
 
                 $login_temp = mb_strtolower($company_name, 'UTF-8') . "." . mb_strtolower($user->firstname, 'UTF-8') . ucfirst(mb_strtolower($user->lastname, 'UTF-8'));
-                $parsed_login = SetUsersLoginsToUsersTable::str_to_noaccent($login_temp);
+                $parsed_login = static::str_to_noaccent($login_temp);
 
                 $login = $parsed_login;
 
@@ -46,7 +46,7 @@ class SetUsersLoginsToUsersTable extends Migration
         });
     }
 
-    public function str_to_noaccent($str)
+    public static function str_to_noaccent($str)
     {
         $parsed = $str;
         $parsed = preg_replace('#Ç#', 'C', $parsed);
@@ -63,7 +63,8 @@ class SetUsersLoginsToUsersTable extends Migration
         $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
         $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
         $parsed = preg_replace('#Ý#', 'Y', $parsed);
-        
+        $parsed = preg_replace('/\s/', '_', $parsed);
+
         return ($parsed);
     }
 
@@ -80,7 +81,7 @@ class SetUsersLoginsToUsersTable extends Migration
 
         $users = DB::table('users')->get();
 
-        foreach ($users as $key => $user) { 
+        foreach ($users as $key => $user) {
             DB::table('users')->where('id', $user->id)->update(['login' => null]);
         }
     }
