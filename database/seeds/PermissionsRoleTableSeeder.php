@@ -38,6 +38,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['modules', 'modules', false],
             ['subscriptions', 'abonnements', false],
             ['bugs', 'bugs', false],
+            ['doc', 'documents', true]
         ];
         // create permissions
         foreach ($Permkeys as $Permkey) {
@@ -77,7 +78,7 @@ class PermissionsRoleTableSeeder extends Seeder
 
         $role = Role::firstOrCreate(['code' => 'user', 'name' => 'Utilisateur']);
         // Give all permissions with name_fr
-        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'heures_supplémentaires', 'bugs'])->get());
+        $role->givePermissionTo(Permission::whereIn('name_fr', ['heures', 'planning', 'tâches', 'indiponibilités', 'heures_supplémentaires', 'bugs', 'documents'])->get());
         // Give specific permission by name
         $role->givePermissionTo(Permission::whereIn('name', ['read companies', 'read customers', 'read projects', 'read permissions', 'read ranges', 'read skills', 'read users', 'read workareas'])->get());
         $role->code = 'user';
