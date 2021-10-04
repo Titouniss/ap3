@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   mariadb:
     image: mariadb
@@ -8,17 +7,21 @@ services:
     networks:
       - default
     ports:
-      - 3306:3306
+      - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - "-h"
+        - localhost
       timeout: 20s
       retries: 10
     volumes:
       - db
-
   phpmyadmin:
     image: phpmyadmin
     container_name: phpmyadmin
@@ -29,34 +32,26 @@ services:
     networks:
       - default
     ports:
-      - 8080:80
+      - "8080:80"
     environment:
       PMA_HOST: mariadb
       PMA_USER: root
-      PMA_PASSWORD: ${DB_PASSWORD}
+      PMA_PASSWORD: "${DB_PASSWORD}"
       UPLOAD_LIMIT: 10M
-
-  plannigo:
+  web:
     build: .
-    container_name: plannigo
+    container_name: web
     depends_on:
       mariadb:
         condition: service_healthy
     networks:
       - default
     ports:
-      - 8000:80
+      - "8000:80"
     volumes:
-      - .:/var/www/html
-      - /var/www/html/node_modules
-      - /var/www/html/vendor
-      - /var/www/html/storage
-    stdin_open: true
-    tty: true
-
+      - ".:/var/www/html:delegated"
 networks:
-  default:
-
+  default: null
 volumes:
   db:
     driver: local

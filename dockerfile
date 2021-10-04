@@ -64,4 +64,6 @@ RUN php artisan key:generate --ansi && \
 RUN chown -R www-data:www-data /var/www/html/storage \
     /var/www/html/bootstrap/cache
 
+VOLUME [ "/var/www/html/node_modules", "/var/www/html/vendor", "/var/www/html/storage" ]
+
 EXPOSE 80
