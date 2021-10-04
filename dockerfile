@@ -18,7 +18,7 @@ RUN docker-php-ext-install pdo_mysql mbstring zip exif
 RUN sed -i -e "s/html/html\/public/g" \
     /etc/apache2/sites-enabled/000-default.conf
 
-COPY .docker/plannigo/php/php.ini /usr/local/etc/php/php.ini
+COPY .docker/web/php/php.ini /usr/local/etc/php/php.ini
 
 # enable apache mod_rewrite
 RUN a2enmod rewrite
@@ -39,31 +39,10 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN npm install -g yarn
 
-# Install vendor dependencies
-COPY composer.json composer.lock /var/www/html/
-COPY database /var/www/html/database
-RUN composer install \
-    --ignore-platform-reqs \
-    --no-interaction \
-    --no-plugins \
-    --no-scripts \
-    --prefer-dist
+VOLUME [ "/var/www/html/storage" ]
 
-# Install node dependencies
-COPY package.json webpack.mix.js yarn.lock /var/www/html/
-RUN yarn install
-
-COPY . /var/www/html/
-
-RUN php artisan key:generate --ansi && \
-    php artisan storage:link && \
-    php artisan config:cache && \
-    php artisan cache:clear
-
-# these directories need to be writable by Apache
-RUN chown -R www-data:www-data /var/www/html/storage \
-    /var/www/html/bootstrap/cache
-
-VOLUME [ "/var/www/html/node_modules", "/var/www/html/vendor", "/var/www/html/storage" ]
+COPY ./storage /var/www/html/storage
 
 EXPOSE 80
+
+ENTRYPOINT [ ".docker/scripts/startup.sh" ]
