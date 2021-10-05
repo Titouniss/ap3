@@ -463,7 +463,15 @@ export default {
             this.$store.dispatch("skillManagement/fetchItems");
         }
         if (this.authorizedTo("read", "companies")) {
-            this.$store.dispatch("companyManagement/fetchItems");
+            this.$store.dispatch("companyManagement/fetchItems").then(() => {
+                if (
+                    this.isAdmin &&
+                    this.companiesData &&
+                    this.companiesData.length > 0
+                ) {
+                    this.filters.company = this.companiesData[0];
+                }
+            });
         }
         if (this.authorizedTo("read", "roles")) {
             this.$store.dispatch("roleManagement/fetchItems");

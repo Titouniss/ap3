@@ -66,13 +66,13 @@
                                     }}</span>
 
                                     <div>
-                                        <vs-button
+                                        <!-- <vs-button
                                             type="border"
                                             to="/pages/login"
                                             class="mt-6"
                                         >
                                             Connexion
-                                        </vs-button>
+                                        </vs-button> -->
                                         <vs-button
                                             class="float-right mt-6"
                                             @click="resetPassword"
