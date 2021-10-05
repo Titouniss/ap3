@@ -358,7 +358,11 @@ export default {
                 this.$store
                     .dispatch("userManagement/addItem", payload)
                     .then(data => {
-                        this.back();
+                        this.$router
+                            .push(
+                                `/${modelPlurial}/user-edit/${data.payload.id}`
+                            )
+                            .catch(() => {});
                         this.$vs.notify({
                             title: "Ajout d'un utilisateur",
                             text: `Utilisateur ajouté avec succès`,
