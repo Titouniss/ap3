@@ -448,9 +448,7 @@ export default {
                                     )}
                                 </p>
                                 <p class="text-base">
-                                    Avancement: ${
-                                        project.progress.task_percent
-                                    }%
+                                    Avancement: ${project.progress}%
                                 </p>
                             </div>
                         `;
