@@ -160,6 +160,7 @@ import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkills.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererSkills from "@/components/cell-renderer/CellRendererSkills.vue";
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
@@ -184,6 +185,7 @@ export default {
         CellRendererActions,
         CellRendererRelations,
         CellRendererRelationSkills,
+        CellRendererSkills,
 
         // Components
         RefreshModule,
@@ -228,7 +230,7 @@ export default {
                 {
                     headerName: "Compétences",
                     field: "skills",
-                    cellRendererFramework: "CellRendererRelationSkills"
+                    cellRendererFramework: "CellRendererSkills"
                 },
                 {
                     headerName: "Max opérateurs",

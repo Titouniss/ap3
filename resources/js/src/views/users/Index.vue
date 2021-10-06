@@ -162,6 +162,7 @@ import moduleSkillManagement from "@/store/skill-management/moduleSkillManagemen
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererSkills from "@/components/cell-renderer/CellRendererSkills.vue";
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
@@ -179,10 +180,12 @@ export default {
     components: {
         AgGridVue,
         vSelect,
+
         // Cell Renderer
         CellRendererLink,
         CellRendererRelations,
         CellRendererActions,
+        CellRendererSkills,
 
         // Components
         RefreshModule,
@@ -371,6 +374,11 @@ export default {
                     resizable: true
                 },
                 {
+                    headerName: "Compétences",
+                    field: "skills",
+                    cellRendererFramework: "CellRendererSkills"
+                },
+                {
                     headerName: "Société",
                     field: "company",
                     filter: true,
@@ -402,7 +410,7 @@ export default {
 
             return this.isAdmin
                 ? columns
-                : columns.slice(0, 5).concat(columns.slice(-1));
+                : columns.slice(0, 6).concat(columns.slice(-1));
         }
     },
     mounted() {
