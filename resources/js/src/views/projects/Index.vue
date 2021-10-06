@@ -343,8 +343,10 @@ export default {
                         .max(moment(p.start_date), moment())
                         .format("YYYY-MM-DD"),
                     end: moment(p.date).format("YYYY-MM-DD"),
-                    progress: p.progress,
-                    custom_class: `bar-${this.getProjectStatusColor(p)}`
+                    progress: p.progress.task_percent,
+                    custom_class: `bar-${this.getProjectStatusColor(p)}${
+                        p.color ? `-${p.color.substring(1)}` : ""
+                    }`
                 }))
                 .slice(0, 9);
         },
@@ -403,7 +405,7 @@ export default {
             this.fetchProjects();
         },
         getProjectStatusColor(project) {
-            if (project.progress === 100) {
+            if (project.progress.task_percent === 100) {
                 return "success";
             } else if (
                 moment(project.end || project.date).isAfter(
@@ -446,7 +448,9 @@ export default {
                                     )}
                                 </p>
                                 <p class="text-base">
-                                    Avancement: ${project.progress}%
+                                    Avancement: ${
+                                        project.progress.task_percent
+                                    }%
                                 </p>
                             </div>
                         `;
@@ -591,24 +595,35 @@ export default {
 .handle {
     display: none;
 }
-.bar-success {
-    .bar-progress {
-        fill: rgba($color: var(--vs-success), $alpha: 1) !important;
+
+$projectStatus: "primary", "warning", "danger";
+$colors: (
+    "51E898": #51e898,
+    "61BD4F": #61bd4f,
+    "F2D600": #f2d600,
+    "FF9F1A": #ff9f1a,
+    "EB5A46": #eb5a46,
+    "FF78CB": #ff78cb,
+    "C377E0": #c377e0,
+    "00C2E0": #00c2e0,
+    "0079BF": #0079bf,
+    "344563": #344563
+);
+@each $status in $projectStatus {
+    .bar-#{$status} {
+        .bar-progress {
+            fill: rgba($color: var(--vs-#{$status}), $alpha: 1) !important;
+        }
     }
-}
-.bar-primary {
-    .bar-progress {
-        fill: rgba($color: var(--vs-primary), $alpha: 1) !important;
-    }
-}
-.bar-warning {
-    .bar-progress {
-        fill: rgba($color: var(--vs-warning), $alpha: 1) !important;
-    }
-}
-.bar-danger {
-    .bar-progress {
-        fill: rgba($color: var(--vs-danger), $alpha: 1) !important;
+    @each $colorName, $color in $colors {
+        .bar-#{$status}-#{$colorName} {
+            .bar {
+                fill: $color !important;
+            }
+            .bar-progress {
+                fill: rgba($color: var(--vs-#{$status}), $alpha: 1) !important;
+            }
+        }
     }
 }
 </style>
