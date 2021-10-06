@@ -469,15 +469,14 @@ export default {
             moduleSkillManagement.isRegistered = true;
         }
 
-        this.$store.dispatch("skillManagement/fetchItems");
         if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems");
+            this.$store.dispatch("skillManagement/fetchItems", {
+                order_by: "name"
+            });
         }
-        this.$store.dispatch("userManagement/fetchItems");
         if (this.authorizedTo("read", "users")) {
             this.$store.dispatch("userManagement/fetchItems");
         }
-        this.$store.dispatch("userManagement/fetchItems");
         if (this.authorizedTo("read", "companies")) {
             this.$store.dispatch("companyManagement/fetchItems");
         }

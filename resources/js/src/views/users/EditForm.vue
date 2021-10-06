@@ -572,7 +572,9 @@ export default {
         }
 
         if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems");
+            this.$store.dispatch("skillManagement/fetchItems", {
+                order_by: "name"
+            });
         }
         if (this.authorizedTo("read", "users")) {
             this.$store.dispatch("userManagement/fetchItems");

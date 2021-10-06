@@ -365,7 +365,10 @@ export default {
         }
 
         this.$store
-            .dispatch("skillManagement/fetchItems", { with_trashed: true })
+            .dispatch("skillManagement/fetchItems", {
+                order_by: "name",
+                with_trashed: true
+            })
             .catch(err => {
                 console.error(err);
             });

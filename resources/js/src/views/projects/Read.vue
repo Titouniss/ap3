@@ -522,9 +522,11 @@ export default {
             });
         }
         if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-                console.error(err);
-            });
+            this.$store
+                .dispatch("skillManagement/fetchItems", { order_by: "name" })
+                .catch(err => {
+                    console.error(err);
+                });
         }
 
         //if (this.authorizedTo("read", "customers")) {

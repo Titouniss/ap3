@@ -206,7 +206,6 @@ export default {
                         });
                     });
                 }
-
             } else if (this.$route.query.type === "users") {
                 if (this.tasksEvent !== []) {
                     this.tasksEvent.forEach(t => {
@@ -507,8 +506,9 @@ export default {
                             let businessHours = [];
                             dates.forEach(day => {
                                 if (
-                                    (day[0] !== null && day[0] != "00:00:00") &&
-                                    (day[1] !== null && day[1] != "00:00:00")
+                                    day[0] !== null &&
+                                    day[0] != "00:00:00" &&
+                                    day[1] !== null && day[1] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -517,8 +517,9 @@ export default {
                                     });
                                 }
                                 if (
-                                    (day[2] !== null && day[2] != "00:00:00") &&
-                                    (day[3] !== null && day[3] != "00:00:00")
+                                    day[2] !== null &&
+                                    day[2] != "00:00:00" &&
+                                    day[3] !== null && day[3] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -706,8 +707,9 @@ export default {
                             let businessHours = [];
                             dates.forEach(day => {
                                 if (
-                                    (day[0] !== null && day[0] != "00:00:00") &&
-                                    (day[1] !== null && day[1] != "00:00:00")
+                                    day[0] !== null &&
+                                    day[0] != "00:00:00" &&
+                                    day[1] !== null && day[1] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -716,8 +718,9 @@ export default {
                                     });
                                 }
                                 if (
-                                    (day[2] !== null && day[2] != "00:00:00") &&
-                                    (day[3] !== null && day[3] != "00:00:00")
+                                    day[2] !== null &&
+                                    day[2] != "00:00:00" &&
+                                    day[3] !== null && day[3] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -807,7 +810,7 @@ export default {
             }
             return dayNumber;
         },
-        dateCalendar(){
+        dateCalendar() {
             if (
                 this.tasksEvent !== [] &&
                 this.tasksEvent[0] != null &&
@@ -818,7 +821,7 @@ export default {
                 );
                 this.$refs.fullCalendar.getApi().gotoDate(this.date);
             }
-        },
+        }
     },
     created() {
         // Add store management
@@ -874,12 +877,13 @@ export default {
                 "projectManagement/fetchItem",
                 this.$route.query.id
             );
-            this.$store.dispatch("taskManagement/fetchItems", {
-                project_id: this.$route.query.id
-            })
-            .then(data => {
-                this.dateCalendar();
-            });
+            this.$store
+                .dispatch("taskManagement/fetchItems", {
+                    project_id: this.$route.query.id
+                })
+                .then(data => {
+                    this.dateCalendar();
+                });
         } else if (this.$route.query.type === "users") {
             this.$store.dispatch("taskManagement/fetchItems", {
                 user_id: this.$route.query.id
@@ -899,7 +903,9 @@ export default {
                 console.error(err);
             });
         }
-        this.$store.dispatch("skillManagement/fetchItems");
+        this.$store.dispatch("skillManagement/fetchItems", {
+            order_by: "name"
+        });
         if (this.authorizedTo("read", "users")) {
             this.$store.dispatch("userManagement/fetchItems");
         }

@@ -368,9 +368,11 @@ export default {
         this.$store.dispatch("companyManagement/fetchItems").catch(err => {
             console.error(err);
         });
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        this.$store
+            .dispatch("skillManagement/fetchItems", { order_by: "name" })
+            .catch(err => {
+                console.error(err);
+            });
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
