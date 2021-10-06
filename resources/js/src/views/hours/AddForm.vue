@@ -19,17 +19,14 @@
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <infinite-scroll-select
+                                label="Projet"
                                 model="project"
-                                label="name"
+                                item-label="name"
                                 v-model="itemLocal.project_id"
                                 :filters="{
                                     company_id
                                 }"
-                            >
-                                <template #header>
-                                    <div style="opacity: 0.8">Projet</div>
-                                </template>
-                            </infinite-scroll-select>
+                            />
 
                             <!-- <v-select
                                 v-validate="'required'"

@@ -1,54 +1,57 @@
 <template>
-    <v-select
+    <vs-select
         :ref="`${model}Select`"
-        :label="label"
-        :options="items"
         :value="value"
-        :filterable="false"
+        :label="label"
         :multiple="multiple"
-        :reduce="item => item.id"
-        @input="onInput"
-        @search:blur="onBlur"
-        @search:focus="onFocus"
-        @search="onSearch"
-        class="w-full"
+        :loading="loading"
         autocomplete
+        @input="onInput"
+        @change="onChange"
+        @blur="onBlur"
+        @focus="onFocus"
+        @input-change="onSearch"
+        class="w-full"
     >
-        <template #header>
-            <slot name="header"></slot>
-        </template>
-        <template #selected-option>
-            <div style="display: flex; align-items: baseline;">
-                <span>{{ selectedItem ? selectedItem[label] : "" }}</span>
-            </div>
-        </template>
-        <template #option="item">
-            <slot name="option" :data="item">
-                <span>{{ item[label] }}</span>
-            </slot>
-        </template>
-        <template #list-footer>
-            <li ref="load" class="loader" v-show="hasNextPage"></li>
-        </template>
-    </v-select>
+        <vs-select-item
+            v-for="item in items"
+            :key="item.id"
+            :value="item.id"
+            :text="itemText(item)"
+        />
+
+        <li ref="load" class="loader" v-show="hasNextPage"></li>
+    </vs-select>
 </template>
 
 <script>
-import vSelect from "vue-select";
 import _ from "lodash";
 
 export default {
-    components: {
-        vSelect
-    },
     props: {
+        label: {
+            type: String,
+            default: null
+        },
         model: {
             type: String,
             required: true
         },
-        label: {
+        itemLabel: {
             type: String,
             required: true
+        },
+        itemText: {
+            type: Function,
+            default(item) {
+                return item[this.itemLabel];
+            }
+        },
+        itemFields: {
+            type: Array,
+            default() {
+                return [this.itemLabel];
+            }
         },
         value: {
             default: null
@@ -56,18 +59,6 @@ export default {
         filters: {
             type: Object,
             default: () => ({})
-        },
-        input: {
-            type: Function,
-            default: value => {}
-        },
-        blur: {
-            type: Function,
-            default: () => {}
-        },
-        focus: {
-            type: Function,
-            default: () => {}
         },
         multiple: {
             type: Boolean,
@@ -86,7 +77,9 @@ export default {
             items: [],
 
             lastSearch: {},
-            fetchTimeout: null
+            fetchTimeout: null,
+
+            loading: false
         };
     },
     methods: {
@@ -98,12 +91,14 @@ export default {
         onInput(value) {
             this.getItem(value);
             this.$emit("input", value);
-            this.input(value);
+        },
+        onChange(value) {
+            if (!Number.isInteger(value)) this.onInput(null);
         },
         onBlur() {
             this.observer.disconnect();
             setTimeout(this.clearFetchTimeout, 0);
-            this.blur();
+            this.$emit("blur");
         },
         async onFocus() {
             await this.fetchItems();
@@ -111,10 +106,10 @@ export default {
                 await this.$nextTick();
                 this.observer.observe(this.$refs.load);
             }
-            this.focus();
+            this.$emit("focus");
         },
-        onSearch(query) {
-            this.searchQuery = query;
+        onSearch(event) {
+            this.searchQuery = event.target.value;
             this.page = 1;
             this.clearFetchTimeout();
             this.fetchTimeout = setTimeout(this.fetchItems, 500);
@@ -140,12 +135,13 @@ export default {
             };
             if (!_.isEqual(this.lastSearch, search)) {
                 this.lastSearch = search;
+                this.loading = true;
                 await this.$store
                     .dispatch(`${this.model}Management/fetchItems`, {
-                        fields: this.label,
+                        fields: this.itemFields,
                         loads: "",
                         appends: "",
-                        order_by: this.label,
+                        order_by: this.itemLabel,
                         ...search
                     })
                     .then(data => {
@@ -169,6 +165,17 @@ export default {
                     })
                     .catch(err => {
                         console.error(err);
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                        this.$refs[`${this.model}Select`].filterItems(
+                            this.searchQuery
+                        );
+                        this.$refs[`${this.model}Select`].$children.map(
+                            item => {
+                                item.valueInputx = this.searchQuery;
+                            }
+                        );
                     });
             }
         },

@@ -8,15 +8,12 @@
             <div class="flex flex-wrap justify-center items-end">
                 <div style="min-width: 15em">
                     <infinite-scroll-select
+                        label="Projet"
+                        item-label="name"
                         model="project"
-                        label="name"
                         v-model="filters.project_id"
-                        :focus="clearRefreshDataTimeout"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Projet</div>
-                        </template>
-                    </infinite-scroll-select>
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
                 <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
                     <div
@@ -44,24 +41,18 @@
                     </vs-dropdown-menu>
                 </vs-dropdown>
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-scroll-select
                         v-if="authorizedTo('show', 'users')"
-                        label="lastname"
-                        :options="users"
+                        label="Utilisateur"
+                        item-label="lastname"
+                        model="user"
                         v-model="filters.user_id"
-                        :reduce="user => user.id"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
             </div>
             <div class="flex flex-wrap items-center">

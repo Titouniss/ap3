@@ -15,17 +15,14 @@
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <infinite-scroll-select
+                            label="Projet"
                             model="project"
-                            label="name"
+                            item-label="name"
                             v-model="itemLocal.project_id"
                             :filters="{
                                 company_id: itemLocal.user.company_id
                             }"
-                        >
-                            <template #header>
-                                <div style="opacity: 0.8">Projet</div>
-                            </template>
-                        </infinite-scroll-select>
+                        />
 
                         <p class="mt-5">Date</p>
                         <flat-pickr
