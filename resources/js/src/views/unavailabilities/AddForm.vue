@@ -63,7 +63,7 @@
                             />
                             <flat-pickr
                                 v-if="
-                                    (itemLocal.reason == 'Autre...' &&
+                                    (itemLocal.reason === 'Autre...' &&
                                         custom_reason !== '') ||
                                         (itemLocal.reason !== '' &&
                                             itemLocal.reason !== 'Autre...')
@@ -77,12 +77,12 @@
                             />
                             <flat-pickr
                                 v-if="
-                                    (itemLocal.reason == 'Autre...' &&
+                                    (itemLocal.reason === 'Autre...' &&
                                         custom_reason !== '') ||
                                         (itemLocal.reason !== '' &&
                                             itemLocal.reason !== 'Autre...' &&
                                             itemLocal.starts_at &&
-                                            itemLocal.reason != 'Jours fériés')
+                                            itemLocal.reason !== 'Jours fériés')
                                 "
                                 name="ends_at"
                                 class="w-full mb-2 mt-5"
@@ -120,7 +120,11 @@ export default {
         id_user: {
             required: true
         },
-        fetchOvertimes: {}
+        fetchOvertimes: {},
+        workHours: {
+            type: Array,
+            default: () => []
+        }
     },
     data() {
         return {
@@ -155,7 +159,8 @@ export default {
                 disableMobile: "true",
                 enableTime: true,
                 locale: FrenchLocale,
-                minDate: null
+                minDate: null,
+                defaultHour: 12
             }
         };
     },
@@ -204,20 +209,66 @@ export default {
                 enableTime: true,
                 locale: FrenchLocale,
                 minDate: null,
-                maxDate: null
+                maxDate: null,
+                defaultHour: 9
             });
             Object.assign(this.configEndsAtDateTimePicker, {
                 disableMobile: "true",
                 enableTime: true,
                 locale: FrenchLocale,
-                minDate: null
+                minDate: null,
+                defaultHour: 12
             });
         },
         onStartsAtChange(selectedDates, dateStr, instance) {
             this.$set(this.configEndsAtDateTimePicker, "minDate", dateStr);
+
+            if (
+                (dateStr && !this.itemLocal.starts_at) ||
+                moment(dateStr).format("dd/MM/yyyy") !==
+                    moment(this.itemLocal.starts_at).format("dd/MM/yyyy")
+            ) {
+                if (this.workHours && this.workHours.length > 0) {
+                    const day = this.workHours.find(
+                        wh =>
+                            wh.is_active &&
+                            wh.day === moment(dateStr).format("dddd")
+                    );
+                    if (day && day.morning_starts_at) {
+                        const [hour, minute] = day.morning_starts_at.split(":");
+                        this.itemLocal.starts_at = moment(dateStr)
+                            .hours(parseInt(hour))
+                            .minutes(parseInt(minute))
+                            .toDate();
+                    }
+                }
+            }
         },
         onEndsAtChange(selectedDates, dateStr, instance) {
             this.$set(this.configStartsAtDateTimePicker, "maxDate", dateStr);
+
+            if (
+                dateStr &&
+                this.itemLocal.starts_at &&
+                moment(dateStr).format("dd/MM/yyyy") !==
+                    moment(this.itemLocal.ends_at).format("dd/MM/yyyy")
+            ) {
+                if (
+                    moment(dateStr).format("dd/MM/yyyy") ===
+                    moment(this.itemLocal.starts_at).format("dd/MM/yyyy")
+                ) {
+                    const startsAt = moment(this.itemLocal.starts_at);
+                    this.itemLocal.ends_at = moment(dateStr)
+                        .hours(startsAt.hours() + 1)
+                        .minutes(startsAt.minutes())
+                        .toDate();
+                } else {
+                    this.itemLocal.ends_at = moment(dateStr)
+                        .hours(12)
+                        .minutes(0)
+                        .toDate();
+                }
+            }
         },
         addUnavailability() {
             this.$validator.validateAll().then(result => {

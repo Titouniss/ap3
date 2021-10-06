@@ -6,10 +6,7 @@
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div
-                    style="min-width: 15em"
-                    class="cursor-pointer mx-4"
-                >
+                <div style="min-width: 15em" class="cursor-pointer mx-4">
                     <v-select
                         label="name"
                         v-model="filters.hours_taken"
@@ -22,7 +19,7 @@
                         </template>
                     </v-select>
                 </div>
-                
+
                 <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
                     <div
                         class="p-3 rounded-lg border border-solid d-theme-border-grey-light cursor-pointer flex items-center justify-between text-lg font-medium w-32"
@@ -135,7 +132,8 @@
             </div>
         </div>
         <div class="mb-base">
-            <br><h6 class="mb-4">Heures supplémentaires</h6>
+            <br />
+            <h6 class="mb-4">Heures supplémentaires</h6>
             <div class="flex items-center mb-4">
                 <span class="ml-4">Total :</span>
                 <span class="ml-4"
@@ -165,7 +163,13 @@
                 <span class="ml-4">Reste à utiliser :</span>
                 <span class="ml-4"
                     >{{
-                        overtimes > 0 ? (overtimes - usedOvertimes - payedOvertimes).toFixed(2) : 0
+                        overtimes > 0
+                            ? (
+                                  overtimes -
+                                  usedOvertimes -
+                                  payedOvertimes
+                              ).toFixed(2)
+                            : 0
                     }}
                     {{
                         overtimes - (usedOvertimes - payedOvertimes) > 1
@@ -186,8 +190,9 @@
             <h6 class="mb-4">Indisponibilités</h6>
             <add-form
                 :id_user="user_id"
+                :fetch-overtimes="fetchOvertimes"
+                :work-hours="workHours"
                 @on-submit="fetchOvertimes"
-                :fetchOvertimes="fetchOvertimes"
             />
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
@@ -478,6 +483,7 @@ export default {
                 altInput: true
             }),
             refreshDataTimeout: null,
+            workHours: [],
 
             // Stats
             stats: { total: 0 }
@@ -510,6 +516,7 @@ export default {
                         this.refreshData();
                         if (value.user_id !== prev.user_id) {
                             this.fetchOvertimes();
+                            this.fetchWorkHours();
                         }
                     }, 1500);
                 }
@@ -658,6 +665,16 @@ export default {
                     });
             }
         },
+        fetchWorkHours() {
+            if (this.user_id) {
+                this.$store
+                    .dispatch("userManagement/fetchItem", this.user_id)
+                    .then(data => {
+                        if (data.success)
+                            this.workHours = data.payload.work_hours;
+                    });
+            }
+        },
         authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
@@ -732,10 +749,11 @@ export default {
             this.filters.period_type = type;
             this.filters.date =
                 type === "date" || type === "full" ? null : moment();
-        },
+        }
     },
     mounted() {
         this.fetchOvertimes();
+        this.fetchWorkHours();
         this.gridApi = this.gridOptions.api;
 
         window.addEventListener("resize", this.onResize);
