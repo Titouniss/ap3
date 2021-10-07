@@ -9,8 +9,8 @@
                 <div style="min-width: 15em">
                     <infinite-select
                         header="Projet"
-                        label="name"
                         model="project"
+                        label="name"
                         v-model="filters.project_id"
                         @focus="clearRefreshDataTimeout"
                     />
@@ -319,7 +319,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 import EditForm from "./EditForm.vue";
 
@@ -360,7 +359,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         flatPickr,
         EditForm,
         // Cell Renderer

@@ -15,6 +15,9 @@
                 >
                     {{ skill.name }}
                 </vs-chip>
+                <span v-if="!skills || skills.length === 0"
+                    >Pas de compétences</span
+                >
             </div>
         </vs-dropdown-menu>
     </vs-dropdown>

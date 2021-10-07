@@ -1,8 +1,8 @@
 import { crud } from "../utils";
 
-const slug = "subscription-management";
-const model = "subscription";
-const model_plurial = "subscriptions";
+const slug = "package-management";
+const model = "package";
+const model_plurial = "packages";
 
 const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
 

@@ -6,7 +6,7 @@
         :label="header"
         :multiple="multiple"
         :loading="loading"
-        :autocomplete="true"
+        :autocomplete="autocomplete"
         :success="required && !!value"
         :danger="required && hadValue && !value"
         :danger-text="`Le champ ${header.toLowerCase()} est obligatoire`"
@@ -73,7 +73,13 @@ export default {
         },
         reduce: {
             type: Function,
-            default: () => item => item.id
+            default(item) {
+                return item.id;
+            }
+        },
+        autocomplete: {
+            type: Boolean,
+            default: () => true
         }
     },
     data() {
@@ -84,7 +90,6 @@ export default {
             perPage: 30,
             hasNextPage: false,
 
-            selectedItem: null,
             items: [],
 
             lastSearch: {},
@@ -105,7 +110,7 @@ export default {
             this.$emit("input", value);
         },
         onChange(value) {
-            if (!Number.isInteger(value)) this.onInput(null);
+            if (value && value.target) this.onInput(null);
         },
         onBlur() {
             this.observer.disconnect();
@@ -191,41 +196,36 @@ export default {
                     });
             }
         },
-        async fetchSelectedItem() {
+        async fetchSelectedItems() {
             if (this.value) {
-                const selectedId = this.value;
-                if (!this.items.find(item => item.id === selectedId)) {
-                    this.$store
-                        .dispatch(
-                            `${this.model}Management/fetchItem`,
-                            selectedId
-                        )
-                        .then(data => {
-                            this.items.unshift(data.payload);
-                            this.getItem(this.value);
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                } else {
-                    this.getItem(this.value);
+                for (const val of this.multiple ? this.value : [this.value]) {
+                    try {
+                        if (!this.items.find(item => item.id === val)) {
+                            const { payload } = await this.$store.dispatch(
+                                `${this.model}Management/fetchItem`,
+                                val
+                            );
+                            this.items.unshift(payload);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
                 }
+                this.getItem(this.value);
             }
         },
         getItem(value) {
-            this.selectedItem = value
-                ? (this.selectedItem = this.$store.getters[
-                      `${this.model}Management/getItem`
-                  ](value))
-                : null;
-            if (this.selectedItem) {
+            if (value) {
+                for (const val of this.multiple ? this.value : [this.value]) {
+                    this.$store.getters[`${this.model}Management/getItem`](val);
+                }
                 this.hadValue = true;
             }
         }
     },
     async created() {
         await this.fetchItems();
-        await this.fetchSelectedItem();
+        await this.fetchSelectedItems();
     }
 };
 </script>

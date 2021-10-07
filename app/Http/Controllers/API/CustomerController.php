@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Exceptions\ApiException;
+use App\Models\Company;
 use App\Models\CompanyDetails;
 use App\Models\Customer;
+use Illuminate\Http\Request;
 
 class CustomerController extends BaseApiController
 {
@@ -78,6 +80,18 @@ class CustomerController extends BaseApiController
     public function __construct()
     {
         parent::__construct(Customer::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('customers.company_id', $request->company_id);
+        }
     }
 
     protected function storeItem(array $arrayRequest)

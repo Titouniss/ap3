@@ -289,6 +289,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('destroy/{id?}', 'API\SubscriptionController@destroy');
         Route::put('force-destroy/{id?}', 'API\SubscriptionController@forceDestroy');
     });
+
+    /***********************************************************************************/
+    /*********************************** Packages **************************************/
+    /***********************************************************************************/
+    Route::prefix('package-management')->group(function () {
+        Route::get('index', 'API\PackageController@index');
+        Route::get('show/{id}', 'API\PackageController@show');
+    });
 });
 
 /***********************************************************************************/

@@ -144,6 +144,7 @@ import AddForm from "./AddForm.vue";
 
 // Store Module
 import moduleSubscriptionManagement from "@/store/subscription-management/moduleSubscriptionManagement.js";
+import modulePackageManagement from "@/store/package-management/modulePackageManagement.js";
 
 // Cell Renderer
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
@@ -378,6 +379,13 @@ export default {
             );
             moduleSubscriptionManagement.isRegistered = true;
         }
+        if (!modulePackageManagement.isRegistered) {
+            this.$store.registerModule(
+                "packageManagement",
+                modulePackageManagement
+            );
+            modulePackageManagement.isRegistered = true;
+        }
 
         if (this.companyId) {
             this.$store
@@ -396,18 +404,14 @@ export default {
                     console.error(err);
                 });
         }
-        this.$store
-            .dispatch("subscriptionManagement/fetchPackages")
-            .catch(err => {
-                console.error(err);
-            });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
         moduleSubscriptionManagement.isRegistered = false;
-
         this.$store.unregisterModule("subscriptionManagement");
+        modulePackageManagement.isRegistered = false;
+        this.$store.unregisterModule("packageManagement");
     }
 };
 </script>

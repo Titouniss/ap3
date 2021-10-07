@@ -67,6 +67,18 @@ class UserController extends BaseApiController
         parent::__construct(User::class);
     }
 
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('users.company_id', $request->company_id);
+        }
+    }
+
     protected function storeItem(array $arrayRequest)
     {
         if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
