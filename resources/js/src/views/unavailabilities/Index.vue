@@ -318,7 +318,7 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 
 // Components
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
-import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // Mixins
 import { multipleActionsMixin } from "@/mixins/lists";
@@ -345,7 +345,7 @@ export default {
         AddPayedHoursForm,
 
         // Components
-        InfiniteScrollSelect,
+        InfiniteSelect,
         MultipleActions
     },
     data() {

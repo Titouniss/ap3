@@ -7,9 +7,9 @@
             </div>
             <div class="flex flex-wrap justify-center items-end">
                 <div style="min-width: 15em">
-                    <infinite-scroll-select
-                        label="Projet"
-                        item-label="name"
+                    <infinite-select
+                        header="Projet"
+                        label="name"
                         model="project"
                         v-model="filters.project_id"
                         @focus="clearRefreshDataTimeout"
@@ -41,10 +41,10 @@
                     </vs-dropdown-menu>
                 </vs-dropdown>
                 <div style="min-width: 15em">
-                    <infinite-scroll-select
+                    <infinite-select
                         v-if="authorizedTo('show', 'users')"
-                        label="Utilisateur"
-                        item-label="lastname"
+                        header="Utilisateur"
+                        label="lastname"
                         model="user"
                         v-model="filters.user_id"
                         :item-fields="['lastname', 'firstname']"
@@ -341,7 +341,7 @@ import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
 
 // Components
-import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
 // Mixins
@@ -370,7 +370,7 @@ export default {
         UnavailabilitiesIndex,
 
         // Components
-        InfiniteScrollSelect,
+        InfiniteSelect,
         MultipleActions
     },
     data() {

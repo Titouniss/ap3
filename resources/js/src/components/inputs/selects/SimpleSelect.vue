@@ -1,0 +1,81 @@
+<template>
+    <vs-select
+        class="w-full"
+        :value="value"
+        :label="header"
+        :multiple="multiple"
+        :autocomplete="true"
+        :success="required && !!value"
+        :danger="required && hadValue && !value"
+        :danger-text="`Le champ ${header.toLowerCase()} est obligatoire`"
+        @input="onInput"
+        @blur="onBlur"
+        @focus="onFocus"
+    >
+        <vs-select-item
+            v-for="item in options"
+            :key="itemText(item)"
+            :value="reduce(item)"
+            :text="itemText(item)"
+        />
+    </vs-select>
+</template>
+
+<script>
+export default {
+    props: {
+        header: {
+            type: String,
+            default: () => null
+        },
+        label: {
+            type: String,
+            required: true
+        },
+        itemText: {
+            type: Function,
+            default(item) {
+                return item[this.label];
+            }
+        },
+        value: {
+            default: () => null
+        },
+        multiple: {
+            type: Boolean,
+            default: () => false
+        },
+        required: {
+            type: Boolean,
+            default: () => false
+        },
+        reduce: {
+            type: Function,
+            default: () => item => item
+        },
+        options: {
+            type: Array,
+            required: true
+        }
+    },
+    data() {
+        return {
+            hadValue: !!this.value
+        };
+    },
+    methods: {
+        onInput(value) {
+            if (value) {
+                this.hadValue = true;
+            }
+            this.$emit("input", value);
+        },
+        onBlur() {
+            this.$emit("blur");
+        },
+        onFocus() {
+            this.$emit("focus");
+        }
+    }
+};
+</script>

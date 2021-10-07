@@ -14,10 +14,11 @@
             <form autocomplete="off">
                 <div class="vx-row">
                     <div class="vx-col w-full">
-                        <infinite-scroll-select
-                            label="Projet"
+                        <infinite-select
+                            required
+                            header="Projet"
                             model="project"
-                            item-label="name"
+                            label="name"
                             v-model="itemLocal.project_id"
                             :filters="{
                                 company_id: itemLocal.user.company_id
@@ -122,8 +123,7 @@ var model = "tâche";
 var modelPlurial = "tâches";
 
 import moment from "moment";
-import vSelect from "vue-select";
-import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // FlatPickr
 import flatPickr from "vue-flatpickr-component";
@@ -133,8 +133,7 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 export default {
     components: {
         flatPickr,
-        vSelect,
-        InfiniteScrollSelect
+        InfiniteSelect
     },
     props: {
         itemId: {

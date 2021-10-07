@@ -190,14 +190,14 @@
                     <div class="flex flex-auto"></div>
 
                     <v-nav-menu-item
-                        href="https://drive.google.com/file/d/1fciNA6MtuzBA2oCQbTCuWQy-PMlkdkrQ/view"
+                        href="/storage/Plannigo_V0.apk"
                         icon="DownloadIcon"
                     >
                         <span
                             v-show="!verticalNavMenuItemsMin"
                             class="truncate"
                         >
-                            Télécharger l'application
+                            Télécharger l'app
                         </span>
                     </v-nav-menu-item>
                 </component>

@@ -1,22 +1,25 @@
 <template>
     <vs-select
+        class="w-full"
         :ref="`${model}Select`"
         :value="value"
-        :label="label"
+        :label="header"
         :multiple="multiple"
         :loading="loading"
-        autocomplete
+        :autocomplete="true"
+        :success="required && !!value"
+        :danger="required && hadValue && !value"
+        :danger-text="`Le champ ${header.toLowerCase()} est obligatoire`"
         @input="onInput"
         @change="onChange"
         @blur="onBlur"
         @focus="onFocus"
         @input-change="onSearch"
-        class="w-full"
     >
         <vs-select-item
             v-for="item in items"
             :key="item.id"
-            :value="item.id"
+            :value="reduce(item)"
             :text="itemText(item)"
         />
 
@@ -29,32 +32,32 @@ import _ from "lodash";
 
 export default {
     props: {
-        label: {
+        header: {
             type: String,
-            default: null
+            default: () => null
         },
         model: {
             type: String,
             required: true
         },
-        itemLabel: {
+        label: {
             type: String,
             required: true
         },
         itemText: {
             type: Function,
             default(item) {
-                return item[this.itemLabel];
+                return item[this.label];
             }
         },
         itemFields: {
             type: Array,
             default() {
-                return [this.itemLabel];
+                return [this.label];
             }
         },
         value: {
-            default: null
+            default: () => null
         },
         filters: {
             type: Object,
@@ -62,7 +65,15 @@ export default {
         },
         multiple: {
             type: Boolean,
-            default: false
+            default: () => false
+        },
+        required: {
+            type: Boolean,
+            default: () => false
+        },
+        reduce: {
+            type: Function,
+            default: () => item => item.id
         }
     },
     data() {
@@ -79,7 +90,8 @@ export default {
             lastSearch: {},
             fetchTimeout: null,
 
-            loading: false
+            loading: false,
+            hadValue: !!this.value
         };
     },
     methods: {
@@ -141,7 +153,7 @@ export default {
                         fields: this.itemFields,
                         loads: "",
                         appends: "",
-                        order_by: this.itemLabel,
+                        order_by: this.label,
                         ...search
                     })
                     .then(data => {
@@ -206,6 +218,9 @@ export default {
                       `${this.model}Management/getItem`
                   ](value))
                 : null;
+            if (this.selectedItem) {
+                this.hadValue = true;
+            }
         }
     },
     async created() {
