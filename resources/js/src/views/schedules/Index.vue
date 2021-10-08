@@ -222,13 +222,11 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import { AgGridVue } from "ag-grid-vue";
-import vSelect from "vue-select";
 import moment from "moment";
 
 export default {
     components: {
-        AgGridVue,
-        vSelect
+        AgGridVue
     },
     data() {
         return {

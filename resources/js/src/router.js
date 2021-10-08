@@ -234,28 +234,6 @@ const router = new Router({
                     }
                 },
                 {
-                    path: "/hours/hours-add",
-                    name: "hours-hours-add",
-                    component: () => import("@/views/hours/Add.vue"),
-                    meta: {
-                        parent: "hours",
-                        pageTitle: "Ajouter des heures",
-                        rule: "admin",
-                        requiresAuth: true
-                    }
-                },
-                {
-                    path: "/hours/hours-edit/:id",
-                    name: "hours-hours-edit",
-                    component: () => import("@/views/hours/Edit.vue"),
-                    meta: {
-                        parent: "hours",
-                        pageTitle: "Edition des heures",
-                        rule: "admin",
-                        requiresAuth: true
-                    }
-                },
-                {
                     path: "/hours/hours-view",
                     name: "hours-hours-view",
                     component: () => import("@/views/hours/Read.vue"),

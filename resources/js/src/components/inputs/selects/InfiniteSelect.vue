@@ -60,6 +60,7 @@ export default {
             }
         },
         value: {
+            type: Array | Number | String,
             default: () => null
         },
         filters: {
@@ -221,11 +222,13 @@ export default {
             if (this.value) {
                 for (const val of this.multiple ? this.value : [this.value]) {
                     try {
-                        if (!this.items.find(item => item.id === val)) {
+                        const id = Number.isInteger(val) ? val : val.id;
+                        if (!this.items.find(item => item.id === id)) {
                             const { payload } = await this.$store.dispatch(
                                 `${this.model}Management/fetchItem`,
-                                val
+                                id
                             );
+
                             this.items.unshift(payload);
                         }
                     } catch (err) {

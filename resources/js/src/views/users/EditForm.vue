@@ -178,34 +178,18 @@
                         class="mt-5 p-3 border border-solid rounded"
                         style="border-color: rgba(var(--vs-warning), 1)"
                     >
-                        <v-select
-                            name="user"
+                        <simple-select
+                            required
+                            header="Utilisateur à relier"
+                            label="firstname"
                             v-model="itemLocal.related_user_id"
-                            :reduce="user => user.id"
-                            class="w-full"
-                            autocomplete
+                            :item-text="
+                                item =>
+                                    `${user.firstname} ${user.lastname} (${user.login})`
+                            "
+                            :reduce="item => item.id"
                             :options="itemLocal.related_users"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Utilisateur à relier
-                                </div>
-                            </template>
-                            <template #option="user">
-                                <span>
-                                    {{
-                                        `${user.firstname} ${user.lastname} (${user.login})`
-                                    }}
-                                </span>
-                            </template>
-                            <template #selected-option="user">
-                                <span>
-                                    {{
-                                        `${user.firstname} ${user.lastname} (${user.login})`
-                                    }}
-                                </span>
-                            </template>
-                        </v-select>
+                        />
                     </div>
                 </vs-col>
             </vs-row>
@@ -240,6 +224,7 @@
 
 <script>
 import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import WorkHours from "./WorkHours";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
@@ -259,6 +244,7 @@ var modelPlurial = "users";
 export default {
     components: {
         InfiniteSelect,
+        SimpleSelect,
         WorkHours
     },
     data() {

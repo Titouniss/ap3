@@ -29,34 +29,6 @@
                                 }"
                             />
 
-                            <!-- <v-select
-                                v-validate="'required'"
-                                name="user_id"
-                                label="lastname"
-                                :multiple="false"
-                                v-model="itemLocal.user_id"
-                                :reduce="lastname => lastname.id"
-                                class="w-full"
-                                autocomplete
-                                :options="usersData"
-                            >
-                                <template #header>
-                                    <div style="opacity: .8 font-size: .60rem">
-                                        Utilisateur
-                                    </div>
-                                </template>
-                                <template #option="user">
-                                    <span>{{
-                                        `${user.firstname} ${user.lastname}`
-                                    }}</span>
-                                </template>
-                            </v-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('user_id')"
-                                >{{ errors.first("user_id") }}</span
-                            > -->
-
                             <p class="mt-5">Date</p>
                             <flat-pickr
                                 v-validate="'required'"

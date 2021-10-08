@@ -15,36 +15,28 @@
             </div>
             <div class="flex flex-wrap justify-center items-end">
                 <div v-if="isAdmin" class="mr-10" style="min-width: 15em">
-                    <v-select
+                    <infinite-select
+                        header="Société"
                         label="name"
+                        model="company"
                         v-model="filters.company"
-                        :options="companiesData"
-                        @input="refreshDataUsers"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Société</div>
-                        </template>
-                    </v-select>
+                        :reduce="item => item"
+                    />
                 </div>
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-select
+                        header="Utilisateur"
                         label="lastname"
+                        model="user"
                         v-model="filters.user"
-                        :options="usersData"
+                        :reduce="item => item"
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        :filters="usersFilter"
                         @input="refreshDataCalendar"
-                        class="w-full"
-                    >
-                        <!-- Finir le filtre -->
-                        <template #header>
-                            <div style="opacity: 0.8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                    />
                 </div>
             </div>
         </div>
@@ -104,7 +96,6 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
 import moment from "moment";
 
 import FullCalendar from "@fullcalendar/vue";
@@ -122,6 +113,7 @@ import moduleUnavailabilityManagement from "@/store/unavailability-management/mo
 // Component
 import EditForm from "./EditForm.vue";
 import AddForm from "./AddForm.vue";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";
@@ -136,7 +128,7 @@ var modelTitle = "Plannings";
 export default {
     components: {
         FullCalendar,
-        vSelect,
+        InfiniteSelect,
         AddForm,
         EditForm
     },
@@ -172,6 +164,11 @@ export default {
         };
     },
     computed: {
+        usersFilter() {
+            return {
+                company_id: this.filters.company ? this.filters.company.id : 0
+            };
+        },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
@@ -243,28 +240,6 @@ export default {
             });
             //   console.log("calendarEvents -> finalHours", finalHours);
             return finalHours;
-        },
-        companiesData() {
-            const companies = JSON.parse(
-                JSON.stringify(
-                    this.$store.getters["companyManagement/getItems"]
-                )
-            );
-            return companies.sort(function(a, b) {
-                var textA = a.name.toUpperCase();
-                var textB = b.name.toUpperCase();
-                return textA < textB ? -1 : textA > textB ? 1 : 0;
-            });
-        },
-        usersData() {
-            const users = JSON.parse(
-                JSON.stringify(this.$store.getters["userManagement/getItems"])
-            );
-            return this.filters.company
-                ? users.filter(
-                      item => item.company_id === this.filters.company.id
-                  )
-                : [];
         },
         hoursData() {
             return this.$store.getters["hoursManagement/getItems"];

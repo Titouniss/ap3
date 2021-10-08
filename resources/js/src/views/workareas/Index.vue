@@ -143,7 +143,6 @@ var modelTitle = "Pôle de production";
 
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 // Store Module
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
@@ -175,7 +174,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         AddForm,
         EditForm,

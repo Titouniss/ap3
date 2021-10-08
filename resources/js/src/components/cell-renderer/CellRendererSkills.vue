@@ -26,10 +26,18 @@
 <script>
 export default {
     name: "CellRendererSkills",
+    props: {
+        items: {
+            type: Array,
+            default: () => null
+        }
+    },
     computed: {
         skills() {
             const skills = [
-                ...(this.params.value || []).filter(skill => skill.name)
+                ...(this.items || this.params.value || []).filter(
+                    skill => skill.name
+                )
             ];
             skills.sort((a, b) => {
                 if (a.name === b.name) return 0;

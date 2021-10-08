@@ -14,7 +14,7 @@
     >
         <vs-select-item
             v-for="item in options"
-            :key="itemText(item)"
+            :key="reduce(item)"
             :value="reduce(item)"
             :text="itemText(item)"
         />
@@ -30,12 +30,12 @@ export default {
         },
         label: {
             type: String,
-            required: true
+            default: () => null
         },
         itemText: {
             type: Function,
             default(item) {
-                return item[this.label];
+                return this.label ? item[this.label] : item;
             }
         },
         value: {

@@ -86,7 +86,6 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
 import moment from "moment";
 
 import FullCalendar from "@fullcalendar/vue";
@@ -1782,7 +1781,8 @@ export default {
                                 if (
                                     day[0] !== null &&
                                     day[0] != "00:00:00" &&
-                                    day[1] !== null && day[1] != "00:00:00"
+                                    day[1] !== null &&
+                                    day[1] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -1793,7 +1793,8 @@ export default {
                                 if (
                                     day[2] !== null &&
                                     day[2] != "00:00:00" &&
-                                    day[3] !== null && day[3] != "00:00:00"
+                                    day[3] !== null &&
+                                    day[3] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -1987,7 +1988,8 @@ export default {
                                     // wH.morning_ends_at !== null
                                     day[0] !== null &&
                                     day[0] != "00:00:00" &&
-                                    day[1] !== null && day[1] != "00:00:00"
+                                    day[1] !== null &&
+                                    day[1] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),
@@ -1998,7 +2000,8 @@ export default {
                                 if (
                                     day[2] !== null &&
                                     day[2] != "00:00:00" &&
-                                    day[3] !== null && day[3] != "00:00:00"
+                                    day[3] !== null &&
+                                    day[3] != "00:00:00"
                                 ) {
                                     businessHours.push({
                                         daysOfWeek: this.getDayNumber(days[i]),

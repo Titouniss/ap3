@@ -123,7 +123,6 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
-import vSelect from "vue-select";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -135,7 +134,6 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect,
         flatPickr,
         AddPreviousTasks,
         FileInput
@@ -176,7 +174,7 @@ export default {
                 dateFormat: "Y-m-d H:i",
                 locale: FrenchLocale,
                 maxDate: this.end_at,
-                monthSelectorType: 'static',
+                monthSelectorType: "static"
             },
             configEndsAtDateTimePicker: {
                 disableMobile: "true",
@@ -184,7 +182,7 @@ export default {
                 dateFormat: "Y-m-d H:i",
                 locale: FrenchLocale,
                 minDate: this.start_at,
-                monthSelectorType: 'static',
+                monthSelectorType: "static"
             },
             start: this.start_at,
             end: this.end_at,
@@ -291,16 +289,40 @@ export default {
                         this.unavailabilities_list[i].date !=
                             this.unavailabilities_list[i].date_end
                     ) {
-                        if ((moment(this.start).isAfter(moment(this.unavailabilities_list[i].date)) &&
-                            moment(this.start).isBefore(moment(this.unavailabilities_list[i].date_end))) ||
-
-                            (moment(this.end).isAfter(moment(this.unavailabilities_list[i].date)) &&
-                            moment(this.end).isBefore(moment(this.unavailabilities_list[i].date_end))) ||
-
-                            (((moment(this.start).isBefore(this.unavailabilities_list[i].date)) || 
-                            moment(this.start).isSame(this.unavailabilities_list[i].date)) &&
-                            (moment(this.end).isAfter(moment(this.unavailabilities_list[i].date_end)) || 
-                            (moment(this.end).isSame(moment(this.unavailabilities_list[i].date_end))))) 
+                        if (
+                            (moment(this.start).isAfter(
+                                moment(this.unavailabilities_list[i].date)
+                            ) &&
+                                moment(this.start).isBefore(
+                                    moment(
+                                        this.unavailabilities_list[i].date_end
+                                    )
+                                )) ||
+                            (moment(this.end).isAfter(
+                                moment(this.unavailabilities_list[i].date)
+                            ) &&
+                                moment(this.end).isBefore(
+                                    moment(
+                                        this.unavailabilities_list[i].date_end
+                                    )
+                                )) ||
+                            ((moment(this.start).isBefore(
+                                this.unavailabilities_list[i].date
+                            ) ||
+                                moment(this.start).isSame(
+                                    this.unavailabilities_list[i].date
+                                )) &&
+                                (moment(this.end).isAfter(
+                                    moment(
+                                        this.unavailabilities_list[i].date_end
+                                    )
+                                ) ||
+                                    moment(this.end).isSame(
+                                        moment(
+                                            this.unavailabilities_list[i]
+                                                .date_end
+                                        )
+                                    )))
                         ) {
                             erreur = true;
                             this.$vs.notify({
@@ -310,79 +332,109 @@ export default {
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "danger",
-                                time: 10000,
+                                time: 10000
                             });
                         }
                     }
                 }
             }
             //bloquer le déplacement si task dépendantes
-            let order=null;
+            let order = null;
             if (this.tasks_list != null && !this.moveAccepted) {
-                for(var i = 0; i < this.tasks_list.length; i++){
-                    if(this.tasks_list[i].id==this.$route.query.task_id){
-                        order=this.tasks_list[i].order;
+                for (var i = 0; i < this.tasks_list.length; i++) {
+                    if (this.tasks_list[i].id == this.$route.query.task_id) {
+                        order = this.tasks_list[i].order;
                     }
                 }
-                for(var i = 0; i < this.tasks_list.length; i++){
-                    if(this.tasks_list[i].id!=this.$route.query.task_id){
+                for (var i = 0; i < this.tasks_list.length; i++) {
+                    if (this.tasks_list[i].id != this.$route.query.task_id) {
                         //task dépendante après
-                        if (order !=null && this.tasks_list[i].order > order &&
-                            moment(this.end).isAfter(moment(this.tasks_list[i].date))) {
+                        if (
+                            order != null &&
+                            this.tasks_list[i].order > order &&
+                            moment(this.end).isAfter(
+                                moment(this.tasks_list[i].date)
+                            )
+                        ) {
                             erreur = true;
                             this.$vs.notify({
                                 title: "Erreur",
-                                text:
-                                    `Vous ne pouvez pas déplacer cette période ici car cette tâche est dépendante et doit être faite avant la suivante ("${this.tasks_list[i].date}")`,
+                                text: `Vous ne pouvez pas déplacer cette période ici car cette tâche est dépendante et doit être faite avant la suivante ("${this.tasks_list[i].date}")`,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "danger",
-                                time: 10000,
+                                time: 10000
                             });
                         }
                         //task dépendante avant
-                        else if(order !=null && this.tasks_list[i].order < order &&
-                                moment(this.start).isBefore(moment(this.tasks_list[i].date_end))){
+                        else if (
+                            order != null &&
+                            this.tasks_list[i].order < order &&
+                            moment(this.start).isBefore(
+                                moment(this.tasks_list[i].date_end)
+                            )
+                        ) {
                             erreur = true;
                             this.$vs.notify({
                                 title: "Erreur",
-                                text:
-                                    `Vous ne pouvez pas déplacer cette période ici car cette tâche est dépendante et doit être faite après la prédécente ("${this.tasks_list[i].date_end}")`,
+                                text: `Vous ne pouvez pas déplacer cette période ici car cette tâche est dépendante et doit être faite après la prédécente ("${this.tasks_list[i].date_end}")`,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "danger",
-                                time: 10000,
+                                time: 10000
                             });
                         }
                     }
                     //récupérer les tasks_period de la task courante
-                    else if(this.tasks_list[i].id==this.$route.query.task_id){
-                        for(var j=0;j<this.tasks_list[i].periods.length;j++){
-                            if(this.tasks_list[i].periods[j].id==this.itemId){
-                                this.tasksPeriod=this.tasks_list[i].periods;
+                    else if (
+                        this.tasks_list[i].id == this.$route.query.task_id
+                    ) {
+                        for (
+                            var j = 0;
+                            j < this.tasks_list[i].periods.length;
+                            j++
+                        ) {
+                            if (
+                                this.tasks_list[i].periods[j].id == this.itemId
+                            ) {
+                                this.tasksPeriod = this.tasks_list[i].periods;
                             }
                         }
                     }
-                    
                 }
                 //bloquer le déplacement de la task_period sur une autre task_period de la task courante
-                if(this.tasksPeriod != null){
+                if (this.tasksPeriod != null) {
                     for (var i = 0; i < this.tasksPeriod.length; i++) {
                         if (
                             this.tasksPeriod[i].start_time != null &&
                             this.tasksPeriod[i].end_time != null &&
                             this.tasksPeriod[i].id != this.itemId
                         ) {
-                            if ((moment(this.start).isAfter(moment(this.tasksPeriod[i].start_time)) &&
-                                moment(this.start).isBefore(moment(this.tasksPeriod[i].end_time))) ||
-    
-                                (moment(this.end).isAfter(moment(this.tasksPeriod[i].start_time)) &&
-                                moment(this.end).isBefore(moment(this.tasksPeriod[i].end_time))) ||   
-    
-                                (((moment(this.start).isBefore(moment(this.tasksPeriod[i].start_time))) || 
-                                moment(this.start).isSame(moment(this.tasksPeriod[i].start_time))) &&
-                                (moment(this.end).isAfter(moment(this.tasksPeriod[i].end_time)) || 
-                                (moment(this.end).isSame(moment(this.tasksPeriod[i].end_time)))))               
+                            if (
+                                (moment(this.start).isAfter(
+                                    moment(this.tasksPeriod[i].start_time)
+                                ) &&
+                                    moment(this.start).isBefore(
+                                        moment(this.tasksPeriod[i].end_time)
+                                    )) ||
+                                (moment(this.end).isAfter(
+                                    moment(this.tasksPeriod[i].start_time)
+                                ) &&
+                                    moment(this.end).isBefore(
+                                        moment(this.tasksPeriod[i].end_time)
+                                    )) ||
+                                ((moment(this.start).isBefore(
+                                    moment(this.tasksPeriod[i].start_time)
+                                ) ||
+                                    moment(this.start).isSame(
+                                        moment(this.tasksPeriod[i].start_time)
+                                    )) &&
+                                    (moment(this.end).isAfter(
+                                        moment(this.tasksPeriod[i].end_time)
+                                    ) ||
+                                        moment(this.end).isSame(
+                                            moment(this.tasksPeriod[i].end_time)
+                                        )))
                             ) {
                                 erreur = true;
                                 this.$vs.notify({
@@ -392,7 +444,7 @@ export default {
                                     iconPack: "feather",
                                     icon: "icon-alert-circle",
                                     color: "danger",
-                                    time: 10000,
+                                    time: 10000
                                 });
                             }
                         }
@@ -401,42 +453,59 @@ export default {
             }
             //bloquer le déplacement si en dehors des heures de travail
             var item = {
-                    id: this.$route.query.id,
-                    type: this.$route.query.type,
-                    task_id: this.$route.query.task_id
-                };
-            let workHoursDay=null;
+                id: this.$route.query.id,
+                type: this.$route.query.type,
+                task_id: this.$route.query.task_id
+            };
+            let workHoursDay = null;
             this.$store
                 .dispatch("projectManagement/workHoursPeriods", item)
                 .then(data => {
-                    moment.locale('fr');
-                    workHoursDay=data.payload[moment(this.start).format('dddd')];
-                    if(((workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
-                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null) &&
-                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
-                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
-                        (moment(moment(this.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
-                        moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[1])._i) &&
-                        (moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i))) ||
-
-                        (moment(moment(this.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[1])._i) &&
-                        (moment(moment(this.end).format('HH:mm:ss'))._i<=(moment(workHoursDay[2])._i))) ||
-
-                        (moment(moment(this.start).format('HH:mm:ss'))._i>=(moment(workHoursDay[0])._i) &&
-                        moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
-                        (moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[2])._i))) ||
-
-                        (moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[1])._i) &&
-                        (workHoursDay[2] == '00:00:00' || workHoursDay[2] == null) &&
-                        (workHoursDay[3] == '00:00:00' || workHoursDay[3] == null)) ||
-
-                        (moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[2])._i) &&
-                        (workHoursDay[0] == '00:00:00' || workHoursDay[0] == null) &&
-                        (workHoursDay[1] == '00:00:00' || workHoursDay[1] == null)) ||
-
-                        moment(moment(this.start).format('HH:mm:ss'))._i<(moment(workHoursDay[0])._i) ||
-
-                        moment(moment(this.end).format('HH:mm:ss'))._i>(moment(workHoursDay[3])._i)){
+                    moment.locale("fr");
+                    workHoursDay =
+                        data.payload[moment(this.start).format("dddd")];
+                    if (
+                        ((workHoursDay[0] == "00:00:00" ||
+                            workHoursDay[0] == null) &&
+                            (workHoursDay[1] == "00:00:00" ||
+                                workHoursDay[1] == null) &&
+                            (workHoursDay[2] == "00:00:00" ||
+                                workHoursDay[2] == null) &&
+                            (workHoursDay[3] == "00:00:00" ||
+                                workHoursDay[3] == null)) ||
+                        (moment(moment(this.start).format("HH:mm:ss"))._i >=
+                            moment(workHoursDay[0])._i &&
+                            moment(moment(this.start).format("HH:mm:ss"))._i <
+                                moment(workHoursDay[1])._i &&
+                            moment(moment(this.end).format("HH:mm:ss"))._i >
+                                moment(workHoursDay[1])._i) ||
+                        (moment(moment(this.start).format("HH:mm:ss"))._i >=
+                            moment(workHoursDay[1])._i &&
+                            moment(moment(this.end).format("HH:mm:ss"))._i <=
+                                moment(workHoursDay[2])._i) ||
+                        (moment(moment(this.start).format("HH:mm:ss"))._i >=
+                            moment(workHoursDay[0])._i &&
+                            moment(moment(this.start).format("HH:mm:ss"))._i <
+                                moment(workHoursDay[2])._i &&
+                            moment(moment(this.end).format("HH:mm:ss"))._i >
+                                moment(workHoursDay[2])._i) ||
+                        (moment(moment(this.end).format("HH:mm:ss"))._i >
+                            moment(workHoursDay[1])._i &&
+                            (workHoursDay[2] == "00:00:00" ||
+                                workHoursDay[2] == null) &&
+                            (workHoursDay[3] == "00:00:00" ||
+                                workHoursDay[3] == null)) ||
+                        (moment(moment(this.start).format("HH:mm:ss"))._i <
+                            moment(workHoursDay[2])._i &&
+                            (workHoursDay[0] == "00:00:00" ||
+                                workHoursDay[0] == null) &&
+                            (workHoursDay[1] == "00:00:00" ||
+                                workHoursDay[1] == null)) ||
+                        moment(moment(this.start).format("HH:mm:ss"))._i <
+                            moment(workHoursDay[0])._i ||
+                        moment(moment(this.end).format("HH:mm:ss"))._i >
+                            moment(workHoursDay[3])._i
+                    ) {
                         erreur = true;
                         this.$vs.notify({
                             title: "Erreur",
@@ -445,7 +514,7 @@ export default {
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 10000,
+                            time: 10000
                         });
                     }
                     if (!erreur) {
@@ -461,9 +530,12 @@ export default {
                         };
                         this.$vs.loading();
                         this.$store
-                            .dispatch("taskManagement/updateTaskPeriod", itemToSave)
+                            .dispatch(
+                                "taskManagement/updateTaskPeriod",
+                                itemToSave
+                            )
                             .then(data => {
-                                this.tasksPeriod=data.payload.periods;
+                                this.tasksPeriod = data.payload.periods;
                                 this.$vs.notify({
                                     title: "Modification d'une période",
                                     text: `modifiée avec succès`,
@@ -551,7 +623,7 @@ export default {
                     });
                 });
         }
-    },
+    }
 };
 </script>
 <style>

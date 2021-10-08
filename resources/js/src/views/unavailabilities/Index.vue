@@ -6,18 +6,13 @@
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div style="min-width: 15em" class="cursor-pointer mx-4">
-                    <v-select
-                        label="name"
+                <div style="min-width: 15em">
+                    <simple-select
+                        header="Heures prises"
                         v-model="filters.hours_taken"
+                        @focus="clearRefreshDataTimeout"
                         :options="hours_type_names"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Heures prises</div>
-                        </template>
-                    </v-select>
+                    />
                 </div>
 
                 <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
@@ -46,24 +41,18 @@
                     </vs-dropdown-menu>
                 </vs-dropdown>
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-select
                         v-if="authorizedTo('show', 'users')"
+                        header="Utilisateur"
                         label="lastname"
-                        :options="users"
+                        model="user"
                         v-model="filters.user_id"
-                        :reduce="user => user.id"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
             </div>
             <div class="flex flex-wrap items-center">
@@ -294,7 +283,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -319,6 +307,7 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 // Components
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 
 // Mixins
 import { multipleActionsMixin } from "@/mixins/lists";
@@ -336,7 +325,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
         flatPickr,
@@ -346,6 +334,7 @@ export default {
 
         // Components
         InfiniteSelect,
+        SimpleSelect,
         MultipleActions
     },
     data() {

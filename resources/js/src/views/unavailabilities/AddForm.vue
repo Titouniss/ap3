@@ -22,32 +22,15 @@
                 <form autocomplete="off">
                     <div class="vx-row">
                         <div class="vx-col w-full">
-                            <v-select
-                                v-validate="'required'"
-                                name="reason"
+                            <simple-select
+                                required
+                                class="my-2"
+                                header="Motif"
                                 label="name"
-                                :multiple="false"
                                 v-model="itemLocal.reason"
-                                :reduce="name => name.name"
-                                class="w-full mt-2 mb-2"
-                                autocomplete
                                 :options="reasons"
-                            >
-                                <template #header>
-                                    <div style="opacity: .8 font-size: .85rem">
-                                        Motif
-                                    </div>
-                                </template>
-                                <template #option="reason">
-                                    <span>{{ `${reason.name}` }}</span>
-                                </template>
-                            </v-select>
-                            <span
-                                v-if="itemLocal.reason === 'Autre...'"
-                                class="text-danger text-sm"
-                                v-show="errors.has('reason')"
-                                >{{ errors.first("reason") }}</span
-                            >
+                                :reduce="item => item.name"
+                            />
                             <vs-input
                                 v-if="itemLocal.reason === 'Autre...'"
                                 name="custom_reason"
@@ -103,7 +86,7 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import flatPickr from "vue-flatpickr-component";
-import vSelect from "vue-select";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
@@ -114,7 +97,7 @@ Validator.localize("fr", errorMessage);
 export default {
     components: {
         flatPickr,
-        vSelect
+        SimpleSelect
     },
     props: {
         id_user: {

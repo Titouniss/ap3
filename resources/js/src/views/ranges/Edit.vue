@@ -109,9 +109,9 @@
                                     </vs-td>
 
                                     <vs-td :data="data[indextr]">
-                                        <CellRendererActions
+                                        <cell-renderer-actions
                                             :item="data[indextr]"
-                                        ></CellRendererActions>
+                                        />
                                     </vs-td>
                                 </vs-tr>
                             </template>
@@ -127,15 +127,17 @@
                             class="ml-auto mt-2"
                             @click="save_changes"
                             :disabled="!validateForm"
-                            >Modifier</vs-button
                         >
+                            Modifier
+                        </vs-button>
                         <vs-button
                             class="ml-4 mt-2"
                             type="border"
                             color="warning"
                             @click="back"
-                            >Annuler</vs-button
                         >
+                            Annuler
+                        </vs-button>
                     </div>
                 </div>
             </div>
@@ -162,6 +164,7 @@ import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkarea
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
+import CellRendererSkills from "../../components/cell-renderer/CellRendererSkills.vue";
 
 var model = "range";
 var modelPlurial = "ranges";
@@ -171,7 +174,8 @@ export default {
     components: {
         AddForm,
         EditForm,
-        CellRendererActions
+        CellRendererActions,
+        CellRendererSkills
     },
     data() {
         return {
@@ -182,27 +186,27 @@ export default {
     },
     computed: {
         repetitiveTasksData() {
-            return this.$store.getters["repetitiveTaskManagement/getItems"]
-                .map(task => {
-                    if (task.skills.length > 0) {
-                        let skillsNames = "";
-                        task.skills.forEach(skill_id => {
-                            const skills = this.$store.state.skillManagement
-                                .skills;
-                            let skill = skills.find(
-                                s => s.id == parseInt(skill_id)
-                            ).name;
-                            skillsNames = skill
-                                ? skillsNames == ""
-                                    ? skill
-                                    : skillsNames + " | " + skill
-                                : skillsNames;
-                        });
-                        task.skillsNames = skillsNames;
-                    }
-                    return task;
-                })
-                .sort((a, b) => a.order - b.order);
+            const items = this.$store.getters[
+                "repetitiveTaskManagement/getItems"
+            ].map(task => {
+                if (task.skills.length > 0) {
+                    let skillsNames = "";
+                    task.skills.forEach(skill_id => {
+                        const skills = this.$store.state.skillManagement.skills;
+                        let skill = skills.find(s => s.id == parseInt(skill_id))
+                            .name;
+                        skillsNames = skill
+                            ? skillsNames == ""
+                                ? skill
+                                : skillsNames + " | " + skill
+                            : skillsNames;
+                    });
+                    task.skillsNames = skillsNames;
+                }
+                return task;
+            });
+            items.sort((a, b) => a.order - b.order);
+            return items;
         },
         validateForm() {
             return !this.errors.any();

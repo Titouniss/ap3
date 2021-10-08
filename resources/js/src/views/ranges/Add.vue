@@ -24,17 +24,14 @@
                     </div>
                     <vs-divider />
 
-                    <v-select
+                    <infinite-select
+                        required
+                        header="Société"
                         label="name"
-                        v-validate="'required'"
-                        v-model="range_data.company"
-                        :options="companiesData"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div class="vs-select--label">Société</div>
-                        </template>
-                    </v-select>
+                        model="company"
+                        v-model="range_data.company_id"
+                        @input="onCompanyChange"
+                    />
 
                     <vs-divider />
                 </div>
@@ -171,12 +168,9 @@
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
-
-import lodash from "lodash";
 
 //Repetitive Task
 import AddForm from "./repetitives-tasks/AddForm.vue";
@@ -191,14 +185,16 @@ import moduleSkillManagement from "@/store/skill-management/moduleSkillManagemen
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+
 var model = "range";
 var modelPlurial = "ranges";
 var modelTitle = "Gammes";
 
 export default {
     components: {
+        InfiniteSelect,
         AddForm,
-        vSelect,
         EditForm,
         CellRendererActions
     },
@@ -217,33 +213,30 @@ export default {
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
-        companiesData() {
-            return this.$store.state.companyManagement
-                ? this.$store.getters["companyManagement/getItems"]
-                : [];
-        },
         repetitiveTasksData() {
-            return this.$store.getters["repetitiveTaskManagement/getItems"]
-                .map(task => {
-                    if (task.skills.length > 0) {
-                        let skillsNames = "";
-                        task.skills.forEach(skill_id => {
-                            const skills = this.$store.state.skillManagement
-                                .skills;
-                            let skill = skills.find(
-                                s => s.id == parseInt(skill_id)
-                            ).name;
-                            skillsNames = skill
-                                ? skillsNames == ""
-                                    ? skill
-                                    : skillsNames + " | " + skill
-                                : skillsNames;
-                        });
-                        task.skillsNames = skillsNames;
-                    }
-                    return task;
-                })
-                .sort((a, b) => a.order - b.order);
+            const items = this.$store.getters[
+                "repetitiveTaskManagement/getItems"
+            ].map(task => {
+                if (task.skills.length > 0) {
+                    let skillsNames = "";
+                    task.skills.forEach(skill_id => {
+                        const skills = this.$store.state.skillManagement.skills;
+                        let skill = skills.find(s => s.id == parseInt(skill_id))
+                            .name;
+                        skillsNames = skill
+                            ? skillsNames == ""
+                                ? skill
+                                : skillsNames + " | " + skill
+                            : skillsNames;
+                    });
+                    task.skillsNames = skillsNames;
+                }
+                return task;
+            });
+
+            items.sort((a, b) => a.order - b.order);
+
+            return items;
         },
         disabled() {
             const user = this.$store.state.AppActiveUser;
@@ -270,6 +263,16 @@ export default {
         }
     },
     methods: {
+        onCompanyChange() {
+            this.$store
+                .dispatch("skillManagement/fetchItems", {
+                    order_by: "name",
+                    company_id: this.range_data.company_id
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
         save_changes() {
             /* eslint-disable */
             if (!this.validateForm) return;
@@ -319,6 +322,7 @@ export default {
     mounted() {
         if (!this.isAdmin) {
             this.range_data.company = this.$store.state.AppActiveUser.company;
+            this.range_data.company_id = this.range_data.company.id;
         }
     },
     created() {
@@ -365,14 +369,6 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
-        this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        this.$store
-            .dispatch("skillManagement/fetchItems", { order_by: "name" })
-            .catch(err => {
-                console.error(err);
-            });
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
