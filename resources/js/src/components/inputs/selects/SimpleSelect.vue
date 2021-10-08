@@ -51,7 +51,9 @@ export default {
         },
         reduce: {
             type: Function,
-            default: () => item => item
+            default(item) {
+                return item;
+            }
         },
         options: {
             type: Array,

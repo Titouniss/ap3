@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Exceptions\ApiException;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
@@ -44,6 +45,17 @@ class RoleController extends BaseApiController
         $user = Auth::user();
         if (!$user->is_admin) {
             $query->orWhere('is_public', true);
+        }
+
+        if ($request->has('company_id')) {
+            if (Company::where('id', $request->company_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where(function ($q) use ($request) {
+                $q->where('company_id', $request->company_id)
+                    ->orWhere('is_public', true);
+            });
         }
     }
 

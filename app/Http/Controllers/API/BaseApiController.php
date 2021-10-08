@@ -77,7 +77,7 @@ abstract class BaseApiController extends Controller
 
             $model = app($this->model);
             $table = $model->getTable();
-            $query = $model->select("{$table}.{$fields->shift()}");
+            $query = $model->select("{$table}.{$fields->shift()}")->distinct();
             foreach ($fields as $field) {
                 $query->addSelect("{$table}.{$field}");
             }

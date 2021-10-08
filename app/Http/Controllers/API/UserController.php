@@ -69,7 +69,7 @@ class UserController extends BaseApiController
 
     protected function filterIndexQuery(Request $request, $query)
     {
-        if ($request->has('company_id')) {
+        if ($request->has('company_id') && $request->company_id) {
             $item = Company::find($request->company_id);
             if (!$item) {
                 throw new ApiException("Paramètre 'company_id' n'est pas valide.");

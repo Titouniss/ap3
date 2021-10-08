@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Exceptions\ApiException;
+use App\Models\Company;
 use App\Models\Skill;
 use App\Models\Workarea;
 use App\Traits\StoresDocuments;
+use Illuminate\Http\Request;
 
 class WorkareaController extends BaseApiController
 {
@@ -39,6 +41,17 @@ class WorkareaController extends BaseApiController
     public function __construct()
     {
         parent::__construct(Workarea::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            if (Company::where('id', $request->company_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('company_id', $request->company_id);
+        }
     }
 
     protected function storeItem(array $arrayRequest)

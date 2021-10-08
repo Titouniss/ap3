@@ -103,105 +103,50 @@
                 </vs-col>
 
                 <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
-                    <!-- Role -->
-                    <div>
-                        <v-select
-                            v-validate="'required'"
-                            name="role"
-                            label="name"
-                            :multiple="false"
-                            v-model="itemLocal.role_id"
-                            :reduce="role => role.id"
-                            class="w-full"
-                            autocomplete
-                            :options="rolesData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .60rem">
-                                    Rôle
-                                </div>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('role')"
-                        >
-                            {{ errors.first("role") }}
-                        </span>
-                    </div>
+                    <infinite-select
+                        v-if="!disabled"
+                        required
+                        class="mb-5"
+                        header="Société"
+                        label="name"
+                        model="company"
+                        v-model="itemLocal.company_id"
+                        @input="onCompanyChange"
+                    />
 
-                    <!-- Company -->
-                    <div v-if="!disabled">
-                        <v-select
-                            v-validate="'required'"
-                            name="company"
-                            label="name"
-                            :multiple="false"
-                            v-model="itemLocal.company_id"
-                            :reduce="c => c.id"
-                            class="w-full mt-5"
-                            autocomplete
-                            :options="companiesData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Société
-                                </div>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('company_id')"
-                        >
-                            {{ errors.first("company_id") }}
-                        </span>
-                    </div>
-
-                    <!-- Skills -->
                     <div v-if="itemLocal.company_id">
-                        <div
-                            v-if="companySkills.length === 0"
-                            class="mt-12 mb-2"
-                        >
-                            <span
-                                label="Compétences"
-                                v-if="companySkills.length === 0"
-                                class="msgTxt mt-10"
-                            >
+                        <infinite-select
+                            required
+                            header="Rôle"
+                            label="name"
+                            model="role"
+                            v-model="itemLocal.role_id"
+                            :filters="rolesFilter"
+                            :item-fields="['name', 'company_id', 'is_public']"
+                        />
+
+                        <div v-if="skillsData.length === 0" class="mt-12 mb-2">
+                            <span label="Compétences" class="msgTxt mt-10">
                                 Aucune compétences trouvées.
                             </span>
                             <router-link
-                                v-if="companySkills.length === 0"
                                 class="linkTxt"
                                 :to="{ path: '/skills' }"
                             >
                                 Ajouter une compétence
                             </router-link>
                         </div>
-                        <v-select
-                            v-validate="'required'"
-                            v-if="companySkills.length !== 0"
-                            name="skill"
+                        <infinite-select
+                            v-show="skillsData.length > 0"
+                            class="mt-5"
+                            required
+                            header="Compétences"
                             label="name"
-                            :multiple="true"
+                            model="skill"
+                            multiple
                             v-model="itemLocal.skills"
-                            :reduce="s => s.id"
-                            class="w-full mt-5"
-                            autocomplete
-                            :options="companySkills"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Compétences
-                                </div>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('company_id')"
-                        >
-                            {{ errors.first("company_id") }}
-                        </span>
+                            :filters="skillsFilter"
+                        />
                     </div>
 
                     <div>
@@ -294,7 +239,7 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import WorkHours from "./WorkHours";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
@@ -313,7 +258,7 @@ var modelPlurial = "users";
 
 export default {
     components: {
-        vSelect,
+        InfiniteSelect,
         WorkHours
     },
     data() {
@@ -337,40 +282,21 @@ export default {
             selected: []
         };
     },
-    watch: {
-        companySkills(val, prevVal) {
-            if (val !== prevVal) {
-                this.getCompanyName();
-
-                if (
-                    !this.rolesData.find(r => r.id === this.itemLocal.role_id)
-                ) {
-                    this.itemLocal.role_id = 0;
-                }
-            }
-        }
-    },
     computed: {
+        skillsFilter() {
+            return { company_id: this.itemLocal.company_id };
+        },
+        rolesFilter() {
+            return { company_id: this.itemLocal.company_id };
+        },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
         relatedUsers() {
             return this.itemLocal.related_users;
         },
-        companiesData() {
-            return this.$store.getters["companyManagement/getItems"];
-        },
-        companySkills() {
-            return this.itemLocal.company_id
-                ? this.$store.getters["skillManagement/getItemsByCompany"](
-                      this.itemLocal.company_id
-                  )
-                : [];
-        },
-        rolesData() {
-            return this.$store.getters["roleManagement/getItemsByCompany"](
-                this.itemLocal.company_id
-            );
+        skillsData() {
+            return this.$store.getters["skillManagement/getItems"];
         },
         disabled() {
             if (this.isAdmin) {
@@ -393,6 +319,21 @@ export default {
         }
     },
     methods: {
+        onCompanyChange() {
+            this.getCompanyName();
+            this.itemLocal.skills = [];
+            const role = this.$store.getters["roleManagement/getItem"](
+                this.itemLocal.role_id
+            );
+            console.log(role);
+            if (
+                role &&
+                role.company_id !== this.itemLocal.company_id &&
+                !role.is_public
+            ) {
+                this.itemLocal.role_id = null;
+            }
+        },
         authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
@@ -412,9 +353,18 @@ export default {
                             skill_ids.push(element.id);
                         });
                     }
-                    item.skills = skill_ids;
-                    this.itemLocal = item;
-                    this.itemLocal.role_id = item.role.id;
+
+                    this.itemLocal = {
+                        firstname: item.firstname,
+                        lastname: item.lastname,
+                        login: item.login,
+                        email: item.email,
+                        company_id: item.company_id,
+                        role_id: item.role.id,
+                        skills: skill_ids,
+                        hours: item.hours,
+                        work_hours: item.work_hours
+                    };
                     if (item.company_id) {
                         this.initial_company_id = item.company_id;
                         this.company_id_temps = item.company_id;
@@ -425,17 +375,15 @@ export default {
                         this.itemLocal.login = this.itemLocal.login
                             .split(".")
                             .slice(1);
-                        //this.getCompanyName();
                     } else {
                         this.itemLocal.login = "";
-                        //this.getCompanyName();
                     }
-                    this.$vs.loading.close();
+                    this.getCompanyName();
                 })
                 .catch(err => {
-                    this.$vs.loading.close();
                     console.error(err);
-                });
+                })
+                .finally(() => this.$vs.loading.close());
         },
         confirmUpdateItem() {
             if (this.itemLocal.related_user_id) {
@@ -569,21 +517,6 @@ export default {
                 moduleSkillManagement
             );
             moduleSkillManagement.isRegistered = true;
-        }
-
-        if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems", {
-                order_by: "name"
-            });
-        }
-        if (this.authorizedTo("read", "users")) {
-            this.$store.dispatch("userManagement/fetchItems");
-        }
-        if (this.authorizedTo("read", "companies")) {
-            this.$store.dispatch("companyManagement/fetchItems");
-        }
-        if (this.authorizedTo("read", "roles")) {
-            this.$store.dispatch("roleManagement/fetchItems");
         }
 
         this.fetch_data(parseInt(this.$route.params.userId, 10));

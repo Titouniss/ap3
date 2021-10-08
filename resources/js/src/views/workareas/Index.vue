@@ -371,12 +371,6 @@ export default {
             .catch(err => {
                 console.error(err);
             });
-        this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

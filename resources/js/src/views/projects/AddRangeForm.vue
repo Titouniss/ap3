@@ -39,25 +39,23 @@
                             maxlength="5"
                             @input="onPrefixChange"
                         />
-                        <v-select
+
+                        <infinite-select
+                            header="Gamme"
+                            model="range"
                             label="name"
-                            v-model="itemLocal.range"
-                            :options="rangesData"
-                            class="w-full"
-                        >
-                            <template #header>
-                                <div class="vs-select--label">Gamme</div>
-                            </template>
-                        </v-select>
+                            v-model="itemLocal.rangeId"
+                            :filters="{ company_id }"
+                        />
                     </vx-tooltip>
                 </form>
                 <div v-if="rangesData.length === 0" class="mt-12 mb-2">
-                    <span label="Compétences" class="msgTxt mt-10"
-                        >Aucune gammes trouvées.</span
-                    >
-                    <router-link class="linkTxt" :to="{ path: '/ranges' }"
-                        >Ajouter une gamme</router-link
-                    >
+                    <span label="Compétences" class="msgTxt mt-10">
+                        Aucune gammes trouvées.
+                    </span>
+                    <router-link class="linkTxt" :to="{ path: '/ranges' }">
+                        Ajouter une gamme
+                    </router-link>
                 </div>
             </div>
         </vs-prompt>
@@ -65,17 +63,16 @@
 </template>
 
 <script>
-import moment from "moment";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect
+        InfiniteSelect
     },
     props: {
         company_id: {
@@ -101,28 +98,20 @@ export default {
             return this.$store.state.AppActiveUser.is_admin;
         },
         validateForm() {
-            return (
-                this.itemLocal.prefix != "" &&
-                this.itemLocal.range != null &&
-                this.itemLocal.range != ""
-            );
+            return this.itemLocal.prefix != "" && this.itemLocal.rangeId;
         },
         rangesData() {
-            return this.filterItemsAdmin(
-                this.$store.getters["rangeManagement/getItems"]
-            );
+            return this.$store.getters["rangeManagement/getItems"];
         }
     },
     methods: {
         clearFields() {
             Object.assign(this.itemLocal, {
                 prefix: "",
-                range: "",
                 rangeId: ""
             });
         },
         addRange() {
-            this.itemLocal.rangeId = this.itemLocal.range.id;
             this.itemLocal.project_id = this.project_id;
 
             this.$store
@@ -137,7 +126,7 @@ export default {
                     this.$vs.loading.close();
                     this.$vs.notify({
                         title: "Ajout d'une gamme au projet",
-                        text: `"${this.itemLocal.range.name}" ajouté avec succès`,
+                        text: `"Gamme ajouté avec succès`,
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success"
@@ -153,16 +142,6 @@ export default {
                         color: "danger"
                     });
                 });
-        },
-        filterItemsAdmin(items) {
-            let filteredItems = items;
-            const user = this.$store.state.AppActiveUser;
-            if (this.isAdmin) {
-                filteredItems = items.filter(
-                    item => item.company.id === this.company_id
-                );
-            }
-            return filteredItems;
         },
         onPrefixChange() {
             this.itemLocal.prefix = this.itemLocal.prefix.toUpperCase();

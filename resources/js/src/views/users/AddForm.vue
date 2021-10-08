@@ -93,63 +93,28 @@
                     </span>
                 </vs-col>
                 <vs-col vs-w="6" vs-xs="12" class="mt-6 px-6">
-                    <div>
-                        <v-select
-                            v-validate="'required'"
-                            name="role"
-                            label="name"
-                            :multiple="false"
-                            v-model="itemLocal.role_id"
-                            :reduce="role => role.id"
-                            class="w-full"
-                            autocomplete
-                            :options="rolesData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .60rem">
-                                    Rôle
-                                </div>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('role')"
-                        >
-                            {{ errors.first("role") }}
-                        </span>
-                    </div>
-
-                    <div v-if="!disabled">
-                        <v-select
-                            v-validate="'required'"
-                            name="company"
-                            label="name"
-                            :multiple="false"
-                            v-model="itemLocal.company_id"
-                            :reduce="c => c.id"
-                            class="w-full mt-5"
-                            autocomplete
-                            :options="companiesData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Société
-                                </div>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('company_id')"
-                        >
-                            {{ errors.first("company_id") }}
-                        </span>
-                    </div>
+                    <infinite-select
+                        v-if="!disabled"
+                        required
+                        class="mb-5"
+                        header="Société"
+                        label="name"
+                        model="company"
+                        v-model="itemLocal.company_id"
+                        @input="onCompanyChange"
+                    />
 
                     <div v-if="itemLocal.company_id">
-                        <div
-                            v-if="companySkills.length === 0"
-                            class="mt-12 mb-2"
-                        >
+                        <infinite-select
+                            required
+                            header="Rôle"
+                            label="name"
+                            model="role"
+                            v-model="itemLocal.role_id"
+                            :filters="rolesFilter"
+                        />
+
+                        <div v-if="skillsData.length === 0" class="mt-12 mb-2">
                             <span label="Compétences" class="msgTxt mt-10">
                                 Aucune compétences trouvées.
                             </span>
@@ -160,30 +125,17 @@
                                 Ajouter une compétence
                             </router-link>
                         </div>
-                        <v-select
-                            v-validate="'required'"
-                            v-if="companySkills.length !== 0"
-                            name="skill"
+                        <infinite-select
+                            v-show="skillsData.length > 0"
+                            class="mt-5"
+                            required
+                            header="Compétences"
                             label="name"
-                            :multiple="true"
+                            model="skill"
+                            multiple
                             v-model="itemLocal.skills"
-                            :reduce="name => name.id"
-                            class="w-full mt-5"
-                            autocomplete
-                            :options="companySkills"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Compétences
-                                </div>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('company_id')"
-                        >
-                            {{ errors.first("company_id") }}
-                        </span>
+                            :filters="skillsFilter"
+                        />
                     </div>
 
                     <div>
@@ -216,15 +168,17 @@
                             class="ml-auto mt-2"
                             @click="addItem"
                             :disabled="!validateForm"
-                            >Ajouter</vs-button
                         >
+                            Ajouter
+                        </vs-button>
                         <vs-button
                             class="ml-4 mt-2"
                             type="border"
                             color="warning"
                             @click="back"
-                            >Annuler</vs-button
                         >
+                            Annuler
+                        </vs-button>
                     </div>
                 </div>
             </div>
@@ -233,8 +187,7 @@
 </template>
 
 <script>
-import moment from "moment";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -252,7 +205,7 @@ var modelPlurial = "users";
 
 export default {
     components: {
-        vSelect
+        InfiniteSelect
     },
     data() {
         return {
@@ -271,37 +224,18 @@ export default {
             company_login: ""
         };
     },
-    watch: {
-        companySkills(val, prevVal) {
-            if (val !== prevVal) {
-                this.getCompanyName();
-
-                if (
-                    !this.rolesData.find(r => r.id === this.itemLocal.role_id)
-                ) {
-                    this.itemLocal.role_id = 0;
-                }
-            }
-        }
-    },
     computed: {
+        skillsFilter() {
+            return { company_id: this.itemLocal.company_id };
+        },
+        rolesFilter() {
+            return { company_id: this.itemLocal.company_id };
+        },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
-        companiesData() {
-            return this.$store.getters["companyManagement/getItems"];
-        },
-        companySkills() {
-            return this.itemLocal.company_id
-                ? this.$store.getters["skillManagement/getItemsByCompany"](
-                      this.itemLocal.company_id
-                  )
-                : [];
-        },
-        rolesData() {
-            return this.$store.getters["roleManagement/getItemsByCompany"](
-                this.itemLocal.company_id
-            );
+        skillsData() {
+            return this.$store.getters["skillManagement/getItems"];
         },
         disabled() {
             const user = this.$store.state.AppActiveUser;
@@ -325,6 +259,17 @@ export default {
         }
     },
     methods: {
+        onCompanyChange() {
+            this.getCompanyName();
+            this.itemLocal.skills = [];
+            if (
+                !this.$store.getters["roleManagement/getItems"].find(
+                    r => r.id === this.itemLocal.role_id
+                )
+            ) {
+                this.itemLocal.role_id = 0;
+            }
+        },
         authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
@@ -467,21 +412,6 @@ export default {
                 moduleSkillManagement
             );
             moduleSkillManagement.isRegistered = true;
-        }
-
-        if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems", {
-                order_by: "name"
-            });
-        }
-        if (this.authorizedTo("read", "users")) {
-            this.$store.dispatch("userManagement/fetchItems");
-        }
-        if (this.authorizedTo("read", "companies")) {
-            this.$store.dispatch("companyManagement/fetchItems");
-        }
-        if (this.authorizedTo("read", "roles")) {
-            this.$store.dispatch("roleManagement/fetchItems");
         }
     },
     beforeDestroy() {

@@ -173,7 +173,6 @@ import EditForm from "./EditForm.vue";
 // Store Module
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
-import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
@@ -506,13 +505,6 @@ export default {
             );
             moduleCompanyManagement.isRegistered = true;
         }
-        if (!moduleRangeManagement.isRegistered) {
-            this.$store.registerModule(
-                "rangeManagement",
-                moduleRangeManagement
-            );
-            moduleRangeManagement.isRegistered = true;
-        }
         if (!moduleCustomerManagement.isRegistered) {
             this.$store.registerModule(
                 "customerManagement",
@@ -529,31 +521,16 @@ export default {
         }
 
         this.fetchProjects();
-        this.$store.dispatch("customerManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        if (this.$store.getters.userHasPermissionTo(`read companies`)) {
-            this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-                console.error(err);
-            });
-        }
-        if (this.$store.getters.userHasPermissionTo(`read ranges`)) {
-            this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
-                console.error(err);
-            });
-        }
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
         moduleProjectManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
-        moduleRangeManagement.isRegistered = false;
         moduleCustomerManagement.isRegistered = false;
         moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("companyManagement");
-        this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("customerManagement");
         this.$store.unregisterModule("documentManagement");
     }

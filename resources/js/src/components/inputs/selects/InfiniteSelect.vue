@@ -7,8 +7,11 @@
         :multiple="multiple"
         :loading="loading"
         :autocomplete="autocomplete"
-        :success="required && !!value"
-        :danger="required && hadValue && !value"
+        :disabled="disabled"
+        :success="required && !!value && (!multiple || value.length > 0)"
+        :danger="
+            required && hadValue && (!value || !multiple || value.length === 0)
+        "
         :danger-text="`Le champ ${header.toLowerCase()} est obligatoire`"
         @input="onInput"
         @change="onChange"
@@ -80,6 +83,10 @@ export default {
         autocomplete: {
             type: Boolean,
             default: () => true
+        },
+        disabled: {
+            type: Boolean,
+            default: () => false
         }
     },
     data() {
@@ -99,6 +106,14 @@ export default {
             hadValue: !!this.value
         };
     },
+    watch: {
+        filters: {
+            handler(val) {
+                this.fetchItems();
+            },
+            deep: true
+        }
+    },
     methods: {
         clearFetchTimeout() {
             if (this.fetchTimeout) {
@@ -106,7 +121,9 @@ export default {
             }
         },
         onInput(value) {
-            this.getItem(value);
+            if (value && (!this.multiple || value.length > 0)) {
+                this.hadValue = true;
+            }
             this.$emit("input", value);
         },
         onChange(value) {
@@ -143,7 +160,7 @@ export default {
                 ul.scrollTop = scrollTop;
             }
         },
-        async fetchItems() {
+        async fetchItems(force) {
             const search = {
                 page: this.page,
                 per_page: this.perPage,
@@ -151,7 +168,7 @@ export default {
                 ...this.filters
             };
             if (!_.isEqual(this.lastSearch, search)) {
-                this.lastSearch = search;
+                this.lastSearch = JSON.parse(JSON.stringify(search));
                 this.loading = true;
                 await this.$store
                     .dispatch(`${this.model}Management/fetchItems`, {
@@ -172,7 +189,11 @@ export default {
                             const ids = this.items.map(item => item.id);
                             const unique = [];
                             data.payload.forEach(item => {
-                                if (ids.indexOf(item.id) === -1) {
+                                if (
+                                    ids.indexOf(item.id) === -1 &&
+                                    this.itemText(item) &&
+                                    this.itemText(item).length > 0
+                                ) {
                                     ids.push(item.id);
                                     unique.push(item);
                                 }
@@ -210,14 +231,6 @@ export default {
                     } catch (err) {
                         console.error(err);
                     }
-                }
-                this.getItem(this.value);
-            }
-        },
-        getItem(value) {
-            if (value) {
-                for (const val of this.multiple ? this.value : [this.value]) {
-                    this.$store.getters[`${this.model}Management/getItem`](val);
                 }
                 this.hadValue = true;
             }
