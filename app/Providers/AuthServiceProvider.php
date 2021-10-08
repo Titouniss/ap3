@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\Range;
 use App\Models\Role;
 use App\Models\Bug;
+use App\Models\Package;
 use App\Models\Skill;
 use App\Models\Subscription;
 use App\Models\Task;
@@ -26,6 +27,7 @@ use App\Policies\ProjectPolicy;
 use App\Policies\RangePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\BugPolicy;
+use App\Policies\PackagePolicy;
 use App\Policies\SkillPolicy;
 use App\Policies\SubscriptionPolicy;
 use App\Policies\TaskPolicy;
@@ -62,6 +64,7 @@ class AuthServiceProvider extends ServiceProvider
         Task::class => TaskPolicy::class,
         Unavailability::class => UnavailabilityPolicy::class,
         Workarea::class => WorkareaPolicy::class,
+        Package::class => PackagePolicy::class
     ];
 
     /**
