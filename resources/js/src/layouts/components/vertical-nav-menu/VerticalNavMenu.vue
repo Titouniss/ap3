@@ -190,7 +190,7 @@
                     <div class="flex flex-auto"></div>
 
                     <v-nav-menu-item
-                        href="/storage/Plannigo_V0.apk"
+                        href="/api/download-app"
                         icon="DownloadIcon"
                     >
                         <span

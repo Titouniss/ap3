@@ -297,6 +297,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('index', 'API\PackageController@index');
         Route::get('show/{id}', 'API\PackageController@show');
     });
+
 });
 
 /***********************************************************************************/
@@ -304,3 +305,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 /***********************************************************************************/
 
 Route::get('document-management/show/{path}', 'API\DocumentController@show');
+
+
+    /***********************************************************************************/
+    /************************************* APK *****************************************/
+    /***********************************************************************************/
+    Route::get('download-app', function () {
+        return response()->download(public_path('storage/Plannigo_V0.apk'), 'Plannigo.apk');
+    });
