@@ -296,7 +296,7 @@ export default {
                 );
 
                 // Filter skills
-                payload.skills = this.companySkills
+                payload.skills = this.skillsData
                     .filter(skill => payload.skills.indexOf(skill.id) > -1)
                     .map(skill => skill.id);
 
@@ -338,15 +338,6 @@ export default {
                     })
                     .finally(() => this.$vs.loading.close());
             }
-        },
-        filterItemsAdmin(items) {
-            let filteredItems = items;
-            if (this.isAdmin) {
-                filteredItems = items.filter(
-                    item => item.company_id === this.itemLocal.company_id
-                );
-            }
-            return filteredItems;
         },
         back() {
             this.$router.push(`/${modelPlurial}`).catch(() => {});
@@ -413,6 +404,8 @@ export default {
             );
             moduleSkillManagement.isRegistered = true;
         }
+
+        this.getCompanyName();
     },
     beforeDestroy() {
         moduleUserManagement.isRegistered = false;

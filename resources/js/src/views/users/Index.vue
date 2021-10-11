@@ -448,6 +448,11 @@ export default {
                     }
                 });
         }
+        if (!this.isAdmin) {
+            this.$store.dispatch("userManagement/fetchItems", {
+                with_trashed: true
+            });
+        }
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

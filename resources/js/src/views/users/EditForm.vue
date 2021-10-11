@@ -311,7 +311,7 @@ export default {
             const role = this.$store.getters["roleManagement/getItem"](
                 this.itemLocal.role_id
             );
-            console.log(role);
+
             if (
                 role &&
                 role.company_id !== this.itemLocal.company_id &&
@@ -341,6 +341,7 @@ export default {
                     }
 
                     this.itemLocal = {
+                        id,
                         firstname: item.firstname,
                         lastname: item.lastname,
                         login: item.login,
@@ -395,7 +396,7 @@ export default {
             payload.login = "".concat(this.company_login, this.itemLocal.login);
 
             // Filter skills
-            payload.skills = this.companySkills
+            payload.skills = this.skillsData
                 .filter(skill => payload.skills.indexOf(skill.id) > -1)
                 .map(skill => skill.id);
 
