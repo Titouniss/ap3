@@ -19,8 +19,7 @@
                         header="Société"
                         label="name"
                         model="company"
-                        v-model="filters.company"
-                        :reduce="item => item"
+                        v-model="filters.company_id"
                     />
                 </div>
                 <div style="min-width: 15em">
@@ -28,8 +27,7 @@
                         header="Utilisateur"
                         label="lastname"
                         model="user"
-                        v-model="filters.user"
-                        :reduce="item => item"
+                        v-model="filters.user_id"
                         :item-fields="['lastname', 'firstname']"
                         :item-text="
                             item => `${item.lastname} ${item.firstname}`
@@ -41,13 +39,13 @@
             </div>
         </div>
 
-        <div class="vx-card w-full p-6" v-if="filters.user">
+        <div class="vx-card w-full p-6" v-if="filters.user_id">
             <add-form
                 :activeAddPrompt="activeAddPrompt"
                 :clickDate="dateData"
                 :hours_list="hoursData"
                 :handleClose="handleClose"
-                :user="filters.user"
+                :user="selectedUser"
             />
 
             <FullCalendar
@@ -88,7 +86,7 @@
             <edit-form
                 :reload="calendarEvents"
                 :itemId="itemIdToEdit"
-                :company="filters.company"
+                :company="selectedCompany"
                 v-if="itemIdToEdit && authorizedTo('edit')"
             />
         </div>
@@ -158,15 +156,15 @@ export default {
             maxTime: "24:00",
             // Filters
             filters: {
-                company: null,
-                user: null
+                company_id: null,
+                user_id: null
             }
         };
     },
     computed: {
         usersFilter() {
             return {
-                company_id: this.filters.company ? this.filters.company.id : 0
+                company_id: this.filters.company_id || 0
             };
         },
         isAdmin() {
@@ -181,10 +179,10 @@ export default {
         },
         calendarEvents() {
             let finalHours = [];
-            let hours = this.filters.user
+            let hours = this.filters.user_id
                 ? this.$store.getters[
                       "hoursManagement/getCalendarItems"
-                  ].filter(item => item.user_id === this.filters.user.id)
+                  ].filter(item => item.user_id === this.filters.user_id)
                 : [];
             finalHours = hours;
 
@@ -197,7 +195,7 @@ export default {
                     title: "Congés payés",
                     end: pH.ends_at,
                     start: pH.starts_at,
-                    user_id: this.filters.user.id
+                    user_id: this.filters.user_id
                 });
             });
             paidHolidays = this.$store.getters[
@@ -209,7 +207,7 @@ export default {
                     title: "Jours fériés",
                     end: pH.ends_at,
                     start: pH.starts_at,
-                    user_id: this.filters.user.id
+                    user_id: this.filters.user_id
                 });
             });
             paidHolidays = this.$store.getters[
@@ -221,7 +219,7 @@ export default {
                     title: "Période de cours",
                     end: pH.ends_at,
                     start: pH.starts_at,
-                    user_id: this.filters.user.id
+                    user_id: this.filters.user_id
                 });
             });
             paidHolidays = this.$store.getters[
@@ -235,7 +233,7 @@ export default {
                     title: "Utilisation heures supplémentaires",
                     end: pH.ends_at,
                     start: pH.starts_at,
-                    user_id: this.filters.user.id
+                    user_id: this.filters.user_id
                 });
             });
             //   console.log("calendarEvents -> finalHours", finalHours);
@@ -243,12 +241,22 @@ export default {
         },
         hoursData() {
             return this.$store.getters["hoursManagement/getItems"];
+        },
+        selectedCompany() {
+            return this.$store.getters["companyManagement/getItem"](
+                this.filters.company_id
+            );
+        },
+        selectedCompany() {
+            return this.$store.getters["userManagement/getItem"](
+                this.filters.user_id
+            );
         }
     },
     methods: {
         fetchHours() {
-            const { user } = this.filters;
-            if (user && this.$refs.fullCalendar) {
+            const { user_id } = this.filters;
+            if (user_id && this.$refs.fullCalendar) {
                 const calendarApi = this.$refs.fullCalendar.getApi();
                 const unit = calendarApi.view.viewSpec.singleUnit;
                 const date = moment(calendarApi.getDate()).format("DD-MM-YYYY");
@@ -257,14 +265,14 @@ export default {
                 this.$store.dispatch("hoursManagement/fetchItems", {
                     date,
                     period_type: unit,
-                    user_id: user.id
+                    user_id
                 });
 
                 // Refresh unavailabilities
                 this.$store.dispatch("unavailabilityManagement/fetchItems", {
                     date,
                     period_type: unit,
-                    user_id: user.id
+                    user_id
                 });
             }
         },
@@ -398,7 +406,7 @@ export default {
             this.activeAddPrompt = false;
         },
         refreshDataUsers() {
-            this.filters.user = null;
+            this.filters.user_id = null;
         },
         refreshDataCalendar() {
             // get user work hours
@@ -407,7 +415,7 @@ export default {
         },
         getBusinessHours() {
             this.$store
-                .dispatch("userManagement/fetchItem", this.filters.user.id)
+                .dispatch("userManagement/fetchItem", this.filters.user_id)
                 .then(data => {
                     let item = data.payload;
                     if (item.work_hours.length > 0) {
@@ -569,8 +577,8 @@ export default {
         }
 
         if (!this.isAdmin) {
-            this.filters.user = this.$store.state.AppActiveUser;
-            this.filters.company = this.filters.user.company;
+            this.filters.user_id = this.$store.state.AppActiveUser.id;
+            this.filters.company_id = this.$store.state.AppActiveUser.company_id;
             this.getBusinessHours();
         }
     },

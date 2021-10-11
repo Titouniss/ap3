@@ -1,10 +1,6 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button
-            type="border"
-            class="items-center p-3 w-full"
-            @click="activePrompt = true"
-        >
+        <vs-button class="items-center p-3 w-full" @click="activePrompt = true">
             Ajouter une indisponibilité
         </vs-button>
         <vs-prompt

@@ -183,12 +183,27 @@
                 <feather-icon icon="CalendarIcon" svgClasses="h-6 w-6" />
                 <h4 class="ml-3">Indisponibilités</h4>
             </div>
-            <add-form
-                :id_user="user_id"
-                :fetch-overtimes="fetchOvertimes"
-                :work-hours="workHours"
-                @on-submit="fetchOvertimes"
-            />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form
+                        :id_user="user_id"
+                        :fetch-overtimes="fetchOvertimes"
+                        :work-hours="workHours"
+                        @on-submit="fetchOvertimes"
+                    />
+                </vs-col>
+            </vs-row>
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
