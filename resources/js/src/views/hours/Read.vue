@@ -247,7 +247,7 @@ export default {
                 this.filters.company_id
             );
         },
-        selectedCompany() {
+        selectedUser() {
             return this.$store.getters["userManagement/getItem"](
                 this.filters.user_id
             );
