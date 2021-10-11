@@ -192,14 +192,16 @@ export default {
                 if (task.skills.length > 0) {
                     let skillsNames = "";
                     task.skills.forEach(skill_id => {
-                        const skills = this.$store.state.skillManagement.skills;
-                        let skill = skills.find(s => s.id == parseInt(skill_id))
-                            .name;
-                        skillsNames = skill
-                            ? skillsNames == ""
-                                ? skill
-                                : skillsNames + " | " + skill
-                            : skillsNames;
+                        const skill = this.$store.getters[
+                            "skillManagement/getItem"
+                        ](parseInt(skill_id));
+
+                        if (skill) {
+                            skillsNames =
+                                skillsNames == ""
+                                    ? skill.name
+                                    : skillsNames + " | " + skill.name;
+                        }
                     });
                     task.skillsNames = skillsNames;
                 }

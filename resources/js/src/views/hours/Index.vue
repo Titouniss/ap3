@@ -170,7 +170,7 @@
             >
             </vs-row>
         </div>
-        <div class="vx-card p-6 mt-1">
+        <div class="vx-card p-6 mt-1 mb-base">
             <div
                 class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
             >
@@ -184,7 +184,7 @@
                     <vs-col
                         vs-w="4"
                         vs-type="flex"
-                        vs-justify="center"
+                        vs-justify="start"
                         vs-align="center"
                     >
                         <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
@@ -210,7 +210,7 @@
                     <vs-col
                         vs-w="4"
                         vs-type="flex"
-                        vs-justify="center"
+                        vs-justify="end"
                         vs-align="center"
                     >
                         <vs-button type="border" @click="onExport">

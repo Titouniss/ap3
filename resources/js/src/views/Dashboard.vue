@@ -54,7 +54,10 @@
                                     style="width: 200px; height: 200px"
                                 >
                                     <h1 class="main-data text-primary">
-                                        {{ projects.length }}
+                                        {{
+                                            (hasMoreProjects ? "+" : "") +
+                                                projects.length
+                                        }}
                                     </h1>
                                     <div class="text-center text-dark">
                                         Dont {{ lateProjects.length }} en retard
@@ -607,7 +610,9 @@ export default {
                         opacity: 0.1
                     }
                 }
-            }
+            },
+
+            hasMoreProjects: false
         };
     },
     components: {
@@ -678,9 +683,16 @@ export default {
                 loads: "",
                 status: "doing",
                 page: 1,
-                per_page: 100,
+                per_page: 99,
                 order_by: "date",
                 order_by_desc: 1
+            })
+            .then(data => {
+                const { success, pagination } = data;
+                if (success) {
+                    this.hasMoreProjects =
+                        pagination.count !== pagination.total;
+                }
             })
             .catch(err => {
                 console.error(err);

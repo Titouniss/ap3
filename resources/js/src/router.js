@@ -69,7 +69,7 @@ const router = new Router({
                     component: () => import("./views/users/EditForm.vue"),
                     meta: {
                         parent: "users",
-                        pageTitle: "Édition d'un utilisateur",
+                        pageTitle: "Édition d'utilisateur",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -124,6 +124,7 @@ const router = new Router({
                     component: () => import("./views/skills/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des compétences",
                         requiresAuth: true
                     }
                 },
@@ -144,7 +145,7 @@ const router = new Router({
                     component: () => import("@/views/roles/Add.vue"),
                     meta: {
                         parent: "roles",
-                        pageTitle: "Ajout de rôle",
+                        pageTitle: "Ajout d'un rôle",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -198,6 +199,7 @@ const router = new Router({
                     component: () => import("./views/ranges/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des gammes",
                         requiresAuth: true
                     }
                 },
@@ -207,7 +209,7 @@ const router = new Router({
                     component: () => import("@/views/ranges/Add.vue"),
                     meta: {
                         parent: "ranges",
-                        pageTitle: "Ajouter une gamme",
+                        pageTitle: "Ajout d'une gamme",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -345,6 +347,7 @@ const router = new Router({
                     component: () => import("./views/bugs/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des bugs",
                         requiresAuth: true
                     }
                 },
@@ -365,7 +368,7 @@ const router = new Router({
                     component: () => import("./views/bugs/Edit.vue"),
                     meta: {
                         parent: "bugs",
-                        pageTitle: "Édition d'un bug",
+                        pageTitle: "Édition de bug",
                         rule: "admin",
                         requiresAuth: true
                     }

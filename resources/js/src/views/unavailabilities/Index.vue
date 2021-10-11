@@ -120,9 +120,12 @@
                 </vs-row>
             </div>
         </div>
-        <div class="mb-base">
-            <br />
-            <h6 class="mb-4">Heures supplémentaires</h6>
+
+        <div class="vx-card mt-1 p-6">
+            <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+                <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
+                <h4 class="ml-3">Heures supplémentaires</h4>
+            </div>
             <div class="flex items-center mb-4">
                 <span class="ml-4">Total :</span>
                 <span class="ml-4"
@@ -175,8 +178,11 @@
             />
         </div>
 
-        <div class="mb-base">
-            <h6 class="mb-4">Indisponibilités</h6>
+        <div class="vx-card mt-1 p-6 mb-base">
+            <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+                <feather-icon icon="CalendarIcon" svgClasses="h-6 w-6" />
+                <h4 class="ml-3">Indisponibilités</h4>
+            </div>
             <add-form
                 :id_user="user_id"
                 :fetch-overtimes="fetchOvertimes"
