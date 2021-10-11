@@ -8,16 +8,16 @@
         <vs-dropdown-menu>
             <div class="p-3 w-full flex items-center justify-start flex-wrap">
                 <vs-chip
-                    v-for="skill in skills"
-                    :key="skill.id"
-                    :color="stringToHslColor(skill.name)"
+                    v-for="item in items"
+                    :key="item.id"
+                    :color="stringToHslColor(itemText(item))"
                     class="m-1"
                 >
-                    {{ skill.name }}
+                    {{ itemText(item) }}
                 </vs-chip>
-                <span v-if="!skills || skills.length === 0"
-                    >Pas de compétences</span
-                >
+                <span v-if="!items || items.length === 0">
+                    Pas de données
+                </span>
             </div>
         </vs-dropdown-menu>
     </vs-dropdown>
@@ -25,29 +25,24 @@
 
 <script>
 export default {
-    name: "CellRendererSkills",
-    props: {
-        items: {
-            type: Array,
-            default: () => null
-        }
-    },
+    name: "CellRendererItemsList",
     computed: {
-        skills() {
-            const skills = [
-                ...(this.items || this.params.value || []).filter(
-                    skill => skill.name
-                )
-            ];
-            skills.sort((a, b) => {
-                if (a.name === b.name) return 0;
+        items() {
+            const items = [...(this.params.value || []).filter(this.itemText)];
+            items.sort((a, b) => {
+                if (this.itemText(a) === this.itemText(b)) return 0;
 
-                return a.name < b.name ? -1 : 1;
+                return this.itemText(a) < this.itemText(b) ? -1 : 1;
             });
-            return skills;
+            return items;
         }
     },
     methods: {
+        itemText(item) {
+            return this.params.reduce
+                ? this.params.reduce(item)
+                : item[this.params.label];
+        },
         stringToHslColor(str, s = 60, l = 60) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {

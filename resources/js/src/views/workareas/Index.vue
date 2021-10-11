@@ -159,7 +159,7 @@ import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkills.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
-import CellRendererSkills from "@/components/cell-renderer/CellRendererSkills.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
@@ -183,7 +183,7 @@ export default {
         CellRendererActions,
         CellRendererRelations,
         CellRendererRelationSkills,
-        CellRendererSkills,
+        CellRendererItemsList,
 
         // Components
         RefreshModule,
@@ -220,21 +220,25 @@ export default {
                     filter: true
                 },
                 {
-                    headerName: "Société",
-                    field: "company",
-                    filter: true,
-                    cellRendererFramework: "CellRendererRelations"
-                },
-                {
                     headerName: "Compétences",
                     field: "skills",
-                    cellRendererFramework: "CellRendererSkills"
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        label: "name"
+                    }
                 },
                 {
                     headerName: "Max opérateurs",
                     field: "max_users",
                     filter: true,
                     width: 110
+                },
+                {
+                    headerName: "Société",
+                    field: "company",
+                    hide: !this.$store.state.AppActiveUser.is_admin,
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations"
                 },
                 {
                     sortable: false,

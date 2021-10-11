@@ -159,6 +159,7 @@ import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.j
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
@@ -180,6 +181,7 @@ export default {
         CellRendererLink,
         CellRendererActions,
         CellRendererRelations,
+        CellRendererItemsList,
 
         // Components
         RefreshModule,
@@ -214,8 +216,18 @@ export default {
                     filter: true
                 },
                 {
+                    headerName: "Utilisateurs",
+                    field: "users",
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        reduce: item =>
+                            `${item.lastname.toUpperCase()} ${item.firstname}`
+                    }
+                },
+                {
                     headerName: "Société",
                     field: "company",
+                    hide: !this.$store.state.AppActiveUser.is_admin,
                     filter: true,
                     cellRendererFramework: "CellRendererRelations"
                 },
@@ -364,6 +376,7 @@ export default {
 
         this.$store
             .dispatch("skillManagement/fetchItems", {
+                loads: ["users", "company"],
                 order_by: "name",
                 with_trashed: true
             })

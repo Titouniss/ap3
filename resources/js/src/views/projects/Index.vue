@@ -265,6 +265,7 @@ export default {
                 {
                     headerName: "Société",
                     field: "company",
+                    hide: !this.isAdmin,
                     filter: true,
                     cellRendererFramework: "CellRendererRelations"
                 },

@@ -151,8 +151,6 @@
 </template>
 
 <script>
-import lodash from "lodash";
-
 //Repetitive Task
 import AddForm from "./repetitives-tasks/AddForm.vue";
 import EditForm from "./repetitives-tasks/EditForm.vue";
@@ -164,7 +162,6 @@ import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkarea
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
-import CellRendererSkills from "../../components/cell-renderer/CellRendererSkills.vue";
 
 var model = "range";
 var modelPlurial = "ranges";
@@ -174,8 +171,7 @@ export default {
     components: {
         AddForm,
         EditForm,
-        CellRendererActions,
-        CellRendererSkills
+        CellRendererActions
     },
     data() {
         return {

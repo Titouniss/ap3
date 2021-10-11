@@ -153,7 +153,7 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
-import CellRendererSkills from "@/components/cell-renderer/CellRendererSkills.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
 import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
@@ -176,7 +176,7 @@ export default {
         CellRendererLink,
         CellRendererRelations,
         CellRendererActions,
-        CellRendererSkills,
+        CellRendererItemsList,
 
         // Components
         InfiniteSelect,
@@ -197,7 +197,78 @@ export default {
                 resizable: true,
                 suppressMenu: true
             },
-            columnDefs: this.getColumnDef(),
+            columnDefs: [
+                {
+                    width: 40,
+                    filter: false,
+                    checkboxSelection: true,
+                    headerCheckboxSelectionFilteredOnly: true,
+                    headerCheckboxSelection: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Nom",
+                    field: "lastname",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Prénom",
+                    field: "firstname",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Email",
+                    field: "email",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Rôle",
+                    field: "role",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                    resizable: true
+                },
+                {
+                    headerName: "Compétences",
+                    field: "skills",
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        label: "name"
+                    }
+                },
+                {
+                    headerName: "Société",
+                    field: "company",
+                    hide: !this.isAdmin,
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                    resizable: true
+                },
+                {
+                    headerName: "Actions",
+                    field: "transactions",
+                    type: "numericColumn",
+                    cellRendererFramework: "CellRendererActions",
+                    cellRendererParams: {
+                        model: "user",
+                        modelPlurial: "users",
+                        name: data =>
+                            `l'utilisateur ${data.firstname} ${data.lastname}`,
+                        disabled: data => data.is_admin,
+                        canArchive: data =>
+                            data.id !== this.$store.getters.AppActiveUser.id,
+                        canDelete: data =>
+                            data.id !== this.$store.getters.AppActiveUser.id,
+                        footNotes: {
+                            archive:
+                                "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
+                        }
+                    }
+                }
+            ],
 
             // Filters
             filters: {
@@ -318,80 +389,6 @@ export default {
         },
         addRecord() {
             this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-        },
-        getColumnDef() {
-            const columns = [
-                {
-                    width: 40,
-                    filter: false,
-                    checkboxSelection: true,
-                    headerCheckboxSelectionFilteredOnly: true,
-                    headerCheckboxSelection: true,
-                    resizable: true
-                },
-                {
-                    headerName: "Nom",
-                    field: "lastname",
-                    filter: true,
-                    resizable: true
-                },
-                {
-                    headerName: "Prénom",
-                    field: "firstname",
-                    filter: true,
-                    resizable: true
-                },
-                {
-                    headerName: "Email",
-                    field: "email",
-                    filter: true,
-                    resizable: true
-                },
-                {
-                    headerName: "Rôle",
-                    field: "role",
-                    filter: true,
-                    cellRendererFramework: "CellRendererRelations",
-                    resizable: true
-                },
-                {
-                    headerName: "Compétences",
-                    field: "skills",
-                    cellRendererFramework: "CellRendererSkills"
-                },
-                {
-                    headerName: "Société",
-                    field: "company",
-                    filter: true,
-                    cellRendererFramework: "CellRendererRelations",
-                    resizable: true
-                },
-                {
-                    headerName: "Actions",
-                    field: "transactions",
-                    type: "numericColumn",
-                    cellRendererFramework: "CellRendererActions",
-                    cellRendererParams: {
-                        model: "user",
-                        modelPlurial: "users",
-                        name: data =>
-                            `l'utilisateur ${data.firstname} ${data.lastname}`,
-                        disabled: data => data.is_admin,
-                        canArchive: data =>
-                            data.id !== this.$store.getters.AppActiveUser.id,
-                        canDelete: data =>
-                            data.id !== this.$store.getters.AppActiveUser.id,
-                        footNotes: {
-                            archive:
-                                "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
-                        }
-                    }
-                }
-            ];
-
-            return this.isAdmin
-                ? columns
-                : columns.slice(0, 6).concat(columns.slice(-1));
         }
     },
     mounted() {
