@@ -1,8 +1,8 @@
 <template>
     <vs-dropdown vs-custom-content class="w-full hover:text-primary">
         <div class="p-3 cursor-pointer flex items-end text-lg font-medium">
-            <span class="mr-2 leading-none">Voir</span>
-            <feather-icon icon="ChevronDownIcon" svgClasses="h-4 w-4" />
+            <feather-icon v-if="!items || items.length === 0" icon="EyeOffIcon" svgClasses="h-4 w-4" />
+            <feather-icon v-else icon="EyeIcon" svgClasses="h-4 w-4" />
         </div>
 
         <vs-dropdown-menu>
