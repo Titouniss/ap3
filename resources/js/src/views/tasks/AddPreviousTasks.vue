@@ -25,28 +25,27 @@
             class="previous-task-compose"
         >
             <div>
-                <v-select
-                    class="w-full mt-3"
-                    name="tasks"
+                <simple-select
+                    class="mt-3"
+                    required
+                    header="Tâches"
                     label="name"
-                    v-model="previousTasksIds_local"
-                    :reduce="task => task.id"
-                    :options="tasksData"
                     multiple
-                    autocomplete
-                >
-                </v-select>
+                    v-model="previousTasksIds_local"
+                    :reduce="item => item.id"
+                    :options="tasksData"
+                />
             </div>
         </vs-prompt>
     </div>
 </template>
 
 <script>
-import vSelect from "vue-select";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 
 export default {
     components: {
-        vSelect
+        SimpleSelect
     },
     props: {
         current_task_id: { type: Number },

@@ -7,7 +7,7 @@
         <vx-tooltip
             v-if="authorizedTo('edit') && !params.data.deleted_at && canEdit"
             text="Modifier"
-            delay=".5s"
+            delay="5000s"
             class="mx-2"
         >
             <feather-icon
@@ -19,7 +19,7 @@
         <vx-tooltip
             v-if="authorizedTo('delete') && usesSoftDelete && canArchive"
             :text="params.data.deleted_at ? 'Restaurer' : 'Archiver'"
-            delay=".5s"
+            delay="5000s"
             class="mx-2"
         >
             <feather-icon
@@ -39,13 +39,25 @@
                     canDelete
             "
             text="Supprimer"
-            delay=".5s"
+            delay="5000s"
             class="mx-2"
         >
             <feather-icon
                 icon="Trash2Icon"
                 svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                 @click="confirmActionRecord(dialogTypes.delete)"
+            />
+        </vx-tooltip>
+        <vx-tooltip
+            v-if="isAdmin && this.params.model == 'company'"
+            text="Dupliquer"
+            delay="5000s"
+            class="mx-2"
+        >
+            <feather-icon
+                icon="CopyIcon"
+                svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+                @click="confirmActionRecord('duplicate')"
             />
         </vx-tooltip>
 
@@ -78,27 +90,32 @@ export default {
             dialogTypes: {
                 restore: "restore",
                 archive: "archive",
-                delete: "delete"
+                delete: "delete",
+                duplicate: "duplicate"
             },
             dialogColors: {
                 restore: "success",
                 archive: "warning",
-                delete: "danger"
+                delete: "danger",
+                duplicate: "primary"
             },
             dialogTitles: {
                 restore: "Confirmer restauration",
                 archive: "Confirmer archivage",
-                delete: "Confirmer suppression"
+                delete: "Confirmer suppression",
+                duplicate: "Confirmer duplication"
             },
             dialogAcceptText: {
                 restore: "Restaurer",
                 archive: "Archiver",
-                delete: "Supprimer"
+                delete: "Supprimer",
+                duplicate: "Dupliquer"
             },
             dialogActions: {
                 restore: this.restoreRecord,
                 archive: this.archiveRecord,
-                delete: this.deleteRecord
+                delete: this.deleteRecord,
+                duplicate: this.duplicateRecord
             }
         };
     },
@@ -161,6 +178,9 @@ export default {
             return this.params.data.deleted_at
                 ? "h-5 w-5 text-success cursor-pointer"
                 : "h-5 w-5 hover:text-warning cursor-pointer";
+        },
+        isAdmin() {
+            return this.$store.getters.AppActiveUser.is_admin;
         }
     },
     methods: {
@@ -184,6 +204,11 @@ export default {
                 this.params.onDelete(this.params.data);
             }
         },
+        onDuplicate() {
+            if (this.params.onDuplicate) {
+                this.params.onDuplicate(this.params.data);
+            }
+        },
         confirmActionRecord(type) {
             if (this.blockDelete && type === this.dialogTypes.delete) {
                 this.$vs.dialog({
@@ -195,6 +220,9 @@ export default {
             } else {
                 let message = "";
                 switch (type) {
+                    case "duplicate":
+                        message = `Voulez vous vraiment dupliquer ${this.name} ?`;
+                        break;
                     case "archive":
                         message = `Voulez vous vraiment archiver ${this.name} ?`;
                         break;
@@ -267,16 +295,32 @@ export default {
                     this.showActionError(err);
                 });
         },
+        duplicateRecord() {
+            this.$store
+                .dispatch(`${this.model}Management/duplicateItem`, [
+                    this.params.data.id
+                ])
+                .then(data => {
+                    this.showActionSuccess("duplicate");
+                    this.onDuplicate();
+                })
+                .catch(err => {
+                    console.error(err);
+                    this.showActionError(err);
+                });
+        },
         showActionSuccess(type) {
             this.$vs.notify({
                 color: "success",
                 title: "Succès",
                 text:
                     type === "delete"
-                        ? `Suppression terminée avec succès`
+                        ? "Suppression terminée avec succès"
                         : type === "archive"
-                        ? `Archivage terminé avec succès`
-                        : `Restauration terminée avec succès`
+                        ? "Archivage terminé avec succès"
+                        : type === "duplicate"
+                        ? "Duplication terminée avec succès"
+                        : "Restauration terminée avec succès"
             });
         },
         showActionError(error) {

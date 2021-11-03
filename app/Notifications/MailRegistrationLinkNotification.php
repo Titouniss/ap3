@@ -59,7 +59,7 @@ class MailRegistrationLinkNotification extends Notification
             ->line("Voici votre lien d'inscription :")
             ->line(Lang::get("Cliquez sur le lien ci-dessous afin d'aller sur le formulaire d'inscription."))
             ->action(Lang::get("Lien d'inscription"), $link)
-            ->line(Lang::get('Si vous n\'avez pas fait de demandes ignorez ce message.'));
+            ->line(Lang::get('Si vous n\'avez pas fait de demande ignorer ce message.'));
     }
 
     /**

@@ -13,7 +13,7 @@
             class="task-compose"
         >
             <div>
-                <form class ="editTaskForm" autocomplete="off">
+                <form class="editTaskForm" autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -60,28 +60,16 @@
                         </div>
                         <!-- Right -->
                         <div class="vx-col flex-1">
-                            <vs-select
-                                label="Compétences"
-                                v-on:change="updateWorkareasList"
-                                v-model="itemLocal.skills"
-                                class="w-full"
+                            <simple-select
+                                required
+                                header="Compétences"
+                                label="name"
                                 multiple
-                                autocomplete
-                                v-validate="'required'"
-                                name="skills"
-                            >
-                                <vs-select-item
-                                    :key="index"
-                                    :value="item.id"
-                                    :text="item.name"
-                                    v-for="(item, index) in skillsData"
-                                />
-                            </vs-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('skills')"
-                                >{{ errors.first("skills") }}</span
-                            >
+                                v-model="itemLocal.skills"
+                                :reduce="item => item.id"
+                                :options="skillsData"
+                                @input="updateWorkareasList"
+                            />
 
                             <span
                                 v-if="
@@ -89,15 +77,11 @@
                                         workareasDataFiltered.length == 0
                                 "
                                 class="text-danger text-sm"
-                                >Attention, aucun pôle de production ne possède
-                                cette combinaison de compétences</span
                             >
+                                Attention, aucun pôle de production ne possède
+                                cette combinaison de compétences
+                            </span>
 
-                            <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
-                      <vs-select name="workarea" label="Pôle de production" v-model="itemLocal.workarea_id" class="w-full mt-3">
-                          <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
-                      </vs-select>
-                    </div> -->
                             <div class="my-4">
                                 <small class="date-label"
                                     >Temps estimé (en h)</small
@@ -127,6 +111,7 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect";
 import FileInput from "@/components/inputs/FileInput.vue";
 
 // register custom messages
@@ -134,6 +119,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
+        SimpleSelect,
         FileInput
     },
     props: {

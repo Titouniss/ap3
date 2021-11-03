@@ -143,7 +143,6 @@ var modelTitle = "Pôle de production";
 
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 // Store Module
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
@@ -160,6 +159,7 @@ import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkills.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
@@ -174,7 +174,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         AddForm,
         EditForm,
@@ -184,6 +183,7 @@ export default {
         CellRendererActions,
         CellRendererRelations,
         CellRendererRelationSkills,
+        CellRendererItemsList,
 
         // Components
         RefreshModule,
@@ -220,21 +220,25 @@ export default {
                     filter: true
                 },
                 {
-                    headerName: "Société",
-                    field: "company",
-                    filter: true,
-                    cellRendererFramework: "CellRendererRelations"
-                },
-                {
                     headerName: "Compétences",
                     field: "skills",
-                    cellRendererFramework: "CellRendererRelationSkills"
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        label: "name"
+                    }
                 },
                 {
                     headerName: "Max opérateurs",
                     field: "max_users",
                     filter: true,
                     width: 110
+                },
+                {
+                    headerName: "Société",
+                    field: "company",
+                    hide: !this.$store.state.AppActiveUser.is_admin,
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations"
                 },
                 {
                     sortable: false,
@@ -369,12 +373,6 @@ export default {
             .catch(err => {
                 console.error(err);
             });
-        this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

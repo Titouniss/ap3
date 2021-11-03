@@ -37,20 +37,13 @@
                                     >
                                 </div>
                                 <vs-divider />
-                                <v-select
+                                <infinite-select
+                                    header="Société"
+                                    model="company"
                                     label="name"
-                                    @input="cleanCustomerInput"
-                                    :reduce="company => company.id"
                                     v-model="itemLocal.company_id"
-                                    :options="companiesData"
-                                    class="w-full"
-                                >
-                                    <template #header>
-                                        <div class="vs-select--label">
-                                            Société
-                                        </div>
-                                    </template>
-                                </v-select>
+                                    @input="cleanCustomerInput"
+                                />
                                 <vs-divider />
                             </div>
                         </div>
@@ -97,17 +90,13 @@
                             ></datepicker>
                         </div>
                         <div class="my-4" v-if="itemLocal.company_id != null">
-                            <v-select
+                            <infinite-select
+                                header="Client"
+                                model="customer"
                                 label="name"
-                                :reduce="customer => customer.id"
                                 v-model="itemLocal.customer_id"
-                                :options="customersData"
-                                class="w-full"
-                            >
-                                <template #header>
-                                    <div class="vs-select--label">Client</div>
-                                </template>
-                            </v-select>
+                                :filters="customerFilters"
+                            />
                         </div>
                         <div class="my-4">
                             <file-input
@@ -128,7 +117,7 @@ import { fr } from "vuejs-datepicker/src/locale";
 import moment from "moment";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 import VSwatches from "vue-swatches";
 import "vue-swatches/dist/vue-swatches.css";
@@ -141,7 +130,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect,
+        InfiniteSelect,
         Datepicker,
         VSwatches,
         FileInput
@@ -188,22 +177,17 @@ export default {
                     });
             }
         },
-        companiesData() {
-            return this.$store.getters["companyManagement/getItems"];
-        },
-        customersData() {
-            let customers = this.filterItemsAdmin(
-                this.$store.getters["customerManagement/getItems"]
-            );
-
-            return customers;
-        },
         validateForm() {
             return (
                 !this.errors.any() &&
                 this.itemLocal.name != "" &&
                 this.itemLocal.company_id != null
             );
+        },
+        customerFilters() {
+            return {
+                company_id: this.itemLocal.company_id
+            };
         }
     },
     methods: {

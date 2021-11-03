@@ -107,19 +107,11 @@ export default {
         },
 
         addHoursPayed() {
-            console.log("itemLocal", this.itemLocal);
             this.$validator.validateAll().then(result => {
                 if (result) {
                     const item = JSON.parse(JSON.stringify(this.itemLocal));
                     item.starts_at = moment(item.starts_at).format(
                         "YYYY-MM-DD HH:mm"
-                    );
-                    console.log(
-                        "end month",
-                        moment()
-                            .endOf("month")
-                            .startOf("day")
-                            .format("YYYY-MM-DD HH:mm")
                     );
                     item.ends_at = moment(item.ends_at)
                         .add(this.hoursPayed, "hours")

@@ -69,29 +69,16 @@
                         </div>
                         <!-- Right -->
                         <div class="vx-col flex-1">
-                            <vs-select
-                                label="Compétences"
-                                v-on:change="updateWorkareasList"
-                                v-model="itemLocal.skills"
-                                class="w-full"
+                            <simple-select
+                                required
+                                header="Compétences"
+                                label="name"
                                 multiple
-                                autocomplete
-                                v-validate="'required'"
-                                name="skills"
-                            >
-                                <vs-select-item
-                                    :key="index"
-                                    :value="item.id"
-                                    :text="item.name"
-                                    v-for="(item, index) in skillsData"
-                                />
-                            </vs-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('skills')"
-                            >
-                                {{ errors.first("skills") }}
-                            </span>
+                                v-model="itemLocal.skills"
+                                :reduce="item => item.id"
+                                :options="skillsData"
+                                @input="updateWorkareasList"
+                            />
 
                             <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"> -->
                             <span
@@ -104,21 +91,6 @@
                                 Attention, aucun pôle de production ne possède
                                 cette combinaison de compétences
                             </span>
-                            <!--
-                <vs-select
-                  name="workarea"
-                  label="Pôle de production"
-                  v-model="itemLocal.workarea_id"
-                  class="w-full mt-3"
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in workareasDataFiltered"
-                  />
-                </vs-select>
-              </div> -->
                             <div class="my-4">
                                 <small class="date-label">
                                     Temps estimé (en h)
@@ -149,6 +121,7 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect";
 import FileInput from "@/components/inputs/FileInput.vue";
 
 // register custom messages
@@ -156,6 +129,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
+        SimpleSelect,
         FileInput
     },
     props: {
@@ -197,13 +171,13 @@ export default {
             );
         },
         workareasData() {
-            let $workareasData = this.$store.state.workareaManagement.workareas;
-            let $filteredItems = this.filterItemsAdmin($workareasData);
-            return $filteredItems;
+            let workareasData = this.$store.state.workareaManagement.workareas;
+            let filteredItems = this.filterItemsAdmin(workareasData);
+            return filteredItems;
         },
         skillsData() {
-            let $skillsData = this.$store.state.skillManagement.skills;
-            return this.filterItemsAdmin($skillsData);
+            let skillsData = this.$store.getters["skillManagement/getItems"];
+            return this.filterItemsAdmin(skillsData);
         }
     },
     methods: {

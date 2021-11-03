@@ -22,7 +22,12 @@
                     <form action="?" method="POST">
                         <div>
                             <vs-input
-                                v-validate="'required|alpha_dash|min:3|max:255'"
+                                v-validate="{
+                                    required: true,
+                                    min: 3,
+                                    max: 255,
+                                    regex: /^[^\d.]+$/
+                                }"
                                 name="lastname"
                                 label-placeholder="Nom"
                                 v-model="lastname"
@@ -36,7 +41,12 @@
                             />
 
                             <vs-input
-                                v-validate="'required|alpha_dash|min:3|max:255'"
+                                v-validate="{
+                                    required: true,
+                                    min: 3,
+                                    max: 255,
+                                    regex: /^[^\d.]+$/
+                                }"
                                 name="firstname"
                                 label-placeholder="Prénom"
                                 v-model="firstname"
@@ -50,7 +60,7 @@
                             />
 
                             <vs-input
-                                v-validate="'required|alpha_dash|min:3|max:255'"
+                                v-validate="'required|min:8|max:255'"
                                 name="company"
                                 label-placeholder="Société"
                                 v-model="company"
@@ -64,7 +74,7 @@
                             />
 
                             <vs-input
-                                v-validate="'required|alpha_dash|min:3|max:255'"
+                                v-validate="'required|min:8|max:255'"
                                 name="contact_function"
                                 label-placeholder="Fonction"
                                 v-model="contact_function"
@@ -269,7 +279,7 @@ export default {
 
                 this.$vs.notify({
                     title: "Connexion",
-                    text: "Vous êtes déjà connecté!",
+                    text: "Vous êtes déjà connecté !",
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "warning"

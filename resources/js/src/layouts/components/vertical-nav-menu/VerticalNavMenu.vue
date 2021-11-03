@@ -89,7 +89,7 @@
                 <component
                     :is="scrollbarTag"
                     ref="verticalNavMenuPs"
-                    class="scroll-area-v-nav-menu pt-2"
+                    class="scroll-area-v-nav-menu pt-2 flex flex-col"
                     :settings="settings"
                     @ps-scroll-y="psSectionScroll"
                     :key="$vs.rtl"
@@ -111,11 +111,28 @@
                                 :key="`item-${index}`"
                                 :index="index"
                                 :to="
-                                    item.slug !== 'external' && !isAdmin && item.name == 'Sociétés' ? '/companies/company-edit/' + companyId
-                                        : item.slug !== 'external' && !isAdmin && item.name == 'Remontées de bugs' ? '/bugs/bug-add/' 
-                                        : item.slug !== 'external' && item.name == 'Gérer mes heures' || item.name == 'Gérer les heures' ? '/hours/hours-view/'
-                                        : item.slug !== 'external' && item.name == 'Gérer mes indisponibilités' || item.name == 'Gérer les indisponibilités' ? '/unavailabilities/' 
-                                        : item.slug !== 'external' ? item.url : null
+                                    item.slug !== 'external' &&
+                                    !isAdmin &&
+                                    item.name == 'Sociétés'
+                                        ? '/companies/company-edit/' + companyId
+                                        : item.slug !== 'external' &&
+                                          !isAdmin &&
+                                          item.name == 'Remontées de bugs'
+                                        ? '/bugs/bug-add/'
+                                        : (item.slug !== 'external' &&
+                                              item.name ==
+                                                  'Gérer mes heures') ||
+                                          item.name == 'Gérer les heures'
+                                        ? '/hours/hours-view/'
+                                        : (item.slug !== 'external' &&
+                                              item.name ==
+                                                  'Gérer mes indisponibilités') ||
+                                          item.name ==
+                                              'Gérer les indisponibilités'
+                                        ? '/unavailabilities/'
+                                        : item.slug !== 'external'
+                                        ? item.url
+                                        : null
                                 "
                                 :href="
                                     item.slug === 'external' ? item.url : null
@@ -128,20 +145,32 @@
                                 <span
                                     v-show="!verticalNavMenuItemsMin"
                                     class="truncate"
-                                    >{{
-                                        !isAdmin && item.name == "Sociétés" ? "Ma société"
-                                            : !isAdmin && item.name == "Remontées de bugs" ? "Remonter un bug" 
-                                            : !isAdmin && !isManager && item.name == "Gérer les heures" ? "Gérer mes heures" 
-                                            : !isAdmin && !isManager && item.name == "Gérer les indisponibilités" ? "Gérer mes indisponibilités" 
-                                            : item.name
-                                    }}</span
                                 >
+                                    {{
+                                        !isAdmin && item.name == "Sociétés"
+                                            ? "Ma société"
+                                            : !isAdmin &&
+                                              item.name == "Remontées de bugs"
+                                            ? "Remonter un bug"
+                                            : !isAdmin &&
+                                              !isManager &&
+                                              item.name == "Gérer les heures"
+                                            ? "Gérer mes heures"
+                                            : !isAdmin &&
+                                              !isManager &&
+                                              item.name ==
+                                                  "Gérer les indisponibilités"
+                                            ? "Gérer mes indisponibilités"
+                                            : item.name
+                                    }}
+                                </span>
                                 <vs-chip
                                     class="ml-auto"
                                     :color="item.tagColor"
                                     v-if="item.tag && (isMouseEnter || !reduce)"
-                                    >{{ item.tag }}</vs-chip
                                 >
+                                    {{ item.tag }}
+                                </vs-chip>
                             </v-nav-menu-item>
 
                             <!-- Nav-Group -->
@@ -158,27 +187,19 @@
                             <!-- /Nav-Group -->
                         </template>
                     </template>
-                    <div
-                        class="mt-2 flex flex-wrap items-center justify-end"
-                        style="bottom: 15px; position: absolute; padding-left: 15px"
+                    <div class="flex flex-auto"></div>
+
+                    <v-nav-menu-item
+                        href="/api/download-app"
+                        icon="DownloadIcon"
                     >
-                        <vs-row
-                            vs-type="flex"
-                            vs-justify="center"
-                            vs-align="center"
+                        <span
+                            v-show="!verticalNavMenuItemsMin"
+                            class="truncate"
                         >
-                            <feather-icon
-                                icon="DownloadIcon"
-                                svgClasses="h-5 w-5"
-                            />
-                            <a
-                                style="text-decoration: none"
-                                class="text-white"
-                                href="https://drive.google.com/file/d/1WccVYF5XYspiG9uYHfVhm2BBDoRbJ7it/view"
-                                >Télécharger l'application</a
-                            >
-                        </vs-row>
-                    </div>
+                            Télécharger l'app
+                        </span>
+                    </v-nav-menu-item>
                 </component>
                 <!-- /Menu Items -->
             </div>

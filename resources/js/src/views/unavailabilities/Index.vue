@@ -6,23 +6,15 @@
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div
-                    style="min-width: 15em"
-                    class="cursor-pointer mx-4"
-                >
-                    <v-select
-                        label="name"
+                <div style="min-width: 15em">
+                    <simple-select
+                        header="Heures prises"
                         v-model="filters.hours_taken"
+                        @focus="clearRefreshDataTimeout"
                         :options="hours_type_names"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Heures prises</div>
-                        </template>
-                    </v-select>
+                    />
                 </div>
-                
+
                 <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
                     <div
                         class="p-3 rounded-lg border border-solid d-theme-border-grey-light cursor-pointer flex items-center justify-between text-lg font-medium w-32"
@@ -49,24 +41,18 @@
                     </vs-dropdown-menu>
                 </vs-dropdown>
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-select
                         v-if="authorizedTo('show', 'users')"
+                        header="Utilisateur"
                         label="lastname"
-                        :options="users"
+                        model="user"
                         v-model="filters.user_id"
-                        :reduce="user => user.id"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
             </div>
             <div class="flex flex-wrap items-center">
@@ -134,8 +120,12 @@
                 </vs-row>
             </div>
         </div>
-        <div class="mb-base">
-            <br><h6 class="mb-4">Heures supplémentaires</h6>
+
+        <div class="vx-card mt-1 p-6">
+            <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+                <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
+                <h4 class="ml-3">Heures supplémentaires</h4>
+            </div>
             <div class="flex items-center mb-4">
                 <span class="ml-4">Total :</span>
                 <span class="ml-4"
@@ -165,7 +155,13 @@
                 <span class="ml-4">Reste à utiliser :</span>
                 <span class="ml-4"
                     >{{
-                        overtimes > 0 ? (overtimes - usedOvertimes - payedOvertimes).toFixed(2) : 0
+                        overtimes > 0
+                            ? (
+                                  overtimes -
+                                  usedOvertimes -
+                                  payedOvertimes
+                              ).toFixed(2)
+                            : 0
                     }}
                     {{
                         overtimes - (usedOvertimes - payedOvertimes) > 1
@@ -182,13 +178,32 @@
             />
         </div>
 
-        <div class="mb-base">
-            <h6 class="mb-4">Indisponibilités</h6>
-            <add-form
-                :id_user="user_id"
-                @on-submit="fetchOvertimes"
-                :fetchOvertimes="fetchOvertimes"
-            />
+        <div class="vx-card mt-1 p-6 mb-base">
+            <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
+                <feather-icon icon="CalendarIcon" svgClasses="h-6 w-6" />
+                <h4 class="ml-3">Indisponibilités</h4>
+            </div>
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form
+                        :id_user="user_id"
+                        :fetch-overtimes="fetchOvertimes"
+                        :work-hours="workHours"
+                        @on-submit="fetchOvertimes"
+                    />
+                </vs-col>
+            </vs-row>
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
@@ -289,7 +304,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -313,7 +327,8 @@ import CellRendererActions from "@/components/cell-renderer/CellRendererActions.
 
 // Components
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
-import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 
 // Mixins
 import { multipleActionsMixin } from "@/mixins/lists";
@@ -331,7 +346,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
         flatPickr,
@@ -340,7 +354,8 @@ export default {
         AddPayedHoursForm,
 
         // Components
-        InfiniteScrollSelect,
+        InfiniteSelect,
+        SimpleSelect,
         MultipleActions
     },
     data() {
@@ -478,6 +493,7 @@ export default {
                 altInput: true
             }),
             refreshDataTimeout: null,
+            workHours: [],
 
             // Stats
             stats: { total: 0 }
@@ -510,6 +526,7 @@ export default {
                         this.refreshData();
                         if (value.user_id !== prev.user_id) {
                             this.fetchOvertimes();
+                            this.fetchWorkHours();
                         }
                     }, 1500);
                 }
@@ -658,6 +675,16 @@ export default {
                     });
             }
         },
+        fetchWorkHours() {
+            if (this.user_id) {
+                this.$store
+                    .dispatch("userManagement/fetchItem", this.user_id)
+                    .then(data => {
+                        if (data.success)
+                            this.workHours = data.payload.work_hours;
+                    });
+            }
+        },
         authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
@@ -732,10 +759,11 @@ export default {
             this.filters.period_type = type;
             this.filters.date =
                 type === "date" || type === "full" ? null : moment();
-        },
+        }
     },
     mounted() {
         this.fetchOvertimes();
+        this.fetchWorkHours();
         this.gridApi = this.gridOptions.api;
 
         window.addEventListener("resize", this.onResize);

@@ -5,10 +5,27 @@ namespace App\Http\Controllers\API;
 use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Company;
 use App\Models\CompanyDetails;
 use App\Models\Subscription;
 use Carbon\Carbon;
+
+use App\Models\Skill;
+use App\Models\Customer;
+use App\Models\Workarea;
+use App\Models\Range;
+use App\Models\Role;
+use App\Models\DealingHours;
+use App\Models\Unavailability;
+use App\Models\Project;
+use App\Models\TasksBundle;
+use App\Models\WorkHours;
+use App\Models\Hours;
+use App\Models\Task;
+use App\User;
+
+
 use Illuminate\Support\Facades\Validator;
 
 class CompanyController extends BaseApiController
@@ -202,5 +219,313 @@ class CompanyController extends BaseApiController
         ]);
 
         return $item;
+    }
+
+    protected function duplicate(Request $request){
+
+        $arrayRequest = $request->all();
+
+        foreach($arrayRequest['ids'] as $id){
+
+            try {
+                // Company
+                $company = Company::withTrashed()->find($id);
+                if(isset($company)){
+                    $newCompany = $company->replicate();
+                    $newCompany->name = $newCompany->name. '('.Company::where('name', 'LIKE', '%'.$company->name.'%')->count().')';
+                    $newCompany->save();
+
+                    // Company details
+                    $companyDetails = CompanyDetails::where('detailable_id', $id)->first();
+                    if($companyDetails){
+                        $newCompanyDetails = $companyDetails->replicate();
+                        $newCompanyDetails->detailable_id = $newCompany->id;
+                        $newCompanyDetails->save();
+                    }
+                    
+
+                    // Subcriptions
+                    $subscriptions = Subscription::where('company_id', $id)->withTrashed()->get();
+                    if(isset($subscriptions)){
+                        foreach($subscriptions as $subscription){
+                            $newSubscription = $subscription->replicate();
+                            $newSubscription->company_id = $newCompany->id;
+                            $newSubscription->save();
+
+                            //Packages
+                            $subscriptionHasPackages = DB::table('subscription_has_packages')->where('subscription_id', $subscription->id)->pluck('package_id');
+                            if(isset($subscriptionHasPackages)){
+                                $newSubscription->packages()->sync($subscriptionHasPackages);
+                                $newSubscription->save();
+                            } 
+                        }
+                    }
+
+                    // Skills
+                    $skills = Skill::where('company_id', $id)->withTrashed()->get();
+                    if(isset($skills)){
+                        foreach($skills as $skill){
+                            $newSkill = $skill->replicate();
+                            $newSkill->company_id = $newCompany->id;
+                            $newSkill->save(); 
+                        }
+                    }
+
+                    // Customers
+                    $oldNewCustomer = [];
+                    $customers = Customer::where('company_id', $id)->withTrashed()->get();
+                    if(isset($customers)){
+                        foreach($customers as $customer){
+                            $newCustomer = $customer->replicate();
+                            $newCustomer->company_id = $newCompany->id;
+                            $newCustomer->save();
+
+                            $oldNewCustomer[$customer->id] = $newCustomer->id;
+
+                            //Customer details
+                            $customerDetails = CompanyDetails::where('detailable_id', $id)->first();
+                            if(isset($customerDetails)){
+                                $newCustomerDetails = $customerDetails->replicate();
+                                $newCustomerDetails->detailable_id = $newCustomer->id;
+                                $newCustomerDetails->save();
+                            }
+                            
+                        }
+                    }
+
+                    // Workareas
+                    $oldNewWorkarea = [];
+                    $workareas = Workarea::where('company_id', $id)->withTrashed()->get();
+                    if(isset($workareas)){
+                        foreach($workareas as $workarea){
+                            $newWorkarea = $workarea->replicate();
+                            $newWorkarea->company_id = $newCompany->id;
+                            $newWorkarea->save();
+
+                            $oldNewWorkarea[$workarea->id] = $newWorkarea->id;
+
+                            //WorkareaSkills
+                            foreach($workarea->skills as $skill){
+                                $newWorkarea->skills()->sync(Skill::where('name', $skill->name)->where('company_id', $newCompany->id)->withTrashed()->pluck('id'));
+                            }
+                            $newWorkarea->save();
+                        }
+                    }
+
+                    // Ranges
+                    $ranges = Range::where('company_id', $id)->withTrashed()->get();
+                    if(isset($ranges)){
+                        foreach($ranges as $range){
+                            $newRange = $range->replicate();
+                            $newRange->company_id = $newCompany->id;
+                            $newRange->save();
+
+                            //RepetitiveTask
+                            foreach($range->repetitive_tasks() as $repetitiveTask){
+
+                                $newRepetitiveTask = $repetitiveTask->replicate();
+                                $newRepetitiveTask->range_id = $newRange->id;
+                                $newRepetitiveTask->save();
+                                
+                                //RepetitiveTaskSkills
+                                foreach($repetitiveTask->skills as $skill){
+                                    $newRepetitiveTask->skills()->sync(Skill::where('name', $skill->name)->where('company_id', $newCompany->id)->withTrashed()->pluck('id'));
+                                }
+                                $newRepetitiveTask->save();
+                            }
+                        }
+                    }
+
+                    //Roles
+                    $roles = Role::where('company_id', $id)->withTrashed()->get();
+                    if(isset($roles)){
+                        foreach($roles as $role){
+                            $newRole = $role->replicate();
+                            $newRole->company_id = $newCompany->id;
+                            $newRole->save();
+
+                            //Permissions
+                            $permissions = [];
+                            foreach($role->permissions as $permission){
+                                $permissions[] = $permission->id;
+                            }
+                            $newRole->syncPermissions($permissions);
+                        }
+                    }
+                    
+                    //Users
+                    $oldNewUser = [];
+                    $users = User::where('company_id', $id)->withTrashed()->get();
+                    if(isset($users)){
+                        foreach($users as $user){
+                            $newUser = $user->replicate();
+                            $newUser->company_id = $newCompany->id;
+                            $newUser->login = $this->getRandomString(8);
+                            $newUser->email = $this->getRandomString(6) . '@' . $this->getRandomString(5) . '.fr';
+                            $newUser->register_token = '';
+                            $newUser->save();
+
+                            $oldNewUser[$user->id] = $newUser->id;
+
+                            //UserRoles
+                            if($user->role){
+                                if($user->role->is_public){
+                                    $newUser->syncRoles($user->role->id);
+                                    $newUser->save();
+                                }
+                                else{
+                                    $newUser->syncRoles(Role::where('name', $user->role->name)->where('company_id', $newCompany->id)->withTrashed()->pluck('id'));
+                                    $newUser->save();
+                                }
+                            }
+
+                            //UserSkills
+                            foreach($user->skills as $skill){
+                                $newUser->skills()->sync(Skill::where('name', $skill->name)->where('company_id', $newCompany->id)->withTrashed()->pluck('id'));
+                            }
+                            $newUser->save();
+
+                            //WorkHours
+                            $workHours = WorkHours::where('user_id', $user->id)->get();
+                            foreach($workHours as $workHour){
+                                $newWorkHour = $workHour->replicate();
+                                $newWorkHour->user_id = $newUser->id;
+                                $newWorkHour->save();
+                            } 
+
+                            //Dealing Hours
+                            $dealingHours = DealingHours::where('user_id', $user->id)->get();
+                            foreach($dealingHours as $dealingHour){
+                                $newDealingHour = $dealingHour->replicate();
+                                $newDealingHour->user_id = $newUser->id;
+                                $newDealingHour->save();
+                            } 
+
+                            // Unavailabilities
+                            $unavailabilities = Unavailability::where('user_id', $user->id)->get();
+                            foreach($unavailabilities as $unavailability){
+                                $newUnavailability = $unavailability->replicate();
+                                $newUnavailability->user_id = $newUser->id;
+                                $newUnavailability->save();
+                            } 
+                        }
+                    }
+
+                    //Project
+                    $projects = Project::where('company_id', $company->id)->withTrashed()->get();
+                    if(isset($projects)){
+                        foreach($projects as $project){
+                            $newProject = $project->replicate();
+                            $newProject->company_id = $newCompany->id;
+                            $newProject->customer_id = $project->customer_id ? $oldNewCustomer[$project->customer_id] : null;
+                            $newProject->save();
+
+                            // Task Bundle
+                            $oldNewTasksBundle = [];
+                            $tasks_bundle = TasksBundle::where('project_id', $project->id)->withTrashed()->get();
+                            foreach($tasks_bundle as $task_bundle){
+                                $newTaskBundle = $task_bundle->replicate();
+                                $newTaskBundle->project_id = $newProject->id;
+                                $newTaskBundle->company_id = $newCompany->id;
+                                $newTaskBundle->save();
+
+                                $oldNewTasksBundle[$task_bundle->id] = $newTaskBundle->id;
+                            }
+
+                            // Task 
+                            $oldNewTask = [];
+                            if(isset($project->tasks)){
+                                foreach($project->tasks as $task){
+                                    $newTask = $task->replicate();
+                                    $newTask->tasks_bundle_id = $oldNewTasksBundle[$task->tasks_bundle_id];
+                                    $newTask->workarea_id = $task->workarea_id ? $oldNewWorkarea[$task->workarea_id] : null;
+                                    $newTask->created_by = isset($oldNewUser[$task->created_by]) ? $oldNewUser[$task->created_by] : $task->created_by;
+                                    $newTask->user_id = $task->user_id ? $oldNewUser[$task->user_id] : null;
+                                    unset($newTask->laravel_through_key);
+                                    $newTask->save();
+
+                                    $oldNewTask[$task->id] = $newTask->id;
+
+                                    // Task Skill
+                                    foreach($task->skills as $skill){
+                                        $newTask->skills()->sync(Skill::where('name', $skill->name)->where('company_id', $newCompany->id)->withTrashed()->pluck('id'));
+                                    }
+                                    $newTask->save();
+
+                                    //Task Comment
+                                    foreach($task->comments as $comment){
+                                        $newComment = $comment->replicate();
+                                        $newComment->task_id = $newTask->id;
+                                        $newComment->created_by = isset($oldNewUser[$comment->created_by]) ? $oldNewUser[$comment->created_by] : $comment->created_by;
+                                        $newComment->save();
+                                    }
+
+                                    // Task Time Spent
+                                    foreach($task->taskTimeSpent as $timeSpent){
+                                        $newTimeSpent = $timeSpent->replicate();
+                                        $newTimeSpent->user_id = $oldNewUser[$timeSpent->user_id];
+                                        $newTimeSpent->task_id = $newTask->id;
+                                        $newTimeSpent->save();
+                                    }
+
+                                    //Task Period
+                                    foreach($task->periods as $period){
+                                        $newPeriod = $period->replicate();
+                                        $newPeriod->task_id = $newTask->id;
+                                        $newPeriod->save();
+                                    }
+                                }
+
+                                foreach($project->tasks as $task){
+                                    // Previous Task
+                                    foreach($task->previousTasks as $previousTask){
+                                        $newPreviousTask = $previousTask->replicate();
+                                        $newPreviousTask->task_id = $oldNewTask[$previousTask->task_id];
+                                        $newPreviousTask->previous_task_id = $oldNewTask[$previousTask->previous_task_id];
+                                        $newPreviousTask->save();
+                                    }
+                                }
+                            }
+
+                            // Hours
+                            $hours = Hours::where('project_id', $project->id)->get();
+                            if(isset($hours)){
+                                foreach($hours as $hour){
+                                    $newHour = $hour->replicate();
+                                    $newHour->user_id = $oldNewUser[$hour->user_id];
+                                    $newHour->project_id = $newProject->id;
+                                    $newHour->save();
+                                }
+                            }
+                        }
+                    }
+
+                    if (static::$show_load) {
+                        $newCompany->load(static::$show_load);
+                    }
+        
+                    if (static::$show_append) {
+                        $newCompany->append(static::$show_append);
+                    }
+
+                    return $this->successResponse($newCompany, 'Duplication terminé avec succès.');
+                }
+
+            } catch (\Throwable $th) {
+                throw new ApiException($th);
+            }
+        }
+    }
+
+    private function getRandomString($n) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomString = '';
+      
+        for ($i = 0; $i < $n; $i++) {
+            $index = rand(0, strlen($characters) - 1);
+            $randomString .= $characters[$index];
+        }
+      
+        return $randomString;
     }
 }

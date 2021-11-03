@@ -106,28 +106,16 @@
                                         this.type != 'workarea'
                                 "
                             >
-                                <v-select
-                                    v-validate="'required'"
-                                    class="w-full"
-                                    name="skills"
+                                <simple-select
+                                    required
+                                    header="Compétences"
                                     label="name"
-                                    v-model="itemLocal.skills"
-                                    :reduce="skill => skill.id"
-                                    :options="skillsData"
                                     multiple
+                                    v-model="itemLocal.skills"
+                                    :reduce="item => item.id"
+                                    :options="skillsData"
                                     @input="updateUsersAndWorkareasList"
-                                >
-                                    <template #header>
-                                        <div class="vs-select--label">
-                                            Compétences
-                                        </div>
-                                    </template>
-                                </v-select>
-                                <span
-                                    class="text-danger text-sm"
-                                    v-show="errors.has('skills')"
-                                    >{{ errors.first("skills") }}</span
-                                >
+                                />
                             </div>
 
                             <div
@@ -156,28 +144,18 @@
                                         hasAvailableUsers
                                 "
                             >
-                                <v-select
-                                    v-validate="'required'"
-                                    name="user_id"
+                                <simple-select
+                                    required
+                                    header="Attribuer"
                                     label="lastname"
-                                    :multiple="false"
                                     v-model="itemLocal.user_id"
-                                    :reduce="name => name.id"
-                                    class="w-full"
-                                    autocomplete
+                                    :reduce="item => item.id"
                                     :options="usersDataFiltered"
-                                >
-                                    <template #header>
-                                        <div class="vs-select--label">
-                                            Attribuer
-                                        </div>
-                                    </template>
-                                    <template #option="user">
-                                        <span>{{
-                                            `${user.firstname} ${user.lastname}`
-                                        }}</span>
-                                    </template>
-                                </v-select>
+                                    :item-text="
+                                        item =>
+                                            `${item.lastname} ${item.firstname}`
+                                    "
+                                />
                             </div>
 
                             <div
@@ -206,21 +184,14 @@
                                         hasAvailableWorkareas
                                 "
                             >
-                                <v-select
+                                <simple-select
+                                    required
+                                    header="Pôle de production"
                                     label="name"
-                                    name="workarea_id"
-                                    v-validate="'required'"
                                     v-model="itemLocal.workarea_id"
-                                    :reduce="name => name.id"
+                                    :reduce="item => item.id"
                                     :options="workareasDataFiltered"
-                                    class="w-full"
-                                >
-                                    <template #header>
-                                        <div class="vs-select--label">
-                                            Pôle de production
-                                        </div>
-                                    </template>
-                                </v-select>
+                                />
                             </div>
                         </div>
                         <!-- Right -->
@@ -459,7 +430,7 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
-import vSelect from "vue-select";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -471,7 +442,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect,
+        SimpleSelect,
         flatPickr,
         AddPreviousTasks,
         FileInput
@@ -664,7 +635,6 @@ export default {
             return moment(date, "YYYY-MM-DD HH:mm:ss").format("HH:mm");
         },
         goToEditView() {
-            console.log("id", this.itemId);
             this.$router.push({
                 path: `/schedules/schedules-edit`,
                 query: {
@@ -683,7 +653,7 @@ export default {
 
             const item = JSON.parse(JSON.stringify(this.itemLocal));
             if (this.totalTimeSpent != item.time_spent) {
-                item.time_spent = this.totalTimeSpent;
+                item.time_spent = this.current_time_spent;
             }
 
             if (this.project_data != null) {
@@ -810,7 +780,6 @@ export default {
         addPreviousTask(taskIds) {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];
-            console.log(taskIds);
 
             taskIds.forEach(id => {
                 let task = this.tasks_list.filter(t => t.id == id);

@@ -33,17 +33,12 @@
                 </vs-col>
 
                 <div v-if="isAdmin" class="mr-10" style="min-width: 30em">
-                    <v-select
+                    <infinite-select
+                        header="Société"
+                        model="company"
                         label="name"
-                        v-model="filters.company"
-                        :options="companiesData"
-                        @input="refreshDataUsers"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Société</div>
-                        </template>
-                    </v-select>
+                        v-model="filters.company_id"
+                    />
                 </div>
             </vs-row>
             <div class="flex flex-wrap items-center">
@@ -149,21 +144,19 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
-import router from "@/router";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
-import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
-import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
@@ -174,76 +167,19 @@ var model = "user";
 var modelPlurial = "users";
 var modelTitle = "Utilisateurs";
 
-var columnDef = [
-    {
-        width: 40,
-        filter: false,
-        checkboxSelection: true,
-        headerCheckboxSelectionFilteredOnly: true,
-        headerCheckboxSelection: true,
-        resizable: true
-    },
-    {
-        headerName: "Nom",
-        field: "lastname",
-        filter: true,
-        resizable: true
-    },
-    {
-        headerName: "Prénom",
-        field: "firstname",
-        filter: true,
-        resizable: true
-    },
-    {
-        headerName: "Email",
-        field: "email",
-        filter: true,
-        resizable: true
-    },
-    {
-        headerName: "Rôle",
-        field: "role",
-        filter: true,
-        cellRendererFramework: "CellRendererRelations",
-        resizable: true
-    },
-    {
-        headerName: "Société",
-        field: "company",
-        filter: true,
-        cellRendererFramework: "CellRendererRelations",
-        resizable: true
-    },
-    {
-        headerName: "Actions",
-        field: "transactions",
-        type: "numericColumn",
-        cellRendererFramework: "CellRendererActions",
-        cellRendererParams: {
-            model: "user",
-            modelPlurial: "users",
-            name: data => `l'utilisateur ${data.firstname} ${data.lastname}`,
-            disabled: data => data.is_admin,
-            footNotes: {
-                archive:
-                    "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
-            }
-        }
-    }
-];
-
 export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
+
         // Cell Renderer
         CellRendererLink,
         CellRendererRelations,
         CellRendererActions,
+        CellRendererItemsList,
 
         // Components
+        InfiniteSelect,
         RefreshModule,
         MultipleActions
     },
@@ -261,12 +197,84 @@ export default {
                 resizable: true,
                 suppressMenu: true
             },
-            columnDefs: this.getColumnDef(),
+            columnDefs: [
+                {
+                    width: 40,
+                    filter: false,
+                    checkboxSelection: true,
+                    headerCheckboxSelectionFilteredOnly: true,
+                    headerCheckboxSelection: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Nom",
+                    field: "lastname",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Prénom",
+                    field: "firstname",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Email",
+                    field: "email",
+                    filter: true,
+                    resizable: true
+                },
+                {
+                    headerName: "Rôle",
+                    field: "role",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                    resizable: true
+                },
+                {
+                    headerName: "Compétences",
+                    field: "skills",
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        label: "name"
+                    }
+                },
+                {
+                    headerName: "Société",
+                    field: "company",
+                    hide: !this.isAdmin,
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                    resizable: true
+                },
+                {
+                    headerName: "Actions",
+                    field: "transactions",
+                    type: "numericColumn",
+                    cellRendererFramework: "CellRendererActions",
+                    cellRendererParams: {
+                        model: "user",
+                        modelPlurial: "users",
+                        name: data =>
+                            `l'utilisateur ${data.firstname} ${data.lastname}`,
+                        disabled: data => data.is_admin,
+                        canArchive: data =>
+                            data.id !== this.$store.getters.AppActiveUser.id,
+                        canDelete: data =>
+                            data.id !== this.$store.getters.AppActiveUser.id,
+                        footNotes: {
+                            archive:
+                                "Si vous archivez l'utilisateur les tâches associées ne lui seront plus attribué."
+                        }
+                    }
+                }
+            ],
+
             // Filters
             filters: {
-                company: this.isAdmin
+                company_id: this.isAdmin
                     ? null
-                    : this.$store.state.AppActiveUser.company
+                    : this.$store.state.AppActiveUser.company_id
             },
 
             // Cell Renderer Components
@@ -295,6 +303,17 @@ export default {
         },
         departmentFilter(obj) {
             this.setColumnFilter("department", obj.value);
+        },
+        filters: {
+            handler(val, prev) {
+                if (val.company_id) {
+                    this.$store.dispatch("userManagement/fetchItems", {
+                        with_trashed: true,
+                        company_id: val.company_id
+                    });
+                }
+            },
+            deep: true
         }
     },
     computed: {
@@ -305,27 +324,7 @@ export default {
             return this.$store.state.userManagement.user.id || 0;
         },
         usersData() {
-            //return this.$store.state.userManagement.users;
-            const users = JSON.parse(
-                JSON.stringify(this.$store.getters["userManagement/getItems"])
-            );
-            return this.filters.company
-                ? users.filter(
-                      item => item.company_id === this.filters.company.id
-                  )
-                : [];
-        },
-        companiesData() {
-            const companies = JSON.parse(
-                JSON.stringify(
-                    this.$store.getters["companyManagement/getItems"]
-                )
-            );
-            return companies.sort(function(a, b) {
-                var textA = a.name.toUpperCase();
-                var textB = b.name.toUpperCase();
-                return textA < textB ? -1 : textA > textB ? 1 : 0;
-            });
+            return this.$store.getters["userManagement/getItems"];
         },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -351,16 +350,6 @@ export default {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
             );
-        },
-        getColumnDef() {
-            if (this.isAdmin) {
-                return columnDef;
-            } else {
-                let withoutCompany = columnDef
-                    .slice(0, 5)
-                    .concat(columnDef.slice(-1));
-                return withoutCompany;
-            }
         },
         setColumnFilter(column, val) {
             const filter = this.gridApi.getFilterInstance(column);
@@ -400,13 +389,9 @@ export default {
         },
         addRecord() {
             this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-        },
-        refreshDataUsers() {
-            this.filters.user = null;
         }
     },
     mounted() {
-        const user = this.$store.state.AppActiveUser;
         this.gridApi = this.gridOptions.api;
 
         window.addEventListener("resize", this.onResize);
@@ -439,10 +424,6 @@ export default {
             this.$store.registerModule("userManagement", moduleUserManagement);
             moduleUserManagement.isRegistered = true;
         }
-        if (!moduleRoleManagement.isRegistered) {
-            this.$store.registerModule("roleManagement", moduleRoleManagement);
-            moduleRoleManagement.isRegistered = true;
-        }
         if (!moduleCompanyManagement.isRegistered) {
             this.$store.registerModule(
                 "companyManagement",
@@ -450,38 +431,32 @@ export default {
             );
             moduleCompanyManagement.isRegistered = true;
         }
-        if (!moduleSkillManagement.isRegistered) {
-            this.$store.registerModule(
-                "skillManagement",
-                moduleSkillManagement
-            );
-            moduleSkillManagement.isRegistered = true;
-        }
 
-        this.$store.dispatch("skillManagement/fetchItems");
-        if (this.authorizedTo("read", "skills")) {
-            this.$store.dispatch("skillManagement/fetchItems");
-        }
         if (this.authorizedTo("read", "companies")) {
-            this.$store.dispatch("companyManagement/fetchItems");
+            this.$store
+                .dispatch("companyManagement/fetchItems", {
+                    order_by: "name",
+                    page: 1,
+                    per_page: 1
+                })
+                .then(({ success, payload }) => {
+                    if (this.isAdmin && success && payload.length > 0) {
+                        this.filters.company_id = payload[0].id;
+                    }
+                });
         }
-        if (this.authorizedTo("read", "roles")) {
-            this.$store.dispatch("roleManagement/fetchItems");
+        if (!this.isAdmin) {
+            this.$store.dispatch("userManagement/fetchItems", {
+                with_trashed: true
+            });
         }
-        this.$store.dispatch("userManagement/fetchItems", {
-            with_trashed: true
-        });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
         moduleUserManagement.isRegistered = false;
-        moduleRoleManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
-        moduleSkillManagement.isRegistered = false;
-        this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("userManagement");
-        this.$store.unregisterModule("roleManagement");
         this.$store.unregisterModule("companyManagement");
     }
 };

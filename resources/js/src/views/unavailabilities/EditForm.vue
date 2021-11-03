@@ -14,26 +14,15 @@
             <form autocomplete="off">
                 <div class="vx-row">
                     <div class="vx-col w-full">
-                        <v-select
-                            v-validate="'required'"
-                            name="reason"
+                        <simple-select
+                            required
+                            class="my-2"
+                            header="Motif"
                             label="name"
-                            :multiple="false"
                             v-model="itemLocal.reason"
-                            :reduce="name => name.name"
-                            class="w-full mt-2 mb-2"
-                            autocomplete
                             :options="reasons"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .85rem">
-                                    Motif
-                                </div>
-                            </template>
-                            <template #option="reason">
-                                <span>{{ `${reason.name}` }}</span>
-                            </template>
-                        </v-select>
+                            :reduce="item => item.name"
+                        />
                         <vs-input
                             v-if="itemLocal.reason === 'Autre...'"
                             name="custom_reason"
@@ -95,7 +84,7 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
-import vSelect from "vue-select";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -103,7 +92,7 @@ Validator.localize("fr", errorMessage);
 export default {
     components: {
         flatPickr,
-        vSelect
+        SimpleSelect
     },
     props: {
         itemId: {
@@ -240,7 +229,10 @@ export default {
         }
     },
     mounted() {
-        if (this.$store.state.AppActiveUser.is_admin || this.$store.state.AppActiveUser.is_manager) {
+        if (
+            this.$store.state.AppActiveUser.is_admin ||
+            this.$store.state.AppActiveUser.is_manager
+        ) {
             this.reasons.unshift({ name: "Heures supplémentaires payées" });
         }
     }
