@@ -203,4 +203,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\MailRegistrationLinkNotification($mails, $companyName));
     }
+    /**
+     * Override the mail body for new bug notification mail.
+     */
+    public function sendEmailNewBugNotification($module,$type,$description,$user_firstname,$user_lastname,$company_name)
+    {
+        $this->notify(new \App\Notifications\MailNewBugNotification($module,$type,$description,$user_firstname,$user_lastname,$company_name));
+    }
 }
