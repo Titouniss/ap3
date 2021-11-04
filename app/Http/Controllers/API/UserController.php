@@ -679,7 +679,7 @@ class UserController extends BaseApiController
             'starts_at' => Carbon::now(),
             'ends_at' => Carbon::now()->addMonth(),
             'is_trial' => true,
-            'state' => 'active',
+            'state' => 'cancelled',
             'company_id' => $company->id
         ]);
         $subscription->packages()->sync(Package::pluck('id'));

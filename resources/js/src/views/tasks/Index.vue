@@ -408,7 +408,7 @@ export default {
         },
         deleteRecord() {
             this.$store
-                .dispatch("taskManagement/removeItems", [this.itemToDel.id])
+                .dispatch("taskManagement/forceRemoveItems", [this.itemToDel.id])
                 .then(() => {
                     this.refreshData();
                     this.showDeleteSuccess();

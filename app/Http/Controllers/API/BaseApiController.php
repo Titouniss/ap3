@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 abstract class BaseApiController extends Controller
 {
     use ReturnsJsonResponse;
@@ -409,6 +412,9 @@ abstract class BaseApiController extends Controller
      */
     public function destroy(Request $request, int $id = null)
     {
+        $controllerLog = new Logger('destroy');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info(['destroy', 'true']);
         try {
             $modelUsesSoftDelete = $this->modelUsesSoftDelete();
 
@@ -482,6 +488,10 @@ abstract class BaseApiController extends Controller
      */
     public function forceDestroy(Request $request, int $id = null)
     {
+        $controllerLog = new Logger('forceDestroy');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
+        $controllerLog->info(['forceDestroy', 'true']);
+
         try {
             if (!$this->modelUsesSoftDelete()) {
                 return $this->errorResponse("Erreur d'accès.", static::$response_codes['error_server']);

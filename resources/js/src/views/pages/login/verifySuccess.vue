@@ -20,7 +20,7 @@
                     alt="graphic-500"
                     class="mx-auto mb-4"
                 />
-                <h4 class="mb-4 text-center">Adresse e-mail vérifiée avec succès.</h4>
+                <h4 class="mb-4 text-center">Adresse e-mail vérifiée avec succès. Votre compte sera activé sous 24h.</h4>
                 <div class="flex justify-center my-3 ml-auto mr-auto">
                     <vs-button
                         color="primary"
