@@ -171,6 +171,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('update/{id}', 'API\TaskController@update');
         Route::put('update-partial/{id}', 'API\TaskController@updatePartial');
         Route::put('destroy/{id?}', 'API\TaskController@destroy');
+        Route::put('force-destroy/{id?}', 'API\TaskController@forceDestroy');
+
     });
 
     /*****************************   REPETITIVE - TASK   ********************************/
