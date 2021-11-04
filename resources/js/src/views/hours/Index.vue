@@ -7,16 +7,13 @@
             </div>
             <div class="flex flex-wrap justify-center items-end">
                 <div style="min-width: 15em">
-                    <infinite-scroll-select
+                    <infinite-select
+                        header="Projet"
                         model="project"
                         label="name"
                         v-model="filters.project_id"
-                        :focus="clearRefreshDataTimeout"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Projet</div>
-                        </template>
-                    </infinite-scroll-select>
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
                 <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
                     <div
@@ -44,24 +41,18 @@
                     </vs-dropdown-menu>
                 </vs-dropdown>
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-select
                         v-if="authorizedTo('show', 'users')"
+                        header="Utilisateur"
                         label="lastname"
-                        :options="users"
+                        model="user"
                         v-model="filters.user_id"
-                        :reduce="user => user.id"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: 0.8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
             </div>
             <div class="flex flex-wrap items-center">
@@ -179,7 +170,7 @@
             >
             </vs-row>
         </div>
-        <div class="vx-card p-6 mt-1">
+        <div class="vx-card p-6 mt-1 mb-base">
             <div
                 class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
             >
@@ -193,7 +184,7 @@
                     <vs-col
                         vs-w="4"
                         vs-type="flex"
-                        vs-justify="center"
+                        vs-justify="start"
                         vs-align="center"
                     >
                         <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
@@ -219,7 +210,7 @@
                     <vs-col
                         vs-w="4"
                         vs-type="flex"
-                        vs-justify="center"
+                        vs-justify="end"
                         vs-align="center"
                     >
                         <vs-button type="border" @click="onExport">
@@ -328,7 +319,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 import EditForm from "./EditForm.vue";
 
@@ -350,7 +340,7 @@ import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
 
 // Components
-import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
 // Mixins
@@ -369,7 +359,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         flatPickr,
         EditForm,
         // Cell Renderer
@@ -379,7 +368,7 @@ export default {
         UnavailabilitiesIndex,
 
         // Components
-        InfiniteScrollSelect,
+        InfiniteSelect,
         MultipleActions
     },
     data() {
@@ -505,8 +494,8 @@ export default {
                 "Rendez-vous privé",
                 "Congés payés",
                 "Période de cours",
-                "Arrêt de travail",
-                "Autre..."
+                "Arrêt de travail"/*,
+                "Autre..."*/
             ],
             period_type_names: ["date", "day", "week", "month", "year", "full"],
             period_types: {

@@ -207,12 +207,8 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
-
 export default {
-    components: {
-        vSelect
-    },
+    components: {},
     props: {
         data: {
             type: Object,

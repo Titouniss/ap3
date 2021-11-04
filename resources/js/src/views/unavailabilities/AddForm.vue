@@ -1,10 +1,6 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button
-            type="border"
-            class="items-center p-3 w-full"
-            @click="activePrompt = true"
-        >
+        <vs-button class="items-center p-3 w-full" @click="activePrompt = true">
             Ajouter une indisponibilité
         </vs-button>
         <vs-prompt
@@ -22,32 +18,15 @@
                 <form autocomplete="off">
                     <div class="vx-row">
                         <div class="vx-col w-full">
-                            <v-select
-                                v-validate="'required'"
-                                name="reason"
+                            <simple-select
+                                required
+                                class="my-2"
+                                header="Motif"
                                 label="name"
-                                :multiple="false"
                                 v-model="itemLocal.reason"
-                                :reduce="name => name.name"
-                                class="w-full mt-2 mb-2"
-                                autocomplete
                                 :options="reasons"
-                            >
-                                <template #header>
-                                    <div style="opacity: .8 font-size: .85rem">
-                                        Motif
-                                    </div>
-                                </template>
-                                <template #option="reason">
-                                    <span>{{ `${reason.name}` }}</span>
-                                </template>
-                            </v-select>
-                            <span
-                                v-if="itemLocal.reason === 'Autre...'"
-                                class="text-danger text-sm"
-                                v-show="errors.has('reason')"
-                                >{{ errors.first("reason") }}</span
-                            >
+                                :reduce="item => item.name"
+                            />
                             <vs-input
                                 v-if="itemLocal.reason === 'Autre...'"
                                 name="custom_reason"
@@ -63,7 +42,7 @@
                             />
                             <flat-pickr
                                 v-if="
-                                    (itemLocal.reason == 'Autre...' &&
+                                    (itemLocal.reason === 'Autre...' &&
                                         custom_reason !== '') ||
                                         (itemLocal.reason !== '' &&
                                             itemLocal.reason !== 'Autre...')
@@ -77,11 +56,12 @@
                             />
                             <flat-pickr
                                 v-if="
-                                    (itemLocal.reason == 'Autre...' &&
+                                    (itemLocal.reason === 'Autre...' &&
                                         custom_reason !== '') ||
                                         (itemLocal.reason !== '' &&
                                             itemLocal.reason !== 'Autre...' &&
-                                            itemLocal.starts_at && itemLocal.reason != 'Jours fériés')
+                                            itemLocal.starts_at &&
+                                            itemLocal.reason !== 'Jours fériés')
                                 "
                                 name="ends_at"
                                 class="w-full mb-2 mt-5"
@@ -102,7 +82,7 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import flatPickr from "vue-flatpickr-component";
-import vSelect from "vue-select";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
@@ -113,13 +93,17 @@ Validator.localize("fr", errorMessage);
 export default {
     components: {
         flatPickr,
-        vSelect
+        SimpleSelect
     },
     props: {
         id_user: {
             required: true
         },
-        fetchOvertimes: {}
+        fetchOvertimes: {},
+        workHours: {
+            type: Array,
+            default: () => []
+        }
     },
     data() {
         return {
@@ -139,7 +123,7 @@ export default {
                 { name: "Congés payés" },
                 { name: "Période de cours" },
                 { name: "Arrêt de travail" },
-                { name: "Autre..." }
+                /*{ name: "Autre..." }*/
             ],
 
             configStartsAtDateTimePicker: {
@@ -147,19 +131,21 @@ export default {
                 enableTime: true,
                 locale: FrenchLocale,
                 minDate: null,
-                maxDate: null
+                maxDate: null,
+                defaultHour: 9
             },
             configEndsAtDateTimePicker: {
                 disableMobile: "true",
                 enableTime: true,
                 locale: FrenchLocale,
-                minDate: null
+                minDate: null,
+                defaultHour: 12
             }
         };
     },
     computed: {
         validateForm() {
-            if (this.itemLocal.reason === "Autre...") {
+            /*if (this.itemLocal.reason === "Autre...") {
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
@@ -167,15 +153,18 @@ export default {
                     this.itemLocal.reason !== "" &&
                     this.custom_reason !== ""
                 );
-            }else if (this.itemLocal.reason === "Jours fériés"){
-                this.$set(this.configStartsAtDateTimePicker, "enableTime", false);
+            } else*/ if (this.itemLocal.reason === "Jours fériés") {
+                this.$set(
+                    this.configStartsAtDateTimePicker,
+                    "enableTime",
+                    false
+                );
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
                     this.itemLocal.reason !== ""
                 );
-            } 
-            else {
+            } else {
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
@@ -199,42 +188,87 @@ export default {
                 enableTime: true,
                 locale: FrenchLocale,
                 minDate: null,
-                maxDate: null
+                maxDate: null,
+                defaultHour: 9
             });
             Object.assign(this.configEndsAtDateTimePicker, {
                 disableMobile: "true",
                 enableTime: true,
                 locale: FrenchLocale,
-                minDate: null
+                minDate: null,
+                defaultHour: 12
             });
         },
         onStartsAtChange(selectedDates, dateStr, instance) {
             this.$set(this.configEndsAtDateTimePicker, "minDate", dateStr);
+
+            if (
+                (dateStr && !this.itemLocal.starts_at) ||
+                moment(dateStr).format("dd/MM/yyyy") !==
+                    moment(this.itemLocal.starts_at).format("dd/MM/yyyy")
+            ) {
+                if (this.workHours && this.workHours.length > 0) {
+                    const day = this.workHours.find(
+                        wh =>
+                            wh.is_active &&
+                            wh.day === moment(dateStr).format("dddd")
+                    );
+                    if (day && day.morning_starts_at) {
+                        const [hour, minute] = day.morning_starts_at.split(":");
+                        this.itemLocal.starts_at = moment(dateStr)
+                            .hours(parseInt(hour))
+                            .minutes(parseInt(minute))
+                            .toDate();
+                    }
+                }
+            }
         },
         onEndsAtChange(selectedDates, dateStr, instance) {
             this.$set(this.configStartsAtDateTimePicker, "maxDate", dateStr);
+
+            if (
+                dateStr &&
+                this.itemLocal.starts_at &&
+                moment(dateStr).format("dd/MM/yyyy") !==
+                    moment(this.itemLocal.ends_at).format("dd/MM/yyyy")
+            ) {
+                if (
+                    moment(dateStr).format("dd/MM/yyyy") ===
+                    moment(this.itemLocal.starts_at).format("dd/MM/yyyy")
+                ) {
+                    const startsAt = moment(this.itemLocal.starts_at);
+                    this.itemLocal.ends_at = moment(dateStr)
+                        .hours(startsAt.hours() + 1)
+                        .minutes(startsAt.minutes())
+                        .toDate();
+                } else {
+                    this.itemLocal.ends_at = moment(dateStr)
+                        .hours(12)
+                        .minutes(0)
+                        .toDate();
+                }
+            }
         },
         addUnavailability() {
             this.$validator.validateAll().then(result => {
                 if (result) {
                     const item = JSON.parse(JSON.stringify(this.itemLocal));
-                    if (this.itemLocal.reason === "Autre...") {
+                    /*if (this.itemLocal.reason === "Autre...") {
                         item.reason = this.custom_reason;
-                    }
-                    if(this.itemLocal.reason === "Jours fériés"){
-                        item.ends_at=moment(item.starts_at).format(
-                        "YYYY-MM-DD HH:mm"
+                    }*/
+                    if (this.itemLocal.reason === "Jours fériés") {
+                        item.ends_at = moment(item.starts_at).format(
+                            "YYYY-MM-DD HH:mm"
                         );
-                    }
-                    else{
+                    } else {
                         item.ends_at = moment(item.ends_at).format(
-                        "YYYY-MM-DD HH:mm"
+                            "YYYY-MM-DD HH:mm"
                         );
                     }
                     item.starts_at = moment(item.starts_at).format(
                         "YYYY-MM-DD HH:mm"
                     );
-                    
+
                     item.user_id = this.id_user;
                     this.$store
                         .dispatch("unavailabilityManagement/addItem", item)
@@ -268,7 +302,10 @@ export default {
         }
     },
     mounted() {
-        if (this.$store.state.AppActiveUser.is_admin || this.$store.state.AppActiveUser.is_manager) {
+        if (
+            this.$store.state.AppActiveUser.is_admin ||
+            this.$store.state.AppActiveUser.is_manager
+        ) {
             this.reasons.unshift({ name: "Heures supplémentaires payées" });
         }
     }

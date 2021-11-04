@@ -116,277 +116,276 @@
 </template>
 
 <script>
-import { AgGridVue } from 'ag-grid-vue'
-import '@sass/vuexy/extraComponents/agGridStyleOverride.scss'
-import vSelect from 'vue-select'
+import { AgGridVue } from "ag-grid-vue";
+import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 
-import moment from 'moment'
+import moment from "moment";
 
 // Store Module
-import moduleCompanyManagement from '@/store/company-management/moduleCompanyManagement.js'
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
 // Cell Renderer
-import CellRendererLink from './cell-renderer/CellRendererLink.vue'
-import CellRendererBoolean from '@/components/cell-renderer/CellRendererBoolean.vue'
-import CellRendererActions from '@/components/cell-renderer/CellRendererActions.vue'
+import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
+import CellRendererBoolean from "@/components/cell-renderer/CellRendererBoolean.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 // Components
-import MultipleActions from '@/components/inputs/buttons/MultipleActions.vue'
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
 // Mixins
-import { multipleActionsMixin } from '@/mixins/lists'
+import { multipleActionsMixin } from "@/mixins/lists";
 
-const model = 'company'
-const modelPlurial = 'companies'
-const modelTitle = 'Société'
+const model = "company";
+const modelPlurial = "companies";
+const modelTitle = "Société";
 
 export default {
-  mixins: [multipleActionsMixin],
-  components: {
-    AgGridVue,
-    vSelect,
+    mixins: [multipleActionsMixin],
+    components: {
+        AgGridVue,
 
-    // Cell Renderer
-    CellRendererLink,
-    CellRendererBoolean,
-    CellRendererActions,
+        // Cell Renderer
+        CellRendererLink,
+        CellRendererBoolean,
+        CellRendererActions,
 
-    // Components
-    MultipleActions
-  },
-  data () {
-    return {
-      searchQuery: '',
+        // Components
+        MultipleActions
+    },
+    data() {
+        return {
+            searchQuery: "",
 
-      // AgGrid
-      gridApi: null,
-      gridOptions: {
-        localeText: { noRowsToShow: 'Aucune société à afficher' },
-        rowClassRules: {
-          'subscription-ending' (params) {
-            return (
-              !params.data.deleted_at &&
+            // AgGrid
+            gridApi: null,
+            gridOptions: {
+                localeText: { noRowsToShow: "Aucune société à afficher" },
+                rowClassRules: {
+                    "subscription-ending"(params) {
+                        return (
+                            !params.data.deleted_at &&
                             params.data.has_active_subscription &&
                             moment(
-                              params.data.active_subscription.ends_at
-                            ).isBefore(moment().add(1, 'month'))
-            )
-          }
+                                params.data.active_subscription.ends_at
+                            ).isBefore(moment().add(1, "month"))
+                        );
+                    }
+                }
+            },
+            defaultColDef: {
+                resizable: true,
+                suppressMenu: true
+            },
+            columnDefs: [
+                {
+                    filter: false,
+                    width: 40,
+                    checkboxSelection: true,
+                    headerCheckboxSelectionFilteredOnly: false,
+                    headerCheckboxSelection: true
+                },
+                {
+                    headerName: "Période d'essai",
+                    field: "is_trial",
+                    filter: true,
+                    sortable: true,
+                    cellRendererFramework: "CellRendererBoolean",
+                    valueGetter: params => {
+                        let bool = null;
+                        if (params.data.has_active_subscription) {
+                            bool = params.data.active_subscription.is_trial;
+                        }
+                        return bool;
+                    }
+                },
+                {
+                    headerName: "Abonnement",
+                    field: "active_subscription",
+                    filter: true,
+                    sortable: true,
+                    valueGetter: params => {
+                        let text = "Aucun";
+                        if (params.data.has_active_subscription) {
+                            text = params.data.active_subscription.packages
+                                .map(p => p.display_name)
+                                .join(", ");
+                        }
+                        return text;
+                    }
+                },
+                {
+                    headerName: "Début",
+                    field: "starts_at",
+                    filter: true,
+                    sortable: true,
+                    valueGetter: params => {
+                        let text = "";
+
+                        if (params.data.has_active_subscription) {
+                            text = moment(
+                                params.data.active_subscription.starts_at
+                            ).format("DD/MM/YYYY");
+                        }
+
+                        return text;
+                    }
+                },
+                {
+                    headerName: "Fin",
+                    field: "ends_at",
+                    filter: true,
+                    sortable: true,
+                    valueGetter: params => {
+                        let text = "";
+
+                        if (params.data.has_active_subscription) {
+                            text = moment(
+                                params.data.active_subscription.ends_at
+                            ).format("DD/MM/YYYY");
+                        }
+
+                        return text;
+                    }
+                },
+                {
+                    headerName: "Nom",
+                    field: "name",
+                    filter: true,
+                    sortable: true
+                },
+                {
+                    headerName: "Nombre d'utilisateurs",
+                    field: "user_count",
+                    filter: true,
+                    sortable: true
+                },
+                {
+                    headerName: "Actions",
+                    field: "transactions",
+                    type: "numericColumn",
+                    cellRendererFramework: "CellRendererActions",
+                    cellRendererParams: {
+                        model: "company",
+                        modelPlurial: "companies",
+                        withPrompt: false,
+                        name: data => `la société ${data.name}`,
+                        footNotes: {
+                            restore:
+                                "Si vous restaurez la société ses utilisateurs, projets et gammes seront également restauré.",
+                            archive:
+                                "Si vous archivez la société ses utilisateurs, projets et gammes seront également archivé.",
+                            delete:
+                                "Si vous supprimez la société ses utilisateurs, projets et gammes seront également supprimé."
+                        }
+                    }
+                }
+            ],
+
+            // Cell Renderer Components
+            components: {
+                CellRendererLink,
+                CellRendererActions
+            }
+        };
+    },
+    watch: {},
+    computed: {
+        companiesData() {
+            return this.$store.state.companyManagement.companies;
+        },
+        paginationPageSize() {
+            if (this.gridApi) return this.gridApi.paginationGetPageSize();
+            else return 10;
+        },
+        totalPages() {
+            if (this.gridApi) return this.gridApi.paginationGetTotalPages();
+            else return 0;
+        },
+        itemIdToEdit() {
+            return this.$store.state.companyManagement.company.id || 0;
+        },
+        currentPage: {
+            get() {
+                if (this.gridApi)
+                    return this.gridApi.paginationGetCurrentPage() + 1;
+                else return 1;
+            },
+            set(val) {
+                this.gridApi.paginationGoToPage(val - 1);
+            }
         }
-      },
-      defaultColDef: {
-        resizable: true,
-        suppressMenu: true
-      },
-      columnDefs: [
-        {
-          filter: false,
-          width: 40,
-          checkboxSelection: true,
-          headerCheckboxSelectionFilteredOnly: false,
-          headerCheckboxSelection: true
+    },
+    methods: {
+        updateSearchQuery(val) {
+            this.gridApi.setQuickFilter(val);
         },
-        {
-          headerName: 'Période d\'essai',
-          field: 'is_trial',
-          filter: true,
-          sortable: true,
-          cellRendererFramework: 'CellRendererBoolean',
-          valueGetter: params => {
-            let bool = null
-            if (params.data.has_active_subscription) {
-              bool = params.data.active_subscription.is_trial
-            }
-            return bool
-          }
+        authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
         },
-        {
-          headerName: 'Abonnement',
-          field: 'active_subscription',
-          filter: true,
-          sortable: true,
-          valueGetter: params => {
-            let text = 'Aucun'
-            if (params.data.has_active_subscription) {
-              text = params.data.active_subscription.packages
-                .map(p => p.display_name)
-                .join(', ')
-            }
-            return text
-          }
+        addRecord() {
+            this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
         },
-        {
-          headerName: 'Début',
-          field: 'starts_at',
-          filter: true,
-          sortable: true,
-          valueGetter: params => {
-            let text = ''
+        onResize(event) {
+            if (this.gridApi) {
+                // refresh the grid
+                this.gridApi.refreshView();
 
-            if (params.data.has_active_subscription) {
-              text = moment(
-                params.data.active_subscription.starts_at
-              ).format('DD/MM/YYYY')
+                // resize columns in the grid to fit the available space
+                this.gridApi.sizeColumnsToFit();
             }
-
-            return text
-          }
-        },
-        {
-          headerName: 'Fin',
-          field: 'ends_at',
-          filter: true,
-          sortable: true,
-          valueGetter: params => {
-            let text = ''
-
-            if (params.data.has_active_subscription) {
-              text = moment(
-                params.data.active_subscription.ends_at
-              ).format('DD/MM/YYYY')
-            }
-
-            return text
-          }
-        },
-        {
-          headerName: 'Nom',
-          field: 'name',
-          filter: true,
-          sortable: true
-        },
-        {
-          headerName: 'Nombre d\'utilisateurs',
-          field: 'user_count',
-          filter: true,
-          sortable: true
-        },
-        {
-          headerName: 'Actions',
-          field: 'transactions',
-          type: 'numericColumn',
-          cellRendererFramework: 'CellRendererActions',
-          cellRendererParams: {
-            model: 'company',
-            modelPlurial: 'companies',
-            withPrompt: false,
-            name: data => `la société ${data.name}`,
-            footNotes: {
-              restore:
-                                'Si vous restaurez la société ses utilisateurs, projets et gammes seront également restauré.',
-              archive:
-                                'Si vous archivez la société ses utilisateurs, projets et gammes seront également archivé.',
-              delete:
-                                'Si vous supprimez la société ses utilisateurs, projets et gammes seront également supprimé.'
-            }
-          }
         }
-      ],
+    },
+    mounted() {
+        this.gridApi = this.gridOptions.api;
 
-      // Cell Renderer Components
-      components: {
-        CellRendererLink,
-        CellRendererActions
-      }
-    }
-  },
-  watch: {},
-  computed: {
-    companiesData () {
-      return this.$store.state.companyManagement.companies
-    },
-    paginationPageSize () {
-      if (this.gridApi) return this.gridApi.paginationGetPageSize()
-      else return 10
-    },
-    totalPages () {
-      if (this.gridApi) return this.gridApi.paginationGetTotalPages()
-      else return 0
-    },
-    itemIdToEdit () {
-      return this.$store.state.companyManagement.company.id || 0
-    },
-    currentPage: {
-      get () {
-        if (this.gridApi) return this.gridApi.paginationGetCurrentPage() + 1
-        else return 1
-      },
-      set (val) {
-        this.gridApi.paginationGoToPage(val - 1)
-      }
-    }
-  },
-  methods: {
-    updateSearchQuery (val) {
-      this.gridApi.setQuickFilter(val)
-    },
-    authorizedTo (action, model = modelPlurial) {
-      return this.$store.getters.userHasPermissionTo(
-        `${action} ${model}`
-      )
-    },
-    addRecord () {
-      this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {})
-    },
-    onResize (event) {
-      if (this.gridApi) {
-        // refresh the grid
-        this.gridApi.refreshView()
+        window.addEventListener("resize", this.onResize);
+        if (this.gridApi) {
+            // refresh the grid
+            this.gridApi.refreshView();
 
-        // resize columns in the grid to fit the available space
-        this.gridApi.sizeColumnsToFit()
-      }
-    }
-  },
-  mounted () {
-    this.gridApi = this.gridOptions.api
+            // resize columns in the grid to fit the available space
+            this.gridApi.sizeColumnsToFit();
 
-    window.addEventListener('resize', this.onResize)
-    if (this.gridApi) {
-      // refresh the grid
-      this.gridApi.refreshView()
+            this.gridApi.showLoadingOverlay();
+        }
 
-      // resize columns in the grid to fit the available space
-      this.gridApi.sizeColumnsToFit()
-
-      this.gridApi.showLoadingOverlay()
-    }
-
-    /* =================================================================
+        /* =================================================================
       NOTE:
       Header is not aligned properly in RTL version of agGrid table.
       However, we given fix to this issue. If you want more robust solution please contact them at gitHub
     ================================================================= */
-    if (this.$vs.rtl) {
-      const header = this.$refs.agGridTable.$el.querySelector(
-        '.ag-header-container'
-      )
-      header.style.left = `-${String(
-        Number(header.style.transform.slice(11, -3)) + 9
-      )}px`
-    }
-  },
-  created () {
-    if (!moduleCompanyManagement.isRegistered) {
-      this.$store.registerModule(
-        'companyManagement',
-        moduleCompanyManagement
-      )
-      moduleCompanyManagement.isRegistered = true
-    }
-    this.$store
-      .dispatch('companyManagement/fetchItems', { with_trashed: true })
-      .catch(err => {
-        console.error(err)
-      })
-  },
-  beforeDestroy () {
-    window.removeEventListener('resize', this.onResize())
+        if (this.$vs.rtl) {
+            const header = this.$refs.agGridTable.$el.querySelector(
+                ".ag-header-container"
+            );
+            header.style.left = `-${String(
+                Number(header.style.transform.slice(11, -3)) + 9
+            )}px`;
+        }
+    },
+    created() {
+        if (!moduleCompanyManagement.isRegistered) {
+            this.$store.registerModule(
+                "companyManagement",
+                moduleCompanyManagement
+            );
+            moduleCompanyManagement.isRegistered = true;
+        }
+        this.$store
+            .dispatch("companyManagement/fetchItems", { with_trashed: true })
+            .catch(err => {
+                console.error(err);
+            });
+    },
+    beforeDestroy() {
+        window.removeEventListener("resize", this.onResize());
 
-    moduleCompanyManagement.isRegistered = false
-    this.$store.unregisterModule('companyManagement')
-  }
-}
+        moduleCompanyManagement.isRegistered = false;
+        this.$store.unregisterModule("companyManagement");
+    }
+};
 </script>
 
 <style lang="scss">

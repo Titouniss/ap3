@@ -97,7 +97,7 @@ export default {
         return apiRequest(`${slug}/password/reset`, "post", null, {
             email,
             password,
-            c_password,
+            password_confirmation: c_password,
             token
         });
     },

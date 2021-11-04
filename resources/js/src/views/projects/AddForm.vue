@@ -1,8 +1,8 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button @click="activePrompt = true" class="w-full"
-            >Ajouter un projet</vs-button
-        >
+        <vs-button @click="activePrompt = true" class="w-full">
+            Ajouter un projet
+        </vs-button>
         <vs-prompt
             title="Ajouter un projet"
             accept-text="Ajouter"
@@ -32,21 +32,13 @@
                                         >
                                     </div>
                                     <vs-divider />
-                                    <v-select
+                                    <infinite-select
+                                        header="Société"
+                                        model="company"
                                         label="name"
-                                        @input="cleanCustomerInput"
-                                        v-validate="'required'"
                                         v-model="itemLocal.company_id"
-                                        :reduce="company => company.id"
-                                        :options="companiesData"
-                                        class="w-full"
-                                    >
-                                        <template #header>
-                                            <div class="vs-select--label">
-                                                Société
-                                            </div>
-                                        </template>
-                                    </v-select>
+                                        @input="cleanCustomerInput"
+                                    />
                                     <vs-divider />
                                 </div>
                             </div>
@@ -102,20 +94,13 @@
                                 class="my-4"
                                 v-if="itemLocal.company_id != null"
                             >
-                                <v-select
+                                <infinite-select
+                                    header="Client"
+                                    model="customer"
                                     label="name"
                                     v-model="itemLocal.customer_id"
-                                    :reduce="customer => customer.id"
-                                    :options="customersData"
-                                    :multiple="false"
-                                    class="w-full"
-                                >
-                                    <template #header>
-                                        <div class="vs-select--label">
-                                            Client
-                                        </div>
-                                    </template>
-                                </v-select>
+                                    :filters="customerFilters"
+                                />
                             </div>
                             <div class="my-4">
                                 <file-input
@@ -137,7 +122,7 @@ import { fr } from "vuejs-datepicker/src/locale";
 import moment from "moment";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 import VSwatches from "vue-swatches";
 import "vue-swatches/dist/vue-swatches.css";
@@ -151,7 +136,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect,
+        InfiniteSelect,
         Datepicker,
         VSwatches,
         FileInput
@@ -194,16 +179,6 @@ export default {
                 this.itemLocal.company_id != null
             );
         },
-        companiesData() {
-            return this.$store.getters["companyManagement/getItems"];
-        },
-        customersData() {
-            let customers = this.filterItemsAdmin(
-                this.$store.getters["customerManagement/getItems"]
-            );
-
-            return customers;
-        },
         disabled() {
             const user = this.$store.state.AppActiveUser;
             if (this.isAdmin) {
@@ -212,6 +187,11 @@ export default {
                 this.itemLocal.company_id = user.company_id;
                 return true;
             }
+        },
+        customerFilters() {
+            return {
+                company_id: this.itemLocal.company_id
+            };
         }
     },
     methods: {
@@ -266,20 +246,6 @@ export default {
         cleanCustomerInput() {
             this.itemLocal.customer_id = null;
             this.itemLocal.customer = null;
-        },
-        filterItemsAdmin(items) {
-            let filteredItems = [];
-            const user = this.$store.state.AppActiveUser;
-            if (this.isAdmin) {
-                filteredItems = items.filter(
-                    item => item.company_id === this.itemLocal.company_id
-                );
-            } else {
-                filteredItems = items.filter(
-                    item => item.company_id === user.company_id
-                );
-            }
-            return filteredItems;
         },
         deleteFiles() {
             const ids = this.uploadedFiles.map(item => item.id);

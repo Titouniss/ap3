@@ -7,7 +7,7 @@ use App\Exceptions\ApiException;
 use App\Models\Bug;
 use App\Models\Role;
 use App\Models\Company;
-use App\Models\User;
+use App\User;
 
 class BugController extends BaseApiController
 {
@@ -61,6 +61,16 @@ class BugController extends BaseApiController
         }
 
         $item->save();
+
+        //Send email
+        $adminNumidev = new User();
+        $adminNumidev->email = 'contact@plannigo.fr';
+        $user=User::where('id', $arrayRequest['created_by'])->get();
+        $user_firstname=$user[0]['firstname'];
+        $user_lastname=$user[0]['lastname'];
+        $company=Company::where('id', $arrayRequest['company_id'])->get();
+        $company_name=$company[0]['name'];
+        $adminNumidev->sendEmailNewBugNotification($arrayRequest['module'], $arrayRequest['type'], $arrayRequest['description'],$user_firstname,$user_lastname,$company_name);
 
         return $item;
     }

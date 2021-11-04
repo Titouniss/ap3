@@ -10,13 +10,37 @@
 <template>
     <div id="page-users-list">
         <div class="vx-card w-full p-6">
-            <vs-button
-                class="mt-1 mb-6"
-                v-if="authorizedTo('publish')"
-                @click="addRecord"
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+                class="mb-6"
             >
-                Ajouter un client
-            </vs-button>
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <vs-button
+                        v-if="authorizedTo('publish')"
+                        @click="addRecord"
+                    >
+                        Ajouter un client
+                    </vs-button>
+                </vs-col>
+
+                <div v-if="isAdmin" class="mr-10" style="min-width: 30em">
+                    <infinite-select
+                        header="Société"
+                        model="company"
+                        label="name"
+                        v-model="filters.company_id"
+                    />
+                </div>
+            </vs-row>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
                     <vs-row type="flex">
@@ -119,7 +143,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -134,6 +157,7 @@ import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
 // Components
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
@@ -148,15 +172,17 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
+
         // Crud
         AddForm,
+
         // Cell Renderer
         CellRendererActions,
         CellRendererBoolean,
         CellRendererRelations,
 
         // Components
+        InfiniteSelect,
         RefreshModule,
         MultipleActions
     },
@@ -236,8 +262,28 @@ export default {
             components: {
                 CellRendererActions,
                 CellRendererBoolean
+            },
+
+            // Filters
+            filters: {
+                company_id: this.isAdmin
+                    ? null
+                    : this.$store.state.AppActiveUser.company_id
             }
         };
+    },
+    watch: {
+        filters: {
+            handler(val, prev) {
+                if (val.company_id) {
+                    this.$store.dispatch("customerManagement/fetchItems", {
+                        with_trashed: true,
+                        company_id: val.company_id
+                    });
+                }
+            },
+            deep: true
+        }
     },
     computed: {
         isAdmin() {
@@ -367,15 +413,22 @@ export default {
             moduleCompanyManagement.isRegistered = true;
         }
 
-        this.$store
-            .dispatch("customerManagement/fetchItems", { with_trashed: true })
-            .catch(err => {
-                console.error(err);
-            });
-
         if (this.authorizedTo("read", "companies")) {
-            this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-                console.error(err);
+            this.$store
+                .dispatch("companyManagement/fetchItems", {
+                    order_by: "name",
+                    page: 1,
+                    per_page: 1
+                })
+                .then(({ success, payload }) => {
+                    if (this.isAdmin && success && payload.length > 0) {
+                        this.filters.company_id = payload[0].id;
+                    }
+                });
+        }
+        if (!this.isAdmin) {
+            this.$store.dispatch("customerManagement/fetchItems", {
+                with_trashed: true
             });
         }
     },
