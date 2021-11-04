@@ -59,7 +59,7 @@
                 </vs-switch>
             </vs-col>
             <vs-col vs-w="6" class="pb-3">
-                <small class="ml-2"> Annulé </small>
+                <small class="ml-2"> Inactif </small>
                 <vs-switch
                     color="danger"
                     vs-icon-off="close"
