@@ -726,6 +726,8 @@ export default {
             return this.$store.getters["taskManagement/getComments"];
         },
         usersWithLoad() {
+            if (this.isAdmin || !this.authorizedTo("show", "users")) return [];
+
             const users = this.$store.getters["userManagement/getItems"];
 
             if (!users || users.length === 0) return [];

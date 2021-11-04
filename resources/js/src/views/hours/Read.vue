@@ -236,6 +236,28 @@ export default {
                     user_id: this.filters.user_id
                 });
             });
+            /*//Indispo "Autre"
+            let typeIndispo=["Heures supplémentaires payées",
+                            "Utilisation heures supplémentaires",
+                            "Jours fériés",
+                            "Rendez-vous privé",
+                            "Congés payés",
+                            "Période de cours",
+                            "Arrêt de travail"];
+            paidHolidays = this.$store.getters[
+                "unavailabilityManagement/getItems"
+            ].filter(
+                item => !typeIndispo.includes(item.reason)
+            );
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    color: "#AEAEAE ",
+                    title: pH.reason,
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user_id
+                });
+            });*/
             //   console.log("calendarEvents -> finalHours", finalHours);
             return finalHours;
         },

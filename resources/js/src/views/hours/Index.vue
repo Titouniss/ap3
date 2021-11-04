@@ -494,8 +494,8 @@ export default {
                 "Rendez-vous privé",
                 "Congés payés",
                 "Période de cours",
-                "Arrêt de travail",
-                "Autre..."
+                "Arrêt de travail"/*,
+                "Autre..."*/
             ],
             period_type_names: ["date", "day", "week", "month", "year", "full"],
             period_types: {
