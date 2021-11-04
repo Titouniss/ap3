@@ -65,32 +65,16 @@
                                         </span>
                                     </router-link>
                                 </div>
-                                <v-select
+                                <infinite-select
                                     v-else
-                                    v-validate="'required'"
-                                    name="skills"
+                                    required
+                                    header="Compétences"
                                     label="name"
-                                    class="w-full"
-                                    v-model="itemLocal.skills"
-                                    :reduce="skill => skill.id"
-                                    :options="skillsData"
+                                    model="skill"
                                     multiple
-                                    autocomplete
-                                >
-                                    <template #header>
-                                        <div
-                                            style="opacity: .8 font-size: .85rem"
-                                        >
-                                            Compétences
-                                        </div>
-                                    </template>
-                                </v-select>
-                                <span
-                                    class="text-danger con-text-validation"
-                                    v-show="errors.has('skills')"
-                                >
-                                    {{ errors.first("skills") }}
-                                </span>
+                                    v-model="itemLocal.skills"
+                                    :filters="skillsFilter"
+                                />
                             </div>
                             <div class="vx-row mt-4" v-if="!disabled">
                                 <div class="vx-col w-full">
@@ -107,71 +91,16 @@
                                         </span>
                                     </div>
                                     <vs-divider />
-                                    <div>
-                                        <v-select
-                                            v-validate="'required'"
-                                            name="company"
+                                    <div class="w-full mt-5">
+                                        <infinite-select
+                                            required
+                                            header="Société"
                                             label="name"
-                                            class="w-full mt-5"
+                                            model="company"
                                             v-model="itemLocal.company_id"
-                                            :reduce="company => company.id"
-                                            :options="companiesData"
-                                            autocomplete
                                             @input="itemLocal.skills = []"
-                                        >
-                                            <template #header>
-                                                <div
-                                                    style="opacity: .8 font-size: .85rem"
-                                                >
-                                                    Société
-                                                </div>
-                                            </template>
-                                        </v-select>
-                                        <span
-                                            class="text-danger con-text-validation"
-                                            v-show="errors.has('company_id')"
-                                        >
-                                            {{ errors.first("company_id") }}
-                                        </span>
+                                        />
                                     </div>
-                                    <!-- <div v-if="itemLocal.company_id" class="mt-5">
-                    <span v-if="companySkills.length == 0" class="msgTxt"
-                      >Aucune compétences trouvées.</span
-                    >
-                    <router-link
-                      v-if="companySkills.length > 0"
-                      class="linkTxt"
-                      :to="{ path: '/skills' }"
-                    >
-                      Ajouter une compétence
-                    </router-link>
-                    <v-select
-                      v-validate="'required'"
-                      v-if="companySkills.length !== 0"
-                      name="skill"
-                      label="name"
-                      :multiple="true"
-                      v-model="itemLocal.skills"
-                      :reduce="(name) => name.id"
-                      class="w-full mt-5"
-                      autocomplete
-                      :options="companySkills"
-                    >
-                      <template #header>
-                        <div style="opacity: .8 font-size: .85rem">
-                          Compétences
-                        </div>
-                      </template>
-                      <template #option="companyskill">
-                        <span>{{ `${companyskill.name}` }}</span>
-                      </template>
-                    </v-select>
-                    <span
-                      class="text-danger text-sm"
-                      v-show="errors.has('company_id')"
-                      >{{ errors.first("company_id") }}</span
-                    >
-                  </div> -->
                                 </div>
                             </div>
 
@@ -190,7 +119,7 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 import FileInput from "@/components/inputs/FileInput.vue";
@@ -200,7 +129,7 @@ Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect,
+        InfiniteSelect,
         FileInput
     },
     data() {
@@ -223,18 +152,14 @@ export default {
         };
     },
     computed: {
+        skillsFilter() {
+            return { company_id: this.itemLocal.company_id };
+        },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
-        companiesData() {
-            return this.$store.getters["companyManagement/getItems"];
-        },
         skillsData() {
-            return this.itemLocal.company_id
-                ? this.$store.getters["skillManagement/getItemsByCompany"](
-                      this.itemLocal.company_id
-                  )
-                : [];
+            return this.$store.getters["skillManagement/getItems"];
         },
         disabled() {
             const user = this.$store.state.AppActiveUser;

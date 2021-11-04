@@ -18,46 +18,16 @@
                 <form autocomplete="off">
                     <div class="vx-row">
                         <div class="vx-col w-full">
-                            <infinite-scroll-select
+                            <infinite-select
+                                required
+                                header="Projet"
                                 model="project"
                                 label="name"
                                 v-model="itemLocal.project_id"
                                 :filters="{
                                     company_id
                                 }"
-                            >
-                                <template #header>
-                                    <div style="opacity: 0.8">Projet</div>
-                                </template>
-                            </infinite-scroll-select>
-
-                            <!-- <v-select
-                                v-validate="'required'"
-                                name="user_id"
-                                label="lastname"
-                                :multiple="false"
-                                v-model="itemLocal.user_id"
-                                :reduce="lastname => lastname.id"
-                                class="w-full"
-                                autocomplete
-                                :options="usersData"
-                            >
-                                <template #header>
-                                    <div style="opacity: .8 font-size: .60rem">
-                                        Utilisateur
-                                    </div>
-                                </template>
-                                <template #option="user">
-                                    <span>{{
-                                        `${user.firstname} ${user.lastname}`
-                                    }}</span>
-                                </template>
-                            </v-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('user_id')"
-                                >{{ errors.first("user_id") }}</span
-                            > -->
+                            />
 
                             <p class="mt-5">Date</p>
                             <flat-pickr
@@ -144,8 +114,7 @@
 
 <script>
 import moment from "moment";
-import vSelect from "vue-select";
-import InfiniteScrollSelect from "@/components/inputs/InfiniteScrollSelect";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // register custom messages
 import { Validator } from "vee-validate";
@@ -180,8 +149,7 @@ export default {
     },
     components: {
         flatPickr,
-        vSelect,
-        InfiniteScrollSelect
+        InfiniteSelect
     },
     data() {
         const user = this.user || this.$store.state.AppActiveUser;

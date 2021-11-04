@@ -1,11 +1,27 @@
 <template>
     <div id="page-role-list">
         <div class="vx-card p-6">
-            <div class="px-4 pt-3 mb-6" v-if="authorizedTo('publish')">
-                <vs-button @click="addRecord" class="w-full"
-                    >Ajouter un rôle</vs-button
+            <vs-row
+                v-if="authorizedTo('publish')"
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+                class="mb-6"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
                 >
-            </div>
+                    <vs-button @click="addRecord">
+                        Ajouter un rôle
+                    </vs-button>
+                </vs-col>
+            </vs-row>
+
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
                     <vs-row vs-type="flex">
@@ -108,7 +124,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 // Store Module
 import moduleRoleManagement from "@/store/role-management/moduleRoleManagement.js";
@@ -131,7 +146,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         // Cell Renderer
         CellRendererActions,

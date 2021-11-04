@@ -228,7 +228,6 @@ var modelTitle = "Tâche";
 
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 import moment from "moment";
 
 //CRUD
@@ -257,7 +256,6 @@ export default {
     },
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
 

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
+use App\Models\Company;
 use App\Models\Range;
 use App\Models\RepetitiveTask;
 use App\Models\RepetitiveTasksSkill;
 use App\Traits\StoresDocuments;
+use Illuminate\Http\Request;
 
 class RangeController extends BaseApiController
 {
@@ -35,6 +38,18 @@ class RangeController extends BaseApiController
     public function __construct()
     {
         parent::__construct(Range::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('ranges.company_id', $request->company_id);
+        }
     }
 
     protected function storeItem(array $arrayRequest)

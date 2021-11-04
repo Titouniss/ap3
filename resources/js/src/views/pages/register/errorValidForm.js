@@ -8,6 +8,14 @@ const errorMessage = {
         password: "mot de passe",
         confirm_password: "confirmation de mot de passe",
         company: "société"
+    },
+    custom: {
+        firstname: {
+            regex: "Le champ prénom ne peut pas contenir des chiffres"
+        },
+        lastname: {
+            regex: "Le champ nom ne peut pas contenir des chiffres"
+        }
     }
 };
 

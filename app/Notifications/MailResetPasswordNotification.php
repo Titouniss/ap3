@@ -51,7 +51,7 @@ class MailResetPasswordNotification extends ResetPassword
             ->line( "Vous recevez cet email car nous avons reçu une demande de changement de mot de passe." )
             ->action('Réinitialiser', $link)
             ->line( "Ce lien expire dans ".config('auth.passwords.users.expire')." minutes" )
-            ->line( "Ignorez ce message si vous n'avez pas fait de demande." );
+            ->line( "Ignorer ce message si vous n'avez pas fait de demande." );
         }
     /**
      * Get the array representation of the notification.

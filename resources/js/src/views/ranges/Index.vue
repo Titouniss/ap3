@@ -134,7 +134,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 // Store Module
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
@@ -157,7 +156,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         // Cell Renderer
         CellRendererActions,

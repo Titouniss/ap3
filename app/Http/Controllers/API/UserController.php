@@ -67,11 +67,23 @@ class UserController extends BaseApiController
         parent::__construct(User::class);
     }
 
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id') && $request->company_id) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('users.company_id', $request->company_id);
+        }
+    }
+
     protected function storeItem(array $arrayRequest)
     {
-        // if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
-        //     throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
-        // }
+        if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
+            throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
+        }
 
         if (User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
             throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
@@ -116,9 +128,13 @@ class UserController extends BaseApiController
 
     protected function updateItem($item, array $arrayRequest)
     {
-        // if ($arrayRequest['email'] && $item->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
-        //     throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
-        // }
+        if (
+            $arrayRequest['email'] &&
+            $item->email != $arrayRequest['email'] &&
+            User::where('email', $arrayRequest['email'])->withTrashed()->exists()
+        ) {
+            throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
+        }
 
         if ($item->login != $arrayRequest['login'] && User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
             throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
@@ -672,8 +688,8 @@ class UserController extends BaseApiController
 
         if (App::environment('production')) {
             $item->sendEmailVerificationNotification();
-            $adminNumidev=new User();
-            $adminNumidev->email='contact@plannigo.fr';
+            $adminNumidev = new User();
+            $adminNumidev->email = 'contact@plannigo.fr';
             $adminNumidev->sendEmailNewUserNotification($item->firstname, $item->lastname, $item->email, $item->company->name, $company->contact_tel1);
         }
 
@@ -713,6 +729,7 @@ class UserController extends BaseApiController
         $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
         $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
         $parsed = preg_replace('#Ý#', 'Y', $parsed);
+        $parsed = preg_replace('/\s/', '_', $parsed);
 
         return ($parsed);
     }

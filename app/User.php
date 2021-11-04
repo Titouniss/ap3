@@ -7,6 +7,10 @@ use App\Models\ModelHasOldId;
 use App\Models\Role;
 use App\Traits\HasCompany;
 use App\Models\DealingHours;
+use App\Models\Skill;
+use App\Models\Task;
+use App\Models\Unavailability;
+use App\Models\WorkHours;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -53,19 +57,24 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
     public function workHours()
     {
-        return $this->hasMany('App\Models\WorkHours');
+        return $this->hasMany(WorkHours::class);
     }
 
     public function unavailabilities()
     {
-        return $this->hasMany('App\Models\Unavailability');
+        return $this->hasMany(Unavailability::class);
     }
 
     public function skills()
     {
-        return $this->belongsToMany('App\Models\Skill', 'users_skills', 'user_id', 'skill_id');
+        return $this->belongsToMany(Skill::class, 'users_skills', 'user_id', 'skill_id');
     }
 
     public function getModuleAttribute()
@@ -193,5 +202,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailRegistrationLinkNotification($mails, $companyName)
     {
         $this->notify(new \App\Notifications\MailRegistrationLinkNotification($mails, $companyName));
+    }
+    /**
+     * Override the mail body for new bug notification mail.
+     */
+    public function sendEmailNewBugNotification($module,$type,$description,$user_firstname,$user_lastname,$company_name)
+    {
+        $this->notify(new \App\Notifications\MailNewBugNotification($module,$type,$description,$user_firstname,$user_lastname,$company_name));
     }
 }

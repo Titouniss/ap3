@@ -118,7 +118,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 import moment from "moment";
 
@@ -136,15 +135,14 @@ import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 // Mixins
 import { multipleActionsMixin } from "@/mixins/lists";
 
-var model = "company";
-var modelPlurial = "companies";
-var modelTitle = "Société";
+const model = "company";
+const modelPlurial = "companies";
+const modelTitle = "Société";
 
 export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         // Cell Renderer
         CellRendererLink,
@@ -163,7 +161,7 @@ export default {
             gridOptions: {
                 localeText: { noRowsToShow: "Aucune société à afficher" },
                 rowClassRules: {
-                    "subscription-ending": function(params) {
+                    "subscription-ending"(params) {
                         return (
                             !params.data.deleted_at &&
                             params.data.has_active_subscription &&

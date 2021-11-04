@@ -78,12 +78,6 @@
 import moment from "moment";
 
 export default {
-    components: {
-    },
-    data() {
-    },
-    computed: {
-    },
     methods: {
          scrollMeTo(refName) {
             var element = this.$refs[refName];
@@ -92,9 +86,7 @@ export default {
             window.scrollTo(0, top);
         }
     },
-    created() {
-    }
-};
+}
 </script>
 
 <style lang="scss">

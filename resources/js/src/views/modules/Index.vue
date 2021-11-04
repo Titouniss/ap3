@@ -106,7 +106,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -132,7 +131,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
 

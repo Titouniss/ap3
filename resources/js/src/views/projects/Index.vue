@@ -162,7 +162,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 import moment from "moment";
 import Gantt from "frappe-gantt";
 
@@ -173,7 +172,6 @@ import EditForm from "./EditForm.vue";
 // Store Module
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
-import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
@@ -195,7 +193,6 @@ export default {
     mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
 
@@ -253,11 +250,22 @@ export default {
                 {
                     headerName: "Avancement",
                     field: "status",
-                    filter: true
+                    filter: true,
+                    cellRenderer: data => {
+                        switch (data.value) {
+                            case "doing":
+                                return "En cours";
+                            case "done":
+                                return "Terminé";
+                            default:
+                                return "À faire"; // todo
+                        }
+                    }
                 },
                 {
                     headerName: "Société",
                     field: "company",
+                    hide: !this.isAdmin,
                     filter: true,
                     cellRendererFramework: "CellRendererRelations"
                 },
@@ -333,8 +341,10 @@ export default {
                         .max(moment(p.start_date), moment())
                         .format("YYYY-MM-DD"),
                     end: moment(p.date).format("YYYY-MM-DD"),
-                    progress: p.progress,
-                    custom_class: `bar-${this.getProjectStatusColor(p)}`
+                    progress: p.progress.task_percent,
+                    custom_class: `bar-${this.getProjectStatusColor(p)}${
+                        p.color ? `-${p.color.substring(1)}` : ""
+                    }`
                 }))
                 .slice(0, 9);
         },
@@ -393,7 +403,7 @@ export default {
             this.fetchProjects();
         },
         getProjectStatusColor(project) {
-            if (project.progress === 100) {
+            if (project.progress.task_percent === 100) {
                 return "success";
             } else if (
                 moment(project.end || project.date).isAfter(
@@ -494,13 +504,6 @@ export default {
             );
             moduleCompanyManagement.isRegistered = true;
         }
-        if (!moduleRangeManagement.isRegistered) {
-            this.$store.registerModule(
-                "rangeManagement",
-                moduleRangeManagement
-            );
-            moduleRangeManagement.isRegistered = true;
-        }
         if (!moduleCustomerManagement.isRegistered) {
             this.$store.registerModule(
                 "customerManagement",
@@ -517,31 +520,16 @@ export default {
         }
 
         this.fetchProjects();
-        this.$store.dispatch("customerManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        if (this.$store.getters.userHasPermissionTo(`read companies`)) {
-            this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-                console.error(err);
-            });
-        }
-        if (this.$store.getters.userHasPermissionTo(`read ranges`)) {
-            this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
-                console.error(err);
-            });
-        }
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
         moduleProjectManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
-        moduleRangeManagement.isRegistered = false;
         moduleCustomerManagement.isRegistered = false;
         moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("companyManagement");
-        this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("customerManagement");
         this.$store.unregisterModule("documentManagement");
     }
@@ -581,24 +569,35 @@ export default {
 .handle {
     display: none;
 }
-.bar-success {
-    .bar-progress {
-        fill: rgba($color: var(--vs-success), $alpha: 1) !important;
+
+$projectStatus: "primary", "warning", "danger";
+$colors: (
+    "51E898": #51e898,
+    "61BD4F": #61bd4f,
+    "F2D600": #f2d600,
+    "FF9F1A": #ff9f1a,
+    "EB5A46": #eb5a46,
+    "FF78CB": #ff78cb,
+    "C377E0": #c377e0,
+    "00C2E0": #00c2e0,
+    "0079BF": #0079bf,
+    "344563": #344563
+);
+@each $status in $projectStatus {
+    .bar-#{$status} {
+        .bar-progress {
+            fill: rgba($color: var(--vs-#{$status}), $alpha: 1) !important;
+        }
     }
-}
-.bar-primary {
-    .bar-progress {
-        fill: rgba($color: var(--vs-primary), $alpha: 1) !important;
-    }
-}
-.bar-warning {
-    .bar-progress {
-        fill: rgba($color: var(--vs-warning), $alpha: 1) !important;
-    }
-}
-.bar-danger {
-    .bar-progress {
-        fill: rgba($color: var(--vs-danger), $alpha: 1) !important;
+    @each $colorName, $color in $colors {
+        .bar-#{$status}-#{$colorName} {
+            .bar {
+                fill: $color !important;
+            }
+            .bar-progress {
+                fill: rgba($color: var(--vs-#{$status}), $alpha: 1) !important;
+            }
+        }
     }
 }
 </style>
