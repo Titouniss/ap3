@@ -533,10 +533,13 @@ class UnavailabilityController extends BaseApiController
         $worked_hours = $date ? Hours::where([['user_id', $user_id], ['start_at', 'LIKE', '%' . $date . '%']])->get() : [];
 
         // add some Unavailability ou plusieurs 
-        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Congés payés"]])
+        /*$worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Congés payés"]])
             ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Jours fériés"]])
             ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Période de cours"]])
-            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Utilisation heures supplémentaires"]])->get() : [];
+            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Utilisation heures supplémentaires"]])->get() : [];*/
+
+        $typeIndispo=array("Heures supplémentaires payées", "Rendez-vous privé", "Arrêt de travail");
+        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%']])->whereNotIn('reason', $typeIndispo)->get() : [];
 
         $nb_worked_hours = 0;
 
