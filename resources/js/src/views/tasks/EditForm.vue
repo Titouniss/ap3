@@ -816,7 +816,7 @@ export default {
                 });
 
             this.$store
-                .dispatch("taskManagement/removeItems", [this.itemLocal.id])
+                .dispatch("taskManagement/forceRemoveItems", [this.itemLocal.id])
                 .then(data => {
                     this.$vs.notify({
                         color: "success",

@@ -56,6 +56,15 @@ class HoursController extends BaseApiController
         $schoolPeriods = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Période de cours') : Unavailability::where('user_id', $user->id)->where('reason', "Période de cours");
         $publicHolidays = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Jours fériés') : Unavailability::where('user_id', $user->id)->where('reason', "Jours fériés");
         $overtimesUsed = ($user->is_admin || $user->is_manager) ? Unavailability::where('reason', 'Utilisation heures supplémentaires') : Unavailability::where('user_id', $user->id)->where('reason', "Utilisation heures supplémentaires");
+        
+        /*$typeIndispo=array("Heures supplémentaires payées",
+                            "Utilisation heures supplémentaires",
+                            "Jours fériés",
+                            "Rendez-vous privé",
+                            "Congés payés",
+                            "Période de cours",
+                            "Arrêt de travail");
+        $other = ($user->is_admin || $user->is_manager) ? Unavailability::whereNotIn('reason', $typeIndispo) : Unavailability::where('user_id', $user->id)->whereNotIn('reason', $typeIndispo);*/
 
         if ($request->has('project_id')) {
             if (Project::where('id', $request->project_id)->doesntExist()) {
@@ -80,6 +89,7 @@ class HoursController extends BaseApiController
             $schoolPeriods->where('user_id', $request->user_id);
             $publicHolidays->where('user_id', $request->user_id);
             $overtimesUsed->where('user_id', $request->user_id);
+            //$other->where('user_id', $request->user_id);
         }
 
         if ($request->has('date')) {
@@ -91,18 +101,21 @@ class HoursController extends BaseApiController
                         $schoolPeriods->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
                         $publicHolidays->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
                         $overtimesUsed->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
+                        //$other->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
                         break;
                     case 'month':
                         $paidHolidays->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
                         $schoolPeriods->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
                         $publicHolidays->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
                         $overtimesUsed->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
+                        //$other->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
                         break;
                     case 'year':
                         $paidHolidays->whereYear('starts_at', $date->year);
                         $schoolPeriods->whereYear('starts_at', $date->year);
                         $publicHolidays->whereYear('starts_at', $date->year);
                         $overtimesUsed->whereYear('starts_at', $date->year);
+                        //$other->whereYear('starts_at', $date->year);
                         break;
 
                     default:
@@ -110,6 +123,7 @@ class HoursController extends BaseApiController
                         $schoolPeriods->whereDate('starts_at', $date);
                         $publicHolidays->whereDate('starts_at', $date);
                         $overtimesUsed->whereDate('starts_at', $date);
+                        //$other->whereDate('starts_at', $date);
                         break;
                 }
             } catch (\Throwable $th) {
@@ -121,6 +135,7 @@ class HoursController extends BaseApiController
         $schoolPeriods = $schoolPeriods->get();
         $publicHolidays = $publicHolidays->get();
         $overtimesUsed = $overtimesUsed->get();
+        //$other = $other->get();
 
         $stats['total'] = CarbonInterval::hours(0);
         // // Ajout des congés payés au nombre d'heures
@@ -166,6 +181,18 @@ class HoursController extends BaseApiController
             $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
             $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
         }
+
+        /*// // Ajout des indispos "Autre" au nombre d'heures
+        if (!$other->isEmpty() && !$request->has('project_id')) {
+            foreach ($other as $pH) {
+                $hours = Carbon::create($pH->ends_at)->floatDiffInHours(Carbon::create($pH->starts_at));
+                $stats['total']->add(CarbonInterval::hours($hours));
+            }
+        } else {
+            $stats['total']->add(CarbonInterval::createFromFormat('H', 1));
+            $stats['total']->sub(CarbonInterval::createFromFormat('H', 1));
+        }*/
+
         $listId = array();
         if (!$allItems->isEmpty()) {
             foreach ($nonPaginatedQuery->get() as $item) {
@@ -576,10 +603,13 @@ class HoursController extends BaseApiController
         // How many hour user worked this day
         $worked_hours = $date ? Hours::where([['user_id', $user_id], ['start_at', 'LIKE', '%' . $date . '%']])->get() : [];
         // add some Unavailability
-        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Congés payés"]])
+        $typeIndispo=array("Heures supplémentaires payées", "Rendez-vous privé", "Arrêt de travail");
+        $worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%']])->whereNotIn('reason', $typeIndispo)->get() : [];
+
+        /*$worked_unavailabilities = $date ? Unavailability::where([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Congés payés"]])
             ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Jours fériés"]])
             ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Période de cours"]])
-            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Utilisation heures supplémentaires"]])->get() : [];
+            ->orWhere([['user_id', $user_id], ['starts_at', 'LIKE', '%' . $date . '%'], ['reason', "Utilisation heures supplémentaires"]])->get() : [];*/
 
         $nb_worked_hours = 0;
 

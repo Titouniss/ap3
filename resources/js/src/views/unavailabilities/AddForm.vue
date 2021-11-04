@@ -123,7 +123,7 @@ export default {
                 { name: "Congés payés" },
                 { name: "Période de cours" },
                 { name: "Arrêt de travail" },
-                { name: "Autre..." }
+                /*{ name: "Autre..." }*/
             ],
 
             configStartsAtDateTimePicker: {
@@ -145,7 +145,7 @@ export default {
     },
     computed: {
         validateForm() {
-            if (this.itemLocal.reason === "Autre...") {
+            /*if (this.itemLocal.reason === "Autre...") {
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
@@ -153,7 +153,7 @@ export default {
                     this.itemLocal.reason !== "" &&
                     this.custom_reason !== ""
                 );
-            } else if (this.itemLocal.reason === "Jours fériés") {
+            } else*/ if (this.itemLocal.reason === "Jours fériés") {
                 this.$set(
                     this.configStartsAtDateTimePicker,
                     "enableTime",
@@ -253,9 +253,9 @@ export default {
             this.$validator.validateAll().then(result => {
                 if (result) {
                     const item = JSON.parse(JSON.stringify(this.itemLocal));
-                    if (this.itemLocal.reason === "Autre...") {
+                    /*if (this.itemLocal.reason === "Autre...") {
                         item.reason = this.custom_reason;
-                    }
+                    }*/
                     if (this.itemLocal.reason === "Jours fériés") {
                         item.ends_at = moment(item.starts_at).format(
                             "YYYY-MM-DD HH:mm"

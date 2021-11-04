@@ -34,6 +34,12 @@ actions.removeItems = ({ commit }, ids) => {
         .then(() => commit("REMOVE_ITEMS", ids));
 };
 
+actions.forceRemoveItems = ({ commit }, ids) => {
+    actionsCopy
+        .forceRemoveItems({ commit }, ids)
+        .then(() => commit("REMOVE_ITEMS", ids));
+};
+
 actions.addComment = ({ commit }, item) => {
     return apiRequest(
         `${slug}/store-comment/${item.id}`,
