@@ -134,7 +134,7 @@ export default {
                 { name: "Congés payés" },
                 { name: "Période de cours" },
                 { name: "Arrêt de travail" },
-                { name: "Autre..." }
+                //{ name: "Autre..." }
             ]
         };
     },
@@ -153,7 +153,7 @@ export default {
             }
         },
         validateForm() {
-            if (this.itemLocal.reason === "Autre...") {
+            /*if (this.itemLocal.reason === "Autre...") {
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
@@ -161,14 +161,14 @@ export default {
                     this.itemLocal.reason !== "" &&
                     this.custom_reason !== ""
                 );
-            } else {
+            } else {*/
                 return (
                     !this.errors.any() &&
                     this.itemLocal.starts_at &&
                     this.itemLocal.ends_at &&
                     this.itemLocal.reason !== ""
                 );
-            }
+            //}
         }
     },
     methods: {

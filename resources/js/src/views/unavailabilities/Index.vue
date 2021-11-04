@@ -449,7 +449,7 @@ export default {
                 "Congés payés",
                 "Période de cours",
                 "Arrêt de travail",
-                "Autre..."
+                //"Autre..."
             ],
             period_type_names: ["date", "day", "week", "month", "year", "full"],
             period_types: {
