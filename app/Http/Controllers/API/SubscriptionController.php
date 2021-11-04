@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\User;
 use App\Models\Company;
+use App\Models\CompanyDetails;
 use App\Models\Package;
 use App\Models\Subscription;
 use Carbon\Carbon;
@@ -87,6 +89,10 @@ class SubscriptionController extends BaseApiController
      */
     private function createOrUpdateSubscription(array $subscriptionArray, Subscription $item)
     {
+        $isNewSubscription=true;
+        if($item['starts_at'] && $item['ends_at']){
+            $isNewSubscription=false;
+        }
         try {
             $item->starts_at = Carbon::createFromFormat('Y-m-d H:i:s', $subscriptionArray['starts_at'] . ' 00:00:00');
         } catch (\Throwable $th) {
@@ -127,14 +133,38 @@ class SubscriptionController extends BaseApiController
             throw new Exception("Paramètre 'subscription.packages' contient des valeurs invalides.");
         }
 
-        if ($item->starts_at->isFuture()) {
-            $item->state = 'pending';
-        } else if ($item->ends_at->isFuture()) {
-            $item->state = 'active';
-        } else {
-            $item->state = 'inactive';
+        //si l'abonnement était à cancelled et passe à active, pending ou inactive -> email pour informer abonnement actif
+        if($item->state == 'cancelled'){
+            if (isset($subscriptionArray['is_cancelled'])) {
+                if (!$subscriptionArray['is_cancelled']) {
+                    //send email
+                    $company_id=$subscriptionArray['company_id'];
+                    $company=Company::where('id',$company_id)->get();
+                    $companyDetails=$company[0]->details;
+                    $adminCompany = new User();
+                    $adminCompany->email = $companyDetails['contact_email'];
+                    $adminFirstname = $companyDetails['contact_firstname'];
+                    $adminLastname = $companyDetails['contact_lastname'];
+                    $adminCompany->sendEmailActiveSubscriptionNotification($adminFirstname, $adminLastname,$item['starts_at'], $item['ends_at']);
+                }
+            }
+            
         }
 
+        //statut annulé par défaut à la création
+        if($isNewSubscription){
+            $item->state = 'cancelled';
+        }
+        else{
+            if ($item->starts_at->isFuture()) {
+                $item->state = 'pending';
+            } else if ($item->ends_at->isFuture()) {
+                $item->state = 'active';
+            } else {
+                $item->state = 'inactive';
+            }
+        }
+        
         if (isset($subscriptionArray['is_cancelled'])) {
             if ($subscriptionArray['is_cancelled']) {
                 $item->state = 'cancelled';
