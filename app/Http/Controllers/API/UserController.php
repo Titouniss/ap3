@@ -41,6 +41,7 @@ class UserController extends BaseApiController
     protected static $store_validation_array = [
         'lastname' => 'required',
         'firstname' => 'required',
+        'function' => 'present',
         'login' => 'required',
         'company_id' => 'required',
         'role_id' => 'required',
@@ -51,6 +52,7 @@ class UserController extends BaseApiController
     protected static $update_validation_array = [
         'lastname' => 'required',
         'firstname' => 'required',
+        'function' => 'present',
         'login' => 'required',
         'company_id' => 'required',
         'role_id' => 'required',
@@ -95,6 +97,7 @@ class UserController extends BaseApiController
         $item = User::create([
             'lastname' => $arrayRequest['lastname'],
             'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['function'],
             'login' => $arrayRequest['login'],
             'email' => $arrayRequest['email'],
             'password' => Hash::make($password),
@@ -154,6 +157,7 @@ class UserController extends BaseApiController
         $item->update([
             'lastname' => $arrayRequest['lastname'],
             'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['function'],
             'login' => $arrayRequest['login'],
             'email' => $arrayRequest['email'],
             'company_id' => $user->is_admin ? $arrayRequest['company_id'] : $user->company_id,
@@ -257,6 +261,7 @@ class UserController extends BaseApiController
         $item->update([
             'lastname' => $arrayRequest['lastname'],
             'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['function'],
             'email' => $arrayRequest['email'],
         ]);
 
@@ -629,6 +634,7 @@ class UserController extends BaseApiController
         $item = User::create([
             'lastname' => $arrayRequest['lastname'],
             'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['contact_function'],
             'login' => $login,
             'email' => $arrayRequest['email'],
             'password' => bcrypt($arrayRequest['password']),

@@ -9,29 +9,35 @@
         </router-link>
 
         <div class="vx-card w-full p-6">
-            <h2 class="mb-4 color-primary">{{ scheduleTitle }}</h2>
-            <!-- <div>
-        <button @click="toggleWeekends">toggle weekends</button>
-        <button @click="gotoPast">go to a date in the past</button>
-        (also, click a date/time to add an event)
-      </div>-->
-            <add-form
-                v-if="project_data"
-                :activeAddPrompt="this.activeAddPrompt"
-                :handleClose="handleClose"
-                :dateData="dateData"
-                :project_data="project_data"
-                :tasks_list="tasksEvent"
-                :customTask="false"
-                :type="this.$route.query.type"
-                :idType="parseInt(this.$route.query.id, 10)"
-                :hideProjectInput="
-                    this.$route.query.type === 'projects' ? true : false
-                "
-                :hideUserInput="
-                    this.$route.query.type === 'users' ? true : false
-                "
-            />
+            <vs-row vs-type="flex" vs-justify="center" vs-w="12">
+                <vs-col vs-w="10" vs-xs="12" vs-type="flex" vs-justify="center" vs-align="center">
+                    <h2 class="mb-4 color-primary">{{ scheduleTitle }}</h2>
+                </vs-col>
+                <!-- <div>
+            <button @click="toggleWeekends">toggle weekends</button>
+            <button @click="gotoPast">go to a date in the past</button>
+            (also, click a date/time to add an event)
+        </div>-->
+                <vs-col vs-w="2" vs-xs="12" vs-type="flex" vs-justify="end">
+                    <add-form
+                        v-if="project_data"
+                        :activeAddPrompt="this.activeAddPrompt"
+                        :handleClose="handleClose"
+                        :dateData="dateData"
+                        :project_data="project_data"
+                        :tasks_list="tasksEvent"
+                        :customTask="false"
+                        :type="this.$route.query.type"
+                        :idType="parseInt(this.$route.query.id, 10)"
+                        :hideProjectInput="
+                            this.$route.query.type === 'projects' ? true : false
+                        "
+                        :hideUserInput="
+                            this.$route.query.type === 'users' ? true : false
+                        "
+                    />
+                </vs-col>
+            </vs-row>
             <FullCalendar
                 locale="fr"
                 class="demo-app-calendar border-c"

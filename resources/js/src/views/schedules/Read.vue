@@ -9,29 +9,50 @@
         </router-link>
 
         <div class="vx-card w-full p-6">
-            <h2 class="mb-4 color-primary">{{ scheduleTitle }}</h2>
+            <vs-row vs-type="flex" vs-justify="center" vs-w="12">
+                <vs-col vs-w="8" vs-xs="12" vs-type="flex" vs-justify="center" vs-align="center">
+                    <h2 class="mb-4 color-primary" id="title-schedule">{{ scheduleTitle }}</h2>
+                </vs-col>
+                <vs-col vs-w="2" vs-xs="12" vs-type="flex" vs-justify="end">
+                    <add-form
+                        v-if="project_data"
+                        :activeAddPrompt="this.activeAddPrompt"
+                        :handleClose="handleClose"
+                        :dateData="dateData"
+                        :project_data="project_data"
+                        :tasks_list="tasksEvent"
+                        :customTask="false"
+                        :type="this.$route.query.type"
+                        :idType="parseInt(this.$route.query.id, 10)"
+                        :hideProjectInput="
+                            this.$route.query.type === 'projects' ? true : false
+                        "
+                        :hideUserInput="
+                            this.$route.query.type === 'users' ? true : false
+                        "
+                    />
+                </vs-col>
+                <vs-col vs-w="2" vs-xs="12" vs-type="flex" vs-justify="end" vs-align="flex-start">
+                    <vs-button type="border" @click="onExport">
+                        <div class="flex flex-row">
+                            <feather-icon
+                                icon="DownloadIcon"
+                                svgClasses="h-5 w-5"
+                                class="mr-2"
+                            />
+                            Télécharger
+                        </div>
+                    </vs-button>
+                </vs-col>
+            </vs-row>
+        </div><br><br>
+
             <!-- <div>
         <button @click="toggleWeekends">toggle weekends</button>
         <button @click="gotoPast">go to a date in the past</button>
         (also, click a date/time to add an event)
       </div>-->
-            <add-form
-                v-if="project_data"
-                :activeAddPrompt="this.activeAddPrompt"
-                :handleClose="handleClose"
-                :dateData="dateData"
-                :project_data="project_data"
-                :tasks_list="tasksEvent"
-                :customTask="false"
-                :type="this.$route.query.type"
-                :idType="parseInt(this.$route.query.id, 10)"
-                :hideProjectInput="
-                    this.$route.query.type === 'projects' ? true : false
-                "
-                :hideUserInput="
-                    this.$route.query.type === 'users' ? true : false
-                "
-            />
+            
             <FullCalendar
                 locale="fr"
                 class="demo-app-calendar border-c"
@@ -110,6 +131,10 @@ import "@fullcalendar/core/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
 
+//generate PDF
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas"
+
 var model = "schedule";
 var modelPlurial = "schedules";
 var modelTitle = "Plannings";
@@ -162,7 +187,7 @@ export default {
         end_atItem() {
             return this.$store.state.taskManagement.task.end || 0;
         },
-
+        
         calendarEvents() {
             // Get all task and parse to show
             var eventsParse = [];
@@ -370,6 +395,31 @@ export default {
         }
     },
     methods: {
+        onExport() {
+            var canvasElement = document.createElement('canvas');
+            const doc = new jsPDF({orientation: 'landscape'});
+            let pWidth = doc.internal.pageSize.width; 
+            let srcWidth = this.$refs.fullCalendar.$el.scrollWidth;
+            let margin = 18;
+            let scale = (pWidth - margin * 2) / srcWidth;
+            document.getElementsByClassName("fc-left")[0].style.display='none';
+            document.getElementsByClassName("fc-center")[0].style.display='none';
+            doc.html(this.$refs.fullCalendar.$el, {
+                x: margin,
+                y: margin,
+                html2canvas: {
+                    scale: scale,
+                },
+                callback: function (doc) {
+                    window.open(doc.output('bloburl'));
+                }
+            });
+            setTimeout(function(){ 
+                document.getElementsByClassName("fc-left")[0].style.display='block';
+                document.getElementsByClassName("fc-center")[0].style.display='block'; 
+            }, 2000);
+            
+        },
         toggleWeekends() {
             this.calendarWeekends = !this.calendarWeekends; // update a property
         },
