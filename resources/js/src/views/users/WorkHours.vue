@@ -109,7 +109,6 @@
                 <div class="flex flex-wrap items-center justify-end">
                     <vs-button
                         class="ml-auto"
-                        type="border"
                         @click="save_changes"
                         :disabled="!validateForm"
                         >Sauvegarder</vs-button
