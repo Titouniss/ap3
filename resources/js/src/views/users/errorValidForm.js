@@ -26,6 +26,11 @@ const errorMessage = {
         company_id: {
             required: "L'utilisteur doit être rattaché à une société"
         },
+        function: {
+            max:
+                "La fonction de l'utilisteur doit être composée de 255 caractères maximum",
+            regex: "La fonction ne peut pas contenir des chiffres"
+        },
         role: {
             required: "L'utilisteur doit être rattaché à un rôle"
         },

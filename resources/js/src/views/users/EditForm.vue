@@ -114,6 +114,25 @@
                         @input="onCompanyChange"
                     />
 
+                    <vs-input
+                        v-validate="{
+                            required: false,
+                            max: 255,
+                            regex: /^[^\d.]+$/
+                        }"
+                        name="function"
+                        class="w-full mb-4 mt-5"
+                        label="Fonction"
+                        v-model="itemLocal.function"
+                        :color="!errors.has('function') ? 'success' : 'danger'"
+                    />
+                    <span
+                        class="text-danger text-sm"
+                        v-show="errors.has('function')"
+                        >{{ errors.first("function") }}</span
+                    >
+
+
                     <div v-if="itemLocal.company_id">
                         <infinite-select
                             required
@@ -256,6 +275,7 @@ export default {
                 full_login: "",
                 email: "",
                 company_id: 0,
+                function: "",
                 role_id: 0,
                 skills: [],
                 hours: 0,
@@ -347,6 +367,7 @@ export default {
                         login: item.login,
                         email: item.email,
                         company_id: item.company_id,
+                        function: item.function,
                         role_id: item.role.id,
                         skills: skill_ids,
                         hours: item.hours,
@@ -356,12 +377,12 @@ export default {
                         this.initial_company_id = item.company_id;
                         this.company_id_temps = item.company_id;
                     }
-
                     // Get login
                     if (this.itemLocal.login != null) {
-                        this.itemLocal.login = this.itemLocal.login
+                        /*this.itemLocal.login = this.itemLocal.login
                             .split(".")
-                            .slice(1);
+                            .slice(1);*/
+                        this.itemLocal.login = this.itemLocal.login.split(".")[1];
                     } else {
                         this.itemLocal.login = "";
                     }

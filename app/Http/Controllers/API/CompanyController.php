@@ -174,14 +174,8 @@ class CompanyController extends BaseApiController
             throw new ApiException("Paramètre 'subscription.packages' contient des valeurs invalides.");
         }
 
-        if ($subscription->starts_at->isFuture()) {
-            $subscription->state = 'pending';
-        } else if ($subscription->ends_at->isFuture()) {
-            $subscription->state = 'active';
-        } else {
-            $subscription->state = 'inactive';
-        }
-
+        //statut annulé par défaut
+        $subscription->state = 'cancelled';
         $subscription->save();
 
         return $item;

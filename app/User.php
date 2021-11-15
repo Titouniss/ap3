@@ -29,7 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'firstname', 'lastname', 'login', 'email', 'password', 'is_password_change', 'isTermsConditionAccepted', 'company_id', 'register_token'
+        'firstname', 'lastname', 'function', 'login', 'email', 'password', 'is_password_change', 'isTermsConditionAccepted', 'company_id', 'register_token'
     ];
 
     /**
@@ -209,5 +209,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailNewBugNotification($module,$type,$description,$user_firstname,$user_lastname,$company_name)
     {
         $this->notify(new \App\Notifications\MailNewBugNotification($module,$type,$description,$user_firstname,$user_lastname,$company_name));
+    }
+    /**
+     * Override the mail body for active subscription notification mail.
+     */
+    public function sendEmailActiveSubscriptionNotification($admin_firstname, $admin_lastname, $start_date_subscription, $end_date_subscription)
+    {
+        $this->notify(new \App\Notifications\MailActiveSubscriptionNotification($admin_firstname, $admin_lastname, $start_date_subscription, $end_date_subscription));
     }
 }
