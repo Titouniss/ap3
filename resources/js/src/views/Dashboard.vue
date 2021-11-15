@@ -440,7 +440,7 @@
                             <vs-button
                                 v-for="(user, index) in usersWithLoad"
                                 :key="user.id"
-                                :to="'/users/user-edit/' + user.id"
+                                :to="'/schedules/schedules-read?id=' + user.id + '&type=users'"
                                 type="flat"
                                 text-color="grey"
                                 :class="[
@@ -691,6 +691,9 @@ export default {
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
+        isManager() {
+            return this.$store.state.AppActiveUser.is_manager;
+        },
         projects() {
             return this.$store.getters["projectManagement/getItems"];
         },
@@ -706,6 +709,16 @@ export default {
             return this.$store.getters["taskManagement/getItems"];
         },
         tasksToday() {
+            if(this.isManager){
+                return this.tasks.filter(task =>
+                    moment(task.date).isSame(moment(), "day") && task.project.company_id==this.$store.state.AppActiveUser.company.id
+                );
+            }
+            else if(!this.isAdmin && !this.isManager){
+                return this.tasks.filter(task =>
+                    moment(task.date).isSame(moment(), "day") && task.user_id==this.$store.state.AppActiveUser.id
+                );
+            }
             return this.tasks.filter(task =>
                 moment(task.date).isSame(moment(), "day")
             );
@@ -856,8 +869,6 @@ export default {
         this.$store
             .dispatch("taskManagement/fetchItems", {
                 date: moment().format("DD-MM-YYYY"),
-                user_id: this.$store.state.AppActiveUser.id,
-                loads: ""
             })
             .catch(err => {
                 console.error(err);
