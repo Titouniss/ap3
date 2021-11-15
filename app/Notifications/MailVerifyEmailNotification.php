@@ -57,24 +57,6 @@ class MailVerifyEmailNotification extends Notification
     }
 
     /**
-     * Get the verification URL for the given notifiable.
-     *
-     * @param  mixed  $notifiable
-     * @return string
-     */
-    protected function verificationUrl($notifiable)
-    {
-        return URL::temporarySignedRoute(
-            'api.verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
-            [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->getEmailForVerification()),
-            ]
-        );
-    }
-
-    /**
      * Set a callback that should be used when building the notification mail message.
      *
      * @param  \Closure  $callback
