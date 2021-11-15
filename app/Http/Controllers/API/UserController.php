@@ -86,6 +86,13 @@ class UserController extends BaseApiController
         if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
             throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }
+        if($arrayRequest['email']){
+            $email = htmlspecialchars(stripslashes(trim($arrayRequest["email"])));
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException("Format email invalide.", static::$response_codes['error_conflict']);
+            }
+        }
 
         if (User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
             throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
@@ -138,7 +145,13 @@ class UserController extends BaseApiController
         ) {
             throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }
+        if($arrayRequest['email']){
+            $email = htmlspecialchars(stripslashes(trim($arrayRequest["email"])));
 
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException("Format email invalide.", static::$response_codes['error_conflict']);
+            }
+        }
         if ($item->login != $arrayRequest['login'] && User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
             throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }

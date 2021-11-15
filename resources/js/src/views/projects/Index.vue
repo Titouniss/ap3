@@ -326,7 +326,7 @@ export default {
             if (!this.projectsData || this.projectsData.length <= 0) {
                 return [];
             }
-
+        
             return this.projectsData
                 .filter(
                     p =>
@@ -346,7 +346,7 @@ export default {
                         p.color ? `-${p.color.substring(1)}` : ""
                     }`
                 }))
-                .slice(0, 9);
+                .slice(0, 10);
         },
         itemIdToEdit() {
             return this.$store.state.projectManagement.project.id || 0;

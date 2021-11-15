@@ -365,10 +365,13 @@ class TaskController extends BaseApiController
                     foreach ($task->periods as $task_period) {
 
                         $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
-
-                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
-                            $available = false;
-                            break;
+                        
+                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) || 
+                            ($period->contains($end_at) && $period->getStartDate() != $end_at) || 
+                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) || 
+                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)) {
+                                $available = false;
+                                break;
                         }
                     }
                 }
@@ -384,20 +387,44 @@ class TaskController extends BaseApiController
 
         $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
             : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
+        $workarea = Workarea::where('id',$workarea_id)->get();
+        $max_users = $workarea[0]['max_users'];
+        $nb_tasks=0;
 
         if (count($workareaTasks) > 0) {
 
-            foreach ($workareaTasks as $task) {
-                if ($available) {
-                    foreach ($task->periods as $task_period) {
+            if($max_users==1){
+                foreach ($workareaTasks as $task) {
+                    if ($available) {
+                        foreach ($task->periods as $task_period) {
 
-                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+                            $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
 
-                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
-                            $available = false;
-                            break;
+                            if (($period->contains($start_at) && $period->getEndDate() != $start_at) || 
+                                ($period->contains($end_at) && $period->getStartDate() != $end_at) || 
+                                ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) || 
+                                ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)) {
+                                    $available = false;
+                                    break;
+                            }
                         }
                     }
+                }
+            }
+            else{
+                foreach ($workareaTasks as $task) {
+                    foreach ($task->periods as $task_period) {
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) || 
+                            ($period->contains($end_at) && $period->getStartDate() != $end_at) || 
+                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) || 
+                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)) {
+                                $nb_tasks++;
+                        }
+                    }
+                }
+                if($nb_tasks>=$max_users){
+                    $available=false;
                 }
             }
         }
