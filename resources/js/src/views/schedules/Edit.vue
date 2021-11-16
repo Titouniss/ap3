@@ -311,7 +311,7 @@ export default {
                                     }
                                     let nbDay = moment(
                                         this.unavailableEvent[i].date_end
-                                    ).weekday();
+                                    ).day();
                                     //dimanche = 7 -> 0 pour les événements récurrents (daysOfWeek)
                                     if (nbDay == 7) {
                                         nbDay = 0;
@@ -580,7 +580,7 @@ export default {
                                     }
                                     nbDay = moment(
                                         this.unavailableEvent[i].date_end
-                                    ).weekday();
+                                    ).day();
                                     //dimanche = 7 -> 0 pour les événements récurrents (daysOfWeek)
                                     if (nbDay == 7) {
                                         nbDay = 0;
@@ -844,7 +844,7 @@ export default {
                                     }
                                     let nbDay = moment(
                                         this.unavailableEvent[i].date_end
-                                    ).weekday();
+                                    ).day();
                                     //dimanche = 7 -> 0 pour les événements récurrents (daysOfWeek)
                                     if (nbDay == 7) {
                                         nbDay = 0;
