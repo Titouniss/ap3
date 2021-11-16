@@ -88,7 +88,11 @@ export default {
                     new Date().getMonth(),
                     new Date().getDate() + 1
                 ),
-                maxDate: this.project_data.date
+                maxDate: new Date(
+                    new Date(this.project_data.date).getFullYear(),
+                    new Date(this.project_data.date).getMonth(),
+                    new Date(this.project_data.date).getDate() - 1
+                )
             }
         };
     },
@@ -106,7 +110,11 @@ export default {
             this.$set(
                 this.configStartsAtDateTimePicker,
                 "maxDate",
-                this.project_data.date
+                new Date(
+                    new Date(this.project_data.date).getFullYear(),
+                    new Date(this.project_data.date).getMonth(),
+                    new Date(this.project_data.date).getDate() - 1
+                )
             );
         },
         clearFields() {
