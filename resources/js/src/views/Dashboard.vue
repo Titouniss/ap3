@@ -286,7 +286,7 @@
                             <vs-button
                                 v-for="(project, index) in projects
                                     .sort((a, b) => a.progress > b.progress)
-                                    .slice(0, 7)"
+                                    .slice(0, 10)"
                                 :key="project.id"
                                 :to="'/projects/project-view/' + project.id"
                                 type="flat"

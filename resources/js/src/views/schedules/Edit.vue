@@ -585,14 +585,12 @@ export default {
                                     if (nbDay == 7) {
                                         nbDay = 0;
                                     }
-                                    heureDebutMatin =
-                                        hoursDay[nbDay]["morning_starts_at"];
-                                    heureFinMatin =
-                                        hoursDay[nbDay]["morning_ends_at"];
-                                    heureDebutApresMidi =
-                                        hoursDay[nbDay]["afternoon_starts_at"];
-                                    heureFinApresMidi =
-                                        hoursDay[nbDay]["afternoon_ends_at"];
+                                    if(hoursDay[nbDay]!=null){
+                                        heureDebutMatin =hoursDay[nbDay]["morning_starts_at"];
+                                        heureFinMatin =hoursDay[nbDay]["morning_ends_at"];
+                                        heureDebutApresMidi =hoursDay[nbDay]["afternoon_starts_at"];
+                                        heureFinApresMidi =hoursDay[nbDay]["afternoon_ends_at"];
+                                    }
                                 }
                             }
 
@@ -849,10 +847,12 @@ export default {
                                     if (nbDay == 7) {
                                         nbDay = 0;
                                     }
-                                    heureDebutMatin = hoursDay[nbDay][0];
-                                    heureFinMatin = hoursDay[nbDay][1];
-                                    heureDebutApresMidi = hoursDay[nbDay][2];
-                                    heureFinApresMidi = hoursDay[nbDay][3];
+                                    if(hoursDay[nbDay]!=null){
+                                        heureDebutMatin = hoursDay[nbDay][0];
+                                        heureFinMatin = hoursDay[nbDay][1];
+                                        heureDebutApresMidi = hoursDay[nbDay][2];
+                                        heureFinApresMidi = hoursDay[nbDay][3];
+                                    }
                                 }
                             }
                             //date de fin
