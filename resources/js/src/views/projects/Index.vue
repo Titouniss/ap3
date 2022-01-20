@@ -309,6 +309,11 @@ export default {
         },
         ganttViewMode(val, oldVal) {
             this.gantt.change_view_mode(val);
+            const oldest = this.gantt.get_oldest_starting_date().getTime()
+            const t = new Date() - oldest
+
+            this.gantt.gantt_start = new Date(this.gantt.gantt_start.getTime() - t)
+            this.gantt.set_scroll_position()
         }
     },
     computed: {
@@ -337,9 +342,11 @@ export default {
                 .map(p => ({
                     id: p.id.toString(),
                     name: p.name || "",
-                    start: moment
-                        .max(moment(p.start_date), moment())
-                        .format("YYYY-MM-DD"),
+                    // start: moment
+                    //     .max(moment(p.start_date), moment())
+                    //     .format("YYYY-MM-DD"),
+
+                    start: moment(p.start_date).format("YYYY-MM-DD"),
                     end: moment(p.date).format("YYYY-MM-DD"),
                     progress: p.progress.task_percent,
                     custom_class: `bar-${this.getProjectStatusColor(p)}${
@@ -459,6 +466,11 @@ export default {
                         );
                     }
                 });
+                const oldest = this.gantt.get_oldest_starting_date().getTime()
+                const t = new Date() - oldest
+
+                this.gantt.gantt_start = new Date(this.gantt.gantt_start.getTime() - t)
+                this.gantt.set_scroll_position()
             }
 
             if (this.gridApi) {
