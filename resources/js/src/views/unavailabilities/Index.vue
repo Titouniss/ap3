@@ -663,16 +663,25 @@ export default {
                                 data.data.success.payedOvertimes;
                         } else {
                             this.$vs.notify({
-                                color: "error",
+                                color: "danger",
                                 title: "Erreur",
                                 text: `Impossible d'afficher les heures supplémentaires`
                             });
                             this.overtimes = 0;
                         }
+                         if(this.overtimes<0)
+                    {
+                        this.$vs.notify({
+                                color: "danger",
+                                title: "Erreur",
+                                text: `Vos heures supplémentaires sont négatifs, un message sera envoyé à votre responsable`
+                            });
+                    }
                     })
                     .catch(err => {
                         console.error(err);
                     });
+                   
             }
         },
         fetchWorkHours() {

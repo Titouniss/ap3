@@ -12,7 +12,7 @@ class Task extends Model
 
     protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
-    protected $appends = ['project_id', 'time_spent'];
+    protected $appends = ['project_id', 'time_spent','project'];
 
     public function getTimeSpentAttribute()
     {
@@ -62,5 +62,11 @@ class Task extends Model
     public function getProjectIdAttribute()
     {
         return $this->hasOneThrough('App\Models\Project', 'App\Models\TasksBundle', 'id', 'id', 'tasks_bundle_id', 'project_id')->first()->id;
+    }
+
+    public function getProjectAttribute()
+    {
+        return Project::where('id', $this->project_id)->get();
+        
     }
 }

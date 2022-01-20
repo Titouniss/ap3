@@ -19,6 +19,11 @@
                         <div
                             class="vx-col flex-1"
                             style="border-right: 1px solid #d6d6d6"
+                                :class="
+                                    itemLocal.project.status == 'doing'
+                                        ? 'disabled-div'
+                                        : ''
+                                "
                         >
                             <vs-input
                                 v-validate="'required'"
@@ -525,7 +530,7 @@ export default {
                 name != "" &&
                 date != "" &&
                 estimated_time != "" &&
-                skills.length > 0 &&
+               skills && skills.length > 0 &&
                 (this.type === "users" ||
                     this.type === "workarea" ||
                     (this.hasAvailableUsers && this.hasAvailableWorkareas)) &&
@@ -620,6 +625,7 @@ export default {
     },
     methods: {
         clear() {
+
             this.deleteFiles();
             this.itemLocal = {};
             (this.workareasDataFiltered = []),

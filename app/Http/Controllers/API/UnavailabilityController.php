@@ -476,8 +476,22 @@ class UnavailabilityController extends BaseApiController
                 $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
             }
             $workWeekHours = WorkHours::where('user_id', $unavailability->user_id)->where('is_active', 1)->get()->map(function ($day) {
-                $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
-                $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                if($day->morning_ends_at != null)
+                {
+                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+                }
+                else
+                {
+                    $morning = CarbonInterval::hours(0);
+                }
+                   if($day->afternoon_ends_at != null)
+                    {
+                        $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                    }
+                    else
+                    {
+                        $afternoon = CarbonInterval::hours(0);
+                    }
                 return $morning->add($afternoon)->totalHours;
             })->sum();
 
@@ -509,8 +523,22 @@ class UnavailabilityController extends BaseApiController
                 $weekOvertimes = DealingHours::create(['user_id' => $unavailability->user_id, 'date' => Carbon::parse($unavailability->starts_at)->startOfWeek()->format('Y-m-d')]);
             }
             $workWeekHours = WorkHours::where('user_id', $unavailability->user_id)->where('is_active', 1)->get()->map(function ($day) {
-                $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
-                $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                if($day->morning_ends_at != null)
+                {
+                     $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
+                }
+                else
+                {
+                    $morning = CarbonInterval::hours(0);
+                }
+                   if($day->afternoon_ends_at != null)
+                    {
+                        $afternoon = CarbonInterval::createFromFormat('H:i:s', $day->afternoon_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->afternoon_starts_at));
+                    }
+                    else
+                    {
+                        $afternoon = CarbonInterval::hours(0);
+                    }
                 return $morning->add($afternoon)->totalHours;
             })->sum();
 

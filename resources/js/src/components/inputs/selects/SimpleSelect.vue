@@ -11,6 +11,7 @@
         @input="onInput"
         @blur="onBlur"
         @focus="onFocus"
+        v-on:keydown.enter="ignore_enter"
     >
         <vs-select-item
             v-for="item in options"
@@ -66,6 +67,9 @@ export default {
         };
     },
     methods: {
+        ignore_enter(){
+            
+        },
         onInput(value) {
             if (value) {
                 this.hadValue = true;

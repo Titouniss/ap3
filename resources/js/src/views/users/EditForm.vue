@@ -210,6 +210,25 @@
                             :options="itemLocal.related_users"
                         />
                     </div>
+
+                    <div  class="mt-5"
+                       >  <small
+                                    class="date-label mb-1 pl-2"
+                                    style="display: block"
+                                >
+                                    Date d'embauche</small>
+                      <flat-pickr
+                       v-validate="{
+                                required: true
+                            }"
+                                header="Date d'embauche"
+                                label="Date d'embauche"
+                                name="start_employment"
+                                class="w-full"
+                                v-model="itemLocal.start_employment"
+                                :config="configdateTimePicker"
+                            />
+                    </div>
                 </vs-col>
             </vs-row>
 
@@ -247,6 +266,9 @@ import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import WorkHours from "./WorkHours";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -264,7 +286,8 @@ export default {
     components: {
         InfiniteSelect,
         SimpleSelect,
-        WorkHours
+        WorkHours,
+        flatPickr
     },
     data() {
         return {
@@ -280,12 +303,22 @@ export default {
                 skills: [],
                 hours: 0,
                 work_hours: [],
-                related_user_id: null
+                related_user_id: null,
+                start_employment : null
             },
             initial_company_id: null,
             company_id_temps: null,
             company_login: "",
-            selected: []
+            selected: [],
+
+             configdateTimePicker: {
+                disableMobile: "true",
+                enableTime: true,
+                locale: FrenchLocale,
+                minDate: null,
+                maxDate: null,
+                defaultHour: 9
+            },
         };
     },
     computed: {
@@ -320,7 +353,9 @@ export default {
                 this.itemLocal.login != "" &&
                 this.itemLocal.company_id != null &&
                 this.itemLocal.role_id > 0 &&
-                this.itemLocal.hours != null
+                this.itemLocal.hours != null &&
+                this.itemLocal.start_employment != null
+
             );
         }
     },
@@ -371,7 +406,8 @@ export default {
                         role_id: item.role.id,
                         skills: skill_ids,
                         hours: item.hours,
-                        work_hours: item.work_hours
+                        work_hours: item.work_hours,
+                        start_employment: item.start_employment,
                     };
                     if (item.company_id) {
                         this.initial_company_id = item.company_id;

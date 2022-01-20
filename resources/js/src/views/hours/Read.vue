@@ -282,7 +282,7 @@ export default {
                 const calendarApi = this.$refs.fullCalendar.getApi();
                 const unit = calendarApi.view.viewSpec.singleUnit;
                 const date = moment(calendarApi.getDate()).format("DD-MM-YYYY");
-
+           
                 // Refresh hours
                 this.$store.dispatch("hoursManagement/fetchItems", {
                     date,
@@ -312,13 +312,15 @@ export default {
             calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
         },
         handleDateClick(arg) {
+           
             const period_start = moment(arg.dateStr).format(
                 "YYYY-MM-DD HH:mm:ss"
             );
+            
             const period_end = moment(arg.dateStr)
                 .add(30, "m")
                 .format("YYYY-MM-DD HH:mm:ss");
-
+        
             var targetsEvent = this.calendarEvents.filter(
                 item =>
                     moment(item.end).format("YYYY-MM-DD HH:mm:ss") >
@@ -443,6 +445,7 @@ export default {
                     if (item.work_hours.length > 0) {
                         let businessHours = [];
                         item.work_hours.forEach(wH => {
+                            
                             if (wH.is_active === 1) {
                                 if (
                                     wH.morning_starts_at !== null &&
@@ -478,6 +481,7 @@ export default {
                             let minHour = null;
                             let maxHour = null;
                             businessHours.forEach(bH => {
+                                
                                 if (
                                     minHour === null ||
                                     minHour > bH.startTime
@@ -496,13 +500,14 @@ export default {
                                           .subtract(2, "hour")
                                           .format("HH:mm")
                                     : "00:00";
+                                
                             this.maxTime =
                                 maxHour <= "22:00"
                                     ? moment(maxHour, "HH:mm")
                                           .add(2, "hour")
                                           .format("HH:mm")
                                     : "24:00";
-
+                              
                             this.businessHours = businessHours;
                         } else {
                             this.businessHours = false;

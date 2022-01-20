@@ -192,6 +192,18 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+
+                {
+                    path: "/projects/project-view/:id/:taskEdit",
+                    name: 'projects-project-view',
+                    component: () => import("@/views/projects/Read.vue"),
+                    meta: {
+                        parent: "projects",
+                        rule: "admin",
+                        requiresAuth: true,
+    
+                        },  
+                },
                 /////---RANGES---/////
                 {
                     path: "/ranges",
@@ -598,5 +610,4 @@ router.afterEach(() => {
         appLoading.style.display = "none";
     }
 });
-
 export default router;
