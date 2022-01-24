@@ -13,13 +13,14 @@ composer install \
     --no-scripts \
     --prefer-dist
 
-php artisan key:generate --ansi && \
+php artisan passport:install && \
+    php artisan key:generate --ansi && \
     php artisan storage:link && \
     php artisan config:cache && \
     php artisan cache:clear
 
 php artisan migrate --seed
 
-yarn install
+npm install
 
 /usr/sbin/apache2ctl -D FOREGROUND

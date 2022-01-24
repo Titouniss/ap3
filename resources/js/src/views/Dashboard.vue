@@ -56,8 +56,7 @@
                                     <h1 class="main-data text-primary">
                                         {{
                                             (hasMoreProjects ? "+" : "") +
-                                            projectsFilter.length 
-
+                                                projectsFilter.length
                                         }}
                                     </h1>
                                     <div class="text-center text-dark">
@@ -165,7 +164,6 @@
                     </vs-col>
                 </vs-row>
                 <vs-row slot="no-body">
-                    
                     <vs-col
                         vs-type="flex"
                         vs-justify="center"
@@ -240,16 +238,14 @@
 
                         <div v-else class="info-emptyblock">
                             <div class="info-empty">
-
-                            
-                            <feather-icon
-                                icon="CheckIcon"
-                                svgClasses="h-16 w-16 text-white"
-                            />
-                            <div class="text-center text-white">
-                                Pas de livraisons
+                                <feather-icon
+                                    icon="CheckIcon"
+                                    svgClasses="h-16 w-16 text-white"
+                                />
+                                <div class="text-center text-white">
+                                    Pas de livraisons
+                                </div>
                             </div>
-                        </div>
                         </div>
                     </vs-col>
                 </vs-row>
@@ -276,18 +272,15 @@
                             class="mr-3"
                         />
                         <h3 class="text-dark">Avancement</h3>
-                         <div class="flex flex-wrap items-center">
-               
-            </div>
-            
-                    <pagination
-                     v-bind:projectsFilter="projectsFilter"
-                     v-on:page:update="updatePage"
-                     v-bind:currentPage="currentPage"
-                     v-bind:pageSize="pageSize">
-                   </pagination>
-                
+                        <div class="flex flex-wrap items-center"></div>
 
+                        <pagination
+                            v-bind:projectsFilter="projectsFilter"
+                            v-on:page:update="updatePage"
+                            v-bind:currentPage="currentPage"
+                            v-bind:pageSize="pageSize"
+                        >
+                        </pagination>
                     </vs-col>
                 </vs-row>
                 <vs-row slot="no-body">
@@ -298,15 +291,16 @@
                         class="info-card"
                     >
                         <div
-                            v-if="updateVisibleProjects.length>0"
+                            v-if="updateVisibleProjects.length > 0"
                             class="items-center w-full info-list"
                         >
                             <vs-button
-                                v-for="(project, index) in updateVisibleProjects
+                                v-for="(project,
+                                index) in updateVisibleProjects
                                     .sort((a, b) => a.progress > b.progress)
-                                    .slice(0, 10)"                                
+                                    .slice(0, 10)"
                                 v-bind:currentPage="currentPage"
-                                :key="project.id"   
+                                :key="project.id"
                                 :to="'/projects/project-view/' + project.id"
                                 type="flat"
                                 text-color="grey"
@@ -316,10 +310,7 @@
                                         'mt-4': index > 0
                                     }
                                 ]"
-                            > 
-                           
-             
-             
+                            >
                                 <div class="flex justify-between items-start">
                                     <div class="flex flex-col items-start">
                                         <span class="text-left mb-1">
@@ -413,9 +404,8 @@
                                     "
                                 ></vs-progress>
                             </vs-button>
-       
                         </div>
-    
+
                         <div v-else class="info-empty">
                             <feather-icon
                                 icon="CheckIcon"
@@ -463,7 +453,11 @@
                             <vs-button
                                 v-for="(user, index) in usersWithLoad"
                                 :key="user.id"
-                                :to="'/schedules/schedules-read?id=' + user.id + '&type=users'"
+                                :to="
+                                    '/schedules/schedules-read?id=' +
+                                        user.id +
+                                        '&type=users'
+                                "
                                 type="flat"
                                 text-color="grey"
                                 :class="[
@@ -543,12 +537,10 @@
                         vs-w="12"
                         class="info-card"
                     >
-                 
                         <ul
                             v-if="taskComments.length > 0"
                             class="w-full vx-timeline info-list"
-                        >   
-                        
+                        >
                             <li
                                 v-for="comment in taskComments"
                                 :key="comment.id"
@@ -560,77 +552,85 @@
                                         svgClasses="text-white stroke-current w-5 h-5"
                                     />
                                 </div>
-                                
-                                 <vs-button
-                                :v-if="comment"
-                                :key="comment.task.project_id"
-                                :to="'/projects/project-view/' + comment.task.project_id + '/' + comment.task_id" 
-                                class="w-full p-5"
-                                type="flat"
-                                text-color="grey"
 
-                                
-                            >                            
-                                <div class="timeline-info">
-                                    <vs-row
-                                        vs-type="flex"
-                                        vs-justify="space-between"
-                                        vs-align="center"
-                                        vs-w="12"
-                                    >
-                                        <vs-col
+                                <vs-button
+                                    :v-if="comment"
+                                    :key="comment.task.project_id"
+                                    :to="
+                                        '/projects/project-view/' +
+                                            comment.task.project_id +
+                                            '/' +
+                                            comment.task_id
+                                    "
+                                    class="w-full p-5"
+                                    type="flat"
+                                    text-color="grey"
+                                >
+                                    <div class="timeline-info">
+                                        <vs-row
                                             vs-type="flex"
-                                            vs-justify="flex-start"
-                                            vs-w="6"
-                                        >
-                                            <div>
-                                                {{
-                                                    comment.creator.firstname +
-                                                        " " +
-                                                        comment.creator.lastname + " " 
-                                                }} :
-                                                <small>{{ comment.task.project[0].name  }}</small>
-                                            </div>
-                                        
-                                        </vs-col>
-                                        
-                                        <vs-col
-                                            vs-type="flex"
-                                            vs-justify="flex-end"
-                                            vs-w="6"
-                                        >
-                                            <small>
-                                                {{
-                                                    displayDateTime(
-                                                        comment.created_at
-                                                    )
-                                                }}
-                                            </small>
-                                        </vs-col>
-                                    </vs-row>
-                                    <vs-row
-                                        vs-type="flex"
-                                        vs-justify="flex-start"
-                                        vs-align="center"
-                                        vs-w="12"
-                                        class="mt-2"
-                                    >
-                                        <vs-col
-                                            vs-type="flex"
-                                            vs-justify="flex-start"
+                                            vs-justify="space-between"
+                                            vs-align="center"
                                             vs-w="12"
                                         >
-                                            <h6>
-                                                {{ comment.description }}
-                                            </h6>
-                                        </vs-col>
-                                    </vs-row>
-                                </div>
-                            
-                                        </vs-button>
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-start"
+                                                vs-w="6"
+                                            >
+                                                <div>
+                                                    {{
+                                                        comment.creator
+                                                            .firstname +
+                                                            " " +
+                                                            comment.creator
+                                                                .lastname +
+                                                            " "
+                                                    }}
+                                                    :
+                                                    <small>{{
+                                                        comment.task.project
+                                                            .name
+                                                    }}</small>
+                                                </div>
+                                            </vs-col>
+
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-end"
+                                                vs-w="6"
+                                            >
+                                                <small>
+                                                    {{
+                                                        displayDateTime(
+                                                            comment.created_at
+                                                        )
+                                                    }}
+                                                </small>
+                                            </vs-col>
+                                        </vs-row>
+                                        <vs-row
+                                            vs-type="flex"
+                                            vs-justify="flex-start"
+                                            vs-align="center"
+                                            vs-w="12"
+                                            class="mt-2"
+                                        >
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-start"
+                                                vs-w="12"
+                                            >
+                                                <h6>
+                                                    {{ comment.description }}
+                                                </h6>
+                                            </vs-col>
+                                        </vs-row>
+                                    </div>
+                                </vs-button>
                             </li>
                         </ul>
-                   
+
                         <div v-else class="info-empty">
                             <feather-icon
                                 icon="CheckIcon"
@@ -664,9 +664,8 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 export default {
     data() {
         return {
-
-             currentPage: 0,
-             pageSize: 10,
+            currentPage: 0,
+            pageSize: 10,
             chartOptions: {
                 plotOptions: {
                     radialBar: {
@@ -731,16 +730,16 @@ export default {
         StatisticsCardLine,
         ChangeTimeDurationDropdown,
         VxTimeline,
-        Pagination,
-        
-        
+        Pagination
     },
- 
-    computed: {
 
-     updateVisibleProjects() {
-        return this.projectsFilter.slice(this.currentPage * this.pageSize, (this.currentPage * this.pageSize) + this.pageSize);
-    },
+    computed: {
+        updateVisibleProjects() {
+            return this.projectsFilter.slice(
+                this.currentPage * this.pageSize,
+                this.currentPage * this.pageSize + this.pageSize
+            );
+        },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
@@ -749,12 +748,12 @@ export default {
         },
         projects() {
             return this.$store.getters["projectManagement/getItems"];
-        }, 
-
-         projectsFilter() {
-            return this.projects.filter(x=>x.status =='doing'); 
         },
-       
+
+        projectsFilter() {
+            return this.projects.filter(x => x.status == "doing");
+        },
+
         lateProjects() {
             return this.projects.filter(p => moment(p.date).isBefore());
         },
@@ -766,16 +765,20 @@ export default {
         tasks() {
             return this.$store.getters["taskManagement/getItems"];
         },
-            
+
         tasksToday() {
-            if(this.isManager){
-                return this.tasks.filter(task =>
-                    moment(task.date).isSame(moment(), "day") && task.project.company_id==this.$store.state.AppActiveUser.company.id
+            if (this.isManager) {
+                return this.tasks.filter(
+                    task =>
+                        moment(task.date).isSame(moment(), "day") &&
+                        task.project.company_id ==
+                            this.$store.state.AppActiveUser.company.id
                 );
-            }
-            else if(!this.isAdmin && !this.isManager){
-                return this.tasks.filter(task =>
-                    moment(task.date).isSame(moment(), "day") && task.user_id==this.$store.state.AppActiveUser.id
+            } else if (!this.isAdmin && !this.isManager) {
+                return this.tasks.filter(
+                    task =>
+                        moment(task.date).isSame(moment(), "day") &&
+                        task.user_id == this.$store.state.AppActiveUser.id
                 );
             }
             return this.tasks.filter(task =>
@@ -797,7 +800,7 @@ export default {
         taskComments() {
             return this.$store.getters["taskManagement/getComments"];
         },
-           usersWithLoad() {
+        usersWithLoad() {
             if (this.isAdmin || !this.authorizedTo("show", "users")) return [];
 
             const users = this.$store.getters["userManagement/getItems"];
@@ -831,36 +834,28 @@ export default {
                     );
                 };
                 let hoursLoad = 0;
-                if(workDay.afternoon_ends_at ==null )
-                {
-                     hoursLoad = duration(
+                if (workDay.afternoon_ends_at == null) {
+                    hoursLoad = duration(
                         workDay.morning_starts_at,
-                        workDay.morning_ends_at, 
-                    )
-                }
-                else if(workDay.morning_ends_at ==null)
-                {
-                   hoursLoad = duration(
-                        workDay.afternoon_starts_at,
-                        workDay.afternoon_ends_at,
-                      
+                        workDay.morning_ends_at
                     );
-                }
-                else
-                {
+                } else if (workDay.morning_ends_at == null) {
+                    hoursLoad = duration(
+                        workDay.afternoon_starts_at,
+                        workDay.afternoon_ends_at
+                    );
+                } else {
                     hoursLoad =
-                    duration(
-                        workDay.morning_starts_at,
-                        workDay.morning_ends_at,
-                        
-                    ) +
-                    duration(
-                        workDay.afternoon_starts_at,
-                        workDay.afternoon_ends_at,
-                      
-                    );
+                        duration(
+                            workDay.morning_starts_at,
+                            workDay.morning_ends_at
+                        ) +
+                        duration(
+                            workDay.afternoon_starts_at,
+                            workDay.afternoon_ends_at
+                        );
                 }
-               
+
                 const taskLoad = tasks
                     ? tasks
                           .map(task => task.periods)
@@ -897,9 +892,9 @@ export default {
     },
     methods: {
         moment,
-    updatePage(pageNumber) {
-      this.currentPage = pageNumber;
-    },
+        updatePage(pageNumber) {
+            this.currentPage = pageNumber;
+        },
         displayDate(date) {
             return moment(date).format("DD/MM/YYYY");
         },
@@ -942,14 +937,14 @@ export default {
                 if (success) {
                     this.hasMoreProjects =
                         pagination.count !== pagination.total;
-                }                                                   
+                }
             })
             .catch(err => {
                 console.error(err);
             });
         this.$store
             .dispatch("taskManagement/fetchItems", {
-                date: moment().format("DD-MM-YYYY"),
+                date: moment().format("DD-MM-YYYY")
             })
             .catch(err => {
                 console.error(err);
@@ -1018,8 +1013,7 @@ export default {
     border-radius: 50%;
     background-color: rgb(var(--vs-primary));
 }
-.info-emptyblock
-{
+.info-emptyblock {
     min-height: max(30vh, 300px);
 }
 .vs-button-text {
