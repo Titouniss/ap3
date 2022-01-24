@@ -68,6 +68,75 @@
                     <refresh-module />
                 </vs-col>
             </vs-row>
+            <vs-row
+                vs-type="flex"
+                vs-align="center"
+                vs-w="12"
+                class="mb-4"
+            >
+                <div v-if="isAdmin" class="mr-10">
+                    <infinite-select
+                        header="Société"
+                        model="company"
+                        label="name"
+                        v-model="filters.company_id"
+                    />
+                </div>
+                <div class="mr-10">
+                    <infinite-select
+                        header="Client"
+                        model="customer"
+                        label="name"
+                        v-model="filters.customer_id"
+                    />
+                </div>
+                <div class="mr-10">
+                    <simple-select
+                        header="Avancement"
+                        label="name"
+                        v-model="filters.status"
+                        :reduce="item => item.key"
+                        :options="statusOption"
+                    />
+                </div>
+                <div class="mr-10">
+                    <small class="small-radio-circle">
+                        <vs-radio
+                            class="date-label"
+                            v-model="filters.formatDate"
+                            vs-value="month"
+                        >
+                            Mois
+                        </vs-radio>
+                        <vs-radio
+                            class="small-radio-circle"
+                            v-model="filters.formatDate"
+                            vs-value="year"
+                        >
+                            Année
+                        </vs-radio>
+                    </small>
+                    <datepicker
+                        placeholder="Filtre par date"
+                        class="pickadate"
+                        name="date"
+                        :format="formatDatePicker"
+                        :language="langFr"
+                        :minimumView="filters.formatDate" :maximumView="'year'" :initialView="filters.formatDate"
+                        v-model="filters.date"
+                    >
+                    </datepicker>
+                </div>
+                 <div class="mr-10">
+                    <simple-select
+                        header="Afficher les projets archivés"
+                        label="name"
+                        v-model="filters.deleted_at"
+                        :reduce="item => item.key"
+                        :options="booleanOption"
+                    />
+                </div>
+            </vs-row>
 
             <div class="w-full">
                 <div class="flex flex-wrap items-center">
@@ -164,6 +233,8 @@ import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import moment from "moment";
 import Gantt from "frappe-gantt";
+import Datepicker from "vuejs-datepicker";
+import { fr } from "vuejs-datepicker/src/locale";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -177,10 +248,13 @@ import moduleDocumentManagement from "@/store/document-management/moduleDocument
 
 // Cell Renderer
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
+import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 
 // Components
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect";
 import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
@@ -194,14 +268,18 @@ export default {
     components: {
         AgGridVue,
         AddForm,
+        Datepicker,
         EditForm,
 
         // Cell Renderer
         CellRendererActions,
         CellRendererLink,
         CellRendererRelations,
+        CellRendererStatus,
 
         // Components
+        InfiniteSelect,
+        SimpleSelect,
         RefreshModule,
         MultipleActions
     },
@@ -209,9 +287,22 @@ export default {
         return {
             searchQuery: "",
             page: 1,
-            perPage: 10,
+            perPage: 50,
             totalPages: 0,
             total: 0,
+            langFr: fr,
+
+            statusOption: [
+                { key:"", name: "-" },
+                { key:"todo", name: "À faire" },
+                { key:"doing", name: "En cours" },
+                { key:"waiting", name: "Terminé, en attente de livraison" },
+                { key:"done", name: "Livré" },
+            ],
+            booleanOption: [
+                { key:true, name: "Oui" },
+                { key:false, name: "Non" },
+            ],
 
             gantt: null,
 
@@ -250,22 +341,18 @@ export default {
                 {
                     headerName: "Avancement",
                     field: "status",
-                    filter: true,
-                    cellRenderer: data => {
-                        switch (data.value) {
-                            case "doing":
-                                return "En cours";
-                            case "done":
-                                return "Terminé";
-                            default:
-                                return "À faire"; // todo
-                        }
-                    }
+                    cellRendererFramework: "CellRendererStatus"
                 },
                 {
                     headerName: "Société",
                     field: "company",
                     hide: !this.isAdmin,
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations"
+                },
+                {
+                    headerName: "Client",
+                    field: "customer",
                     filter: true,
                     cellRendererFramework: "CellRendererRelations"
                 },
@@ -296,7 +383,17 @@ export default {
             components: {
                 CellRendererLink,
                 CellRendererActions,
-                CellRendererRelations
+                CellRendererRelations,
+                CellRendererStatus
+            },
+
+            filters: {
+                company_id: null,
+                customer_id: null,
+                status: null,
+                date: null,
+                formatDate: 'year',
+                deleted_at: false
             },
 
             ganttViewMode: "Week",
@@ -314,6 +411,12 @@ export default {
 
             this.gantt.gantt_start = new Date(this.gantt.gantt_start.getTime() - t)
             this.gantt.set_scroll_position()
+        },
+         filters: {
+            handler(val, prev) {
+                this.fetchProjects()
+            },
+            deep: true
         }
     },
     computed: {
@@ -353,7 +456,7 @@ export default {
                         p.color ? `-${p.color.substring(1)}` : ""
                     }`
                 }))
-                .slice(0, 10);
+                .slice(0, 50);
         },
         itemIdToEdit() {
             return this.$store.state.projectManagement.project.id || 0;
@@ -376,19 +479,38 @@ export default {
                 this.page = val;
                 this.fetchProjects();
             }
+        },
+        formatDatePicker () {
+            return this.filters.formatDate === 'year' ? 'yyyy' : 'MMM yyyy' 
         }
     },
     methods: {
         fetchProjects() {
             const that = this;
             this.$vs.loading();
+
+            let month = null
+            let year = null
+            if(this.filters.date && this.filters.formatDate === 'year'){
+                year = moment(this.filters.date).format('YYYY')
+            }
+            if(this.filters.date && this.filters.formatDate === 'month'){
+                year = moment(this.filters.date).format('YYYY')
+                month = moment(this.filters.date).format('M')
+            }
+
             this.$store
                 .dispatch("projectManagement/fetchItems", {
-                    with_trashed: true,
                     page: this.currentPage,
                     per_page: this.perPage,
                     q: this.searchQuery || undefined,
-                    order_by: "status"
+                    company_id: this.filters.company_id || undefined,
+                    customer_id: this.filters.customer_id || undefined,
+                    status: this.filters.status || undefined,
+                    year: year || undefined,
+                    month: month || undefined,
+                    deleted_at: this.filters.deleted_at || undefined,
+                    order_by: 'status'
                 })
                 .then(data => {
                     that.projectsLoaded = true;
@@ -581,6 +703,8 @@ export default {
 .handle {
     display: none;
 }
+.small-radio-circle .vs-radio--circle { transform: scale(0.5) !important; }
+.small-radio-circle .vs-radio--borde { transform: scale(0.5) !important; }
 
 $projectStatus: "primary", "warning", "danger";
 $colors: (

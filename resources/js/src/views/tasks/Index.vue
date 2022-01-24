@@ -113,6 +113,7 @@
                             @click="editRecord(item)"
                         />
                         <feather-icon
+                            v-if="project_data.status != 'waiting' && project_data.status != 'done'"
                             icon="Trash2Icon"
                             svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                             @click="confirmDeleteRecord(item)"

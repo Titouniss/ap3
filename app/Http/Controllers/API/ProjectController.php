@@ -71,7 +71,18 @@ class ProjectController extends BaseApiController
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-
+        if ($request->has('deleted_at')) {
+            $query->onlyTrashed();
+        }
+        if ($request->has('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+        if ($request->has('month')) { 
+            $query->whereMonth('created_at', '=', $request->month);
+        }
+        if ($request->has('year')) { 
+            $query->whereYear('created_at', '=', $request->year);    
+        }
         if ($request->has('order_by') && $request->order_by == 'status') {
             try {
                 $query->getQuery()->orders = null;
@@ -81,7 +92,7 @@ class ProjectController extends BaseApiController
                     $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
                 }
 
-                $query->orderByRaw("FIELD(status, \"doing\", \"todo\", \"done\") {$direction}");
+                $query->orderByRaw("FIELD(status, \"doing\", \"todo\", \"waiting\", \"done\") {$direction}");
                 $query->orderBy('name', $direction);
             } catch (\Throwable $th) {
                 throw new ApiException("Paramètre 'order_by' n'est pas valide.");
@@ -120,6 +131,7 @@ class ProjectController extends BaseApiController
             'name' => $arrayRequest['name'],
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
+            'status' => $arrayRequest['status'],
         ]);
 
         if (isset($arrayRequest['customer_id'])) {
