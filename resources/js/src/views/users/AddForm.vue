@@ -175,6 +175,24 @@
                             {{ errors.first("hours") }}
                         </span>
                     </div>
+                    <div  class="mt-5"
+                       >  <small
+                                    class="date-label mb-1 pl-2"
+                                    style="display: block"
+                                >
+                                    Date d'embauche</small>
+                      <flat-pickr
+                       v-validate="{
+                                required: true
+                            }"
+                                header="Date d'embauche"
+                                label="Date d'embauche"
+                                name="start_employment"
+                                class="w-full"
+                                v-model="itemLocal.start_employment"
+                                :config="configdateTimePicker"
+                            />
+                    </div>
                 </vs-col>
             </vs-row>
 
@@ -208,6 +226,9 @@
 import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 
 // Store Module
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
@@ -223,7 +244,8 @@ var modelPlurial = "users";
 
 export default {
     components: {
-        InfiniteSelect
+        InfiniteSelect,
+        flatPickr
     },
     data() {
         return {
@@ -238,9 +260,18 @@ export default {
                 function: "",
                 role_id: 0,
                 skills: [],
-                hours: 0
+                hours: 0,
+                start_employment : null
             },
-            company_login: ""
+            company_login: "",
+            configdateTimePicker: {
+                disableMobile: "true",
+                enableTime: true,
+                locale: FrenchLocale,
+                minDate: null,
+                maxDate: null,
+                defaultHour: 9
+            },
         };
     },
     computed: {
@@ -273,7 +304,8 @@ export default {
                 this.itemLocal.login != "" &&
                 this.itemLocal.company_id > 0 &&
                 this.itemLocal.role_id > 0 &&
-                this.itemLocal.hours != null
+                this.itemLocal.hours != null &&
+                this.itemLocal.start_employment != null
             );
         }
     },

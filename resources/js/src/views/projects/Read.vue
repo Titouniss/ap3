@@ -147,15 +147,17 @@
                             </tr>
                             <tr>
                                 <td class="font-semibold">
-                                    Temps estimé sur le projet :
+                                    Temps estimé sur le projet : 
                                 </td>
-                                <td>{{ estimatedTimeData }} heures</td>
+                                <td> {{ estimatedTimeData }} heures</td>
                             </tr>
                             <tr v-if="project_data.status != 'todo'">
                                 <td class="font-semibold">
                                     Temps réalisé sur le projet :
                                 </td>
-                                <td>{{ achievedTimeData }} heures</td>
+                                <td>{{ achievedTimeData > 0
+                                            ? achievedTimeData  + " " + "heures"
+                                            : achievedTimeData + " " + "heure"}} </td>
                             </tr>
                         </table>
                     </div>
@@ -253,6 +255,7 @@
                         <index-tasks
                             :project_data="this.project_data"
                             :refreshData="refreshData"
+                            :taskIdToEdit =this.$route.params.taskEdit
                         />
                     </vx-card>
                 </div>

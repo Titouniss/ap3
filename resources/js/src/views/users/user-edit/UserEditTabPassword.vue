@@ -37,7 +37,7 @@
       class="w-full mb-base"
       label-placeholder="Confirmation mot de passe"
       v-model="confirm_password"
-      v-validate="'required|min:8|max:50|confirmed:password'"
+      v-validate="'required|min:8|max:50|confirmed:password|'"
       name="confirm_password"
       :danger="errors.has('confirm_password')"
       :danger-text="errors.first('confirm_password')"
@@ -91,6 +91,7 @@ export default {
       if (!str) return "";
       return str.slice(0, 1).toUpperCase() + str.slice(1, str.length);
     },
+
     change_password() {
       //Check old password
       const itemLocal = {

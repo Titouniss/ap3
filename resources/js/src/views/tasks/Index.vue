@@ -182,12 +182,12 @@
                 </div>
 
                 <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-                <vs-input
+                <!-- <vs-input
                     class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
                     v-model="searchQuery"
                     @input="updateSearchQuery"
                     placeholder="Rechercher..."
-                />
+                /> -->
                 <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
             </div>
 
@@ -215,7 +215,7 @@
         </div>
 
         <edit-form
-            :itemId="itemIdToEdit"
+            :itemId="itemIdToEdit "
             :project_data="this.project_data"
             v-if="itemIdToEdit"
             :tasks_list="tasksData"
@@ -250,6 +250,9 @@ export default {
     props: {
         project_data: {
             required: true
+        },
+         taskIdToEdit: {
+            required: false
         },
         refreshData: {
             required: true
@@ -388,6 +391,7 @@ export default {
             }
         },
         editRecord(item) {
+
             this.$store
                 .dispatch("taskManagement/editItem", item)
                 .then(() => {})
@@ -457,6 +461,7 @@ export default {
         }
     },
     created() {
+        
         if (!moduleTaskManagement.isRegistered) {
             this.$store.registerModule("taskManagement", moduleTaskManagement);
             moduleTaskManagement.isRegistered = true;
@@ -482,7 +487,30 @@ export default {
             });
 
         this.$store.dispatch("userManagement/fetchItems");
+
+let tasks = this.$store.getters["taskManagement/getItems"];
+
+
+      if(this.taskIdToEdit){
+             let task = tasks.filter(x=>x.id == this.taskIdToEdit);
+
+             this.$store
+                .dispatch("taskManagement/getTasksById", this.taskIdToEdit)
+                .then((reponse) => {console.log(reponse); 
+                
+                this.$store
+                .dispatch("taskManagement/editItem", reponse.payload)
+                .then(() => {})
+                .catch(err => {
+                    console.error(err);
+                });})
+                .catch(err => {
+                    console.log("erreur");
+                    console.error(err);
+                });
+        }
     },
+    
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 

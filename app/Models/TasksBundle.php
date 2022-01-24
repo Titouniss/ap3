@@ -11,4 +11,8 @@ class TasksBundle extends Model
     use SoftDeletes, HasCompany;
 
     protected $fillable = ['id', 'company_id', 'project_id'];
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'id');
+    }
 }

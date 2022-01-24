@@ -529,10 +529,13 @@ class TaskController extends BaseApiController
                         ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
                         ->where('projects.company_id', $user->company_id);
                 } else {
-                    $query->where('created_by', $user->id);
-                }
+                    $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
+                        ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                        ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
+                        ->where('created_by', $user->id);
+                    }
             }
-
+           
             $extra = collect([]);
 
             if ($request->has('order_by')) {
@@ -584,7 +587,9 @@ class TaskController extends BaseApiController
                     'total' => $paginator->total()
                 ]);
             }
-
+            //commentaire dashboard liaison entre le commentaire -> la tâche -> le projet
+            $query->with('task')->get();
+            
             $items = $query->get();
 
             return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
@@ -593,5 +598,11 @@ class TaskController extends BaseApiController
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
+    }
+    public function getTask(int $id)
+    {
+        $extra = collect([]);
+        $task = Task::where('id', $id)->first();
+        return $this->successResponse($task, 'Chargement terminé avec succès.', $extra->toArray());
     }
 }

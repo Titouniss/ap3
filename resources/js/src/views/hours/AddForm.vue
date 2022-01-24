@@ -290,6 +290,7 @@ export default {
             this.handleClose();
         },
         addItem() {
+           
             this.$validator.validateAll().then(result => {
                 if (result) {
                     const payload = JSON.parse(JSON.stringify(this.itemLocal));

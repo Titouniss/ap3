@@ -6,6 +6,19 @@ const model = "task";
 const model_plurial = "tasks";
 
 const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
+state.task = {};
+getters.getTask = state => JSON.parse(JSON.stringify(state.task || {}));
+
+actions.getTasksById = ({ commit }, params = null) => {
+    return apiRequest(
+        `${slug}/task/${params}`,
+        "get",
+        payload => commit("SET_TASK", payload),
+        params
+    );
+}
+mutations.SET_TASK = (state, items) => (state.task = items);
+
 
 //#region Comments
 

@@ -56,7 +56,8 @@
                                     <h1 class="main-data text-primary">
                                         {{
                                             (hasMoreProjects ? "+" : "") +
-                                                projects.length
+                                            projectsFilter.length 
+
                                         }}
                                     </h1>
                                     <div class="text-center text-dark">
@@ -164,6 +165,7 @@
                     </vs-col>
                 </vs-row>
                 <vs-row slot="no-body">
+                    
                     <vs-col
                         vs-type="flex"
                         vs-justify="center"
@@ -236,7 +238,10 @@
                             </li>
                         </ul>
 
-                        <div v-else class="info-empty">
+                        <div v-else class="info-emptyblock">
+                            <div class="info-empty">
+
+                            
                             <feather-icon
                                 icon="CheckIcon"
                                 svgClasses="h-16 w-16 text-white"
@@ -244,6 +249,7 @@
                             <div class="text-center text-white">
                                 Pas de livraisons
                             </div>
+                        </div>
                         </div>
                     </vs-col>
                 </vs-row>
@@ -270,6 +276,18 @@
                             class="mr-3"
                         />
                         <h3 class="text-dark">Avancement</h3>
+                         <div class="flex flex-wrap items-center">
+               
+            </div>
+            
+                    <pagination
+                     v-bind:projectsFilter="projectsFilter"
+                     v-on:page:update="updatePage"
+                     v-bind:currentPage="currentPage"
+                     v-bind:pageSize="pageSize">
+                   </pagination>
+                
+
                     </vs-col>
                 </vs-row>
                 <vs-row slot="no-body">
@@ -280,14 +298,15 @@
                         class="info-card"
                     >
                         <div
-                            v-if="projects.length > 0"
+                            v-if="updateVisibleProjects.length>0"
                             class="items-center w-full info-list"
                         >
                             <vs-button
-                                v-for="(project, index) in projects
+                                v-for="(project, index) in updateVisibleProjects
                                     .sort((a, b) => a.progress > b.progress)
-                                    .slice(0, 10)"
-                                :key="project.id"
+                                    .slice(0, 10)"                                
+                                v-bind:currentPage="currentPage"
+                                :key="project.id"   
                                 :to="'/projects/project-view/' + project.id"
                                 type="flat"
                                 text-color="grey"
@@ -297,7 +316,10 @@
                                         'mt-4': index > 0
                                     }
                                 ]"
-                            >
+                            > 
+                           
+             
+             
                                 <div class="flex justify-between items-start">
                                     <div class="flex flex-col items-start">
                                         <span class="text-left mb-1">
@@ -391,8 +413,9 @@
                                     "
                                 ></vs-progress>
                             </vs-button>
+       
                         </div>
-
+    
                         <div v-else class="info-empty">
                             <feather-icon
                                 icon="CheckIcon"
@@ -520,10 +543,12 @@
                         vs-w="12"
                         class="info-card"
                     >
+                 
                         <ul
                             v-if="taskComments.length > 0"
                             class="w-full vx-timeline info-list"
-                        >
+                        >   
+                        
                             <li
                                 v-for="comment in taskComments"
                                 :key="comment.id"
@@ -535,6 +560,17 @@
                                         svgClasses="text-white stroke-current w-5 h-5"
                                     />
                                 </div>
+                                
+                                 <vs-button
+                                :v-if="comment"
+                                :key="comment.task.project_id"
+                                :to="'/projects/project-view/' + comment.task.project_id + '/' + comment.task_id" 
+                                class="w-full p-5"
+                                type="flat"
+                                text-color="grey"
+
+                                
+                            >                            
                                 <div class="timeline-info">
                                     <vs-row
                                         vs-type="flex"
@@ -551,10 +587,13 @@
                                                 {{
                                                     comment.creator.firstname +
                                                         " " +
-                                                        comment.creator.lastname
-                                                }}
+                                                        comment.creator.lastname + " " 
+                                                }} :
+                                                <small>{{ comment.task.project[0].name  }}</small>
                                             </div>
+                                        
                                         </vs-col>
+                                        
                                         <vs-col
                                             vs-type="flex"
                                             vs-justify="flex-end"
@@ -587,9 +626,11 @@
                                         </vs-col>
                                     </vs-row>
                                 </div>
+                            
+                                        </vs-button>
                             </li>
                         </ul>
-
+                   
                         <div v-else class="info-empty">
                             <feather-icon
                                 icon="CheckIcon"
@@ -613,6 +654,7 @@ import VueApexCharts from "vue-apexcharts";
 import StatisticsCardLine from "@/components/statistics-cards/StatisticsCardLine.vue";
 import ChangeTimeDurationDropdown from "@/components/ChangeTimeDurationDropdown.vue";
 import VxTimeline from "@/components/timeline/VxTimeline";
+import Pagination from "@/components/Pagination.vue";
 
 // Store Module
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
@@ -622,6 +664,9 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 export default {
     data() {
         return {
+
+             currentPage: 0,
+             pageSize: 10,
             chartOptions: {
                 plotOptions: {
                     radialBar: {
@@ -685,9 +730,17 @@ export default {
         VueApexCharts,
         StatisticsCardLine,
         ChangeTimeDurationDropdown,
-        VxTimeline
+        VxTimeline,
+        Pagination,
+        
+        
     },
+ 
     computed: {
+
+     updateVisibleProjects() {
+        return this.projectsFilter.slice(this.currentPage * this.pageSize, (this.currentPage * this.pageSize) + this.pageSize);
+    },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
@@ -696,7 +749,12 @@ export default {
         },
         projects() {
             return this.$store.getters["projectManagement/getItems"];
+        }, 
+
+         projectsFilter() {
+            return this.projects.filter(x=>x.status =='doing'); 
         },
+       
         lateProjects() {
             return this.projects.filter(p => moment(p.date).isBefore());
         },
@@ -708,6 +766,7 @@ export default {
         tasks() {
             return this.$store.getters["taskManagement/getItems"];
         },
+            
         tasksToday() {
             if(this.isManager){
                 return this.tasks.filter(task =>
@@ -738,7 +797,7 @@ export default {
         taskComments() {
             return this.$store.getters["taskManagement/getComments"];
         },
-        usersWithLoad() {
+           usersWithLoad() {
             if (this.isAdmin || !this.authorizedTo("show", "users")) return [];
 
             const users = this.$store.getters["userManagement/getItems"];
@@ -771,17 +830,37 @@ export default {
                         true
                     );
                 };
-
-                const hoursLoad =
+                let hoursLoad = 0;
+                if(workDay.afternoon_ends_at ==null )
+                {
+                     hoursLoad = duration(
+                        workDay.morning_starts_at,
+                        workDay.morning_ends_at, 
+                    )
+                }
+                else if(workDay.morning_ends_at ==null)
+                {
+                   hoursLoad = duration(
+                        workDay.afternoon_starts_at,
+                        workDay.afternoon_ends_at,
+                      
+                    );
+                }
+                else
+                {
+                    hoursLoad =
                     duration(
                         workDay.morning_starts_at,
-                        workDay.morning_ends_at
+                        workDay.morning_ends_at,
+                        
                     ) +
                     duration(
                         workDay.afternoon_starts_at,
-                        workDay.afternoon_ends_at
+                        workDay.afternoon_ends_at,
+                      
                     );
-
+                }
+               
                 const taskLoad = tasks
                     ? tasks
                           .map(task => task.periods)
@@ -800,7 +879,6 @@ export default {
                               0
                           )
                     : 0;
-
                 return {
                     id,
                     firstname,
@@ -819,6 +897,9 @@ export default {
     },
     methods: {
         moment,
+    updatePage(pageNumber) {
+      this.currentPage = pageNumber;
+    },
         displayDate(date) {
             return moment(date).format("DD/MM/YYYY");
         },
@@ -861,7 +942,7 @@ export default {
                 if (success) {
                     this.hasMoreProjects =
                         pagination.count !== pagination.total;
-                }
+                }                                                   
             })
             .catch(err => {
                 console.error(err);
@@ -922,9 +1003,8 @@ export default {
 .info-card {
     padding: 0 20px;
     padding-bottom: 20px;
-    min-height: max(30vh, 300px);
+    /* min-height: max(30vh, 300px); */
 }
-
 .info-list {
 }
 
@@ -938,7 +1018,10 @@ export default {
     border-radius: 50%;
     background-color: rgb(var(--vs-primary));
 }
-
+.info-emptyblock
+{
+    min-height: max(30vh, 300px);
+}
 .vs-button-text {
     width: 100%;
 }

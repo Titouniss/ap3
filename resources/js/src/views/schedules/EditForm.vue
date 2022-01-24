@@ -69,6 +69,7 @@
                             v-model="itemLocal.user_id"
                             class="w-full"
                             autocomplete
+                            v-on:keydown.enter="ignore_enter"
                         >
                             <vs-select-item
                                 :key="index"
@@ -102,6 +103,7 @@
                             v-model="itemLocal.workarea_id"
                             class="w-full"
                             autocomplete
+                            v-on:keydown.enter="ignore_enter"
                         >
                             <vs-select-item
                                 :key="index"
@@ -229,6 +231,8 @@ export default {
         }
     },
     methods: {
+        ignore_enter(){
+        },
         init() {
             this.itemLocal = Object.assign(
                 {},

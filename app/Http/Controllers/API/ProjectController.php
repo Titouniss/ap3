@@ -2518,6 +2518,7 @@ class ProjectController extends BaseApiController
 
         //récupérer toutes les tasks avec le même workarea_id
         $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
+    
         $listTaskId = array();
         //s'il y a au moins une task sur le même îlot
         if (count($tasksWorkarea) > 0) {
@@ -3063,7 +3064,7 @@ class ProjectController extends BaseApiController
         $timeData = $this->calculTimeAvailable($users, $project, $users);
 
         if ($timeData['total_hours_available'] < $nbHoursRequired) {
-            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Vueillez modifier la date de livraison du projet.");
+            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
         }
 
         return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
@@ -3128,6 +3129,18 @@ class ProjectController extends BaseApiController
         }
         $workersHaveSkills = $nb_tasks == $nb_tasks_skills_worker ? true : false;
         $workareasHaveSkills = $nb_tasks == $nb_tasks_skills_workarea ? true : false;
+
+//Alerte Planification mettre la compétence lorsqu'elle n'est pas affilié à un utilisateur ou à un pôle 
+  $taskWOrk = Task::whereNull('workarea_id')->where('name',$task->name)->get();
+
+
+
+        // // $skillNull = Task::where('workarea_id', $workarea[0]->id)->get();
+        // $workarea_id = $task[0]['workarea_id'];
+        // $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
+        
+
+
 
         $alerts = [];
         $haveHours ? null : $alerts[] = "Aucun utilisateur ne possède d'heures de travail";
@@ -3947,7 +3960,7 @@ class ProjectController extends BaseApiController
             // En cas d'erreur, on annule les changements et on retourne une erreur
             if (!$allPlanified) {
                 Task::whereIn('id', $taskIds)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
-                throw new Exception("Les plages de travails disponibles sont insuffisantes pour démarrer le projet. Veuillez modifier la date de livraison.");
+                throw new Exception("Les plages de travail disponibles sont insuffisantes pour démarrer le projet. Veuillez modifier la date de livraison.");
             }
 
             // Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success

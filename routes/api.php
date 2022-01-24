@@ -165,6 +165,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('task-management')->group(function () {
         Route::get('index', 'API\TaskController@index');
         Route::get('comments', 'API\TaskController@comments');
+        Route::get('task/{id}', 'API\TaskController@getTask');
         Route::get('show/{id}', 'API\TaskController@show');
         Route::post('store', 'API\TaskController@store');
         Route::post('store-comment/{id}', 'API\TaskController@addComment');
