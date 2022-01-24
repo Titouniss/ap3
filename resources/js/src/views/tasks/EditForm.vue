@@ -213,11 +213,7 @@
                                 style="flex-direction: column; display: flex"
                             >
                                 <span
-                                    :class="
-                                        itemLocal.project.status == 'doing'
-                                            ? 'disabled-div'
-                                            : ''
-                                    "
+                                    v-if="itemLocal.project.status !== 'doing'"
                                 >
                                     <add-previous-tasks
                                         :addPreviousTask="addPreviousTask"
