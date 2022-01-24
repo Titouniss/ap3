@@ -17,7 +17,7 @@ class CreateProjectsTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->timestamp('date')->nullable(); // Date de livraison
-            $table->enum('status', ['todo', 'doing', 'done']); // Avancement
+            $table->enum('status', ['todo', 'doing', 'waiting','done']); // Avancement
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');          
             $table->unsignedBigInteger('created_by')->nullable();

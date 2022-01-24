@@ -12,7 +12,7 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-            <div>
+            <div :class="project_data.status == 'waiting' || project_data.status == 'done' ? 'disabled-div' : null">
                 <form autocomplete="off">
                     <div class="vx-row">
                         <!-- Left -->
