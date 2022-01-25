@@ -669,14 +669,6 @@ export default {
                             });
                             this.overtimes = 0;
                         }
-                         if(this.overtimes<0)
-                    {
-                        this.$vs.notify({
-                                color: "danger",
-                                title: "Erreur",
-                                text: `Vos heures supplémentaires sont négatifs, un message sera envoyé à votre responsable`
-                            });
-                    }
                     })
                     .catch(err => {
                         console.error(err);

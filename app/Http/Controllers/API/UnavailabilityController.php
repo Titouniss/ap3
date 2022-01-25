@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Carbon\CarbonPeriod;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class UnavailabilityController extends BaseApiController
 {
@@ -53,22 +55,22 @@ class UnavailabilityController extends BaseApiController
         }
         if ($request->has('date')) {
             try {
-                $date = Carbon::parse($request->date);
-                switch ($request->period_type) {
-                    case 'week':
-                        $query->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
-                        break;
-                    case 'month':
-                        $query->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
-                        break;
-                    case 'year':
-                        $query->whereYear('starts_at', $date->year);
-                        break;
-
-                    default:
-                        $query->whereDate('starts_at', $date);
-                        break;
-                }
+                $date = Carbon::parse($request->date);                 
+                    switch ($request->period_type) {
+                        case 'week':  
+                            $query->whereBetween('starts_at', [$date->startOfWeek()->format('Y-m-d H:i:s'), $date->endOfWeek()->format('Y-m-d H:i:s')]);
+                            break;
+                        case 'month':
+                            $query->whereMonth('starts_at', $date->month)->whereYear('starts_at', $date->year);
+                            break;
+                        case 'year':
+                            $query->whereYear('starts_at', $date->year);
+                            break;
+    
+                        default:
+                            $query->whereDate('starts_at', $date);
+                            break;
+                    }
             } catch (\Throwable $th) {
                 throw new ApiException("Paramètre 'date' n'est pas valide.");
             }
@@ -125,7 +127,8 @@ class UnavailabilityController extends BaseApiController
                 }
         }
         if ($arrayRequest['reason'] == 'Utilisation heures supplémentaires' || $arrayRequest['reason'] == 'Heures supplémentaires payées') {
-            if ($OvertimesToUse < $duration) {
+            if ($OvertimesToUse < $duration && $arrayRequest['reason'] == 'Heures supplémentaires payées') {
+
                 throw new ApiException("Vous ne disposez pas assez d'heures supplémentaires.");
             }
             if ($arrayRequest_starts->format("Y-m-d") != $arrayRequest_ends->format("Y-m-d") && $arrayRequest['reason'] != 'Heures supplémentaires payées') {

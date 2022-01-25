@@ -501,7 +501,7 @@ class HoursController extends BaseApiController
 
         $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
        
-        $users = User::where('id', $request->user_id)->whereBetween('start_employment', [Carbon::parse($request->date)->startOfWeek()->format('Y-m-d H:i:s'), Carbon::parse($request->date)->endOfWeek()->format('Y-m-d H:i:s')])->get();
+        $users = User::where('id', $request->user_id)->get();
         if(!$users->isEmpty())
         {
             $firstDateContains = $periodWeek->contains($users[0]->start_employment);
@@ -511,12 +511,10 @@ class HoursController extends BaseApiController
         {
             $firstDateContains = false;
         }
-
         if($firstDateContains)
         {
          
             $premierJour = Carbon::createFromFormat('Y-m-d H:i:s', $users[0]->start_employment)->format("Y-m-d");
-           
         }
             $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
             
@@ -540,7 +538,6 @@ class HoursController extends BaseApiController
                     }
                 }
             }
-         
             $nbWorkDaysPerMonth = $countMonday + $countTuesday + $countWednesday + $countThursday + $countFriday + $countSaturday + $countSunday;
         return $nbWorkDaysPerMonth;
     }
@@ -821,6 +818,10 @@ class HoursController extends BaseApiController
             }
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
             $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
+            $controllerLog = new Logger('hours');
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            $controllerLog->info('$listDealingHour[0]',[$listDealingHour[0]]);
+
         } elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)) {
             //Create new tuple in dealing_hours with user_id, date and overtimes
             $deallingHourItem = DealingHours::create(
