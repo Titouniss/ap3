@@ -68,12 +68,7 @@
                     <refresh-module />
                 </vs-col>
             </vs-row>
-            <vs-row
-                vs-type="flex"
-                vs-align="center"
-                vs-w="12"
-                class="mb-4"
-            >
+            <vs-row vs-type="flex" vs-align="center" vs-w="12" class="mb-4">
                 <div v-if="isAdmin" class="mr-10">
                     <infinite-select
                         header="Société"
@@ -122,12 +117,14 @@
                         name="date"
                         :format="formatDatePicker"
                         :language="langFr"
-                        :minimumView="filters.formatDate" :maximumView="'year'" :initialView="filters.formatDate"
+                        :minimumView="filters.formatDate"
+                        :maximumView="'year'"
+                        :initialView="filters.formatDate"
                         v-model="filters.date"
                     >
                     </datepicker>
                 </div>
-                 <div class="mr-10">
+                <div class="mr-10">
                     <simple-select
                         header="Afficher les projets archivés"
                         label="name"
@@ -166,11 +163,14 @@
                             class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
                         >
                             <span class="mr-2">
-                                {{ currentPage * perPage - (perPage - 1) }}
+                                {{
+                                    currentPage * itemsPerPage -
+                                        (itemsPerPage - 1)
+                                }}
                                 -
                                 {{
-                                    total - currentPage * perPage > 0
-                                        ? currentPage * perPage
+                                    total - currentPage * itemsPerPage > 0
+                                        ? currentPage * itemsPerPage
                                         : total
                                 }}
                                 sur {{ total }}
@@ -259,12 +259,12 @@ import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
 import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
 // Mixins
-import { multipleActionsMixin } from "@/mixins/lists";
+import { multipleActionsMixin, paginationMixin } from "@/mixins/lists";
 
 var modelTitle = "Projet";
 
 export default {
-    mixins: [multipleActionsMixin],
+    mixins: [multipleActionsMixin, paginationMixin],
     components: {
         AgGridVue,
         AddForm,
@@ -286,22 +286,19 @@ export default {
     data() {
         return {
             searchQuery: "",
-            page: 1,
-            perPage: 50,
-            totalPages: 0,
-            total: 0,
+            perPage: this.$router.history.current.query.perPage || 50,
             langFr: fr,
 
             statusOption: [
-                { key:"", name: "-" },
-                { key:"todo", name: "À faire" },
-                { key:"doing", name: "En cours" },
-                { key:"waiting", name: "Terminé, en attente de livraison" },
-                { key:"done", name: "Livré" },
+                { key: "", name: "-" },
+                { key: "todo", name: "À faire" },
+                { key: "doing", name: "En cours" },
+                { key: "waiting", name: "Terminé, en attente de livraison" },
+                { key: "done", name: "Livré" }
             ],
             booleanOption: [
-                { key:true, name: "Oui" },
-                { key:false, name: "Non" },
+                { key: true, name: "Oui" },
+                { key: false, name: "Non" }
             ],
 
             gantt: null,
@@ -392,7 +389,7 @@ export default {
                 customer_id: null,
                 status: null,
                 date: null,
-                formatDate: 'year',
+                formatDate: "year",
                 deleted_at: false
             },
 
@@ -406,15 +403,17 @@ export default {
         },
         ganttViewMode(val, oldVal) {
             this.gantt.change_view_mode(val);
-            const oldest = this.gantt.get_oldest_starting_date().getTime()
-            const t = new Date() - oldest
+            const oldest = this.gantt.get_oldest_starting_date().getTime();
+            const t = new Date() - oldest;
 
-            this.gantt.gantt_start = new Date(this.gantt.gantt_start.getTime() - t)
-            this.gantt.set_scroll_position()
+            this.gantt.gantt_start = new Date(
+                this.gantt.gantt_start.getTime() - t
+            );
+            this.gantt.set_scroll_position();
         },
-         filters: {
+        filters: {
             handler(val, prev) {
-                this.fetchProjects()
+                this.fetchProjects();
             },
             deep: true
         }
@@ -434,7 +433,7 @@ export default {
             if (!this.projectsData || this.projectsData.length <= 0) {
                 return [];
             }
-        
+
             return this.projectsData
                 .filter(
                     p =>
@@ -461,47 +460,32 @@ export default {
         itemIdToEdit() {
             return this.$store.state.projectManagement.project.id || 0;
         },
-        itemsPerPage: {
-            get() {
-                return this.perPage;
-            },
-            set(val) {
-                this.perPage = val;
-                this.page = 1;
-                this.fetchProjects();
-            }
-        },
-        currentPage: {
-            get() {
-                return this.page;
-            },
-            set(val) {
-                this.page = val;
-                this.fetchProjects();
-            }
-        },
-        formatDatePicker () {
-            return this.filters.formatDate === 'year' ? 'yyyy' : 'MMM yyyy' 
+        formatDatePicker() {
+            return this.filters.formatDate === "year" ? "yyyy" : "MMM yyyy";
         }
     },
     methods: {
+        onPageChanged() {
+            console.log("changed", this.page, this.perPage);
+            this.fetchProjects();
+        },
         fetchProjects() {
             const that = this;
             this.$vs.loading();
 
-            let month = null
-            let year = null
-            if(this.filters.date && this.filters.formatDate === 'year'){
-                year = moment(this.filters.date).format('YYYY')
+            let month = null;
+            let year = null;
+            if (this.filters.date && this.filters.formatDate === "year") {
+                year = moment(this.filters.date).format("YYYY");
             }
-            if(this.filters.date && this.filters.formatDate === 'month'){
-                year = moment(this.filters.date).format('YYYY')
-                month = moment(this.filters.date).format('M')
+            if (this.filters.date && this.filters.formatDate === "month") {
+                year = moment(this.filters.date).format("YYYY");
+                month = moment(this.filters.date).format("M");
             }
 
             this.$store
                 .dispatch("projectManagement/fetchItems", {
-                    page: this.currentPage,
+                    page: this.page,
                     per_page: this.perPage,
                     q: this.searchQuery || undefined,
                     company_id: this.filters.company_id || undefined,
@@ -510,7 +494,7 @@ export default {
                     year: year || undefined,
                     month: month || undefined,
                     deleted_at: this.filters.deleted_at || undefined,
-                    order_by: 'status'
+                    order_by: "status"
                 })
                 .then(data => {
                     that.projectsLoaded = true;
@@ -588,11 +572,13 @@ export default {
                         );
                     }
                 });
-                const oldest = this.gantt.get_oldest_starting_date().getTime()
-                const t = new Date() - oldest
+                const oldest = this.gantt.get_oldest_starting_date().getTime();
+                const t = new Date() - oldest;
 
-                this.gantt.gantt_start = new Date(this.gantt.gantt_start.getTime() - t)
-                this.gantt.set_scroll_position()
+                this.gantt.gantt_start = new Date(
+                    this.gantt.gantt_start.getTime() - t
+                );
+                this.gantt.set_scroll_position();
             }
 
             if (this.gridApi) {
@@ -652,7 +638,6 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
-
         this.fetchProjects();
     },
     beforeDestroy() {
@@ -703,8 +688,12 @@ export default {
 .handle {
     display: none;
 }
-.small-radio-circle .vs-radio--circle { transform: scale(0.5) !important; }
-.small-radio-circle .vs-radio--borde { transform: scale(0.5) !important; }
+.small-radio-circle .vs-radio--circle {
+    transform: scale(0.5) !important;
+}
+.small-radio-circle .vs-radio--borde {
+    transform: scale(0.5) !important;
+}
 
 $projectStatus: "primary", "warning", "danger";
 $colors: (

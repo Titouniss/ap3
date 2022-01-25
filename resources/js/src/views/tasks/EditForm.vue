@@ -12,18 +12,30 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
+<<<<<<< HEAD
             <div :class="project_data.status == 'waiting' || project_data.status == 'done' ? 'disabled-div' : null">
                 <form autocomplete="off" v-on:submit.prevent>
+=======
+            <div
+                :class="
+                    project_data.status == 'waiting' ||
+                    project_data.status == 'done'
+                        ? 'disabled-div'
+                        : null
+                "
+            >
+                <form autocomplete="off">
+>>>>>>> 5e9b823f7bfe99e32224bc5d1c264cec8ceb5f53
                     <div class="vx-row">
                         <!-- Left -->
                         <div
                             class="vx-col flex-1"
                             style="border-right: 1px solid #d6d6d6"
-                                :class="
-                                    itemLocal.project.status == 'doing'
-                                        ? 'disabled-div'
-                                        : ''
-                                "
+                            :class="
+                                itemLocal.project.status == 'doing'
+                                    ? 'disabled-div'
+                                    : ''
+                            "
                         >
                             <vs-input
                                 v-validate="'required'"
@@ -42,7 +54,7 @@
                                 {{ errors.first("name") }}
                             </span>
 
-                            <div class="my-3">
+                            <div class="my-3 enabled">
                                 <div
                                     v-if="
                                         descriptionDisplay ||
@@ -206,11 +218,7 @@
                                 style="flex-direction: column; display: flex"
                             >
                                 <span
-                                    :class="
-                                        itemLocal.project.status == 'doing'
-                                            ? 'disabled-div'
-                                            : ''
-                                    "
+                                    v-if="itemLocal.project.status !== 'doing'"
                                 >
                                     <add-previous-tasks
                                         :addPreviousTask="addPreviousTask"
@@ -530,7 +538,8 @@ export default {
                 name != "" &&
                 date != "" &&
                 estimated_time != "" &&
-               skills && skills.length > 0 &&
+                skills &&
+                skills.length > 0 &&
                 (this.type === "users" ||
                     this.type === "workarea" ||
                     (this.hasAvailableUsers && this.hasAvailableWorkareas)) &&
@@ -625,7 +634,6 @@ export default {
     },
     methods: {
         clear() {
-
             this.deleteFiles();
             this.itemLocal = {};
             (this.workareasDataFiltered = []),
@@ -822,7 +830,9 @@ export default {
                 });
 
             this.$store
-                .dispatch("taskManagement/forceRemoveItems", [this.itemLocal.id])
+                .dispatch("taskManagement/forceRemoveItems", [
+                    this.itemLocal.id
+                ])
                 .then(data => {
                     this.$vs.notify({
                         color: "success",
@@ -843,7 +853,7 @@ export default {
 };
 </script>
 <style>
-.disabled-div {
+.disabled-div > div:not(.enabled) {
     pointer-events: none;
     opacity: 0.6;
 }

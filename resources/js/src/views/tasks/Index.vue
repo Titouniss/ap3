@@ -113,7 +113,10 @@
                             @click="editRecord(item)"
                         />
                         <feather-icon
-                            v-if="project_data.status != 'waiting' && project_data.status != 'done'"
+                            v-if="
+                                project_data.status != 'waiting' &&
+                                    project_data.status != 'done'
+                            "
                             icon="Trash2Icon"
                             svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                             @click="confirmDeleteRecord(item)"
@@ -215,7 +218,7 @@
         </div>
 
         <edit-form
-            :itemId="itemIdToEdit "
+            :itemId="itemIdToEdit"
             :project_data="this.project_data"
             v-if="itemIdToEdit"
             :tasks_list="tasksData"
@@ -251,7 +254,7 @@ export default {
         project_data: {
             required: true
         },
-         taskIdToEdit: {
+        taskIdToEdit: {
             required: false
         },
         refreshData: {
@@ -391,7 +394,6 @@ export default {
             }
         },
         editRecord(item) {
-
             this.$store
                 .dispatch("taskManagement/editItem", item)
                 .then(() => {})
@@ -413,7 +415,9 @@ export default {
         },
         deleteRecord() {
             this.$store
-                .dispatch("taskManagement/forceRemoveItems", [this.itemToDel.id])
+                .dispatch("taskManagement/forceRemoveItems", [
+                    this.itemToDel.id
+                ])
                 .then(() => {
                     this.refreshData();
                     this.showDeleteSuccess();
@@ -428,7 +432,7 @@ export default {
             this.$vs.notify({
                 color: "success",
                 title: "Tâche",
-                text: `${modelTitle} supprimé`
+                text: `${modelTitle} supprimée`
             });
         }
     },
@@ -461,7 +465,6 @@ export default {
         }
     },
     created() {
-        
         if (!moduleTaskManagement.isRegistered) {
             this.$store.registerModule("taskManagement", moduleTaskManagement);
             moduleTaskManagement.isRegistered = true;
@@ -488,29 +491,30 @@ export default {
 
         this.$store.dispatch("userManagement/fetchItems");
 
-let tasks = this.$store.getters["taskManagement/getItems"];
+        let tasks = this.$store.getters["taskManagement/getItems"];
 
+        if (this.taskIdToEdit) {
+            let task = tasks.filter(x => x.id == this.taskIdToEdit);
 
-      if(this.taskIdToEdit){
-             let task = tasks.filter(x=>x.id == this.taskIdToEdit);
-
-             this.$store
+            this.$store
                 .dispatch("taskManagement/getTasksById", this.taskIdToEdit)
-                .then((reponse) => {console.log(reponse); 
-                
-                this.$store
-                .dispatch("taskManagement/editItem", reponse.payload)
-                .then(() => {})
-                .catch(err => {
-                    console.error(err);
-                });})
+                .then(reponse => {
+                    console.log(reponse);
+
+                    this.$store
+                        .dispatch("taskManagement/editItem", reponse.payload)
+                        .then(() => {})
+                        .catch(err => {
+                            console.error(err);
+                        });
+                })
                 .catch(err => {
                     console.log("erreur");
                     console.error(err);
                 });
         }
     },
-    
+
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
