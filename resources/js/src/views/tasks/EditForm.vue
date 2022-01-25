@@ -12,10 +12,10 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-<<<<<<< HEAD
+
             <div :class="project_data.status == 'waiting' || project_data.status == 'done' ? 'disabled-div' : null">
                 <form autocomplete="off" v-on:submit.prevent>
-=======
+
             <div
                 :class="
                     project_data.status == 'waiting' ||
@@ -25,7 +25,7 @@
                 "
             >
                 <form autocomplete="off">
->>>>>>> 5e9b823f7bfe99e32224bc5d1c264cec8ceb5f53
+
                     <div class="vx-row">
                         <!-- Left -->
                         <div
