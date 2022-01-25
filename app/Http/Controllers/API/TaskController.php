@@ -534,7 +534,7 @@ class TaskController extends BaseApiController
                     $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
                         ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
                         ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
-                        ->where('created_by', $user->id);
+                        ->where('task_comments.created_by', $user->id);
                 }
             }
 
