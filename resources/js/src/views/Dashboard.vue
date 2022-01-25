@@ -555,12 +555,14 @@
 
                                 <vs-button
                                     :v-if="comment"
-                                    :key="comment.task.project_id"
+                                    :key="comment.id"
                                     :to="
-                                        '/projects/project-view/' +
-                                            comment.task.project_id +
-                                            '/' +
-                                            comment.task_id
+                                        comment.task && comment.task.project
+                                            ? `/projects/project-view/${comment.task.project.id}/${comment.task_id}`
+                                            : null
+                                    "
+                                    :disabled="
+                                        !(comment.task && comment.task.project)
                                     "
                                     class="w-full p-5"
                                     type="flat"
@@ -587,11 +589,17 @@
                                                                 .lastname +
                                                             " "
                                                     }}
-                                                    :
-                                                    <small>{{
-                                                        comment.task.project
-                                                            .name
-                                                    }}</small>
+                                                    <small
+                                                        v-if="
+                                                            comment.task &&
+                                                                comment.task
+                                                                    .project
+                                                        "
+                                                    >
+                                                        {{
+                                                            `: ${comment.task.project.name}`
+                                                        }}
+                                                    </small>
                                                 </div>
                                             </vs-col>
 

@@ -2,9 +2,9 @@
     <div id="page-bug-list">
         <div class="vx-card p-6">
             <div class="px-4 pt-3 mb-6">
-                <vs-button @click="addRecord" class="w-full"
-                    >Remonter un bug</vs-button
-                >
+                <vs-button @click="addRecord" class="w-full">
+                    Remonter un bug
+                </vs-button>
             </div>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
