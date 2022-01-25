@@ -20,7 +20,7 @@
             :active.sync="activePrompt"
         >
             <div>
-                <form autocomplete="off">
+                <form autocomplete="off" v-submit.prevent>
                     <vx-tooltip
                         style="z-index: 52007"
                         title="Information"

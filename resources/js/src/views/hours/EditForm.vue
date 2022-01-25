@@ -11,7 +11,7 @@
         :active.sync="activePrompt"
     >
         <div>
-            <form autocomplete="off">
+            <form autocomplete="off" v-submit.prevent>
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <infinite-select

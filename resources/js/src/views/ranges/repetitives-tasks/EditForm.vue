@@ -13,7 +13,7 @@
             class="task-compose"
         >
             <div>
-                <form class="editTaskForm" autocomplete="off">
+                <form class="editTaskForm" autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div

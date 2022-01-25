@@ -32,7 +32,7 @@
             class="task-compose"
         >
             <div>
-                <form autocomplete="off">
+                <form autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div

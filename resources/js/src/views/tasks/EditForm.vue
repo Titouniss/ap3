@@ -13,7 +13,7 @@
             class="task-compose"
         >
             <div :class="project_data.status == 'waiting' || project_data.status == 'done' ? 'disabled-div' : null">
-                <form autocomplete="off">
+                <form autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div
