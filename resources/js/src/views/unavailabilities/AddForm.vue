@@ -111,6 +111,7 @@ export default {
         {
             required: false
         },
+        fetchOvertimes:{},
         workHours: {
             type: Array,
             default: () => []
@@ -127,6 +128,7 @@ export default {
                 reason: ""
                 
             },
+           
             custom_reason: "",
             reasons: [
                 { name: "Utilisation heures supplémentaires" },
