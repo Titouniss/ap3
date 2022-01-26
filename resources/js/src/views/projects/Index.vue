@@ -466,7 +466,6 @@ export default {
     },
     methods: {
         onPageChanged() {
-            console.log("changed", this.page, this.perPage);
             this.fetchProjects();
         },
         fetchProjects() {

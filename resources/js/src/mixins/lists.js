@@ -44,7 +44,7 @@ export const paginationMixin = {
                     `${this.$router.history.current.path}?page=${this.page}&perPage=${this.perPage}`
                 );
 
-                this.onPageChanged && this.onPageChanged();
+                this.onPageChanged();
             }
         },
         currentPage: {
@@ -53,7 +53,6 @@ export const paginationMixin = {
             },
             set(val) {
                 this.page = val;
-                console.log("page", val);
 
                 history.pushState(
                     {},
@@ -61,8 +60,11 @@ export const paginationMixin = {
                     `${this.$router.history.current.path}?page=${this.page}&perPage=${this.perPage}`
                 );
 
-                this.onPageChanged && this.onPageChanged();
+                this.onPageChanged();
             }
         }
+    },
+    methods: {
+        onPageChanged() {}
     }
 };
