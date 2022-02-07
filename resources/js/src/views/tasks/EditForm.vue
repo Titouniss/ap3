@@ -12,6 +12,7 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
+
             <div
                 :class="
                     project_data.status == 'waiting' ||
