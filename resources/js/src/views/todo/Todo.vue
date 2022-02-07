@@ -294,7 +294,6 @@ import moduleTodo from "@/store/todo-management/moduleTodoManagement.js";
 import moduleTag from "@/store/tag-management/moduleTagManagement.js";
 import TodoAddNew from "./TodoAddNew.vue";
 import TodoTask from "./TodoTask.vue";
-import TodoFilters from "./TodoFilters.vue";
 import TodoEdit from "./TodoEdit.vue";
 import TodoAddTags from "./TodoAddTags.vue";
 import VuePerfectScrollbar from "vue-perfect-scrollbar";
