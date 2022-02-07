@@ -539,7 +539,6 @@ export default {
   components: {
     TodoAddNew,
     TodoTask,
-    TodoFilters,
     TodoEdit,
     VuePerfectScrollbar,
     SimpleSelect,
