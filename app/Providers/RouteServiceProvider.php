@@ -93,6 +93,9 @@ class RouteServiceProvider extends ServiceProvider
         Route::bind('document', function ($id) {
             return Document::find($id);
         });
+        Route::bind('todos', function ($id) {
+            return Todo::find($id);
+        });
     }
 
     /**

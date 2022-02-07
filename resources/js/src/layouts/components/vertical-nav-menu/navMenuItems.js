@@ -98,9 +98,9 @@ export default [
         icon: "BookIcon"
     },
     {
-        url: "/todo",
+        url: "/todos",
         name: "TodoList",
-        slug: "todo",
+        slug: "todos",
         icon: "CheckSquareIcon",
     },
     {

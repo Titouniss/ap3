@@ -57,6 +57,7 @@ class TodoController extends BaseApiController
             $query->where('user_id', $user->id)->get();
         }
     }
+   
 
    if ($request->has('tag_id')) {
     if (TodoTags::where('tag_id', $request->tag_id)->doesntExist()) {

@@ -354,8 +354,8 @@ const router = new Router({
                 },
                   /////---Todo---/////
                 {
-                    path: "/todo",
-                    name: "todo",
+                    path: "/todos",
+                    name: "todos",
                     component: () => import("@/views/todo/Todo.vue"),
                     meta: {
                         pageTitle: "Todos List",
