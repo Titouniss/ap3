@@ -121,7 +121,7 @@ export default {
       configdateTimePicker: {
         disableMobile: "true",
         locale: FrenchLocale,
-        // minDate: new Date(Date.now() - 8640000),
+        minDate: new Date(Date.now() - 8640000),
         maxDate: null,
       },
       isSubmiting: false,
