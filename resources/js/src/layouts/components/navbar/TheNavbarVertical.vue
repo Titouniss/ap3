@@ -23,14 +23,14 @@
                     @click.stop="showSidebar"
                 />
 
-                <bookmarks
+                <!-- <bookmarks
                     :navbarColor="navbarColor"
                     v-if="windowWidth >= 992"
-                />
-
-                <vs-spacer />
+                /> -->
 
                 <search-bar />
+
+                <vs-spacer />
 
                 <!-- <notification-drop-down /> -->
 
