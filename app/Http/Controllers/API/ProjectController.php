@@ -741,7 +741,7 @@ class ProjectController extends BaseApiController
                     //     if ($heureFinNewPeriod >= $heureFinTravailMatin) {
                     //         $heuresDisposMatin = Carbon::parse($heureFinTravailMatin)->floatDiffInHours($heureDebutTravailMatin);
                     //     } else {
-                    //         $heuresDisposMatin = Carbon::parse($heureDebutTravailMatin)->floatDiffInHours($heureFinNewPeriod);
+                    //         $heuresDisposMatin = Carbon::parse($heureDebutTravailMatin)->floatDiffInaHours($heureFinNewPeriod);
                     //     }
                     // }else if($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00"){
                     if ($heureFinNewPeriod > $heureFinTravailMatin) {

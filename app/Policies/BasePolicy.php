@@ -44,7 +44,6 @@ abstract class BasePolicy
      */
     public function read(User $user)
     {
-
         return $user->hasPermissionTo("read {$this->model}");
     }
 

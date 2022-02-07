@@ -98,9 +98,16 @@ export default [
         icon: "BookIcon"
     },
     {
+        url: "/todo",
+        name: "TodoList",
+        slug: "todo",
+        icon: "CheckSquareIcon",
+    },
+    {
         url: "/bugs",
         name: "Remontées de bugs",
         slug: "bugs",
         icon: "TerminalIcon"
     }
+   
 ];

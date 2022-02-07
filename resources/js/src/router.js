@@ -352,6 +352,17 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                  /////---Todo---/////
+                {
+                    path: "/todo",
+                    name: "todo",
+                    component: () => import("@/views/todo/Todo.vue"),
+                    meta: {
+                        pageTitle: "Todos List",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Bugs---/////
                 {
                     path: "/bugs",
@@ -550,7 +561,8 @@ const router = new Router({
                     meta: {
                         rule: "editor"
                     }
-                }
+                },
+                
             ]
         },
         // Redirect to 404 page, if no match found

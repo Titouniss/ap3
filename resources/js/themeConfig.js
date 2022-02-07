@@ -31,6 +31,20 @@ export const project_colors = [
   '#344563',
   ''
 ];
+// TAG COLORS
+export const tag_colors = [
+  '#51E898',
+  '#61BD4F',
+  '#F2D600',
+  '#FF9F1A',
+  '#EB5A46',
+  '#FF78CB',
+  '#C377E0',
+  '#00C2E0',
+  '#0079BF',
+  '#344563',
+  ''
+];
 
 // CONFIGS
 const themeConfig = {

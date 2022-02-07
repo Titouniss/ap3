@@ -9,7 +9,7 @@ use App\Models\Company;
 use App\Models\DealingHours;
 use App\Models\Unavailability;
 use Carbon\Carbon;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Monolog\Logger;
