@@ -66,6 +66,7 @@
                 type="transparent"
                 @click="filtersImportantAndCompleted.is_completed = 1"
                 v-on:click="filtersImportantAndCompleted.is_important = 0"
+                v-on:click.stop ="filtersImportantAndCompleted.tags =null"
               >
                 <feather-icon
                   icon="CheckIcon"
@@ -80,6 +81,7 @@
                 type="transparent"
                 @click="filtersImportantAndCompleted.is_important = 1"
                 v-on:click="filtersImportantAndCompleted.is_completed = 0"
+                v-on:click.stop ="filtersImportantAndCompleted.tags =null"
               >
                 <feather-icon
                   icon="StarIcon"
@@ -95,7 +97,7 @@
             <todo-add-tags tag_list="tagData" />
 
             <h5>Tags</h5>
-            <div class="todo__lables-list">
+            <div class="todo__lables-list" v-if="tagData.length > 0">
               <a
                 class="flex items-center mt-6 cursor-pointer w-full"
                 style="color: #2c2c2c"
@@ -453,12 +455,12 @@ export default {
           that.$vs.loading.close();
         })
         .catch((err) => {
+          that.$vs.loading.close();
             this.$vs.notify({
             color: "danger",
             title: "Erreur",
-            text: `Ce tag n'est pas attribué à une tâche.`,
+            text: "Ce tag n'est attribué à aucune tâche"
             });
-          that.$vs.loading.close();
 
           console.error(err);
         });
