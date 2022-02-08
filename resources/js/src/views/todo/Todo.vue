@@ -445,6 +445,7 @@ export default {
       this.$vs.loading();
       this.$store
         .dispatch("todoManagement/fetchItems", {
+          q: this.searchQuery || undefined,
           is_completed:
             this.filtersImportantAndCompleted.is_completed || undefined,
           is_important:
@@ -512,7 +513,6 @@ export default {
     },
     updateSearchQuery(val) {
       this.fetchTodo();
-      this.fetchTag();
     },
     resetSortAndNavigate() {
       const currentRouteQuery = JSON.parse(JSON.stringify(route.value.query));

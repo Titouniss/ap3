@@ -57,7 +57,14 @@ class TodoController extends BaseApiController
             $query->where('user_id', $user->id)->get();
         }
     }
-   
+
+    if ($request->has('q') && $request->q) {
+        try {
+            $query->where('todos.title', 'like', "%{$request->q}%");
+        } catch (\Throwable $th) {
+            throw new ApiException("Paramêtre 'q' n'est pas valide.");
+        }
+    }
 
    if ($request->has('tag_id')) {
     if (TodoTags::where('tag_id', $request->tag_id)->doesntExist()) {
