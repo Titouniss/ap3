@@ -89,7 +89,8 @@ export default {
                 street_name: "",
                 postal_code: "",
                 city: "",
-                country: ""
+                country: "",
+                authorize_supply: false
             }
         };
     },
@@ -113,6 +114,8 @@ export default {
                 this.itemLocal.postal_code !== "" &&
                 this.itemLocal.city !== "" &&
                 this.itemLocal.country !== ""
+                && this.itemLocal.authorize_supply !== ""
+                
             );
         }
     },

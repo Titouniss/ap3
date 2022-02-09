@@ -31,6 +31,14 @@
           :danger-text="errors.first('siret')"
         />
       </vs-col>
+        <vs-row  vs-type="flex" class="mb-6" >
+        <vs-col vs-w="6" vs-xs="12" class="pt-3 px-3">
+         <!-- <vs-radio v-validate="'required'" v-model="itemLocal.authorize_supply" vs-value="1" class="mr-4" vs-name="authorize_supply">Activer</vs-radio>
+         <vs-radio v-validate="'required'" v-model="itemLocal.authorize_supply" vs-value="0" class="mr-4" vs-name="authorize_supply">Désactiver</vs-radio> -->
+          <label style="font-size: .85rem; padding-left: 5px; margin-bottom: 5px" for="switch">{{itemLocal.authorize_supply == 1 ? 'Module d\' approvisionnement : Activer' : 'Module d\' approvisionnement : Désactiver'}}</label>
+          <vs-switch class="ml-5" v-validate="'required'" color="success" v-model="itemLocal.authorize_supply"/>
+          </vs-col>
+        </vs-row>
       <vs-col v-if="showAll || isAdmin" vs-w="6" vs-xs="12" class="pt-3 px-3">
         <vs-input
           v-validate="'max:255'"
@@ -220,8 +228,12 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 Validator.localize("fr", errorMessage);
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 
 export default {
+  components:{
+    SimpleSelect
+  },
   props: {
     itemLocal: {
       type: Object,

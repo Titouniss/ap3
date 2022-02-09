@@ -78,10 +78,10 @@ class ProjectController extends BaseApiController
             $query->where('customer_id', $request->customer_id);
         }
         if ($request->has('month')) { 
-            $query->whereMonth('created_at', '=', $request->month);
+            $query->whereMonth('date', '=', $request->month);
         }
         if ($request->has('year')) { 
-            $query->whereYear('created_at', '=', $request->year);    
+            $query->whereYear('date', '=', $request->year);    
         }
         if ($request->has('order_by') && $request->order_by == 'status') {
             try {
@@ -4096,11 +4096,11 @@ class ProjectController extends BaseApiController
         $usersPeriods = [];
 
         // Get days today date -> end date
-        $start_date = Carbon::createFromFormat('Y-m-d', $project->start_date)->startOfDay();
+        $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->start_date);
+
         $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->date)->subDays('1')->endOfDay();
 
         $period = CarbonPeriod::create($start_date, $end_date);
-
         foreach ($period as $t) {
             $daysPeriod[] = [
                 'date' => $t,
