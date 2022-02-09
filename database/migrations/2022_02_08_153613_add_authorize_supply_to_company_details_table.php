@@ -14,7 +14,7 @@ class AddAuthorizeSupplyToCompanyDetailsTable extends Migration
     public function up()
     {
         Schema::table('company_details', function (Blueprint $table) {
-            $table->bool('authorize_supply')->default(0)->after('country');
+            $table->boolean('authorize_supply')->default(0)->after('country');
         });
     }
 
