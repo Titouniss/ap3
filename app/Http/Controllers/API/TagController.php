@@ -36,9 +36,11 @@ class TagController extends BaseApiController
 
    protected function filterIndexQuery(Request $request, $query)
    {
+    $user = Auth::user();
+    $query->where('user_id', $user->id)->get();
 
+   
    }
-
    protected function storeItem(array $arrayRequest)
    {
     $item = Tag::create([

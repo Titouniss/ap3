@@ -47,16 +47,8 @@ class TodoController extends BaseApiController
    protected function filterIndexQuery(Request $request, $query)
    {
     $user = Auth::user();
-    if (!$user->is_admin) {
-        if ($user->is_manager) {
-            $query->join('users', function ($join) use ($user) {
-                $join->on('todo.user_id', '=', 'users.id')
-                    ->where('users.company_id', $user->company_id)->get();
-            });
-        } else {
-            $query->where('user_id', $user->id)->get();
-        }
-    }
+    $query->where('user_id', $user->id)->get();
+    
 
     if ($request->has('q') && $request->q) {
         try {
