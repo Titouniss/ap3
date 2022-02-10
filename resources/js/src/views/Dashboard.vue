@@ -28,7 +28,7 @@
                                     svgClasses="h-6 w-6 text-white"
                                     class="mr-3"
                                 />
-                                <h3 class="text-white">Projet en cours</h3>
+                                <h3 class="text-white">Projets en cours</h3>
                             </vs-col>
                             <vs-col
                                 vs-type="flex"
