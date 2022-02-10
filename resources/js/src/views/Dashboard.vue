@@ -282,7 +282,7 @@
                         <ul
                             v-if="projectsToDeliver.length > 0"
                             class="w-full vx-timeline info-list"
-                            style="color: white"
+                            style="color: gray"
                         >
                             <li
                                 v-for="project in projectsToDeliver.slice(
