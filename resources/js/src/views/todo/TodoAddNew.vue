@@ -45,7 +45,7 @@
           <div class="vx-row">
             <div class="vx-col w-full">
               <vs-input
-                v-validate="'max:250|required'"
+                v-validate="'max:200|required'"
                 label="Titre"
                 name="title"
                 class="w-full mb-4 mt-5"
