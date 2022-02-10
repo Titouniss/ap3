@@ -14,7 +14,7 @@
 
 
       <div class=" sm:items-center todo-title-area">
-        <div class="flex">
+        <div class="flex" >
           <vs-checkbox
             v-model="isCompleted"
             :checked="task_data.is_completed"
@@ -22,8 +22,8 @@
             @click.native.stop
           />
           <h6
-            class="title-wrapper mb-3 ml-2"
-            style="white-space: pre-line"
+            class="title-wrapper mb-5 ml-2 "
+            style="white-space: pre-line;"
             :class="{ 'line-through': task_data.is_completed }"
           >
             {{ capitalize(task_data.title) }}
@@ -36,7 +36,7 @@
           <vs-chip
             v-for="(tag, index) in task_data.tags"
             :key="index"
-            class="ml-4 mt-1"
+            class="ml-4 mt-3"
             :style="` background-color: ${tag.color};`"
           >
             <span :style="`color: white; font-size: 12px; font-weight: 600;`">{{
