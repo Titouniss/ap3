@@ -1,7 +1,8 @@
 <template>
     <div id="dashboard">
-        <vs-row vs-type="flex" vs-justify="center" vs-w="12">
-            <vs-col vs-w="6" vs-xs="12" class="mt-3 px-3">
+        <vs-row vs-type="flex" vs-justify="center" vs-w="12"
+>
+            <vs-col vs-w="4" vs-xs="12" class="mt-3 px-3">
                 <vs-button
                     to="/projects"
                     color="rgba(var(--vs-primary),1)"
@@ -27,7 +28,7 @@
                                     svgClasses="h-6 w-6 text-white"
                                     class="mr-3"
                                 />
-                                <h3 class="text-white">Projets en cours</h3>
+                                <h3 class="text-white">Projet en cours</h3>
                             </vs-col>
                             <vs-col
                                 vs-type="flex"
@@ -69,7 +70,115 @@
                 </vs-button>
             </vs-col>
 
-            <vs-col vs-w="6" vs-xs="12" class="mt-3 px-3">
+          <vs-col vs-w="4" vs-xs="12" class="mt-3 px-3">
+                  <vs-button
+                    to="/todos"
+                    color="white"
+                    class="flex w-full p-0"
+                    style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;"
+                >
+                    <vx-card style="background: transparent">
+                        <vs-row
+                            vs-type="flex"
+                            vs-justify="space-between"
+                            vs-align="center"
+                            vs-w="12"
+                        >
+                            <vs-col
+                                vs-type="flex"
+                                vs-justify="flex-start"
+                                vs-align="center"
+                                vs-w="8"
+                            >
+                                <feather-icon
+                                    icon="CheckSquareIcon"
+                                    svgClasses="h-6 w-6"
+                                    class="mr-3"
+                                    style="color: gray"
+                                />
+                                <h3 class="text-gray">Tâches planifiées</h3>
+                            </vs-col>
+                            <vs-col
+                                vs-type="flex"
+                                vs-justify="flex-end"
+                                vs-align="center"
+                                vs-w="2"
+                            >
+                                <feather-icon
+                                    icon="ExternalLinkIcon"
+                                    svgClasses="h-6 w-6"
+                                    class="link-icon"
+                                    style="color: gray"
+                                />
+                            </vs-col>
+                        </vs-row>
+                        <vs-row style="min-height: 250px">
+                            <vs-col
+                                vs-type="flex"
+                                vs-justify="center"
+                                vs-align="center"
+                                vs-w="12"
+                            >
+                            
+                            <ul
+                            v-if="todoData.length > 0"
+                            class="w-full vx-timeline  mt-5"
+                            >
+                            
+                            <li
+                                v-for="todos in todoData.slice(
+                                    0,
+                                    5 
+                                )"
+                                :key="todos.id"
+                                class="py-1 "
+                            >
+                                        <vs-row
+                                            vs-type="flex"
+                                            vs-justify="space-between"
+                                            vs-align="center"
+                                            vs-w="12"
+                                        >
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-start"
+                                                vs-w="9"
+                                                
+                                            >
+                                                    <p style="color: gray; max_width: 250px" class="truncate">
+                                                        {{
+                                                         todos.title
+                                                        }}
+                                                    </p>
+                                            </vs-col>
+
+                                            <vs-col
+                                                vs-type="flex"
+                                                vs-justify="flex-end"
+                                                vs-w="3"
+                                            >
+                                                <p style="color: gray; font-size: 12px">
+                                                    {{
+                                                        displayDate(
+                                                            todos.due_date
+                                                        )
+                                                    }}
+                                                </p>
+                                            </vs-col>
+                                        </vs-row>  
+                                    </li>
+                                 </ul>   
+                                 <div v-else>
+                                     Aucune tâche a été planifié
+                                 </div>                           
+                            </vs-col>
+                        </vs-row>
+                    </vx-card>
+                </vs-button>
+            </vs-col>
+
+            
+            <vs-col vs-w="4" vs-xs="12" class="mt-3 px-3">
                 <vx-card>
                     <vs-row
                         vs-type="flex"
@@ -173,6 +282,7 @@
                         <ul
                             v-if="projectsToDeliver.length > 0"
                             class="w-full vx-timeline info-list"
+                            style="color: white"
                         >
                             <li
                                 v-for="project in projectsToDeliver.slice(
@@ -668,6 +778,7 @@ import Pagination from "@/components/Pagination.vue";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
+import moduleTodoManagement from  "@/store/todo-management/moduleTodoManagement.js";
 
 export default {
     data() {
@@ -742,6 +853,10 @@ export default {
     },
 
     computed: {
+        todoData()
+        {
+            return this.$store.getters["todoManagement/getItems"].filter(todo=>todo.is_completed == 0);
+        },
         updateVisibleProjects() {
             return this.projectsFilter.slice(
                 this.currentPage * this.pageSize,
@@ -931,6 +1046,18 @@ export default {
             this.$store.registerModule("taskManagement", moduleTaskManagement);
             moduleTaskManagement.isRegistered = true;
         }
+         if (!moduleTodoManagement.isRegistered) {
+            this.$store.registerModule("todoManagement", moduleTodoManagement);
+            moduleTodoManagement.isRegistered = true;
+        }
+         this.$store
+            .dispatch("todoManagement/fetchItems", {
+                order_by:"due_date",
+                due_date: moment().format("DD-MM-YYYY")
+            })
+            .catch(err => {
+                console.error(err);
+            });
         this.$store
             .dispatch("projectManagement/fetchItems", {
                 loads: "",
@@ -957,6 +1084,7 @@ export default {
             .catch(err => {
                 console.error(err);
             });
+            
         this.$store
             .dispatch("taskManagement/fetchComments", {
                 page: 1,

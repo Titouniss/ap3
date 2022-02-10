@@ -45,13 +45,15 @@
           <div class="vx-row">
             <div class="vx-col w-full">
               <vs-input
-                v-validate="'required'"
+                v-validate="'max:250|required'"
                 label="Titre"
                 name="title"
                 class="w-full mb-4 mt-5"
                 placeholder="Title"
                 v-model="itemLocal.title"
-                :color="validateForm ? 'success' : 'danger'"
+                :success="itemLocal.title != '' && !errors.has('title')"
+                :danger="errors.has('title')"
+                :danger-text="errors.first('title')"   
               />
 
               <simple-select
@@ -120,8 +122,16 @@ export default {
       },
       configdateTimePicker: {
         disableMobile: "true",
+        dateFormat: "Y-m-d",
+        altFormat: "d/m/Y",
+        altInput: true,
         locale: FrenchLocale,
-        minDate: new Date(Date.now() - 8640000),
+        minDate: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(), 
+                    new Date().getDate(),
+                  
+                ),
         maxDate: null,
       },
       isSubmiting: false,

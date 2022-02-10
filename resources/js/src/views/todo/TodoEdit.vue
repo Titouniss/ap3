@@ -27,11 +27,12 @@
             <vs-checkbox v-model="itemLocal.is_completed" class="w-8"></vs-checkbox>
           </div>
 
-          <div class="vx-col ml-auto flex">
+          <div class="vx-col ml-auto flex" >
             <feather-icon
               icon="StarIcon"
               class="cursor-pointer"
               style=""
+              
               :svgClasses="[
                 { 'text-warning stroke-current': itemLocal.is_important },
                 'w-5',
@@ -42,13 +43,17 @@
           </div>
         </div>
         <div class="vx-row">
-          <div class="vx-col w-full">
+          <div class="vx-col w-full"           >
             <vs-input
-              v-validate="'required'"
+              v-validate="'max:250|required'"
               name="title"
               class="w-full mb-4 mt-5"
               placeholder="Title"
               v-model="itemLocal.title"
+              :success="itemLocal.title != '' && !errors.has('title')"
+              :danger="errors.has('title')"
+              :danger-text="errors.first('title')"   
+             :disabled="(itemLocal.is_completed == true)"
             />
                <simple-select
                 required
@@ -61,6 +66,7 @@
                 :options="taskTags"
                 :reduce="item => item.id"
                 input-id="tags"
+                :disabled="(itemLocal.is_completed == true)"
               />
             <small class="date-label pl-2 mt-5" style="display: block">
               Date
@@ -121,9 +127,16 @@ export default {
     return {
        configdateTimePicker: {
         disableMobile: "true",
+        dateFormat: "Y-m-d",
+        altFormat: "d/m/Y",
+        altInput: true,
         locale: FrenchLocale,
-        minDate: new Date(Date.now() - 8640000),
-        minDate: null,
+        minDate: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(), 
+                    new Date().getDate(),
+                  
+                ),
         maxDate: null,
       },
      itemLocal: storeItem,
@@ -163,13 +176,26 @@ export default {
                             this.refreshData();
                         }
                         this.$vs.loading.close();
-                        this.$vs.notify({
+                        if(this.itemLocal.is_completed == 1)
+                        {
+                           this.$vs.notify({
+                            title: "Finalisation d'une tâche",
+                            text: `"${this.itemLocal.title}" est finalisé avec succès`,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
+                        }); 
+                        }
+                        else{
+                           this.$vs.notify({
                             title: "Modification d'un projet",
                             text: `"${this.itemLocal.title}" modifiée avec succès`,
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "success"
                         });
+                        }
+                       
                     })
                     .catch(error => {
                         this.$vs.loading.close();

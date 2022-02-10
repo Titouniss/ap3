@@ -9,21 +9,21 @@
 
 
 <template>
-  <div @click="displayPrompt" class="px-4 py-1 list-item-component">
-    <div class="vx-row py-4">
-        
-      <div
-        class="vx-col w-full sm:w-5/6 flex sm:items-center sm:flex-row flex-col"
-      >
-        <div class="flex items-center">
+  <div @click="displayPrompt" class="py-1 list-item-component">
+    <div class="flex py-4 todo-title-wrapper">
+
+
+      <div class=" sm:items-center todo-title-area">
+        <div class="flex">
           <vs-checkbox
             v-model="isCompleted"
             :checked="task_data.is_completed"
-            class="w-8 m-0 vs-checkbox-medium"
+            class="w-8 ml-2 vs-checkbox-medium"
             @click.native.stop
           />
           <h6
-            class="todo-title"
+            class="title-wrapper mb-3 ml-2"
+            style="white-space: pre-line"
             :class="{ 'line-through': task_data.is_completed }"
           >
             {{ capitalize(task_data.title) }}
@@ -31,8 +31,8 @@
         </div>
       </div>
 
-      <div class="vx-col w-full sm:w-1/6 ml-auto flex sm:justify-end">
-        <div class="todo-tags flex mr-10">
+      <div class=" ml-auto todo-item-action">
+        <div class="title-wrapper mr-3">
           <vs-chip
             v-for="(tag, index) in task_data.tags"
             :key="index"
@@ -45,41 +45,30 @@
           </vs-chip>
         </div>
         <h6
-          class="mr-2  mt-2"
+          class="mr-2"
           style="color: grey; font-size: 14px; min-width: 60px"
         >
           {{ format_date(task_data.due_date) }}
         </h6>
-  <feather-icon
+        <feather-icon
           v-model="isImportant"
           icon="StarIcon"
           class="cursor-pointer mr-2"
-          :style="{'color': task_data.is_important == true ? '#ffc107' : '#1b263b' }"
+          :style="{
+            color: task_data.is_important == true ? '#ffc107' : '#1b263b',
+          }"
           svgClasses="w-5 h-5"
           @click="task_data.is_important"
-
         />
         <feather-icon
           v-if="!task_data.isTrashed"
-          icon="TrashIcon"
-          class="cursor-pointer"
-          style="color:#ba181b;"
-          svgClasses="w-5 h-5"
+          icon="Trash2Icon"
+          class="cursor-pointer hover:text-danger"
+          svgClasses="w-5 h-5 mr-2"
           @click.stop="moveToTrash(task_data)"
         />
       </div>
     </div>
-    <div class="vx-row" v-if="task_data.desc">
-      <div class="vx-col w-full">
-        <p
-          class="mt-2 truncate"
-          :class="{ 'line-through': task_data.isCompleted }"
-        >
-          {{ task_data.desc }}
-        </p>
-
-      </div>
-    </div>    
   </div>
 </template>
 
@@ -98,8 +87,8 @@ export default {
       required: true,
     },
   },
-  data() {  
-return {
+  data() {
+    return {
       itemToDel: null,
     };
   },
@@ -109,36 +98,40 @@ return {
         return this.task_data.is_completed;
       },
       set(value) {
-        this.task_data.tags = this.task_data.tags.map(tag => tag.id);
+        this.task_data.tags = this.task_data.tags.map((tag) => tag.id);
         this.task_data.is_completed = value;
 
         this.$store
-          .dispatch(
-            "todoManagement/updateItem",
-           this.task_data)
+          .dispatch("todoManagement/updateItem", this.task_data)
 
           .then((data) => {
+            if (this.task_data.is_completed == 1) {
+              this.$vs.notify({
+                title: "Finalisation d'une tâche",
+                text: `"${this.task_data.title}" est finalisé avec succès`,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success",
+              });
+            }
           })
           .catch((error) => {
             console.error(error);
           });
       },
     },
-     isImportant: {
+    isImportant: {
       get() {
         return this.task_data.is_important;
       },
       set(value) {
-        this.task_data.tags = this.task_data.tags.map(tag => tag.id);
+        this.task_data.tags = this.task_data.tags.map((tag) => tag.id);
         this.task_data.is_important = value;
 
         this.$store
-          .dispatch(
-            "todoManagement/updateItem",
-           this.task_data)
+          .dispatch("todoManagement/updateItem", this.task_data)
 
-          .then((data) => {
-          })
+          .then((data) => {})
           .catch((error) => {
             console.error(error);
           });
@@ -180,7 +173,7 @@ return {
     },
     showDeleteSuccess() {
       this.$vs.notify({
-        color: "success",
+        color: "danger",
         title: "Tâche",
         text: "La tâche est supprimée",
       });
@@ -193,16 +186,37 @@ return {
 };
 </script>
 <style lang="scss" scoped>
-.draggable-task-handle {
-  position: absolute;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
-  visibility: hidden;
-  cursor: move;
-
-  .todo-list .todo_todo-item:hover & {
-    visibility: visible;
+      
+    .todo-title-wrapper {
+        .title-wrapper {
+          margin-bottom: 0.5rem;
+        }
+        .todo-title {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .badge-wrapper {
+          margin-right: auto !important;
+        }
+      }
+.todo-item-action {
+  display: flex;
+  align-items: center;
+  > small {
+    margin-left: auto;
   }
+
+  a {
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1.5;
+  }
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

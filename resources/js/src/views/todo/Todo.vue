@@ -38,19 +38,26 @@
           <!-- all -->
           <div class="px-6 py-5">
             <a
-              style="color: gray; font-weight: 500"
+            
+              style="color: gray; font-weight: 500 "
               class="flex cursor-pointer"
               type="transparent"
               @click="filtersImportantAndCompleted.is_completed = 0"
               v-on:click="filtersImportantAndCompleted.is_important = 0"
-              v-on:click.stop="filtersImportantAndCompleted.tags =null"
+              v-on:click.stop="filtersImportantAndCompleted.tags = null"
             >
               <feather-icon
                 icon="LayersIcon"
-                clas
+                :style="{'color': filtersImportantAndCompleted.is_completed == 0 
+              && filtersImportantAndCompleted.is_important == 0  
+              && filtersImportantAndCompleted.tags == null  ? 'rgba(var(--vs-success), 1)' : 'gray' }"
                 :svgClasses="['h-6 w-6']"
               ></feather-icon>
-              <span class="text-lg ml-3">Tous</span>
+              <span 
+              :style="{'color': filtersImportantAndCompleted.is_completed == 0 
+              && filtersImportantAndCompleted.is_important == 0  
+              && filtersImportantAndCompleted.tags == null  ? 'rgba(var(--vs-success), 1)' : 'gray' }"
+              class="text-lg ml-3">Tous</span>
             </a>
           </div>
 
@@ -66,13 +73,20 @@
                 type="transparent"
                 @click="filtersImportantAndCompleted.is_completed = 1"
                 v-on:click="filtersImportantAndCompleted.is_important = 0"
-                v-on:click.stop ="filtersImportantAndCompleted.tags =null"
+                v-on:click.stop="filtersImportantAndCompleted.tags = null"
               >
                 <feather-icon
                   icon="CheckIcon"
                   :svgClasses="['h-6 w-6']"
+                 :style="{'color': filtersImportantAndCompleted.is_completed == 1
+                  && filtersImportantAndCompleted.is_important == 0  
+                  && filtersImportantAndCompleted.tags == null  ? 'rgba(var(--vs-success), 1)' : 'gray' }" 
                 ></feather-icon>
-                <span class="text-lg ml-3">Complété</span>
+                <span
+                 :style="{'color': filtersImportantAndCompleted.is_completed == 1
+                  && filtersImportantAndCompleted.is_important == 0  
+                  && filtersImportantAndCompleted.tags == null  ? 'rgba(var(--vs-success), 1)' : 'gray' }" 
+                class="text-lg ml-3">Complété</span>
               </a>
 
               <a
@@ -81,13 +95,20 @@
                 type="transparent"
                 @click="filtersImportantAndCompleted.is_important = 1"
                 v-on:click="filtersImportantAndCompleted.is_completed = 0"
-                v-on:click.stop ="filtersImportantAndCompleted.tags =null"
+                v-on:click.stop="filtersImportantAndCompleted.tags = null"
               >
                 <feather-icon
                   icon="StarIcon"
                   :svgClasses="['h-6 w-6']"
+                   :style="{'color': filtersImportantAndCompleted.is_completed == 0
+                  && filtersImportantAndCompleted.is_important == 1
+                  && filtersImportantAndCompleted.tags == null  ? 'rgba(var(--vs-success), 1)' : 'gray' }"  
                 ></feather-icon>
-                <span class="text-lg ml-3">Important</span>
+                <span
+                :style="{'color': filtersImportantAndCompleted.is_completed == 0
+                  && filtersImportantAndCompleted.is_important == 1
+                  && filtersImportantAndCompleted.tags == null  ? 'rgba(var(--vs-success), 1)' : 'gray' }"  
+                class="text-lg ml-3">Important</span>
               </a>
             </template>
           </div>
@@ -114,10 +135,9 @@
                 <span class="text-lg">{{ tag.title }}</span>
                 <div class="vx-col w-full sm:w-1/6 ml-auto flex sm:justify-end">
                   <feather-icon
-                    icon="TrashIcon"
-                    class="cursor-pointer"
+                    icon="Trash2Icon"
+                    class="cursor-pointer hover:text-danger "
                     svgClasses="w-5 h-5"
-                    style="color: red"
                     @click.stop="moveToTrash(tag)"
                   />
                 </div>
@@ -151,7 +171,7 @@
           size="large"
           icon-pack="feather"
           icon="icon-search"
-          placeholder="Search..."
+          placeholder="Rechercher..."
           v-model="searchQuery"
           @input="updateSearchQuery"
           class="vs-input-no-border vs-input-no-shdow-focus w-full"
@@ -169,114 +189,110 @@
         :key="$vs.rtl"
       >
         <!-- Toute les tâches  -->
-          <h3 class="m-5">En retard, les dernières semaines</h3>
-          <draggable
-            tag="ul"
-            :list="tasksBeforeYesterday"
-            group="todo"
-            :move="onMoveCallback"
-            class="beforeYesterday"
-          >
-            <li
-              v-for="(task, index) in tasksBeforeYesterday.slice(0, 7)"
-              :key="String(task.id)"
-              :style="[{ transitionDelay: index * 0.1 + 's' }]"
+        <div v-if="todoData.length > 0">
+          <div v-if="tasksYesterday.length > 0">
+            <h3 class="m-5">En retard</h3>
+            <draggable
+              tag="ul"
+              :list="tasksYesterday"
+              group="todo"
+              :move="onMoveCallback"
+              class="yesterday"
             >
-              <todo-task
-                :task_data="task"
-                @showDisplayPrompt="showDisplayPrompt(task)"
-                :key="String(task.title)"
-              />
-            </li>
-          </draggable>
-   
+              <li
+                v-for="(task, index) in tasksYesterday"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
 
-          <h3 class="m-5">En retard</h3>
-          <draggable
-            tag="ul"
-            :list="tasksYesterday"
-            group="todo"
-            :move="onMoveCallback"
-            class="yesterday"
-          >
-            <li
-              v-for="(task, index) in tasksYesterday"
-              :key="String(task.id)"
-              :style="[{ transitionDelay: index * 0.1 + 's' }]"
+          <div v-if="tasksToday.length > 0">
+            <h3 class="m-5">Aujourd'hui</h3>
+            <draggable
+              tag="ul"
+              :list="tasksToday"
+              group="todo"
+              :move="onMoveCallback"
+              class="today"
             >
-              <todo-task
-                :task_data="task"
-                @showDisplayPrompt="showDisplayPrompt(task)"
-                :key="String(task.title)"
-              />
-            </li>
-          </draggable>
+              <li
+                v-for="(task, index) in tasksToday"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
 
-
-          <h3 class="m-5">Aujourd'hui</h3>
-          <draggable
-            tag="ul"
-            :list="tasksToday"
-            group="todo"
-            :move="onMoveCallback"
-            class="today">
-          
-            <li
-              v-for="(task, index) in tasksToday"
-              :key="String(task.id)"
-              :style="[{ transitionDelay: index * 0.1 + 's' }]"
+          <div v-if="tasksTomorrow.length > 0">
+            <h3 class="m-5">Demain</h3>
+            <draggable
+              tag="ul"
+              :list="tasksTomorrow"
+              group="todo"
+              :move="onMoveCallback"
+              class="tomorrow"
             >
-              <todo-task
-                :task_data="task"
-                @showDisplayPrompt="showDisplayPrompt(task)"
-                :key="String(task.title)"
-              />
-            </li>
-          </draggable>
+              <li
+                v-for="(task, index) in tasksTomorrow"
+                :key="task.id"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
 
-
-          <h3 class="m-5">Demain</h3>
-          <draggable
-            tag="ul"
-            :list="tasksTomorrow"
-            group="todo"
-            :move="onMoveCallback"
-            class="tomorrow"
-          >
-            <li
-              v-for="(task, index) in tasksTomorrow"
-              :key="task.id"
-              :style="[{ transitionDelay: index * 0.1 + 's' }]"
+          <div v-if="tasksAfterTomorrow.length > 0">
+            <h3 class="m-5">Plus tard dans la semaine</h3>
+            <draggable
+              tag="ul"
+              :list="tasksAfterTomorrow"
+              group="todo"
+              :move="onMoveCallback"
+              class="afterTomorrow"
             >
-              <todo-task
-                :task_data="task"
-                @showDisplayPrompt="showDisplayPrompt(task)"
-                :key="String(task.title)"
-              />
-            </li>
-          </draggable>
-
-
-          <h3 class="m-5">Plus tard dans la semaine</h3>
-          <draggable
-            tag="ul"
-            :list="tasksAfterTomorrow"
-            group="todo"
-            :move="onMoveCallback"
-            class="afterTomorrow"
-          >
-            <li
-              v-for="(task, index) in tasksAfterTomorrow"
-              :key="String(task.id)"
-              :style="[{ transitionDelay: index * 0.1 + 's' }]"
-            >
-              <todo-task
-                :task_data="task"
-                @showDisplayPrompt="showDisplayPrompt(task)"
-                :key="String(task.title)"
-              />
-            </li>
-          </draggable>
+              <li
+                v-for="(task, index) in tasksAfterTomorrow"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+        </div>
+        <div v-else>
+          <div class="text-center">Vous n'avez actuellement aucune tâche</div>
+        </div>
       </component>
     </div>
     <!-- /TODO LIST -->
@@ -366,19 +382,9 @@ export default {
     },
     tasksYesterday() {
       return this.todoData.filter((x) =>
-        moment(x.due_date).isSame(
-          moment().subtract(1, "days").format("YYYY-MM-DD")
-        )
+        moment(x.due_date).isBefore(moment().format("YYYY-MM-DD"))
       );
     },
-    tasksBeforeYesterday() {
-        return this.todoData.filter((x) =>
-        moment(x.due_date).isBefore(
-          moment().subtract(1, "days").format("YYYY-MM-DD")
-        )
-      );      
-    },
-
     tagData() {
       return this.$store.getters["tagManagement/getItems"];
     },
@@ -395,13 +401,7 @@ export default {
   },
   methods: {
     onMoveCallback(evt, originalEvent) {
-
-    switch (evt.to.className) {
-        case "beforeYesterday":
-          evt.draggedContext.element.due_date = moment()
-            .subtract(2, "days")
-            .format("YYYY-MM-DD");
-          break;
+      switch (evt.to.className) {
         case "yesterday":
           evt.draggedContext.element.due_date = moment()
             .subtract(1, "days")
@@ -423,18 +423,18 @@ export default {
         default:
           break;
       }
-      if(evt.draggedContext.element != null)
-      {
+      if (evt.draggedContext.element != null) {
         let todo = {
-        id: evt.draggedContext.element.id,
-        title: evt.draggedContext.element.title,
-        is_completed: evt.draggedContext.element.is_completed,
-        is_important: evt.draggedContext.element.is_important,
-        due_date: evt.draggedContext.element.due_date,
-        description: evt.draggedContext.element.description,
-      };
-      evt.dragged.parentNode.removeChild(evt.dragged)
-      return this.$store.dispatch("todoManagement/updateItem", todo);
+          id: evt.draggedContext.element.id,
+          title: evt.draggedContext.element.title,
+          is_completed: evt.draggedContext.element.is_completed,
+          is_important: evt.draggedContext.element.is_important,
+          due_date: evt.draggedContext.element.due_date,
+          description: evt.draggedContext.element.description,
+        };
+        console.log(evt.dragged.parentNode)
+        evt.dragged.parentNode.removeChild(evt.dragged);
+        return this.$store.dispatch("todoManagement/updateItem", todo);
       }
     },
     moment: function () {
@@ -446,6 +446,7 @@ export default {
       this.$store
         .dispatch("todoManagement/fetchItems", {
           q: this.searchQuery || undefined,
+          order_by: "due_date",
           is_completed:
             this.filtersImportantAndCompleted.is_completed || undefined,
           is_important:
@@ -457,12 +458,11 @@ export default {
         })
         .catch((err) => {
           that.$vs.loading.close();
-            this.$vs.notify({
+          this.$vs.notify({
             color: "danger",
             title: "Erreur",
-            text: "Ce tag n'est attribué à aucune tâche"
-            });
-
+            text: "Ce tag n'est attribué à aucune tâche",
+          });
           console.error(err);
         });
     },
@@ -494,7 +494,7 @@ export default {
     },
     showDeleteSuccess() {
       this.$vs.notify({
-        color: "success",
+        color: "danger",
         title: "Tâche",
         text: "La tâche est supprimée",
       });
@@ -569,18 +569,6 @@ export default {
 <style lang="scss">
 @import "@sass/vuexy/apps/todo.scss";
 
-.draggable-task-handle {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  visibility: hidden;
-  cursor: move;
-
-  .todo-task-list .todo-item:hover & {
-    visibility: visible;
-  }
-}
 
 $colors: (
   "51E898": #51e898,

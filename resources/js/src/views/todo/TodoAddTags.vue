@@ -29,14 +29,15 @@
           <div>
             <div class="vx-col flex-1" style="border-right: 1px solid #d6d6d6">
               <vs-input
-                v-validate="'required'"
+                v-validate="'max:50|required'"
                 name="title"
                 label="Titre"
                 class="w-full mb-4 mt-1"
                 placeholder="Titre" 
                 v-model="tagLocal.title"
-                :color="validateForm ? 'success' : 'danger'"
-              />
+                :success="tagLocal.title != '' && !errors.has('title')"
+                :danger="errors.has('title')"
+                :danger-text="errors.first('title')"              />
             </div>
             <div>
               <small class="ml-2">Couleur</small>
@@ -44,6 +45,7 @@
 
             <div class="pb-2 pl-2">
               <v-swatches
+               v-validate="'required'"
                 clas="vs-row"
                 :swatches="colors"
                 name="color"
@@ -103,8 +105,6 @@ export default {
 
             this.isSubmiting = true;
         const item = JSON.parse(JSON.stringify(this.tagLocal));
-
-      console.log("kalal");
       this.$validator.validateAll().then((result) => {
         if (result) {
           this.$store
