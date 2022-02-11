@@ -497,7 +497,7 @@ export default {
             let task = tasks.filter(x => x.id == this.taskIdToEdit);
 
             this.$store
-                .dispatch("taskManagement/getTasksById", this.taskIdToEdit)
+                .dispatch("taskManagement/fetchItem", this.taskIdToEdit)
                 .then(reponse => {
                     console.log(reponse);
 
