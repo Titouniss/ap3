@@ -474,8 +474,8 @@ export default {
                 this.$store.getters["taskManagement/getItem"](this.itemId)
             )
         );
-        item.skills = item.skills.map(skill => skill.id);
-        item.date = moment(item.date).format("DD-MM-YYYY HH:mm");
+        item.skills = item.skills ? item.skills.map(skill => skill.id) : []
+        item.date = moment(item.date).format("DD-MM-YYYY HH:mm")
         return {
             configdateTimePicker: {
                 disableMobile: "true",
