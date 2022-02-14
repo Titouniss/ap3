@@ -169,7 +169,7 @@
                                     </li>
                                  </ul>   
                                  <div v-else class="text-dark">
-                                     Aucune tâche a été planifié
+                                     Aucune tâche n'a été planifié
                                  </div>                           
                             </vs-col>
                         </vs-row>
