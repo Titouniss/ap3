@@ -53,7 +53,13 @@ class TagController extends BaseApiController
    }
     protected function updateItem($item, array $arrayRequest)
     {
-
+        $item->update([
+            'title' => $arrayRequest['title'],
+            'color' => $arrayRequest['color'] ?? null,
+            'user_id' => Auth::id(),
+        ]);
+        $item->save();
+        return $item;     
     }
    //Ajout d'un tag
    public function addTag(Request $request, int $id)

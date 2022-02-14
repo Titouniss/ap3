@@ -134,6 +134,15 @@
                 />
                 <span class="text-lg">{{ tag.title }}</span>
                 <div class="vx-col w-full sm:w-1/6 ml-auto flex sm:justify-end">
+
+                <feather-icon
+                    icon="Edit3Icon"
+                    class="cursor-pointer hover:text-primary "
+                    svgClasses="w-5 h-5"
+                    @click.Stop="showDisplayPromptTag(tag)"
+
+                  />
+  
                   <feather-icon
                     icon="Trash2Icon"
                     class="cursor-pointer hover:text-danger "
@@ -291,7 +300,7 @@
           <div v-else />
         </div>
         <div v-else>
-          <div class="text-center">Vous n'avez actuellement aucune tâche</div>
+          <div class="text-center ">Vous n'avez actuellement aucune tâche</div>
         </div>
       </component>
     </div>
@@ -304,6 +313,12 @@
       @hideDisplayPrompt="hidePrompt"
       v-if="displayPrompt"
     ></todo-edit>
+        <tag-edit
+           :displayPrompt="displayPromptTag"
+           :itemId="tagIdToEdit"
+           @hideDisplayPrompt="hidePrompt"
+           v-if="displayPromptTag"
+        />
   </div>
 </template>
 
@@ -313,6 +328,7 @@ import moduleTag from "@/store/tag-management/moduleTagManagement.js";
 import TodoAddNew from "./TodoAddNew.vue";
 import TodoTask from "./TodoTask.vue";
 import TodoEdit from "./TodoEdit.vue";
+import TagEdit from "./TagEdit.vue";
 import TodoAddTags from "./TodoAddTags.vue";
 import VuePerfectScrollbar from "vue-perfect-scrollbar";
 import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
@@ -327,7 +343,9 @@ export default {
       searchQuery: "",
       clickNotClose: true,
       displayPrompt: false,
+      displayPromptTag: false,
       taskIdToEdit: 0,
+      tagIdToEdit: 0,
       isSidebarActive: true,
       filtersImportantAndCompleted: {
         is_important: false,
@@ -400,6 +418,13 @@ export default {
     },
   },
   methods: {
+     itemIdToEdit() {
+       console.log(this.$store.getters["tagManagement/getSelectedItem"].id)
+            return (
+                this.$store.getters["tagManagement/getSelectedItem"].id ||
+                0
+            );
+        },
     onMoveCallback(evt, originalEvent) {
       switch (evt.to.className) {
         case "yesterday":
@@ -458,11 +483,6 @@ export default {
         })
         .catch((err) => {
           that.$vs.loading.close();
-          this.$vs.notify({
-            color: "danger",
-            title: "Erreur",
-            text: "Ce tag n'est attribué à aucune tâche",
-          });
           console.error(err);
         });
     },
@@ -527,8 +547,15 @@ export default {
       this.taskIdToEdit = itemId.id;
       this.displayPrompt = true;
     },
+      showDisplayPromptTag(itemId) {
+        
+      this.tagIdToEdit = itemId.id;
+      this.displayPromptTag = true;
+    },
     hidePrompt() {
       this.displayPrompt = false;
+      this.displayPromptTag = false;
+
     },
     setSidebarWidth() {
       if (this.windowWidth < 992) {
@@ -539,6 +566,7 @@ export default {
     },
   },
   components: {
+    TagEdit,
     TodoAddNew,
     TodoTask,
     TodoEdit,

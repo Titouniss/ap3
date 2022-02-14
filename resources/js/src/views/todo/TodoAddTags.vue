@@ -37,7 +37,7 @@
                 v-model="tagLocal.title"
                 :success="tagLocal.title != '' && !errors.has('title')"
                 :danger="errors.has('title')"
-                :danger-text="errors.first('title')"              />
+                :danger-text="errors.first('title')"/>
             </div>
             <div>
               <small class="ml-2">Couleur</small>

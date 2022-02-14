@@ -168,7 +168,7 @@
                                         </vs-row>  
                                     </li>
                                  </ul>   
-                                 <div v-else>
+                                 <div v-else class="text-dark">
                                      Aucune tâche a été planifié
                                  </div>                           
                             </vs-col>
@@ -408,7 +408,7 @@
                                 v-for="(project,
                                 index) in updateVisibleProjects
                                     .sort((a, b) => a.progress > b.progress)
-                                    .slice(0, 10)"
+                                    .slice(0, 5)"
                                 v-bind:currentPage="currentPage"
                                 :key="project.id"
                                 :to="'/projects/project-view/' + project.id"
@@ -784,7 +784,7 @@ export default {
     data() {
         return {
             currentPage: 0,
-            pageSize: 10,
+            pageSize: 5,
             chartOptions: {
                 plotOptions: {
                     radialBar: {
@@ -1088,7 +1088,7 @@ export default {
         this.$store
             .dispatch("taskManagement/fetchComments", {
                 page: 1,
-                per_page: 10,
+                per_page: 5,
                 order_by: "created_at",
                 order_by_desc: 1
             })

@@ -82,6 +82,7 @@ class TodoController extends BaseApiController
         }
         $query->where('is_important',$request->is_important)->get();
     }
+    
     if($request->has('order_by'))
     {
         $query->orderBy($request->order_by);
