@@ -15,7 +15,7 @@
             :active.sync="activePrompt"
         >
             <div>
-                <form autocomplete="off" v-submit.prevent>
+                <form autocomplete="off">
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <div class="vx-row mt-4" v-if="!disabled">
