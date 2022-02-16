@@ -10,15 +10,15 @@
 
 <template>
   <div @click="displayPrompt" class="py-1 list-item-component">
-    <div class="flex py-4 todo-title-wrapper">
+    <div class="flex todo-title-wrapper">
 
 
-      <div class=" sm:items-center todo-title-area">
+      <div class=" sm:items-center todo-title-area" >
         <div class="flex" >
           <vs-checkbox
             v-model="isCompleted"
             :checked="task_data.is_completed"
-            class="w-8 ml-2 vs-checkbox-medium"
+            class="w-8 ml-5 vs-checkbox-medium"
             @click.native.stop
           />
           <h6

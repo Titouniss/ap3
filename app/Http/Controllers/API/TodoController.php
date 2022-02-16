@@ -60,7 +60,7 @@ class TodoController extends BaseApiController
 
    if ($request->has('tag_id')) {
     if (TodoTags::where('tag_id', $request->tag_id)->doesntExist()) {
-        throw new Exception("Paramètre 'tag_id' n'est pas valide.");
+        // throw new Exception("Paramètre 'tag_id' n'est pas valide.");
     }
 
     $query->join('todo_tags', function ($join) use ($request) {
