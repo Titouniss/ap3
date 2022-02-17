@@ -1,14 +1,14 @@
 <template>
     <div>
         <vs-button
-            v-if="customTask == false"
+            v-if="customTask == false && project_data.status != 'done'"
             @click="activePrompt = true"
             class="w-full p-3 mb-4 mr-4"
         >
             Ajouter une tâche
         </vs-button>
         <div
-            v-if="customTask == true"
+            v-if="customTask == true && project_data.status != 'done'"
             @click="activePrompt = true"
             class="card-task-add p-2 m-3"
         >
@@ -32,7 +32,7 @@
             class="task-compose"
         >
             <div>
-                <form autocomplete="off">
+                <form autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div

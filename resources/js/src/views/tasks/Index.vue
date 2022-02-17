@@ -113,6 +113,10 @@
                             @click="editRecord(item)"
                         />
                         <feather-icon
+                            v-if="
+                                project_data.status != 'waiting' &&
+                                    project_data.status != 'done'
+                            "
                             icon="Trash2Icon"
                             svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                             @click="confirmDeleteRecord(item)"
@@ -181,12 +185,12 @@
                 </div>
 
                 <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-                <vs-input
+                <!-- <vs-input
                     class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
                     v-model="searchQuery"
                     @input="updateSearchQuery"
                     placeholder="Rechercher..."
-                />
+                /> -->
                 <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
             </div>
 
@@ -249,6 +253,9 @@ export default {
     props: {
         project_data: {
             required: true
+        },
+        taskIdToEdit: {
+            required: false
         },
         refreshData: {
             required: true
@@ -408,7 +415,9 @@ export default {
         },
         deleteRecord() {
             this.$store
-                .dispatch("taskManagement/forceRemoveItems", [this.itemToDel.id])
+                .dispatch("taskManagement/forceRemoveItems", [
+                    this.itemToDel.id
+                ])
                 .then(() => {
                     this.refreshData();
                     this.showDeleteSuccess();
@@ -423,7 +432,7 @@ export default {
             this.$vs.notify({
                 color: "success",
                 title: "Tâche",
-                text: `${modelTitle} supprimé`
+                text: `${modelTitle} supprimée`
             });
         }
     },
@@ -481,7 +490,31 @@ export default {
             });
 
         this.$store.dispatch("userManagement/fetchItems");
+
+        let tasks = this.$store.getters["taskManagement/getItems"];
+
+        if (this.taskIdToEdit) {
+            let task = tasks.filter(x => x.id == this.taskIdToEdit);
+
+            this.$store
+                .dispatch("taskManagement/fetchItem", this.taskIdToEdit)
+                .then(reponse => {
+                    console.log(reponse);
+
+                    this.$store
+                        .dispatch("taskManagement/editItem", reponse.payload)
+                        .then(() => {})
+                        .catch(err => {
+                            console.error(err);
+                        });
+                })
+                .catch(err => {
+                    console.log("erreur");
+                    console.error(err);
+                });
+        }
     },
+
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 

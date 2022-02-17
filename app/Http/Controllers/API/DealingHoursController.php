@@ -9,8 +9,11 @@ use App\Models\Company;
 use App\Models\DealingHours;
 use App\Models\Unavailability;
 use Carbon\Carbon;
-use Validator;
+use Illuminate\Support\Facades\Validator;
+use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class DealingHoursController extends Controller
 {
@@ -52,15 +55,26 @@ class DealingHoursController extends Controller
 
         // Check if overtimes
         $items = DealingHours::where('user_id', $id)->get();
-
         $totalOvertimes = 0;
         $nbUsedOvertimes = 0;
         $nbPayedOvertimes = 0;
-
+        
         if (!$items->isEmpty()) {
             // Get total overtimes
-            $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '<', Carbon::now()->startOfWeek())->sum('overtimes');
+            $user = User::where('id', $id)->get();
+            $start_employment = Carbon::parse($user[0]->start_employment);
+            if($user[0]->start_employment == null)
+            {
+                $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '<', Carbon::now()->startOfWeek())->sum('overtimes');                      
+            }
+            else
+            { 
+                $users = User::where('id', $id)->whereBetween('start_employment', [Carbon::now()->startOfWeek()->format('Y-m-d H:i:s'), Carbon::now()->endOfWeek()->format('Y-m-d H:i:s')])->get();
+                $totalOvertimes = DealingHours::where('user_id', $id)->whereBetween('date', [$start_employment->format('Y-m-d H:i:s'), Carbon::now()->startOfWeek()->format('Y-m-d H:i:s')])->sum('overtimes');
+            }
+
             // Get nb used and payed overtimes
+
             $usedOrvertimes = Unavailability::where([['user_id', $id], ['reason', 'Utilisation heures supplémentaires']])->get();
             $usedOvertimesPayed = Unavailability::where([['user_id', $id], ['reason', 'Heures supplémentaires payées']])->get();
             if (!$usedOrvertimes->isEmpty()) {

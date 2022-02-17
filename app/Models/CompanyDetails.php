@@ -23,6 +23,7 @@ class CompanyDetails extends Model
         'postal_code',
         'city',
         'country',
+        'authorize_supply'
     ];
 
     public $timestamps = false;

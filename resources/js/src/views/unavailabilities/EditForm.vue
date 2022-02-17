@@ -11,7 +11,7 @@
         :active.sync="activePrompt"
     >
         <div>
-            <form autocomplete="off">
+            <form autocomplete="off" v-on:submit.prevent>
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <simple-select
@@ -22,7 +22,14 @@
                             v-model="itemLocal.reason"
                             :options="reasons"
                             :reduce="item => item.name"
+                            
                         />
+                         <!-- <div
+                                v-if="itemLocal.reason =='Utilisation heures supplémentaires' && this.totalOvertimes<0"
+                                class="text-danger text-sm"
+                            >
+                                Attention, vos heures supplémentaires sont dans le négatif
+                            </div> -->
                         <vs-input
                             v-if="itemLocal.reason === 'Autre...'"
                             name="custom_reason"
@@ -102,12 +109,14 @@ export default {
         fetchOvertimes: {}
     },
     data() {
+       
         const itemLocal = this.$store.getters[
             "unavailabilityManagement/getItem"
         ](this.itemId);
         return {
             itemLocal: itemLocal,
-
+            totalOvertimes: "",
+            id_user: "",
             configStartsAtDateTimePicker: {
                 disableMobile: "true",
                 enableTime: true,
@@ -139,6 +148,32 @@ export default {
         };
     },
     computed: {
+        // Overtimes()
+        // {  
+        //     if(this.activePrompt ==true)
+        //     {    
+        //         const item = JSON.parse(JSON.stringify(this.itemLocal));
+        //         item.user_id = this.id_user;
+                
+        //             console.log("lala")
+        //         return(
+        //         this.$store
+        //                 .dispatch(
+        //                     "dealingHoursManagement/getOvertimes",
+        //                     this.id_user
+        //                 )
+        //                 .then(data => {
+        //                     if (data && data.status === 200) {
+        //                         this.overtimes = data.data.success.overtimes;
+        //                         this.totalOvertimes = this.overtimes;
+        //                         console.log(this.totalOvertimes);
+        //                         console.log(this.id_user);
+
+        //                     }
+        //                 })
+        //         );
+        //     }
+        // },
         activePrompt: {
             get() {
                 return this.itemId && this.itemId > 0 ? true : false;

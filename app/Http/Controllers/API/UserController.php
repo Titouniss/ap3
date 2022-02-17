@@ -47,6 +47,7 @@ class UserController extends BaseApiController
         'role_id' => 'required',
         'skills' => 'present|array',
         'email' => 'nullable|email',
+        'start_employment' => 'required',
     ];
 
     protected static $update_validation_array = [
@@ -58,7 +59,8 @@ class UserController extends BaseApiController
         'role_id' => 'required',
         'skills' => 'present|array',
         'email' => 'nullable|email',
-        'related_user_id' => 'nullable'
+        'related_user_id' => 'nullable',
+        'start_employment' => 'required',
     ];
 
     /**
@@ -86,6 +88,13 @@ class UserController extends BaseApiController
         if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
             throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }
+        if($arrayRequest['email']){
+            $email = htmlspecialchars(stripslashes(trim($arrayRequest["email"])));
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException("Format email invalide.", static::$response_codes['error_conflict']);
+            }
+        }
 
         if (User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
             throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
@@ -104,6 +113,7 @@ class UserController extends BaseApiController
             'company_id' => $user->is_admin ? $arrayRequest['company_id'] : $user->company_id,
             'register_token' => Str::random(8),
             'isTermsConditionAccepted' => false,
+            'start_employment' => $arrayRequest['start_employment'],
         ]);
 
         //On ajoute des heures de travail par défaut ( 35H )
@@ -138,7 +148,13 @@ class UserController extends BaseApiController
         ) {
             throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }
+        if($arrayRequest['email']){
+            $email = htmlspecialchars(stripslashes(trim($arrayRequest["email"])));
 
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException("Format email invalide.", static::$response_codes['error_conflict']);
+            }
+        }
         if ($item->login != $arrayRequest['login'] && User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
             throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }
@@ -161,6 +177,8 @@ class UserController extends BaseApiController
             'login' => $arrayRequest['login'],
             'email' => $arrayRequest['email'],
             'company_id' => $user->is_admin ? $arrayRequest['company_id'] : $user->company_id,
+            'start_employment' => $arrayRequest['start_employment'],
+
         ]);
 
         $this->setRole($item, $arrayRequest['role_id']);
@@ -263,6 +281,7 @@ class UserController extends BaseApiController
             'firstname' => $arrayRequest['firstname'],
             'function' => $arrayRequest['function'],
             'email' => $arrayRequest['email'],
+            
         ]);
 
         return $this->successResponse($item->load(static::$show_load), "Mise à jour terminée avec succès.");

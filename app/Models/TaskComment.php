@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\User;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Task;
 
 class TaskComment extends Model
 {
@@ -13,5 +14,9 @@ class TaskComment extends Model
     public function getCreatorAttribute()
     {
         return User::find($this->created_by);
+    }
+    public function task()
+    {
+        return $this->belongsTo(Task::class, 'task_id', 'id');
     }
 }

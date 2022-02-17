@@ -366,7 +366,11 @@ class TaskController extends BaseApiController
 
                         $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
 
-                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
+                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) ||
+                            ($period->contains($end_at) && $period->getStartDate() != $end_at) ||
+                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) ||
+                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)
+                        ) {
                             $available = false;
                             break;
                         }
@@ -384,20 +388,45 @@ class TaskController extends BaseApiController
 
         $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
             : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
+        $workarea = Workarea::where('id', $workarea_id)->get();
+        $max_users = $workarea[0]['max_users'];
+        $nb_tasks = 0;
 
         if (count($workareaTasks) > 0) {
 
-            foreach ($workareaTasks as $task) {
-                if ($available) {
-                    foreach ($task->periods as $task_period) {
+            if ($max_users == 1) {
+                foreach ($workareaTasks as $task) {
+                    if ($available) {
+                        foreach ($task->periods as $task_period) {
 
-                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+                            $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
 
-                        if ($period->contains($start_at) || $period->contains($end_at) || $newTaskPeriod->contains($task_period->start_time) || $newTaskPeriod->contains($task_period->end_time)) {
-                            $available = false;
-                            break;
+                            if (($period->contains($start_at) && $period->getEndDate() != $start_at) ||
+                                ($period->contains($end_at) && $period->getStartDate() != $end_at) ||
+                                ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) ||
+                                ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)
+                            ) {
+                                $available = false;
+                                break;
+                            }
                         }
                     }
+                }
+            } else {
+                foreach ($workareaTasks as $task) {
+                    foreach ($task->periods as $task_period) {
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) ||
+                            ($period->contains($end_at) && $period->getStartDate() != $end_at) ||
+                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) ||
+                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)
+                        ) {
+                            $nb_tasks++;
+                        }
+                    }
+                }
+                if ($nb_tasks >= $max_users) {
+                    $available = false;
                 }
             }
         }
@@ -502,7 +531,10 @@ class TaskController extends BaseApiController
                         ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
                         ->where('projects.company_id', $user->company_id);
                 } else {
-                    $query->where('created_by', $user->id);
+                    $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
+                        ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                        ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
+                        ->where('task_comments.created_by', $user->id);
                 }
             }
 
@@ -557,6 +589,8 @@ class TaskController extends BaseApiController
                     'total' => $paginator->total()
                 ]);
             }
+            //commentaire dashboard liaison entre le commentaire -> la tâche -> le projet
+            $query->with('task', 'task.project')->get();
 
             $items = $query->get();
 
@@ -566,5 +600,11 @@ class TaskController extends BaseApiController
         } catch (\Throwable $th) {
             return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
         }
+    }
+    public function getTask(int $id)
+    {
+        $extra = collect([]);
+        $task = Task::where('id', $id)->first();
+        return $this->successResponse($task, 'Chargement terminé avec succès.', $extra->toArray());
     }
 }

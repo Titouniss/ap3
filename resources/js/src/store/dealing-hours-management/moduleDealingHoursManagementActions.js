@@ -75,6 +75,7 @@ export default {
       axios.post(`/api/dealing-hours-management/update/${payload.id}`, payload)
         .then((response) => {
           resolve(response)
+          
         })
         .catch((error) => { reject(error) })
     })

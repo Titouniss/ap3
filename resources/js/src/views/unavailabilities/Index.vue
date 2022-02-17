@@ -663,7 +663,7 @@ export default {
                                 data.data.success.payedOvertimes;
                         } else {
                             this.$vs.notify({
-                                color: "error",
+                                color: "danger",
                                 title: "Erreur",
                                 text: `Impossible d'afficher les heures supplémentaires`
                             });
@@ -673,6 +673,7 @@ export default {
                     .catch(err => {
                         console.error(err);
                     });
+                   
             }
         },
         fetchWorkHours() {

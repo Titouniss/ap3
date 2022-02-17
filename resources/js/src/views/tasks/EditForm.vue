@@ -12,13 +12,27 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
-            <div>
-                <form autocomplete="off">
+
+            <div
+                :class="
+                    project_data.status == 'waiting' ||
+                    project_data.status == 'done'
+                        ? 'disabled-div'
+                        : null
+                "
+            >
+                <form autocomplete="off" v-on:submit.prevent>
+
                     <div class="vx-row">
                         <!-- Left -->
                         <div
                             class="vx-col flex-1"
                             style="border-right: 1px solid #d6d6d6"
+                            :class="
+                                itemLocal.project.status == 'doing'
+                                    ? 'disabled-div'
+                                    : ''
+                            "
                         >
                             <vs-input
                                 v-validate="'required'"
@@ -37,7 +51,7 @@
                                 {{ errors.first("name") }}
                             </span>
 
-                            <div class="my-3">
+                            <div class="my-3 enabled">
                                 <div
                                     v-if="
                                         descriptionDisplay ||
@@ -201,11 +215,7 @@
                                 style="flex-direction: column; display: flex"
                             >
                                 <span
-                                    :class="
-                                        itemLocal.project.status == 'doing'
-                                            ? 'disabled-div'
-                                            : ''
-                                    "
+                                    v-if="itemLocal.project.status !== 'doing'"
                                 >
                                     <add-previous-tasks
                                         :addPreviousTask="addPreviousTask"
@@ -464,8 +474,8 @@ export default {
                 this.$store.getters["taskManagement/getItem"](this.itemId)
             )
         );
-        item.skills = item.skills.map(skill => skill.id);
-        item.date = moment(item.date).format("DD-MM-YYYY HH:mm");
+        item.skills = item.skills ? item.skills.map(skill => skill.id) : []
+        item.date = moment(item.date).format("DD-MM-YYYY HH:mm")
         return {
             configdateTimePicker: {
                 disableMobile: "true",
@@ -525,6 +535,7 @@ export default {
                 name != "" &&
                 date != "" &&
                 estimated_time != "" &&
+                skills &&
                 skills.length > 0 &&
                 (this.type === "users" ||
                     this.type === "workarea" ||
@@ -816,7 +827,9 @@ export default {
                 });
 
             this.$store
-                .dispatch("taskManagement/forceRemoveItems", [this.itemLocal.id])
+                .dispatch("taskManagement/forceRemoveItems", [
+                    this.itemLocal.id
+                ])
                 .then(data => {
                     this.$vs.notify({
                         color: "success",
@@ -837,7 +850,7 @@ export default {
 };
 </script>
 <style>
-.disabled-div {
+.disabled-div > div:not(.enabled) {
     pointer-events: none;
     opacity: 0.6;
 }

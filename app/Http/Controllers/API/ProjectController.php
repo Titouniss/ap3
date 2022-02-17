@@ -71,7 +71,18 @@ class ProjectController extends BaseApiController
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
-
+        if ($request->has('deleted_at')) {
+            $query->onlyTrashed();
+        }
+        if ($request->has('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+        if ($request->has('month')) { 
+            $query->whereMonth('date', '=', $request->month);
+        }
+        if ($request->has('year')) { 
+            $query->whereYear('date', '=', $request->year);    
+        }
         if ($request->has('order_by') && $request->order_by == 'status') {
             try {
                 $query->getQuery()->orders = null;
@@ -81,7 +92,7 @@ class ProjectController extends BaseApiController
                     $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
                 }
 
-                $query->orderByRaw("FIELD(status, \"doing\", \"todo\", \"done\") {$direction}");
+                $query->orderByRaw("FIELD(status, \"doing\", \"todo\", \"waiting\", \"done\") {$direction}");
                 $query->orderBy('name', $direction);
             } catch (\Throwable $th) {
                 throw new ApiException("Paramètre 'order_by' n'est pas valide.");
@@ -120,6 +131,7 @@ class ProjectController extends BaseApiController
             'name' => $arrayRequest['name'],
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
+            'status' => $arrayRequest['status'],
         ]);
 
         if (isset($arrayRequest['customer_id'])) {
@@ -729,7 +741,7 @@ class ProjectController extends BaseApiController
                     //     if ($heureFinNewPeriod >= $heureFinTravailMatin) {
                     //         $heuresDisposMatin = Carbon::parse($heureFinTravailMatin)->floatDiffInHours($heureDebutTravailMatin);
                     //     } else {
-                    //         $heuresDisposMatin = Carbon::parse($heureDebutTravailMatin)->floatDiffInHours($heureFinNewPeriod);
+                    //         $heuresDisposMatin = Carbon::parse($heureDebutTravailMatin)->floatDiffInaHours($heureFinNewPeriod);
                     //     }
                     // }else if($hoursWork[2] != "00:00:00" || $hoursWork[3] != "00:00:00"){
                     if ($heureFinNewPeriod > $heureFinTravailMatin) {
@@ -2506,6 +2518,7 @@ class ProjectController extends BaseApiController
 
         //récupérer toutes les tasks avec le même workarea_id
         $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
+    
         $listTaskId = array();
         //s'il y a au moins une task sur le même îlot
         if (count($tasksWorkarea) > 0) {
@@ -3051,7 +3064,7 @@ class ProjectController extends BaseApiController
         $timeData = $this->calculTimeAvailable($users, $project, $users);
 
         if ($timeData['total_hours_available'] < $nbHoursRequired) {
-            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Vueillez modifier la date de livraison du projet.");
+            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
         }
 
         return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
@@ -3116,6 +3129,18 @@ class ProjectController extends BaseApiController
         }
         $workersHaveSkills = $nb_tasks == $nb_tasks_skills_worker ? true : false;
         $workareasHaveSkills = $nb_tasks == $nb_tasks_skills_workarea ? true : false;
+
+//Alerte Planification mettre la compétence lorsqu'elle n'est pas affilié à un utilisateur ou à un pôle 
+  $taskWOrk = Task::whereNull('workarea_id')->where('name',$task->name)->get();
+
+
+
+        // // $skillNull = Task::where('workarea_id', $workarea[0]->id)->get();
+        // $workarea_id = $task[0]['workarea_id'];
+        // $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
+        
+
+
 
         $alerts = [];
         $haveHours ? null : $alerts[] = "Aucun utilisateur ne possède d'heures de travail";
@@ -3446,59 +3471,111 @@ class ProjectController extends BaseApiController
         $afternoon_starts_at_max_Dimanche = "00:00:00";
         $afternoon_ends_at_min_Dimanche = "23:59:59";
 
-        for ($i = 0; $i < count($listUserId); $i++) { //($listUserId as $user_id){
-            // $controllerLog = new Logger('hours');
-            // $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            // $controllerLog->info('user_id',[$user_id]);
-
+        for ($i = 0; $i < count($listUserId); $i++) {
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'lundi')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursLundi["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursLundi["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursLundi["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursLundi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursLundi["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursLundi["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursLundi["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursLundi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursLundi["morning_start"], NULL);
+                array_push($workHoursLundi["morning_end"], NULL);
+                array_push($workHoursLundi["afternoon_start"], NULL);
+                array_push($workHoursLundi["afternoon_end"], NULL);
+            }
 
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'mardi')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursMardi["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursMardi["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursMardi["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursMardi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursMardi["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursMardi["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursMardi["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursMardi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursMardi["morning_start"], NULL);
+                array_push($workHoursMardi["morning_end"], NULL);
+                array_push($workHoursMardi["afternoon_start"], NULL);
+                array_push($workHoursMardi["afternoon_end"], NULL); 
+            }
 
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'mercredi')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursMercredi["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursMercredi["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursMercredi["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursMercredi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursMercredi["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursMercredi["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursMercredi["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursMercredi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursMercredi["morning_start"], NULL);
+                array_push($workHoursMercredi["morning_end"], NULL);
+                array_push($workHoursMercredi["afternoon_start"], NULL);
+                array_push($workHoursMercredi["afternoon_end"], NULL); 
+            }
 
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'jeudi')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursJeudi["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursJeudi["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursJeudi["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursJeudi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursJeudi["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursJeudi["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursJeudi["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursJeudi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursJeudi["morning_start"], NULL);
+                array_push($workHoursJeudi["morning_end"], NULL);
+                array_push($workHoursJeudi["afternoon_start"], NULL);
+                array_push($workHoursJeudi["afternoon_end"], NULL); 
+            }
 
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'vendredi')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursVendredi["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursVendredi["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursVendredi["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursVendredi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursVendredi["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursVendredi["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursVendredi["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursVendredi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursVendredi["morning_start"], NULL);
+                array_push($workHoursVendredi["morning_end"], NULL);
+                array_push($workHoursVendredi["afternoon_start"], NULL);
+                array_push($workHoursVendredi["afternoon_end"], NULL); 
+            }
 
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'samedi')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursSamedi["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursSamedi["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursSamedi["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursSamedi["afternoon_end"], $user_workHours['afternoon_ends_at']);
-
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursSamedi["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursSamedi["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursSamedi["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursSamedi["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursSamedi["morning_start"], NULL);
+                array_push($workHoursSamedi["morning_end"], NULL);
+                array_push($workHoursSamedi["afternoon_start"], NULL);
+                array_push($workHoursSamedi["afternoon_end"], NULL);
+            }
+            
             $user_workHours = Workhours::where('user_id', $listUserId[$i])->where('day', 'dimanche')->get();
-            $user_workHours = $user_workHours[0];
-            array_push($workHoursDimanche["morning_start"], $user_workHours['morning_starts_at']);
-            array_push($workHoursDimanche["morning_end"], $user_workHours['morning_ends_at']);
-            array_push($workHoursDimanche["afternoon_start"], $user_workHours['afternoon_starts_at']);
-            array_push($workHoursDimanche["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            if(sizeof($user_workHours)>0){
+                $user_workHours = $user_workHours[0];
+                array_push($workHoursDimanche["morning_start"], $user_workHours['morning_starts_at']);
+                array_push($workHoursDimanche["morning_end"], $user_workHours['morning_ends_at']);
+                array_push($workHoursDimanche["afternoon_start"], $user_workHours['afternoon_starts_at']);
+                array_push($workHoursDimanche["afternoon_end"], $user_workHours['afternoon_ends_at']);
+            }
+            else{
+                array_push($workHoursDimanche["morning_start"], NULL);
+                array_push($workHoursDimanche["morning_end"], NULL);
+                array_push($workHoursDimanche["afternoon_start"], NULL);
+                array_push($workHoursDimanche["afternoon_end"], NULL);
+            }
         }
 
         //$workHours=$workHours[0];
@@ -3642,15 +3719,15 @@ class ProjectController extends BaseApiController
                     foreach ($workareasSkill as $workareaSkill) {
                         array_push($skills, $workareaSkill['skill_id']);
                     }
-                    foreach ($skills as $skill) {
-                        $usersSkill = UsersSkill::where('skill_id', $skill)->get();
-                    }
                     //liste des id des utilisateurs qui ont les compétences du workarea
                     $listUserId = array();
-                    foreach ($usersSkill as $userSkill) {
-                        $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
-                        if (!$item->isEmpty()) {
-                            array_push($listUserId, $userSkill['user_id']);
+                    foreach ($skills as $skill) {
+                        $usersSkill = UsersSkill::where('skill_id', $skill)->get();
+                        foreach ($usersSkill as $userSkill) {
+                            $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
+                            if (!$item->isEmpty() && !in_array($userSkill['user_id'], $listUserId)) {
+                                array_push($listUserId, $userSkill['user_id']);
+                            }
                         }
                     }
                 }
@@ -3675,15 +3752,15 @@ class ProjectController extends BaseApiController
                     foreach ($workareasSkill as $workareaSkill) {
                         array_push($skills, $workareaSkill['skill_id']);
                     }
-                    foreach ($skills as $skill) {
-                        $usersSkill = UsersSkill::where('skill_id', $skill)->get();
-                    }
                     //liste des id des utilisateurs qui ont les compétences du workarea
                     $listUserId = array();
-                    foreach ($usersSkill as $userSkill) {
-                        $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
-                        if (!$item->isEmpty()) {
-                            array_push($listUserId, $userSkill['user_id']);
+                    foreach ($skills as $skill) {
+                        $usersSkill = UsersSkill::where('skill_id', $skill)->get();
+                        foreach ($usersSkill as $userSkill) {
+                            $item = WorkHours::where('user_id', $userSkill['user_id'])->get();
+                            if (!$item->isEmpty() && !in_array($userSkill['user_id'], $listUserId)) {
+                                array_push($listUserId, $userSkill['user_id']);
+                            }
                         }
                     }
                 }
@@ -3883,7 +3960,7 @@ class ProjectController extends BaseApiController
             // En cas d'erreur, on annule les changements et on retourne une erreur
             if (!$allPlanified) {
                 Task::whereIn('id', $taskIds)->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
-                throw new Exception("Les plages de travails disponibles sont insuffisantes pour démarrer le projet. Veuillez modifier la date de livraison.");
+                throw new Exception("Les plages de travail disponibles sont insuffisantes pour démarrer le projet. Veuillez modifier la date de livraison.");
             }
 
             // Si toutes les taches ont été planifié, on passe le projet en `doing` et on return success
@@ -4019,11 +4096,11 @@ class ProjectController extends BaseApiController
         $usersPeriods = [];
 
         // Get days today date -> end date
-        $start_date = Carbon::createFromFormat('Y-m-d', $project->start_date)->startOfDay();
+        $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->start_date);
+
         $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->date)->subDays('1')->endOfDay();
 
         $period = CarbonPeriod::create($start_date, $end_date);
-
         foreach ($period as $t) {
             $daysPeriod[] = [
                 'date' => $t,

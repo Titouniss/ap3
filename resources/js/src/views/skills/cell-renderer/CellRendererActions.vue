@@ -116,7 +116,7 @@ export default {
             this.$vs.notify({
                 color: "success",
                 title: modelTitle,
-                text: `Compétence supprimé`
+                text: `Compétence supprimée`
             });
         }
     }

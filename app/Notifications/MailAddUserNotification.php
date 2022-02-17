@@ -87,7 +87,7 @@ class MailAddUserNotification extends Notification
     {
         return URL::temporarySignedRoute(
             'api.verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+            Carbon::now()->addHours(24),
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),

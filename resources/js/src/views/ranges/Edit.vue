@@ -20,7 +20,7 @@
                 ><router-link
                     :to="{ name: 'ranges' }"
                     class="text-inherit underline"
-                    >Toutes les games</router-link
+                    >Toutes les gammes</router-link
                 >
             </span>
         </vs-alert>

@@ -15,7 +15,7 @@
             :active.sync="showPrompt"
         >
             <div>
-                <form autocomplete="off">
+                <form autocomplete="off" v-submit.prevent>
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <infinite-select
@@ -290,6 +290,7 @@ export default {
             this.handleClose();
         },
         addItem() {
+           
             this.$validator.validateAll().then(result => {
                 if (result) {
                     const payload = JSON.parse(JSON.stringify(this.itemLocal));
