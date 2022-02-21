@@ -192,9 +192,6 @@ class TaskController extends BaseApiController
             'created_by' => Auth::id(),
         ]);
 
-        if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
-        }
 
         if ($project->status == 'doing') {
             TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -254,9 +251,6 @@ class TaskController extends BaseApiController
             'workarea_id' => $arrayRequest['workarea_id'] ?? null,
         ]);
 
-        if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
-        }
 
         // if ($project->status == 'doing') {
         //     TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -332,7 +326,6 @@ class TaskController extends BaseApiController
             return $this->errorResponse($validator->errors());
         }
 
-        $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
 
         if (isset($arrayRequest['comment'])) {
             $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
@@ -492,24 +485,7 @@ class TaskController extends BaseApiController
         }
     }
 
-    private function addTimeSpent(int $taskId, float $duration)
-    {
-        if ($duration != 0) {
-            $timeSpent = TaskTimeSpent::firstOrCreate([
-                'date' => Carbon::now()->startOfDay(),
-                'user_id' => Auth::id(),
-                'task_id' => $taskId,
-            ]);
 
-            if (($newDuration = $duration + $timeSpent->duration) != 0) {
-                $timeSpent->update([
-                    'duration' => $newDuration
-                ]);
-            } else {
-                $timeSpent->delete();
-            }
-        }
-    }
 
     /**
      * Display a listing of comments.

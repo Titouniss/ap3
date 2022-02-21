@@ -24,7 +24,14 @@
                                 company_id: itemLocal.user.company_id
                             }"
                         />
-
+                        <infinite-select
+                            required
+                            header="Tâche"
+                            model="task"
+                            label="name"
+                            v-model="itemLocal.task_id"
+                            :filters="tasksFilter"
+                        />
                         <p class="mt-5">Date</p>
                         <flat-pickr
                             v-validate="'required'"
@@ -237,12 +244,18 @@ export default {
             return (
                 !this.errors.any() &&
                 this.itemLocal.project_id !== "" &&
+                this.itemLocal.task_id !== "" &&
                 this.itemLocal.user_id !== "" &&
                 this.itemLocal.date !== "" &&
                 this.itemLocal.startHour !== "" &&
                 this.itemLocal.endHour !== ""
             );
-        }
+        },
+        tasksFilter() {
+            return {
+                project_id: this.itemLocal.project_id || 0
+            };
+        },
     },
     methods: {
         init() {
@@ -260,6 +273,7 @@ export default {
                 description: this.itemLocal.description,
                 user_id: this.itemLocal.user_id,
                 project_id: this.itemLocal.project_id,
+                task_id: this.itemLocal.task_id,
                 start_at: this.itemLocal.date + " " + this.itemLocal.startHour,
                 end_at: this.itemLocal.date + " " + this.itemLocal.endHour
             };

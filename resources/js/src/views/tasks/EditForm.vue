@@ -310,7 +310,10 @@
                                     "
                                 />
                             </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo'">
+                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
+                                Ajout d'heures travaillées :
+                            </div>
+                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
                                 <small class="date-label">
                                     Temps passé (en h)
                                 </small>
@@ -320,6 +323,67 @@
                                     class="inputNumber"
                                     v-model="current_time_spent"
                                 />
+                            </div>
+                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin && isManager">
+                                <infinite-select
+                                    header="Utilisateur"
+                                    label="lastname"
+                                    model="user"
+                                    v-model="itemLocal.userTask"
+                                    :item-fields="['lastname', 'firstname']"
+                                    :item-text="
+                                        item => `${item.lastname} ${item.firstname}`
+                                    "
+                                    :filters="usersFilter"
+                                />
+                            </div>
+                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
+                                <small class="date-label">
+                                    Description
+                                </small>
+                                <vs-textarea
+                                    rows="1"
+                                    label="Description travail réalisé"
+                                    name="descriptionHours"
+                                    class="w-full mb-1 mt-1"
+                                    v-model="itemLocal.descriptionHours"
+                                    :color="validateForm ? 'success' : 'danger'"
+                                />
+                            </div>
+                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
+                                <small
+                                        class="date-label mb-1"
+                                        style="display: block"
+                                    >
+                                    Date
+                                </small>
+                                <flat-pickr
+                                    :config="configDatePicker"
+                                    v-model="itemLocal.dateHours"
+                                    placeholder="Date"
+                                    class="w-full"
+                                />
+                            </div>
+                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
+                                <p class="mt-5">Heure de début</p>
+                                <flat-pickr
+                                    v-validate="'required'"
+                                    name="startHour"
+                                    :config="configStartHourPicker"
+                                    class="w-full"
+                                    v-model="itemLocal.startHour"
+                                    :color="
+                                        !errors.has('startHour')
+                                            ? 'success'
+                                            : 'danger'
+                                    "
+                                    :onChange="definedMinEndHour()"
+                                />
+                                <span
+                                    class="text-danger text-sm"
+                                    v-show="errors.has('startHour')"
+                                    >{{ errors.first("startHour") }}</span
+                                >
                             </div>
                             <div class="my-2" v-if="itemLocal.status != 'todo'">
                                 <small class="date-label">
@@ -441,6 +505,7 @@ import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
 import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -453,6 +518,7 @@ Validator.localize("fr", errorMessage);
 export default {
     components: {
         SimpleSelect,
+        InfiniteSelect,
         flatPickr,
         AddPreviousTasks,
         FileInput
@@ -475,12 +541,22 @@ export default {
             )
         );
         item.skills = item.skills ? item.skills.map(skill => skill.id) : []
+        item.userTask = null;
         item.date = moment(item.date).format("DD-MM-YYYY HH:mm")
+        item.descriptionHours = ""
+        item.dateHours = moment().format("YYYY-MM-DD")
+        item.startHour= moment().format("HH:mm")
         return {
             configdateTimePicker: {
                 disableMobile: "true",
                 enableTime: true,
                 dateFormat: "d-m-Y H:i",
+                locale: FrenchLocale
+            },
+            configDatePicker: {
+                disableMobile: "true",
+                enableTime: false,
+                dateFormat: "Y-m-d",
                 locale: FrenchLocale
             },
 
@@ -504,6 +580,22 @@ export default {
         };
     },
     computed: {
+        configStartHourPicker: {
+            get() {
+                return {
+                    disableMobile: "true",
+                    enableTime: true,
+                    locale: FrenchLocale,
+                    noCalendar: true,
+                    dateFormat: "H:i",
+                    altFormat: "H:i",
+                    altInput: true,
+                };
+            },
+            set(value) {
+                return value;
+            }
+        },
         totalTimeSpent() {
             return (this.itemLocal.time_spent || 0) + this.current_time_spent;
         },
@@ -520,6 +612,14 @@ export default {
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
         },
+        isManager() {
+            return this.$store.state.AppActiveUser.is_manager;
+        },
+        usersFilter() {
+            return {
+                company_id: this.$store.state.AppActiveUser.company_id || 0
+            };
+        },
         validateForm() {
             const {
                 name,
@@ -527,8 +627,19 @@ export default {
                 date,
                 skills,
                 workarea_id,
-                user_id
+                user_id,
+                userTask,
+                descriptionHours,
+                dateHours,
+                startHour
             } = this.itemLocal;
+
+            let validFormAddHours=true;
+            if(this.current_time_spent>0){
+                if(descriptionHours=="" || dateHours==null || (this.isManager && userTask==null)){
+                    validFormAddHours=false;
+                }
+            }
 
             return (
                 !this.errors.any() &&
@@ -537,6 +648,7 @@ export default {
                 estimated_time != "" &&
                 skills &&
                 skills.length > 0 &&
+                validFormAddHours &&
                 (this.type === "users" ||
                     this.type === "workarea" ||
                     (this.hasAvailableUsers && this.hasAvailableWorkareas)) &&
@@ -705,6 +817,42 @@ export default {
                 .finally(() => {
                     this.$vs.loading.close();
                 });
+            if(item.time_spent>0){
+                const payload = {
+                    startHour: item.startHour,
+                    endHour: moment(item.startHour, "HH:mm").add(item.time_spent, "hours").format("HH:mm"),
+                    date: item.dateHours,
+                    description: item.descriptionHours,
+                    project_id: item.project_id,
+                    task_id: item.id,
+                    user_id: item.userTask ? item.userTask : this.$store.state.AppActiveUser.id
+                }
+                payload.start_at = payload.date + " " + payload.startHour;
+                payload.end_at = payload.date + " " + payload.endHour;
+                this.$store
+                    .dispatch("hoursManagement/addItem", payload)
+                    .then(data => {
+                        this.$vs.notify({
+                            title: "Ajout d'un horaire",
+                            text: `Horaire ajouté avec succès`,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
+                        });
+                    })
+                    .catch(error => {
+                        this.$vs.notify({
+                            title: "Erreur",
+                            text: error.message,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger"
+                        });
+                    })
+                    .finally(() => {
+                        this.$vs.loading.close();
+                    });
+            }
         },
         deleteFiles() {
             const ids = this.itemLocal.documents
@@ -763,12 +911,15 @@ export default {
             if (ids) {
                 this.usersDataFiltered = this.usersData.filter(function(user) {
                     for (let i = 0; i < ids.length; i++) {
-                        if (
-                            user.skills.filter(skill => skill.id == ids[i])
-                                .length == 0
-                        ) {
-                            return false;
+                        if(user.skills){
+                            if (
+                                user.skills.filter(skill => skill.id == ids[i])
+                                    .length == 0
+                            ) {
+                                return false;
+                            }
                         }
+                        
                     }
                     return true;
                 });
@@ -802,6 +953,15 @@ export default {
         },
         showDescription() {
             this.descriptionDisplay = true;
+        },
+        definedMinEndHour() {
+            if (this.itemLocal !== null && this.itemLocal.startHour !== null) {
+                let result =
+                    parseInt(this.itemLocal.startHour.split(":")[0]) + 1;
+                if (result !== NaN) {
+                    this.configEndHourPicker = result;
+                }
+            }
         },
         confirmDeleteTask(idEvent) {
             this.deleteWarning = true;
