@@ -979,7 +979,7 @@ class HoursController extends BaseApiController
     {
         $date = Carbon::parse($item->start_at);
 
-        $TaskTimeSpentOfDay=TaskTimeSpent::where('task_id', $item['task_id'])->where('user_id', $item['user_id'])->where('date', $item['date'])->get();
+        $TaskTimeSpentOfDay=TaskTimeSpent::where('task_id', $item['task_id'])->where('user_id', $item['user_id'])->where('date', Carbon::parse($item['start_at'])->format('Y-m-d'))->get();
        
         if(!$TaskTimeSpentOfDay->isEmpty()){
             $TaskTimeSpentOfDay[0]->update([
