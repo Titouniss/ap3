@@ -244,6 +244,7 @@ export default {
             return (
                 !this.errors.any() &&
                 this.itemLocal.project_id !== "" &&
+                this.itemLocal.task_id &&
                 this.itemLocal.task_id !== "" &&
                 this.itemLocal.user_id !== "" &&
                 this.itemLocal.date !== "" &&
