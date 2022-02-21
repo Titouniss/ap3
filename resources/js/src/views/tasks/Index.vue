@@ -242,6 +242,7 @@ import EditForm from "./EditForm.vue";
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
+import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
@@ -480,6 +481,10 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
+        if (!moduleHourManagement.isRegistered) {
+            this.$store.registerModule("hoursManagement", moduleHourManagement);
+            moduleHourManagement.isRegistered = true;
+        }
 
         this.$store
             .dispatch("taskManagement/fetchItems", {
@@ -531,6 +536,11 @@ export default {
         if (moduleDocumentManagement.isRegistered) {
             moduleDocumentManagement.isRegistered = false;
             this.$store.unregisterModule("documentManagement");
+        }
+
+        if (moduleHourManagement.isRegistered) {
+            moduleHourManagement.isRegistered = false;
+            this.$store.unregisterModule("hoursManagement");
         }
     }
 };
