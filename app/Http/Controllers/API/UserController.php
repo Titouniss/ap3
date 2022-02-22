@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Notifications\UserRegistration;
-use App\Notifications\MailAddUserNotification;
+use App\Exceptions\ApiException;
 use App\Rules\StrongPassword;
 
 use Illuminate\Http\Request;
@@ -13,228 +11,725 @@ use Illuminate\Auth\Events\Verified;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-
-
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-use Validator;
 
 use App\User;
 use App\Models\Company;
+use App\Models\DealingHours;
+use App\Models\ModelHasOldId;
+use App\Models\Package;
+use App\Models\Project;
+use App\Models\Range;
+use App\Models\Skill;
+use App\Models\Subscription;
+use App\Models\Task;
+use App\Models\TaskComment;
+use App\Models\Unavailability;
 use App\Models\WorkHours;
-use App\Models\UsersSkill;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class UserController extends Controller
+class UserController extends BaseApiController
 {
-    use SoftDeletes;
-    public $successStatus = 200;
+    protected static $index_load = ['company:companies.id,name', 'skills:skills.id,name'];
+    protected static $index_append = null;
+    protected static $show_load = ['company:companies.id,name', 'skills:skills.id,name', 'workHours', 'unavailabilities'];
+    protected static $show_append = ['related_users', 'hours'];
+
+    protected static $store_validation_array = [
+        'lastname' => 'required',
+        'firstname' => 'required',
+        'function' => 'present',
+        'login' => 'required',
+        'company_id' => 'required',
+        'role_id' => 'required',
+        'skills' => 'present|array',
+        'email' => 'nullable|email',
+        'start_employment' => 'required',
+    ];
+
+    protected static $update_validation_array = [
+        'lastname' => 'required',
+        'firstname' => 'required',
+        'function' => 'present',
+        'login' => 'required',
+        'company_id' => 'required',
+        'role_id' => 'required',
+        'skills' => 'present|array',
+        'email' => 'nullable|email',
+        'related_user_id' => 'nullable',
+        'start_employment' => 'required',
+    ];
+
     /**
-     * login api
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function login()
+    public function __construct()
     {
-        if (Auth::attempt(['login' => request('login'), 'password' => request('password')])) {
-            $module = null;
-            $user = Auth::user();
+        parent::__construct(User::class);
+    }
 
-            if ($user->company_id) {
-                $company = Company::find($user->company_id);
-                if (!$company) {
-                    return response()->json(['success' => false, 'error' => 'Account deactivated']);
-                } else if ($company->is_trial && Carbon::now()->isAfter($company->expires_at)) {
-                    return response()->json(['success' => false, 'error' => 'Trial ended']);
-                }
-                if ($company->module && $company->module->is_active) {
-                    $module = $company->module->load('moduleDataTypes', 'moduleDataTypes.dataType');
-                }
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id') && $request->company_id) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
             }
 
-            if (!$user->hasVerifiedEmail()) {
-                return response()->json(['success' => false, 'verify' => false], $this->successStatus);
-            }
-
-            $token =  $user->createToken('ProjetX');
-            $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
-            $success['token'] =  $token->accessToken;
-            $success['tokenExpires'] =  $token->token->expires_at;
-            $user->load(['roles' => function ($query) {
-                $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                    $query->select(['id', 'name', 'name_fr', 'isPublic']);
-                }]);
-            }])->load('company:id,name');
-            return response()->json(['success' => $success, 'userData' => $user, 'module' => ($module && $module->count() > 0 ? $module : null)], $this->successStatus);
-        } else {
-            return response()->json(['success' => false, 'error' => 'Unauthorised']);
+            $query->where('users.company_id', $request->company_id);
         }
+    }
+
+    protected function storeItem(array $arrayRequest)
+    {
+        if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
+            throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
+        }
+        if($arrayRequest['email']){
+            $email = htmlspecialchars(stripslashes(trim($arrayRequest["email"])));
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException("Format email invalide.", static::$response_codes['error_conflict']);
+            }
+        }
+
+        if (User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
+            throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
+        }
+
+        $user = Auth::user();
+
+        $password = Str::random(12);
+        $item = User::create([
+            'lastname' => $arrayRequest['lastname'],
+            'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['function'],
+            'login' => $arrayRequest['login'],
+            'email' => $arrayRequest['email'],
+            'password' => Hash::make($password),
+            'company_id' => $user->is_admin ? $arrayRequest['company_id'] : $user->company_id,
+            'register_token' => Str::random(8),
+            'isTermsConditionAccepted' => false,
+            'start_employment' => $arrayRequest['start_employment'],
+        ]);
+
+        //On ajoute des heures de travail par défaut ( 35H )
+        $this->addDefaultWorkHours($item->id);
+
+        $item->markEmailAsVerified();
+        if ($item->email !== null && App::environment('production')) {
+            $item->sendEmailAddUserNotification($item->id, $item->register_token);
+        } else {
+            $item->clear_password = $password;
+            $item->append('clear_password');
+        }
+
+        $this->setRole($item, $arrayRequest['role_id']);
+
+        $this->setSkills($item, $arrayRequest['skills']);
+
+        //on crée un dealingHours pour enregistrer le nombres d'heures supplémentaires dans overtimes pour ce nouvel utilisateur
+        $deallingHourItem = DealingHours::create(
+            ['user_id' => $item->id, 'date' => '2001-01-01', 'overtimes' => ($arrayRequest['hours'])]
+        );
+
+        return $item;
+    }
+
+    protected function updateItem($item, array $arrayRequest)
+    {
+        if (
+            $arrayRequest['email'] &&
+            $item->email != $arrayRequest['email'] &&
+            User::where('email', $arrayRequest['email'])->withTrashed()->exists()
+        ) {
+            throw new ApiException("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
+        }
+        if($arrayRequest['email']){
+            $email = htmlspecialchars(stripslashes(trim($arrayRequest["email"])));
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException("Format email invalide.", static::$response_codes['error_conflict']);
+            }
+        }
+        if ($item->login != $arrayRequest['login'] && User::where('login', $arrayRequest['login'])->withTrashed()->exists()) {
+            throw new ApiException("Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
+        }
+
+        $relatedUserOldId = null;
+        if (isset($arrayRequest['related_user_id'])) {
+            $relatedUserOldId = ModelHasOldId::where('model', User::class)->where('new_id', $arrayRequest['related_user_id'])->first();
+
+            if (!$relatedUserOldId) {
+                throw new ApiException("L'utilisateur à relier n'existe pas.", static::$response_codes['error_conflict']);
+            }
+        }
+
+        $user = Auth::user();
+
+        $item->update([
+            'lastname' => $arrayRequest['lastname'],
+            'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['function'],
+            'login' => $arrayRequest['login'],
+            'email' => $arrayRequest['email'],
+            'company_id' => $user->is_admin ? $arrayRequest['company_id'] : $user->company_id,
+            'start_employment' => $arrayRequest['start_employment'],
+
+        ]);
+
+        $this->setRole($item, $arrayRequest['role_id']);
+
+        $this->setSkills($item, $arrayRequest['skills']);
+
+        if ($relatedUserOldId) {
+            $relatedUserId = $relatedUserOldId->new_id;
+            Unavailability::where('user_id', $relatedUserId)->update(['user_id' => $item->id]);
+            Project::where('created_by', $relatedUserId)->update(['created_by' => $item->id]);
+            Task::where('created_by', $relatedUserId)->update(['created_by' => $item->id]);
+            Task::where('user_id', $relatedUserId)->update(['user_id' => $item->id]);
+            TaskComment::where('created_by', $relatedUserId)->update(['created_by' => $item->id]);
+            Range::where('created_by', $relatedUserId)->update(['created_by' => $item->id]);
+            WorkHours::where('user_id', $relatedUserId)->delete();
+            DealingHours::where('user_id', $relatedUserId)->update(['user_id' => $item->id]);
+
+            ModelHasOldId::where('model', User::class)->where('new_id', $relatedUserOldId->new_id)->update(['new_id' => $item->id]);
+            User::find($relatedUserId)->forceDelete();
+        }
+
+        $findDealinHoursHeuresSupp = DealingHours::where('date', '2001-01-01')->where('user_id', $item->id)->first();
+
+        if (!empty($findDealinHoursHeuresSupp)) {
+            $findDealinHoursHeuresSupp->update(['overtimes' => ($arrayRequest['hours'])]);
+        } else {
+            $deallingHourItem = DealingHours::create(
+                ['user_id' => $item->id, 'date' => '2001-01-01', 'overtimes' => ($arrayRequest['hours'])]
+            );
+        }
+
+        $item->save();
+
+        return $item;
+    }
+
+    /**
+     * Sets the role of the user.
+     *
+     * @throws \App\Exceptions\ApiException
+     */
+    protected function setRole(User $item, int $roleId)
+    {
+        $role = Role::find($roleId);
+        if (!$role) {
+            throw new ApiException("Rôle inconnu.");
+        }
+
+        if ($user = Auth::user()) {
+            if (!$user->is_admin && $role->company_id != $user->company_id && !$role->is_public) {
+                throw new ApiException("Accès non authorisé.", static::$response_codes['error_unauthorized']);
+            }
+        } else if ($role->code == "super_admin") {
+            throw new ApiException("Accès non authorisé.", static::$response_codes['error_unauthorized']);
+        }
+
+        $item->syncRoles($roleId);
+    }
+
+    /**
+     * Sets the skills of the user.
+     *
+     * @throws \App\Exceptions\ApiException
+     */
+    protected function setSkills(User $item, array $skillIds)
+    {
+        $ids = collect($skillIds);
+        foreach ($ids as $id) {
+            $skill = Skill::find($id);
+            if (!$skill) {
+                throw new ApiException("Compétence inconnue.", static::$response_codes['error_not_found']);
+            }
+        }
+
+        $item->skills()->sync($skillIds);
+    }
+
+    /**
+     * Updates the account information of the user.
+     */
+    public function updateAccount(Request $request)
+    {
+        $item = Auth::user();
+        if (!$item) {
+            return $this->unauthorizedResponse();
+        }
+
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'firstname' => 'required',
+            'lastname' => 'required',
+            'email' => 'nullable|email'
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
+        }
+
+        $item->update([
+            'lastname' => $arrayRequest['lastname'],
+            'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['function'],
+            'email' => $arrayRequest['email'],
+            
+        ]);
+
+        return $this->successResponse($item->load(static::$show_load), "Mise à jour terminée avec succès.");
+    }
+
+    /**
+     * Updates the password of the user before the first login.
+     */
+    public function updatePasswordBeforeLogin(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'new_password' => [new StrongPassword],
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
+        }
+
+        $item = User::where('register_token', $arrayRequest['register_token'])->first();
+        if (!$item) {
+            return $this->notFoundResponse();
+        }
+
+        if ($item->is_password_change) {
+            return $this->errorResponse("Le mot de passe de l'utilisateur a déjà été changé.");
+        }
+
+        $item->update([
+            'password' => bcrypt($arrayRequest['new_password']),
+            'is_password_change' => true,
+            'register_token' => Str::random(8)
+        ]);
+
+        return $this->successResponse($item->load(static::$show_load), "Mot de passe changé avec succès.");
+    }
+
+    /**
+     * Updates the password of the user.
+     */
+    public function updatePassword(Request $request)
+    {
+        $item = Auth::user();
+        if (!$item) {
+            return $this->unauthorizedResponse();
+        }
+
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'old_password' => 'required',
+            'new_password' => [new StrongPassword],
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
+        }
+
+        if (!Hash::check($arrayRequest['old_password'], $item->password)) {
+            return $this->errorResponse("L'ancien mot de passe n'est pas valide.");
+        }
+
+        $item->update([
+            'password' => bcrypt($arrayRequest['new_password']),
+        ]);
+
+        return $this->successResponse($item->load(static::$show_load), "Mot de passe changé avec succès.");
+    }
+
+    /**
+     * Updates the work hours of the user.
+     */
+    public function updateWorkHours(Request $request, int $id)
+    {
+        $item = User::find($id);
+        if ($error = $this->itemErrors($item, 'edit')) {
+            return $error;
+        }
+
+        $arrayRequest = $request->all();
+        foreach ($arrayRequest['work_hours'] as $day => $hours) {
+            if (!in_array(strtolower($day), WorkHours::$days)) {
+                return $this->errorResponse("Le jour '{$day}' n'est pas valide.");
+            }
+            $validator = Validator::make($hours, [
+                'is_active' => 'required',
+            ]);
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors());
+            }
+        }
+
+        foreach ($arrayRequest['work_hours'] as $day => $hours) {
+            $workHours = WorkHours::firstOrCreate(['user_id' => $item->id, 'day' => strtolower($day)]);
+            $workHours->is_active = $hours['is_active'];
+            $workHours->morning_starts_at = $hours['morning_starts_at'];
+            $workHours->morning_ends_at = $hours['morning_ends_at'];
+            $workHours->afternoon_starts_at = $hours['afternoon_starts_at'];
+            $workHours->afternoon_ends_at = $hours['afternoon_ends_at'];
+            $workHours->save();
+        }
+
+        return $this->successResponse($item->load(static::$show_load), 'Mise à jour terminée avec succès.');
+    }
+
+    /**
+     * Sets the default work hours of the user.
+     */
+    private function addDefaultWorkHours(int $id)
+    {
+        foreach (WorkHours::$days as $day) {
+            if (!in_array($day, ['samedi', 'dimanche'])) {
+                WorkHours::create([
+                    'user_id' => $id,
+                    'is_active' => 1,
+                    'day' => $day,
+                    'morning_starts_at' => '09:00:00',
+                    'morning_ends_at' => '12:00:00',
+                    'afternoon_starts_at' =>  '13:00:00',
+                    'afternoon_ends_at' => '17:00:00'
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Logs the user in.
+     */
+    public function login(Request $request)
+    {
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
+            'login' => 'required',
+            'password' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
+        }
+
+        if (!Auth::attempt(['login' => $arrayRequest['login'], 'password' => $arrayRequest['password']])) {
+            return $this->errorResponse("Connexion impossible, l'identifiant ou le mot de passe est incorrect.");
+        }
+
+        $item = Auth::user();
+        if (!$item->is_admin) {
+            if (!$item->hasVerifiedEmail()) {
+                Auth::logout();
+                return $this->errorResponse("Connexion impossible, veuillez vérifier votre adresse e-mail avant de vous connecter.", static::$response_codes['error_request'], ["email_not_verified" => true]);
+            }
+            if (!$item->is_password_change) {
+                Auth::logout();
+                return $this->errorResponse("Connexion impossible, veuillez changer votre mot de passe avant de vous connecter.", static::$response_codes['error_request'], ["change_password" => true, "register_token" => $item->register_token]);
+            }
+            $company = Company::find($item->company_id);
+            if (!$company) {
+                Auth::logout();
+                return $this->errorResponse("Connexion impossible, votre compte a été désactivé.");
+            } else if (!$company->has_active_subscription) {
+                Auth::logout();
+                return $this->errorResponse("Connexion impossible, votre société ne dispose d'aucun abonnement actif.");
+            }
+            if ($company->module && $company->module->is_active) {
+                $item->append('module');
+            }
+        }
+
+        $token = $item->createToken('ProjetX');
+        $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
+        $item->load(['company:companies.id,name']);
+        if ($item->is_manager) {
+            $item->load(['company.users:users.id,firstname,lastname,company_id']);
+        }
+        $item->append('permissions');
+
+        return $this->successResponse($item, "Connexion réussie.", ['token' => [
+            'value' => $token->accessToken,
+            'expires_at' => $token->token->expires_at
+        ]]);
     }
 
     /**
      * Resend the email verification notification.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function resendVerification(Request $request)
     {
-        $verificationSend = false;
         $arrayRequest = $request->all();
-
-        if (isset($arrayRequest['email'])) {
-            $user = User::where('email', $arrayRequest['email'])->first();
-
-            if (!$user->hasVerifiedEmail()) {
-                $user->SendEmailVerificationNotification();
-                $verificationSend = true;
-            }
+        $validator = Validator::make($arrayRequest, [
+            'email' => 'required|email',
+            //'password' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
         }
-        return response()->json(['success' => $verificationSend], 200);
+
+        $item = User::where('email', $arrayRequest['email'])->first();
+        if (!$item) {
+            return $this->errorResponse("Émail inconnu.");
+        }
+
+        // if ($item->hasVerifiedEmail()) {
+        //     return $this->errorResponse("Émail déjà vérifié.");
+        // }
+
+        try {
+            $item->SendEmailVerificationNotification();
+        } catch (\Throwable $th) {
+            return $this->errorResponse("Impossible d'envoyer le mail de vérification.");
+        }
+
+        return $this->successResponse(true, "Émail envoyé.");
     }
 
     /**
-     * Mark the authenticated user's email address as verified.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *  Mark the authenticated user's email address as verified.
      */
     public function verify(Request $request)
     {
-        $user = User::find($request->route('id'));
-        if ($user === null) {
+        $item = User::find($request->route('id'));
+        if ($item === null) {
             return redirect('/pages/not-authorized');
         }
 
-        if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+        if (!hash_equals((string) $request->route('hash'), sha1($item->getEmailForVerification()))) {
             return redirect('/pages/not-authorized');
         }
 
-        if ($user->hasVerifiedEmail()) {
+        if ($item->hasVerifiedEmail()) {
             return redirect('/pages/verify/success');
             return redirect('/pages/login');
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
+        if ($item->markEmailAsVerified()) {
+            event(new Verified($item));
         }
         return redirect('/pages/verify/success');
     }
+
     /**
-     * login api
-     *
-     * @return \Illuminate\Http\Response
+     * send the registrationLink with company.
      */
-    public function getUserByUserToken()
+    public function sendRegistrationLink(Request $request)
     {
-        $user = Auth::user();
-        $success = false;
-        if ($user != null) {
-            $user->load(['roles' => function ($query) {
-                $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                    $query->select(['id', 'name', 'name_fr', 'isPublic']);
-                }]);
-            }])->load('company:id,name');
-            $success = true;
+        $arrayRequest = $request->all();
+        $item = User::where('id', $arrayRequest["id"])->first();
+        $validator = Validator::make($arrayRequest["email"], [
+            'required|email',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
         }
-        response()->json(['success' => $success, 'userData' => $user], $this->successStatus);
+
+        //on récupère la company de l'admin authentifié
+        $companyId = $item["company_id"];
+        $company = Company::where('id', $companyId)->get();
+        $companyName = $company[0]['name'];
+
+        try {
+            $item->SendEmailRegistrationLinkNotification($arrayRequest["email"], $companyName);
+        } catch (\Throwable $th) {
+            return $this->errorResponse("Impossible d'envoyer le mail avec le lien d'inscription.");
+        }
+
+        return $this->successResponse(true, "Émail envoyé.");
     }
 
     /**
-     * get single item api
-     *
-     * @return \Illuminate\Http\Response
+     * Logs the user in via token
      */
-    public function getUserForRegistration($token)
-    {
-        $item = User::where('register_token', $token)->first();
-        $success = isset($item) ? true : false;
-        return response()->json(['success' => $success, 'userData' => $item], $success ? $this->successStatus : 404);
-    }
+    // public function getUserByUserToken()
+    // {
+    //     $item = Auth::user();
+    //     if (!$item) {
+    //         return $this->unauthorizedResponse();
+    //     }
+
+    //     if (!$item->is_admin) {
+    //         if (!$item->hasVerifiedEmail()) {
+    //             Auth::logout();
+    //             return $this->errorResponse("Connexion impossible, veuillez vérifier votre adresse e-mail avant de vous connecter.", static::$response_codes['error_request'], "verify");
+    //         }
+    //         $company = Company::find($item->company_id);
+    //         if (!$company) {
+    //             Auth::logout();
+    //             return $this->errorResponse("Connexion impossible, votre compte a été désactivé.");
+    //         } else if (!$company->has_active_subscription) {
+    //             Auth::logout();
+    //             return $this->errorResponse("Connexion impossible, votre société ne dispose d'aucun abonnement actif.");
+    //         }
+    //         if ($company->module && $company->module->is_active) {
+    //             $item->syncable = $company->module->moduleDataTypes->map(function ($mdt) {
+    //                 return $mdt->dataType->slug . '-management';
+    //             });
+    //         }
+    //     }
+
+    //     $token = $item->createToken('ProjetX');
+    //     $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
+    //     $item->token = [
+    //         'value' => $token->accessToken,
+    //         'expires_at' => $token->token->expires_at
+    //     ];
+    //     $item->load(['company:id,name']);
+    //     if ($item->is_manager) {
+    //         $item->load(['company.users:id,firstname,lastname,company_id']);
+    //     }
+    //     $item->append('permissions');
+
+    //     return $this->successResponse($item, "Connexion réussie.");
+    // }
 
     /**
-     * logout api
-     *
-     * @return \Illuminate\Http\Response
+     * Gets a user via token.
+     */
+    // public function getUserForRegistration($token)
+    // {
+    //     $item = User::where('register_token', $token)->first();
+    //     if (!$item) {
+    //         return $this->notFoundResponse();
+    //     }
+
+    //     return $this->successResponse(true);
+    // }
+
+    /**
+     * Logs the user out.
      */
     public function logout()
     {
-        $success = false;
         if (Auth::check()) {
             Auth::user()->AauthAcessToken()->delete();
-            $success = true;
         }
-        return response()->json(['success' => $success], $this->successStatus);
+
+        return $this->successResponse(true, "Déconnexion réussie.");
     }
 
     /**
-     * Register api
-     *
-     * @return \Illuminate\Http\Response
+     * Register a new user.
      */
     public function register(Request $request)
     {
-        $input = $request->all();
-        $validator = Validator::make($input, [
+        $arrayRequest = $request->all();
+        $validator = Validator::make($arrayRequest, [
             'firstname' => 'required',
             'lastname' => 'required',
+            'company_name' => 'required',
+            'contact_function' => 'required',
             'email' => 'required|email',
+            'contact_tel1' => 'required',
             'password' => 'required',
             'c_password' => 'required|same:password',
-            'company_name' => 'required',
-            'isTermsConditionAccepted' => 'required',
+            'terms_accepted' => 'required',
+            'g-recaptcha-response' => 'required|recaptcha',
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+            return $this->errorResponse($validator->errors());
         }
 
-        if (User::where('email', $input['email'])->withTrashed()->exists()) {
-            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
+        if (User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
+            return $this->errorResponse("Émail déjà pris par un autre utilisateur, veuillez en saisir un autre.", static::$response_codes['error_conflict']);
         }
 
         // creation of a temporary identifier before testing if it already exists
-        $login_temp = mb_strtolower($input['company_name'], 'UTF-8') . "." . mb_strtolower($input['firstname'], 'UTF-8') . ucfirst(mb_strtolower($input['lastname'], 'UTF-8'));
-        $parsed_login = UserController::str_to_noaccent($login_temp);
+        $login_temp = mb_strtolower($arrayRequest['company_name'], 'UTF-8') . "." . mb_strtolower($arrayRequest['firstname'], 'UTF-8') . ucfirst(mb_strtolower($arrayRequest['lastname'], 'UTF-8'));
+        $parsed_login = static::str_to_noaccent($login_temp);
 
         $login = $parsed_login;
-
-        do {
-            $login = $parsed_login;
+        while (User::where('login', $login)->withTrashed()->exists()) {
             $login = $parsed_login . rand(0, 9999);
-        } while (User::where('login', $login)->withTrashed()->exists());
-
-        $input['login'] = $login;
-
-        $input['password'] = bcrypt($input['password']);
-        $input['is_password_change'] = 1;
-
-        $controllerLog = new Logger('user');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('input', [$input]);
-
-        $user = User::create($input);
-        if ($user == null) {
-            return response()->json(['error' => $validator->errors()], 401);
         }
-        $role = Role::where('name', 'Administrateur');
-        if ($role != null) {
-            $user->assignRole('Administrateur'); // pour les nouveaux inscrits on leur donne tout les droits d'entreprise
+
+        DB::beginTransaction();
+        $item = User::create([
+            'lastname' => $arrayRequest['lastname'],
+            'firstname' => $arrayRequest['firstname'],
+            'function' => $arrayRequest['contact_function'],
+            'login' => $login,
+            'email' => $arrayRequest['email'],
+            'password' => bcrypt($arrayRequest['password']),
+            'register_token' => Str::random(8),
+            'is_password_change' => false,
+            'isTermsConditionAccepted' => $arrayRequest['terms_accepted'],
+        ]);
+        //On ajoute des heures de travail par défaut ( 35H )
+        $this->addDefaultWorkHours($item->id);
+
+        try {
+            $role = Role::where('code', 'admin')->firstOrFail();
+            $this->setRole($item, $role->id);
+        } catch (ApiException $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse("Erreur serveur.", static::$response_codes['error_server']);
         }
-        $company = Company::create(['name' => $input['company_name'], 'is_trial' => true, 'expires_at' => (new Carbon())->addWeeks(4)]);
-        $user->company()->associate($company);
-        $user->save();
-        $user->sendEmailVerificationNotification();
-        $token =  $user->createToken('ProjetX');
-        $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
-        $success['token'] =  $token->accessToken;
-        $success['tokenExpires'] =  $token->token->expires_at;
-        return response()->json(['success' => $success, 'userData' => $user, 'company' => $company], $this->successStatus);
+        if ($arrayRequest['registerLink'] != null) {
+            if (Company::where('name', $arrayRequest['company_name'])->doesntExist()) {
+                throw new ApiException("La société n'existe pas.");
+            }
+            $company = Company::where([
+                'name' => $arrayRequest['company_name'],
+            ])->get();
+            $company = $company[0];
+            $item->company()->associate($company);
+        } else {
+            $company = Company::create([
+                'name' => $arrayRequest['company_name'],
+            ]);
+
+            $company->details()->update([
+                'contact_firstname' => $arrayRequest['firstname'],
+                'contact_lastname' => $arrayRequest['lastname'],
+                'contact_function' => $arrayRequest['contact_function'],
+                'contact_email' => $arrayRequest['email'],
+                'contact_tel1' => $arrayRequest['contact_tel1'],
+            ]);
+            $item->company()->associate($company);
+        }
+        $item->save();
+
+        $subscription = Subscription::create([
+            'starts_at' => Carbon::now(),
+            'ends_at' => Carbon::now()->addMonth(),
+            'is_trial' => true,
+            'state' => 'cancelled',
+            'company_id' => $company->id
+        ]);
+        $subscription->packages()->sync(Package::pluck('id'));
+
+        DB::commit();
+
+        if (App::environment('production')) {
+            $item->sendEmailVerificationNotification();
+            $adminNumidev = new User();
+            $adminNumidev->email = 'contact@plannigo.fr';
+            $adminNumidev->sendEmailNewUserNotification($item->firstname, $item->lastname, $item->email, $item->company->name, $company->contact_tel1);
+        }
+
+        $token = $item->createToken('ProjetX');
+        $token->token->expires_at = now()->addHours(2); // unused but prevent eventual  javascript issue
+        $item->load(['company:companies.id,name']);
+        if ($item->is_manager) {
+            $item->load(['company.users:users.id,firstname,lastname,company_id']);
+        }
+        $item->append('permissions');
+
+        return $this->successResponse($item, "Inscription réussie.", ['token' => [
+            'value' => $token->accessToken,
+            'expires_at' => $token->token->expires_at
+        ]]);
     }
 
     /**
@@ -242,7 +737,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function str_to_noaccent($str)
+    public static function str_to_noaccent($str)
     {
         $parsed = $str;
         $parsed = preg_replace('#Ç#', 'C', $parsed);
@@ -259,336 +754,8 @@ class UserController extends Controller
         $parsed = preg_replace('#Ù|Ú|Û|Ü#', 'U', $parsed);
         $parsed = preg_replace('#ý|ÿ#', 'y', $parsed);
         $parsed = preg_replace('#Ý#', 'Y', $parsed);
+        $parsed = preg_replace('/\s/', '_', $parsed);
 
         return ($parsed);
-    }
-
-    /**
-     * Register api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function registerWithToken(Request $request, $token)
-    {
-        $validator = Validator::make($request->all(), [
-            'firstname' => 'required',
-            'lastname' => 'required',
-            'password' => 'required',
-            'c_password' => 'required|same:password',
-            'isTermsConditionAccepted' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-        $input = $request->all();
-        $user = User::where('register_token', $token)->where('email', $input['email'])->first();
-        if (!isset($user)) return response()->json(['success' => false], 404);
-        // get full data user before or after update
-        $user->load(['roles' => function ($query) {
-            $query->select(['id', 'name'])->with(['permissions' => function ($query) {
-                $query->select(['id', 'name', 'name_fr', 'isPublic']);
-            }]);
-        }])->load('company:id,name');
-
-        // update user data
-        $user->password = bcrypt($input['password']);
-        $user->firstname = $input['firstname'];
-        $user->lastname = $input['lastname'];
-        $user->isTermsConditionAccepted = $input['isTermsConditionAccepted'];
-        $user->register_token = null;
-        $user->save();
-
-        // generate access token
-        $token =  $user->createToken('ProjetX');
-        $token->token->expires_at = now()->addHours(2);  // unused but prevent eventual  javascript issue
-        $success['token'] =  $token->accessToken;
-        $success['tokenExpires'] =  $token->token->expires_at;
-
-        return response()->json(['success' => $success, 'userData' => $user], $this->successStatus);
-    }
-
-    /**
-     * get all items api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        $user = Auth::user();
-        $usersList = [];
-        if ($user->hasRole('superAdmin')) {
-            $usersList = User::withTrashed()->get()->load('roles', 'company:id,name', 'skills');
-        } else if ($user->company_id != null) {
-            $usersList = User::withTrashed()->where('company_id', $user->company_id)->get()->load('roles:id,name', 'company:id,name', 'skills');
-        }
-        return response()->json(['success' => $usersList], $this->successStatus);
-    }
-
-
-    /**
-     * add item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'lastname' => 'required',
-            'firstname' => 'required',
-            'company_id' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-
-        if ($arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
-            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
-        }
-
-        if (User::where('login', $arrayRequest['full_login'])->withTrashed()->exists()) {
-            return response()->json(['error' => 'Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
-        }
-        $password = Str::random(12);
-        $password_not_hash = $password;
-        $arrayRequest['password'] = Hash::make($password); // on créer un password temporaire
-        $arrayRequest['register_token'] = Str::random(8); // on génère un token qui représentera le lien d'inscription
-        $arrayRequest['isTermsConditionAccepted'] = false;
-        $arrayRequest['login'] = $arrayRequest['full_login'];
-        $item = User::create($arrayRequest)->load('company');
-        $item->markEmailAsVerified();
-        if ($item->email !== null) {
-            $item->sendEmailAdUserNotification($password);
-        }
-
-        if (isset($arrayRequest['roles'])) {
-            $item->assignRole($arrayRequest['roles']); // on ajoute le role à l'utilisateur
-        } else {
-            // on assigne le rôle d'utilisateur sans droit par défault pour éviter un bug.
-            $item->assignRole('basicUsers');
-        }
-        if (!empty($arrayRequest['skills'])) {
-            foreach ($arrayRequest['skills'] as $skill_id) {
-                UsersSkill::create(['user_id' => $item->id, 'skill_id' => $skill_id]);
-            }
-        }
-
-        //$item->notify(new UserRegistration($item));
-
-        return response()->json(['success' => [$item, $password_not_hash]], $this->successStatus);
-        //Il faut envoyer un email avec lien d'inscription
-
-    }
-
-    /**
-     * get single item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function show(User $user)
-    {
-        $item = User::where('id', $user->id)
-            ->with('roles:id,name', 'company:id,name', 'workHours', 'unavailabilities', 'skills')
-            ->first();
-        return response()->json(['success' => $item], isset($item) ? $this->successStatus : 404);
-    }
-
-    /**
-     * update item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, User $user)
-    {
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'firstname' => 'required',
-            'lastname' => 'required',
-            'company_id' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-
-        if ($user->email != $arrayRequest['email'] && User::where('email', $arrayRequest['email'])->withTrashed()->exists()) {
-            return response()->json(['error' => 'Émail déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
-        }
-
-        if ($user->login != $arrayRequest['full_login'] && User::where('login', $arrayRequest['full_login'])->withTrashed()->exists()) {
-            return response()->json(['error' => 'Identifiant déjà pris par un autre utilisateur, veuillez en saisir un autre'], 409);
-        }
-
-
-        if ($user != null) {
-            if (isset($arrayRequest['roles']) || $arrayRequest['roles'] !== null) {
-                $roles = array();
-                foreach ($arrayRequest['roles'] as $role) {
-                    array_push($roles, $role['id']);
-                }
-                $user->syncRoles($roles);
-            }
-
-            $user->firstname = $arrayRequest['firstname'];
-            $user->lastname = $arrayRequest['lastname'];
-            $user->login = $arrayRequest['full_login'];
-            $user->email = $arrayRequest['email'];
-            $user->company_id = $arrayRequest['company_id'];
-
-            UsersSkill::where('user_id', $user->id)->delete();
-            if (!empty($arrayRequest['skills'])) {
-                foreach ($arrayRequest['skills'] as $skill_id) {
-                    UsersSkill::create(['user_id' => $user->id, 'skill_id' => $skill_id]);
-                }
-            }
-
-            $user->save();
-        }
-        return response()->json(['success' => $user], $this->successStatus);
-    }
-
-    /**
-     * update account item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function updateAccount(Request $request, User $user)
-    {
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'firstname' => 'required',
-            'lastname' => 'required',
-            'email' => 'email'
-        ]);
-
-        if ($user != null) {
-            $user->firstname = $arrayRequest['firstname'];
-            $user->lastname = $arrayRequest['lastname'];
-            $user->email = $arrayRequest['email'];
-            $user->save();
-        }
-        return response()->json(['success' => $user], $this->successStatus);
-    }
-
-    /**
-     * update password api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function updatePassword(Request $request, User $user)
-    {
-        $arrayRequest = $request->all();
-
-        $rule = ['password' => [new StrongPassword]];
-
-        // Verify user exist
-        if ($user != null) {
-            if ($user->is_password_change === 0) {
-                if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
-                    // Save password
-                    $user->password = bcrypt($arrayRequest['new_password']);
-                    $user->is_password_change = 1;
-                    $user->save();
-
-                    return response()->json(['success' => $user, $this->successStatus]);
-                } else {
-                    return response()->json('error_format', 400);
-                }
-            } else {
-                // Verify old same password
-                if (Hash::check($arrayRequest['old_password'], $user->password)) {
-                    // Verify password format
-                    if (Validator::Make(['password' => $arrayRequest['new_password']], $rule)->passes()) {
-                        // Save password
-                        $user->password = bcrypt($arrayRequest['new_password']);
-                        $user->save();
-
-                        return response()->json(['success', $user]);
-                    } else {
-                        Log::debug('ICI 3 :');
-                        return response()->json('error_format', 400);
-                    }
-                } else {
-                    return response()->json('error_old_password', 400);
-                }
-            }
-        }
-    }
-
-    /**
-     * update work hours item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function updateWorkHours(Request $request, User $user)
-    {
-        $arrayRequest = $request->all();
-
-        foreach ($arrayRequest['work_hours'] as $day => $hours) {
-            if (!in_array(strtolower($day), WorkHours::$days)) {
-                return response()->json(['error' => 'Invalid index'], 401);
-            }
-            $validator = Validator::make($hours, [
-                'is_active' => 'required',
-            ]);
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 401);
-            }
-        }
-
-        if ($user != null) {
-            foreach ($arrayRequest['work_hours'] as $day => $hours) {
-                $workHours = WorkHours::firstOrCreate(['user_id' => $user->id, 'day' => strtolower($day)]);
-                $workHours->is_active = $hours['is_active'];
-                $workHours->morning_starts_at = $hours['morning_starts_at'];
-                $workHours->morning_ends_at = $hours['morning_ends_at'];
-                $workHours->afternoon_starts_at = $hours['afternoon_starts_at'];
-                $workHours->afternoon_ends_at = $hours['afternoon_ends_at'];
-                $workHours->save();
-            }
-        }
-        return response()->json(['success' => User::where('id', $user->id)->with('workHours', 'unavailabilities')->first()], $this->successStatus);
-    }
-
-    /**
-     * Restore the specified resource in storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function restore($id)
-    {
-        $item = User::withTrashed()->findOrFail($id)->restore();
-        if ($item) {
-            $item = User::where('id', $id)->first();
-            return response()->json(['success' => $item], $this->successStatus);
-        }
-    }
-
-    /**
-     * delete item api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        $item = User::findOrFail($id);
-        $item->delete();
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    /**
-     * forceDelete the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function forceDelete($id)
-    {
-        $item = User::withTrashed()->findOrFail(intval($id));
-
-        $item->forceDelete();
-        return response()->json(['success' => true], $this->successStatus);
     }
 }

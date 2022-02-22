@@ -1,91 +1,74 @@
 <?php
 
 namespace App\Http\Controllers\API;
-use Illuminate\Http\Request; 
-use App\Http\Controllers\Controller; 
 
-use App\User; 
-use Spatie\Permission\Models\Role;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Auth;
 
-use Illuminate\Support\Facades\Auth; 
-use Validator;
-
-class PermissionController extends Controller 
+class PermissionController extends BaseApiController
 {
-    public $successStatus = 200;
+    protected static $index_load = null;
+    protected static $index_append = null;
+    protected static $show_load = null;
+    protected static $show_append = null;
 
-    /** 
-     * list of items api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function index() 
-    { 
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'name_fr' => 'required',
+        'is_public' => 'required'
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'name_fr' => 'required',
+        'is_public' => 'required'
+    ];
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        parent::__construct(Permission::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
+    {
         $user = Auth::user();
-        $listObject = [];
-        if ($user->hasRole('superAdmin')) {
-            $listObject = Permission::orderBy('name', 'desc')->get(); // order important because vuejs have fixed array
-        } else {
-            $listObject = Permission::where('isPublic', true)->orderBy('name', 'desc')->get();
+        if (!$user->is_admin) {
+            $query->where('is_public', true);
         }
-        return response()->json(['success' => $listObject], $this-> successStatus); 
-    } 
-    
-    /** 
-     * get single item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function show($id) 
-    { 
-        $item = Permission::where('id',$id)->first();
-        return response()->json(['success' => $item], $this-> successStatus); 
-    } 
+        if (!$request->has('order_by')) {
+            $query->orderBy('name', 'desc');
+        }
+    }
 
-    /** 
-     * create item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function store(Request $request) 
-    { 
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [ 
-            'name' => 'required'
+    protected function storeItem(array $arrayRequest)
+    {
+        $user = Auth::user();
+
+        $item = Permission::create([
+            'name' => $arrayRequest['name'],
+            'name_fr' => $arrayRequest['name_fr'],
+            'is_public' => $arrayRequest['is_public'] && $user->is_admin,
+            'guard_name' => 'web'
         ]);
-        if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
-        }
-        $item = Permission::create($arrayRequest);
-        return response()->json(['success' => $item], $this-> successStatus); 
-    } 
 
-    /** 
-     * update item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function update(Request $request, $id) 
-    { 
-        $arrayRequest = $request->all();
-        
-        $validator = Validator::make($arrayRequest, [ 
-            'name' => 'required'
-            ]);
-        
-        $item = Permission::where('id',$id)->update(['name' => $arrayRequest['name'], 'isPublic' => $arrayRequest['isPublic'] ]);
-        return response()->json(['success' => $item], $this-> successStatus); 
-    } 
+        return $item;
+    }
 
-    /** 
-     * delete item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function destroy($id) 
-    { 
-        $item = Permission::where('id',$id)->delete();
-        return response()->json(['success' => $item], $this-> successStatus); 
-    } 
+    protected function updateItem($item, array $arrayRequest)
+    {
+        $user = Auth::user();
+
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'name_fr' => $arrayRequest['name_fr'],
+            'is_public' => $arrayRequest['is_public'] && $user->is_admin,
+            'guard_name' => 'web'
+        ]);
+
+        return $item;
+    }
 }

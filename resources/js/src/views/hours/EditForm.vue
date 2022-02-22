@@ -11,63 +11,27 @@
         :active.sync="activePrompt"
     >
         <div>
-            <form>
+            <form autocomplete="off" v-submit.prevent>
                 <div class="vx-row">
                     <div class="vx-col w-full">
-                        <v-select
-                            v-validate="'required'"
-                            name="project_id"
+                        <infinite-select
+                            required
+                            header="Projet"
+                            model="project"
                             label="name"
-                            :multiple="false"
                             v-model="itemLocal.project_id"
-                            :reduce="name => name.id"
-                            class="w-full"
-                            autocomplete
-                            :options="projectsData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .60rem">
-                                    Projet
-                                </div>
-                            </template>
-                            <template #option="project">
-                                <span>{{ `${project.name}` }}</span>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('project_id')"
-                            >{{ errors.first("project_id") }}</span
-                        >
-
-                        <!-- <v-select
-                            v-validate="'required'"
-                            name="user_id"
-                            label="lastname"
-                            :multiple="false"
-                            v-model="itemLocal.user_id"
-                            :reduce="lastname => lastname.id"
-                            class="w-full"
-                            autocomplete
-                            :options="usersData"
-                        >
-                            <template #header>
-                                <div style="opacity: .8 font-size: .60rem">
-                                    Utilisateur
-                                </div>
-                            </template>
-                            <template #option="user">
-                                <span>{{
-                                    `${user.firstname} ${user.lastname}`
-                                }}</span>
-                            </template>
-                        </v-select>
-                        <span
-                            class="text-danger text-sm"
-                            v-show="errors.has('user_id')"
-                            >{{ errors.first("user_id") }}</span
-                        > -->
-
+                            :filters="{
+                                company_id: itemLocal.user.company_id
+                            }"
+                        />
+                        <infinite-select
+                            required
+                            header="Tâche"
+                            model="task"
+                            label="name"
+                            v-model="itemLocal.task_id"
+                            :filters="tasksFilter"
+                        />
                         <p class="mt-5">Date</p>
                         <flat-pickr
                             v-validate="'required'"
@@ -82,8 +46,9 @@
                         <span
                             class="text-danger text-sm"
                             v-show="errors.has('startDate')"
-                            >{{ errors.first("startDate") }}</span
                         >
+                            {{ errors.first("startDate") }}
+                        </span>
 
                         <div class="vx-row">
                             <div class="vx-col flex-1">
@@ -103,8 +68,9 @@
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('startHour')"
-                                    >{{ errors.first("startHour") }}</span
                                 >
+                                    {{ errors.first("startHour") }}
+                                </span>
                             </div>
                             <div class="vx-col flex-1">
                                 <p class="mt-5">Heure de fin</p>
@@ -123,8 +89,9 @@
                                 <span
                                     class="text-danger text-sm"
                                     v-show="errors.has('endHour')"
-                                    >{{ errors.first("endHour") }}</span
                                 >
+                                    {{ errors.first("endHour") }}
+                                </span>
                             </div>
                         </div>
 
@@ -147,8 +114,9 @@
                 color="danger"
                 type="filled"
                 size="small"
-                >Supprimer l'horaire</vs-button
             >
+                Supprimer l'horaire
+            </vs-button>
         </vs-row>
     </vs-prompt>
 </template>
@@ -162,7 +130,7 @@ var model = "tâche";
 var modelPlurial = "tâches";
 
 import moment from "moment";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // FlatPickr
 import flatPickr from "vue-flatpickr-component";
@@ -172,7 +140,7 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 export default {
     components: {
         flatPickr,
-        vSelect
+        InfiniteSelect
     },
     props: {
         itemId: {
@@ -182,10 +150,7 @@ export default {
     },
     data() {
         return {
-            itemLocal: Object.assign(
-                {},
-                this.$store.getters["hoursManagement/getItem"](this.itemId)
-            ),
+            itemLocal: {},
             workareasSkillsData: {},
             deleteWarning: false,
             configDatePicker: () => ({
@@ -209,17 +174,16 @@ export default {
                     dateFormat: "H:i",
                     altFormat: "H:i",
                     altInput: true,
-                    maxTime:
-                        this.itemLocal.startHour && this.itemLocal.endHour
-                            ? this.itemLocal.endHour.split(":")[1] === "00"
-                                ? moment(this.itemLocal.endHour, "HH:mm")
-                                      .subtract(1, "h")
-                                      .set("m", 55)
-                                      .format("HH:mm")
-                                : moment(this.itemLocal.endHour, "HH:mm")
-                                      .subtract(5, "m")
-                                      .format("HH:mm")
-                            : null
+                    maxTime: this.itemLocal.endHour
+                        ? this.itemLocal.endHour.split(":")[1] === "00"
+                            ? moment(this.itemLocal.endHour, "HH:mm")
+                                  .subtract(1, "h")
+                                  .set("m", 55)
+                                  .format("HH:mm")
+                            : moment(this.itemLocal.endHour, "HH:mm")
+                                  .subtract(5, "m")
+                                  .format("HH:mm")
+                        : null
                 };
             },
             set(value) {
@@ -236,17 +200,16 @@ export default {
                     dateFormat: "H:i",
                     altFormat: "H:i",
                     altInput: true,
-                    minTime:
-                        this.itemLocal.startHour && this.itemLocal.endHour
-                            ? this.itemLocal.startHour.split(":")[1] === "55"
-                                ? moment(this.itemLocal.startHour, "HH:mm")
-                                      .set("m", 0)
-                                      .add(1, "h")
-                                      .format("HH:mm")
-                                : moment(this.itemLocal.startHour, "HH:mm")
-                                      .add(5, "m")
-                                      .format("HH:mm")
-                            : null,
+                    minTime: this.itemLocal.startHour
+                        ? this.itemLocal.startHour.split(":")[1] === "55"
+                            ? moment(this.itemLocal.startHour, "HH:mm")
+                                  .set("m", 0)
+                                  .add(1, "h")
+                                  .format("HH:mm")
+                            : moment(this.itemLocal.startHour, "HH:mm")
+                                  .add(5, "m")
+                                  .format("HH:mm")
+                        : null,
                     defaultHour: this.updateEndHour
                 };
             },
@@ -257,12 +220,9 @@ export default {
         activePrompt: {
             get() {
                 if (this.itemId && this.itemId > -1) {
-                    this.itemLocal = Object.assign(
-                        {},
-                        this.$store.getters["hoursManagement/getItem"](
-                            this.itemId
-                        )
-                    );
+                    this.itemLocal = this.$store.getters[
+                        "hoursManagement/getItem"
+                    ](this.itemId);
                 }
 
                 return this.itemId &&
@@ -284,22 +244,25 @@ export default {
             return (
                 !this.errors.any() &&
                 this.itemLocal.project_id !== "" &&
+                this.itemLocal.task_id &&
+                this.itemLocal.task_id !== "" &&
                 this.itemLocal.user_id !== "" &&
                 this.itemLocal.date !== "" &&
                 this.itemLocal.startHour !== "" &&
                 this.itemLocal.endHour !== ""
             );
         },
-        projectsData() {
-            return this.$store.state.projectManagement.projects;
-        }
+        tasksFilter() {
+            return {
+                project_id: this.itemLocal.project_id || 0
+            };
+        },
     },
     methods: {
         init() {
-            this.itemLocal = Object.assign(
-                {},
-                this.$store.getters["hoursManagement/getItem"](this.itemId)
-            );
+            this.itemLocal = this.$store.getters[
+                "hoursManagement/getSelectedItem"
+            ];
         },
         submitHour() {
             var itemToSave = {};
@@ -311,35 +274,23 @@ export default {
                 description: this.itemLocal.description,
                 user_id: this.itemLocal.user_id,
                 project_id: this.itemLocal.project_id,
+                task_id: this.itemLocal.task_id,
                 start_at: this.itemLocal.date + " " + this.itemLocal.startHour,
                 end_at: this.itemLocal.date + " " + this.itemLocal.endHour
             };
 
             this.$store
                 .dispatch("hoursManagement/updateItem", itemToSave)
-                .then(response => {
-                    if (response.data.success) {
-                        this.$vs.loading.close();
-                        this.$vs.notify({
-                            title: "Modification d'un horaire",
-                            text: `Horaire modifié avec succès`,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "success"
-                        });
-                    } else {
-                        this.$vs.loading.close();
-                        this.$vs.notify({
-                            title: "Une erreur est survenue",
-                            text: response.data.error,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "danger"
-                        });
-                    }
+                .then(data => {
+                    this.$vs.notify({
+                        title: "Modification d'un horaire",
+                        text: `Horaire modifié avec succès`,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success"
+                    });
                 })
                 .catch(err => {
-                    this.$vs.loading.close();
                     this.$vs.notify({
                         title: "Une erreur est survenue",
                         text: err.message,
@@ -347,6 +298,9 @@ export default {
                         icon: "icon-alert-circle",
                         color: "danger"
                     });
+                })
+                .finally(() => {
+                    this.$vs.loading.close();
                 });
 
             this.$store.dispatch("hoursManagement/editItem", {});
@@ -375,9 +329,8 @@ export default {
         deleteHour() {
             this.deleteWarning = false;
             this.$store
-                .dispatch("hoursManagement/removeItem", this.itemLocal.id)
-                .then(() => {
-                    this.$vs.loading.close();
+                .dispatch("hoursManagement/removeItems", [this.itemLocal.id])
+                .then(data => {
                     this.$vs.notify({
                         title: "Suppression d'un horaire",
                         text: `Horaire supprimé avec succès`,
@@ -387,7 +340,6 @@ export default {
                     });
                 })
                 .catch(err => {
-                    this.$vs.loading.close();
                     this.$vs.notify({
                         title: "Une erreur est survenue",
                         text: err.message,
@@ -395,12 +347,17 @@ export default {
                         icon: "icon-alert-circle",
                         color: "danger"
                     });
+                })
+                .finally(() => {
+                    this.$vs.loading.close();
                 });
 
             this.init();
             this.$store.dispatch("hoursManagement/editItem", {});
         }
     },
-    mounted() {}
+    created() {
+        this.init();
+    }
 };
 </script>

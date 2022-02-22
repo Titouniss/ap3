@@ -20,12 +20,12 @@
             class="task-compose"
         >
             <div>
-                <form>
+                <form autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div
                             class="vx-col flex-1"
-                            style="border-right: 1px solid #d6d6d6;"
+                            style="border-right: 1px solid #d6d6d6"
                         >
                             <div class="mb-4">
                                 <small class="date-label">Ordre</small>
@@ -69,28 +69,16 @@
                         </div>
                         <!-- Right -->
                         <div class="vx-col flex-1">
-                            <vs-select
-                                label="Compétences"
-                                v-on:change="updateWorkareasList"
-                                v-model="itemLocal.skills"
-                                class="w-full"
+                            <simple-select
+                                required
+                                header="Compétences"
+                                label="name"
                                 multiple
-                                autocomplete
-                                v-validate="'required'"
-                                name="skills"
-                            >
-                                <vs-select-item
-                                    :key="index"
-                                    :value="item.id"
-                                    :text="item.name"
-                                    v-for="(item, index) in skillsData"
-                                />
-                            </vs-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('skills')"
-                                >{{ errors.first("skills") }}</span
-                            >
+                                v-model="itemLocal.skills"
+                                :reduce="item => item.id"
+                                :options="skillsData"
+                                @input="updateWorkareasList"
+                            />
 
                             <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length == 0"> -->
                             <span
@@ -99,34 +87,26 @@
                                         workareasDataFiltered.length == 0
                                 "
                                 class="text-danger text-sm"
-                                >Attention, aucun îlot ne possède cette
-                                combinaison de compétences</span
                             >
-                            <!--
-                <vs-select
-                  name="workarea"
-                  label="Ilot"
-                  v-model="itemLocal.workarea_id"
-                  class="w-full mt-3"
-                >
-                  <vs-select-item
-                    :key="index"
-                    :value="item.id"
-                    :text="item.name"
-                    v-for="(item,index) in workareasDataFiltered"
-                  />
-                </vs-select>
-              </div> -->
+                                Attention, aucun pôle de production ne possède
+                                cette combinaison de compétences
+                            </span>
                             <div class="my-4">
-                                <small class="date-label"
-                                    >Temps estimé (en h)</small
-                                >
+                                <small class="date-label">
+                                    Temps estimé (en h)
+                                </small>
                                 <vs-input-number
                                     min="1"
                                     max="200"
                                     name="estimatedTime"
                                     class="inputNumber"
                                     v-model="itemLocal.estimated_time"
+                                />
+                            </div>
+                            <div class="my-4">
+                                <file-input
+                                    :items="itemLocal.documents"
+                                    :token="token"
                                 />
                             </div>
                         </div>
@@ -141,10 +121,17 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect";
+import FileInput from "@/components/inputs/FileInput.vue";
+
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
+    components: {
+        SimpleSelect,
+        FileInput
+    },
     props: {
         company_id: {
             required: true
@@ -160,8 +147,15 @@ export default {
                 estimated_time: 1,
                 description: "",
                 // workarea_id: null,
-                skills: []
+                skills: [],
+                documents: []
             },
+
+            token:
+                "token_" +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 15),
 
             workareasDataFiltered: []
         };
@@ -177,24 +171,26 @@ export default {
             );
         },
         workareasData() {
-            let $workareasData = this.$store.state.workareaManagement.workareas;
-            let $filteredItems = this.filterItemsAdmin($workareasData);
-            return $filteredItems;
+            let workareasData = this.$store.state.workareaManagement.workareas;
+            let filteredItems = this.filterItemsAdmin(workareasData);
+            return filteredItems;
         },
         skillsData() {
-            let $skillsData = this.$store.state.skillManagement.skills;
-            return this.filterItemsAdmin($skillsData);
+            let skillsData = this.$store.getters["skillManagement/getItems"];
+            return this.filterItemsAdmin(skillsData);
         }
     },
     methods: {
         clearFields() {
+            this.deleteFiles();
             Object.assign(this.itemLocal, {
                 name: "",
                 order: 1,
                 estimated_time: 1,
                 description: "",
                 //workarea_id: null,
-                skills: []
+                skills: [],
+                documents: []
             });
             Object.assign(this.workareasDataFiltered, []);
         },
@@ -205,12 +201,23 @@ export default {
                 // );
 
                 if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    if (this.itemLocal.documents.length > 0) {
+                        item.token = this.token;
+                    }
                     this.$store
-                        .dispatch(
-                            "repetitiveTaskManagement/addItem",
-                            Object.assign({}, this.itemLocal)
-                        )
+                        .dispatch("repetitiveTaskManagement/addItem", item)
                         .then(() => {
+                            Object.assign(this.itemLocal, {
+                                name: "",
+                                order: 1,
+                                estimated_time: 1,
+                                description: "",
+                                //workarea_id: null,
+                                skills: [],
+                                documents: []
+                            });
+                            Object.assign(this.workareasDataFiltered, []);
                             this.$vs.loading.close();
                             this.$vs.notify({
                                 title: "Ajout d'une étape",
@@ -219,7 +226,6 @@ export default {
                                 icon: "icon-alert-circle",
                                 color: "success"
                             });
-                            this.clearFields();
                         })
                         .catch(error => {
                             this.$vs.loading.close();
@@ -233,6 +239,17 @@ export default {
                         });
                 }
             });
+        },
+        deleteFiles() {
+            const ids = this.itemLocal.documents.map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/removeItems", ids)
+                    .then(response => {
+                        this.itemLocal.documents = [];
+                    })
+                    .catch(error => {});
+            }
         },
         updateWorkareasList(ids) {
             this.workareasDataFiltered = this.workareasData.filter(function(
@@ -252,23 +269,15 @@ export default {
                 this.itemLocal.workarea_id = null;
             }
         },
-        filterItemsAdmin($items) {
-            let $filteredItems = [];
+        filterItemsAdmin(items) {
+            let filteredItems = items;
             const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    $filteredItems = $items.filter(
-                        item => item.company_id === this.company_id
-                    );
-                } else {
-                    $filteredItems = $items;
-                }
+            if (this.isAdmin) {
+                filteredItems = items.filter(
+                    item => item.company_id === this.company_id
+                );
             }
-            return $filteredItems;
+            return filteredItems;
         }
     }
 };

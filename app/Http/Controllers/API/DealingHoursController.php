@@ -9,16 +9,16 @@ use App\Models\Company;
 use App\Models\DealingHours;
 use App\Models\Unavailability;
 use Carbon\Carbon;
-use Validator;
+use Illuminate\Support\Facades\Validator;
+use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
 class DealingHoursController extends Controller
 {
     use SoftDeletes;
-    
+
     public static $successStatus = 200;
     /**
      * Display a listing of the resource.
@@ -29,7 +29,7 @@ class DealingHoursController extends Controller
     {
         $user = Auth::user();
         $items = [];
-        if ($user->hasRole('superAdmin')) {
+        if ($user->is_admin) {
             $items = DealingHours::all();
         } else {
             $items = DealingHours::where('user_id', $user->id)->get();
@@ -43,41 +43,71 @@ class DealingHoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public static function getOvertimes($check = false) {
+    public static function getOvertimes($user_id=null, $check = false)
+    {
         $user = Auth::user();
+        if($user_id != "null"){
+            $id=$user_id;
+        }
+        else{
+            $id=$user->id;
+        }
 
         // Check if overtimes
-        $items = DealingHours::where('user_id', $user->id)->get();
-
+        $items = DealingHours::where('user_id', $id)->get();
         $totalOvertimes = 0;
         $nbUsedOvertimes = 0;
-
+        $nbPayedOvertimes = 0;
+        
         if (!$items->isEmpty()) {
             // Get total overtimes
-            $totalOvertimes = DealingHours::where('user_id', $user->id)->sum('overtimes');
-            // Get nb used overtimes
-            $usedOrvertimes = Unavailability::where([['user_id', $user->id], ['reason', 'Utilisation heures suplémentaires']])->get();
-            if(!$usedOrvertimes->isEmpty()) {
+            $user = User::where('id', $id)->get();
+            $start_employment = Carbon::parse($user[0]->start_employment);
+            if($user[0]->start_employment == null)
+            {
+                $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '<', Carbon::now()->startOfWeek())->sum('overtimes');                      
+            }
+            else
+            { 
+                $users = User::where('id', $id)->whereBetween('start_employment', [Carbon::now()->startOfWeek()->format('Y-m-d H:i:s'), Carbon::now()->endOfWeek()->format('Y-m-d H:i:s')])->get();
+                $totalOvertimes = DealingHours::where('user_id', $id)->whereBetween('date', [$start_employment->format('Y-m-d H:i:s'), Carbon::now()->startOfWeek()->format('Y-m-d H:i:s')])->sum('overtimes');
+            }
+
+            // Get nb used and payed overtimes
+
+            $usedOrvertimes = Unavailability::where([['user_id', $id], ['reason', 'Utilisation heures supplémentaires']])->get();
+            $usedOvertimesPayed = Unavailability::where([['user_id', $id], ['reason', 'Heures supplémentaires payées']])->get();
+            if (!$usedOrvertimes->isEmpty()) {
                 foreach ($usedOrvertimes as $key => $used) {
                     $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
                     $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
-
-                    $nbUsedOvertimes += ( floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]) );
+                    $hours = Carbon::create($parseEndsAt)->floatDiffInHours(Carbon::create($parseStartAt));
+                    $nbUsedOvertimes += $hours;
+                    //$nbUsedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
                 }
             }
-            $result = Array (
+            if (!$usedOvertimesPayed->isEmpty()) {
+                foreach ($usedOvertimesPayed as $key => $used) {
+                    $parseStartAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->ends_at)->format('H:i');
+                    $parseEndsAt = Carbon::createFromFormat('Y-m-d H:i:s', $used->starts_at)->format('H:i');
+                    $hours = Carbon::create($parseEndsAt)->floatDiffInHours(Carbon::create($parseStartAt));
+                    $nbPayedOvertimes += $hours;
+                    //$nbPayedOvertimes += (floatval(explode(':', $parseStartAt)[0]) - floatval(explode(':', $parseEndsAt)[0]));
+                }
+            }
+            $result = array(
                 "overtimes" => $totalOvertimes,
-                "usedOvertimes" => $nbUsedOvertimes
+                "usedOvertimes" => $nbUsedOvertimes,
+                "payedOvertimes" => $nbPayedOvertimes
             );
-
-        }
-        else {
-            $result = Array (
+        } else {
+            $result = array(
                 "overtimes" => $totalOvertimes,
-                "usedOvertimes" => $nbUsedOvertimes
+                "usedOvertimes" => $nbUsedOvertimes,
+                "payedOvertimes" => $nbPayedOvertimes
             );
         }
-        if($check === true) {
+        if ($check === true) {
             return $result;
         } else {
             return response()->json(['success' => $result], self::$successStatus);
@@ -87,12 +117,12 @@ class DealingHoursController extends Controller
     /**
      * Show the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(DealingHours $dealing_hours)
     {
-        //
+        return response()->json(['success' => $dealing_hours], self::$successStatus);
     }
 
     /**
@@ -126,11 +156,11 @@ class DealingHoursController extends Controller
      */
     public function storeOrUpdateUsed(Request $request)
     {
-        $arrayRequest = $request->all();        
+        $arrayRequest = $request->all();
 
         $validator = Validator::make($arrayRequest, [
             'date' => 'required',
-            'used_hours' => 'required', 
+            'used_hours' => 'required',
             'used_type' => 'required',
             'overtimes_to_use' => 'required',
         ]);
@@ -140,7 +170,7 @@ class DealingHoursController extends Controller
 
         // Parse used_hours from time to double
         $parts = explode(':', $arrayRequest['used_hours']);
-        $arrayRequest['used_hours'] = $parts[0] + $parts[1]/60*100 / 100;
+        $arrayRequest['used_hours'] = $parts[0] + $parts[1] / 60 * 100 / 100;
 
         // Expected hours for this day
         $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $arrayRequest['date']);
@@ -149,7 +179,7 @@ class DealingHoursController extends Controller
             $target_day = strftime("%A", strtotime($arrayRequest['date']));
             return response()->json(['error' => "Vérifier que l'utilisateur ai bien renseigné des horraires de travail pour le " + $target_day], 401);
         }
-        
+
         // Check have nb overtimes
         if ($arrayRequest['used_hours'] <= $arrayRequest['overtimes_to_use']) {
             // Check used_hours
@@ -168,7 +198,7 @@ class DealingHoursController extends Controller
                         // Check if same type
                         if ($item->used_type === $arrayRequest['used_type']) {
                             // Check if after update used_hour < workDuration
-                            if (($item->used_hours + $arrayRequest['used_hours'] ) <= $workDuration) {
+                            if (($item->used_hours + $arrayRequest['used_hours']) <= $workDuration) {
                                 $item = DealingHours::where('id', $item->id)->update(['used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
                                 return response()->json(['success' => [$item, "update"]], $this->successStatus);
                             } else {
@@ -220,10 +250,10 @@ class DealingHoursController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, DealingHours $dealing_hours)
     {
         $arrayRequest = $request->all();
 
@@ -235,36 +265,29 @@ class DealingHoursController extends Controller
             'used_type' => 'required'
         ]);
 
-        $item = DealingHours::where('id', $id)->update(['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => $arrayRequest['overtimes'], 'used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
-        return response()->json(['success' => $item], $this->successStatus);
+        $dealing_hours->update(['user_id' => $arrayRequest['user_id'], 'date' => $arrayRequest['date'], 'overtimes' => $arrayRequest['overtimes'], 'used_hours' => $arrayRequest['used_hours'], 'used_type' => $arrayRequest['used_type']]);
+        return response()->json(['success' => $dealing_hours], $this->successStatus);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(DealingHours $dealing_hours)
     {
-        $item = DealingHours::findOrFail($id);
-        $item->delete();
-        return '';
+        return response()->json(['success' => $dealing_hours->delete()], $this->successStatus);
     }
 
     /**
      * forceDelete the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\DealingHours $dealing_hours
      * @return \Illuminate\Http\Response
      */
-    public function forceDelete($id)
+    public function forceDelete(DealingHours $dealing_hours)
     {
-        $item = DealingHours::findOrFail($id);
-        $item->delete();
-
-        $item = DealingHours::withTrashed()->findOrFail($id);
-        $item->forceDelete();
-        return '';
+        return response()->json(['success' => $dealing_hours->forceDelete()], $this->successStatus);
     }
 }

@@ -15,6 +15,7 @@
                 vs-justify="space-between"
                 vs-align="center"
                 vs-w="12"
+                class="mb-6"
             >
                 <vs-col
                     vs-type="flex"
@@ -23,66 +24,35 @@
                     vs-w="2"
                     vs-sm="6"
                 >
-                    <add-form v-if="authorizedToPublish" />
+                    <vs-button
+                        v-if="authorizedTo('publish')"
+                        @click="addRecord"
+                    >
+                        Ajouter un client
+                    </vs-button>
                 </vs-col>
-                <vs-col
-                    vs-type="flex"
-                    vs-justify="flex-end"
-                    vs-align="center"
-                    vs-w="2"
-                    vs-sm="6"
-                >
-                    <refresh-module />
-                </vs-col>
-            </vs-row>
 
+                <div v-if="isAdmin" class="mr-10" style="min-width: 30em">
+                    <infinite-select
+                        header="Société"
+                        model="company"
+                        label="name"
+                        v-model="filters.company_id"
+                    />
+                </div>
+            </vs-row>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
+                        <multiple-actions
+                            model="customer"
+                            model-plurial="customers"
+                            :items="selectedItems"
+                            @on-action="onAction"
+                        />
 
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('delete')"
-                                    v-if="authorizedToDelete"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('archive')"
-                                    v-if="authorizedToDelete"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="ArchiveIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Archiver</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
                             class="ml-5"
@@ -162,25 +132,19 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
         </div>
-        <edit-form
-            :reload="customersData"
-            :itemId="itemIdToEdit"
-            v-if="itemIdToEdit && authorizedToEdit"
-        />
     </div>
 </template>
 
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
-import EditForm from "./EditForm.vue";
 import AddForm from "./AddForm.vue";
 
 // Store Module
@@ -193,26 +157,34 @@ import CellRendererBoolean from "./cell-renderer/CellRendererBoolean.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 var model = "customer";
 var modelPlurial = "customers";
 var modelTitle = "Clients";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
+
         // Crud
-        EditForm,
         AddForm,
+
         // Cell Renderer
         CellRendererActions,
         CellRendererBoolean,
         CellRendererRelations,
 
         // Components
-        RefreshModule
+        InfiniteSelect,
+        RefreshModule,
+        MultipleActions
     },
     data() {
         return {
@@ -236,35 +208,35 @@ export default {
                     width: 40
                 },
                 {
-                    headerName: "Société",
+                    headerName: "Nom",
                     field: "name",
                     filter: true,
                     sortable: true
                 },
                 {
-                    headerName: "Nom",
-                    field: "lastname",
+                    headerName: "Email",
+                    field: "contact_email",
                     filter: true,
                     sortable: true
                 },
                 {
-                    headerName: "Siret",
-                    field: "siret",
-                    filter: true,
-                    sortable: true
-                },
-                {
-                    headerName: "Type",
-                    field: "professional",
+                    headerName: "Contact",
                     filter: true,
                     sortable: true,
-                    cellRendererFramework: "CellRendererBoolean"
+                    valueGetter: params =>
+                        params.data.contact_firstname &&
+                        params.data.contact_lastname
+                            ? `${params.data.contact_firstname} ${params.data.contact_lastname}`
+                            : ""
                 },
                 {
-                    headerName: "Société",
-                    field: "company",
+                    headerName: "Ville",
                     filter: true,
-                    cellRendererFramework: "CellRendererRelations"
+                    sortable: true,
+                    valueGetter: params =>
+                        params.data.postal_code && params.data.city
+                            ? `${params.data.postal_code} ${params.data.city}`
+                            : ""
                 },
                 {
                     headerName: "Actions",
@@ -274,9 +246,15 @@ export default {
                     cellRendererParams: {
                         model: "customer",
                         modelPlurial: "customers",
-                        withPrompt: true,
-                        name: data => `le client ${data.lastname}`,
-                        linkedTables: ["projets", "tâches"]
+                        name: data => `le client ${data.name}`,
+                        footNotes: {
+                            restore:
+                                "Si vous restaurez le client ses projets seront également restaurés.",
+                            archive:
+                                "Si vous archivez le client ses projets seront également archivés.",
+                            delete:
+                                "Si vous supprimez le client ses projets seront également supprimés."
+                        }
                     }
                 }
             ],
@@ -284,36 +262,41 @@ export default {
             components: {
                 CellRendererActions,
                 CellRendererBoolean
+            },
+
+            // Filters
+            filters: {
+                company_id: this.isAdmin
+                    ? null
+                    : this.$store.state.AppActiveUser.company_id
             }
         };
     },
+    watch: {
+        filters: {
+            handler(val, prev) {
+                if (val.company_id) {
+                    this.$store.dispatch("customerManagement/fetchItems", {
+                        with_trashed: true,
+                        company_id: val.company_id
+                    });
+                }
+            },
+            deep: true
+        }
+    },
     computed: {
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
+        },
         itemIdToEdit() {
-            return this.$store.state.customerManagement.customer.id || 0;
+            return (
+                this.$store.getters["customerManagement/getSelectedItem"].id ||
+                0
+            );
         },
         customersData() {
-            return this.activeUserRole() == "superAdmin"
-                ? this.$store.state.customerManagement.customers
-                : this.$store.state.customerManagement.customers.filter(
-                      c =>
-                          c.company.id ===
-                          this.$store.state.AppActiveUser.company_id
-                  );
-        },
-        authorizedToPublish() {
-            return this.$store.getters.userHasPermissionTo(
-                `publish ${modelPlurial}`
-            );
-        },
-        authorizedToDelete() {
-            return this.$store.getters.userHasPermissionTo(
-                `delete ${modelPlurial}`
-            );
-        },
-        authorizedToEdit() {
-            return this.$store.getters.userHasPermissionTo(
-                `edit ${modelPlurial}`
-            );
+            return this.$store.getters["customerManagement/getItems"];
         },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -335,10 +318,13 @@ export default {
         }
     },
     methods: {
-        authorizedTo(action, model = "customers") {
+        authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
             );
+        },
+        addRecord() {
+            this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
         },
         setColumnFilter(column, val) {
             const filter = this.gridApi.getFilterInstance(column);
@@ -367,90 +353,6 @@ export default {
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
         },
-        confirmDeleteRecord(type) {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleCustomer = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title:
-                    type === "delete"
-                        ? "Confirmer suppression"
-                        : "Confirmer archivage",
-                text:
-                    type === "delete" &&
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces clients ?`
-                        : type === "delete" &&
-                          this.gridApi.getSelectedRows().length === 1
-                        ? `Voulez vous vraiment supprimer le client ${singleCustomer.lastname} ?`
-                        : this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment archiver ces clients ?`
-                        : `Voulez vous vraiment archiver le client ${singleCustomer.lastname} ?`,
-                accept:
-                    type === "delete" ? this.deleteRecord : this.archiveRecord,
-                acceptText: type === "delete" ? "Supprimer" : "Archiver",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch(
-                        "customerManagement/forceRemoveItem",
-                        selectRow.id
-                    )
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess("delete", selectedRowLength);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("delete", selectedRowLength);
-            }
-        },
-        archiveRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("customerManagement/removeItem", selectRow.id)
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess(
-                                "archive",
-                                selectedRowLength
-                            );
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("archive", selectedRowLength);
-            }
-        },
-        showDeleteSuccess(type, selectedRowLength) {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    type === "delete" && selectedRowLength > 1
-                        ? `Clients supprimés`
-                        : type === "delete" && selectedRowLength === 1
-                        ? `Client supprimé`
-                        : selectedRowLength > 1
-                        ? `Clients archivés`
-                        : `Client archivé`
-            });
-        },
         onResize(event) {
             if (this.gridApi) {
                 // refresh the grid
@@ -459,13 +361,6 @@ export default {
                 // resize columns in the grid to fit the available space
                 this.gridApi.sizeColumnsToFit();
             }
-        },
-        activeUserRole() {
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                return user.roles[0].name;
-            }
-            return false;
         }
     },
     mounted() {
@@ -474,7 +369,7 @@ export default {
         // Hide company column ?
         this.gridOptions.columnApi.setColumnVisible(
             "company",
-            this.activeUserRole() == "superAdmin" ? true : false
+            this.isAdmin ? true : false
         );
 
         window.addEventListener("resize", this.onResize);
@@ -518,13 +413,24 @@ export default {
             moduleCompanyManagement.isRegistered = true;
         }
 
-        if (this.authorizedTo("read", "customers")) {
-            this.$store.dispatch("customerManagement/fetchItems");
+        if (this.authorizedTo("read", "companies")) {
+            this.$store
+                .dispatch("companyManagement/fetchItems", {
+                    order_by: "name",
+                    page: 1,
+                    per_page: 1
+                })
+                .then(({ success, payload }) => {
+                    if (this.isAdmin && success && payload.length > 0) {
+                        this.filters.company_id = payload[0].id;
+                    }
+                });
         }
-
-        this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        if (!this.isAdmin) {
+            this.$store.dispatch("customerManagement/fetchItems", {
+                with_trashed: true
+            });
+        }
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

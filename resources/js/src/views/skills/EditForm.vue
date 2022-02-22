@@ -20,7 +20,7 @@
         :active.sync="activePrompt"
     >
         <div>
-            <form>
+            <form autocomplete="off" v-submit.prevent>
                 <div class="vx-row">
                     <div class="vx-col w-full">
                         <vs-input
@@ -52,28 +52,14 @@
                                 </div>
                                 <vs-divider />
                                 <div>
-                                    <v-select
-                                        v-validate="'required'"
-                                        name="company"
+                                    <infinite-select
+                                        class="mt-5"
+                                        required
+                                        header="Société"
                                         label="name"
-                                        :multiple="false"
+                                        model="company"
                                         v-model="itemLocal.company_id"
-                                        :reduce="name => name.id"
-                                        class="w-full mt-5"
-                                        autocomplete
-                                        :options="companiesData"
-                                    >
-                                        <template #header>
-                                            <div
-                                                style="opacity: .8 font-size: .85rem"
-                                            >
-                                                Société
-                                            </div>
-                                        </template>
-                                        <template #option="company">
-                                            <span>{{ `${company.name}` }}</span>
-                                        </template>
-                                    </v-select>
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -85,7 +71,7 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -100,7 +86,7 @@ export default {
         }
     },
     components: {
-        vSelect
+        InfiniteSelect
     },
     data() {
         return {
@@ -111,6 +97,9 @@ export default {
         };
     },
     computed: {
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
+        },
         activePrompt: {
             get() {
                 return this.itemId && this.itemId > 0 ? true : false;
@@ -124,26 +113,13 @@ export default {
                     });
             }
         },
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
-        },
-        permissions() {
-            return this.$store.state.roleManagement.permissions;
-        },
         disabled() {
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    return false;
-                } else {
-                    this.itemLocal.company_id = user.company_id;
-                    return true;
-                }
-            } else return true;
+            if (this.isAdmin) {
+                return false;
+            } else {
+                this.itemLocal.company_id = this.$store.state.AppActiveUser.company_id;
+                return true;
+            }
         },
         validateForm() {
             return (

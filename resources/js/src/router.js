@@ -69,7 +69,7 @@ const router = new Router({
                     component: () => import("./views/users/EditForm.vue"),
                     meta: {
                         parent: "users",
-                        pageTitle: "Édition d'un utilisateur",
+                        pageTitle: "Édition d'utilisateur",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -95,6 +95,28 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: "/companies/company-add/",
+                    name: "companies-company-add",
+                    component: () => import("./views/companies/AddForm.vue"),
+                    meta: {
+                        parent: "companies",
+                        pageTitle: "Ajout d'une société",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/companies/company-edit/:companyId",
+                    name: "companies-company-edit",
+                    component: () => import("./views/companies/EditForm.vue"),
+                    meta: {
+                        parent: "companies",
+                        pageTitle: "Édition de société",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---SKILLS---/////
                 {
                     path: "/skills",
@@ -102,6 +124,7 @@ const router = new Router({
                     component: () => import("./views/skills/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des compétences",
                         requiresAuth: true
                     }
                 },
@@ -122,7 +145,7 @@ const router = new Router({
                     component: () => import("@/views/roles/Add.vue"),
                     meta: {
                         parent: "roles",
-                        pageTitle: "Ajout de rôle",
+                        pageTitle: "Ajout d'un rôle",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -145,6 +168,7 @@ const router = new Router({
                     component: () => import("./views/workareas/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des pôles de production",
                         requiresAuth: true
                     }
                 },
@@ -168,6 +192,18 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+
+                {
+                    path: "/projects/project-view/:id/:taskEdit",
+                    name: 'projects-project-view',
+                    component: () => import("@/views/projects/Read.vue"),
+                    meta: {
+                        parent: "projects",
+                        rule: "admin",
+                        requiresAuth: true,
+    
+                        },  
+                },
                 /////---RANGES---/////
                 {
                     path: "/ranges",
@@ -175,6 +211,7 @@ const router = new Router({
                     component: () => import("./views/ranges/Index.vue"),
                     meta: {
                         rule: "admin",
+                        pageTitle: "Gestion des gammes",
                         requiresAuth: true
                     }
                 },
@@ -184,7 +221,7 @@ const router = new Router({
                     component: () => import("@/views/ranges/Add.vue"),
                     meta: {
                         parent: "ranges",
-                        pageTitle: "Ajouter une gamme",
+                        pageTitle: "Ajout d'une gamme",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -211,33 +248,22 @@ const router = new Router({
                     }
                 },
                 {
-                    path: "/hours/hours-add",
-                    name: "hours-hours-add",
-                    component: () => import("@/views/hours/Add.vue"),
-                    meta: {
-                        parent: "hours",
-                        pageTitle: "Ajouter des heures",
-                        rule: "admin",
-                        requiresAuth: true
-                    }
-                },
-                {
-                    path: "/hours/hours-edit/:id",
-                    name: "hours-hours-edit",
-                    component: () => import("@/views/hours/Edit.vue"),
-                    meta: {
-                        parent: "hours",
-                        pageTitle: "Edition des heures",
-                        rule: "admin",
-                        requiresAuth: true
-                    }
-                },
-                {
                     path: "/hours/hours-view",
                     name: "hours-hours-view",
                     component: () => import("@/views/hours/Read.vue"),
                     meta: {
                         pageTitle: "Gestion des heures",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                /////---Unavailabilities---/////
+                {
+                    path: "/unavailabilities",
+                    name: "unavailabilities",
+                    component: () =>
+                        import("./views/unavailabilities/Index.vue"),
+                    meta: {
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -262,6 +288,16 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                {
+                    path: "/schedules/schedules-edit",
+                    name: "schedules-edit",
+                    component: () => import("@/views/schedules/Edit.vue"),
+                    meta: {
+                        parent: "schedules",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Customers---/////
                 {
                     path: "/customers",
@@ -269,6 +305,28 @@ const router = new Router({
                     component: () => import("@/views/customers/Index.vue"),
                     meta: {
                         pageTitle: "Gestion des clients",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/customers/customer-add/",
+                    name: "customers-customer-add",
+                    component: () => import("./views/customers/AddForm.vue"),
+                    meta: {
+                        parent: "customers",
+                        pageTitle: "Ajout d'un client",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/customers/customer-edit/:customerId",
+                    name: "customers-customer-edit",
+                    component: () => import("./views/customers/EditForm.vue"),
+                    meta: {
+                        parent: "customers",
+                        pageTitle: "Édition de client",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -290,6 +348,71 @@ const router = new Router({
                     component: () => import("@/views/modules/Read.vue"),
                     meta: {
                         parent: "modules",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                  /////---Todo---/////
+                {
+                    path: "/todos",
+                    name: "todos",
+                    component: () => import("@/views/todo/Todo.vue"),
+                    meta: {
+                        pageTitle: "Todos List",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                /////---Bugs---/////
+                {
+                    path: "/bugs",
+                    name: "bugs",
+                    component: () => import("./views/bugs/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        pageTitle: "Gestion des bugs",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/bugs/bug-add/",
+                    name: "bugs-bug-add",
+                    component: () => import("./views/bugs/Add.vue"),
+                    meta: {
+                        parent: "bugs",
+                        rule: "admin",
+                        pageTitle: "Remontée d'un bug",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/bugs/bug-edit/:id",
+                    name: "bugs-bug-edit",
+                    component: () => import("./views/bugs/Edit.vue"),
+                    meta: {
+                        parent: "bugs",
+                        pageTitle: "Édition de bug",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                /////---Doc---/////
+                {
+                    path: "/doc",
+                    name: "doc",
+                    component: () => import("./views/doc/Index.vue"),
+                    meta: {
+                        pageTitle: "Documentation Plannigo",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "/doc/project",
+                    name: "doc-project",
+                    component: () => import("./views/doc/ProjectView.vue"),
+                    meta: {
+                        pageTitle: "Documentation Projet",
                         rule: "admin",
                         requiresAuth: true
                     }
@@ -349,14 +472,23 @@ const router = new Router({
                     }
                 },
                 {
-                    path: "/pages/register/:token/:email",
-                    name: "page-register",
+                    path: "/pages/register/cgu",
+                    name: "page-register-cgu",
                     component: () =>
-                        import("@/views/pages/register/RegisterWithToken.vue"),
+                        import("@/views/users/user-edit/UserEditCGU.vue"),
                     meta: {
                         rule: "editor"
                     }
                 },
+                // {
+                //     path: "/pages/register/:token/:email",
+                //     name: "page-register",
+                //     component: () =>
+                //         import("@/views/pages/register/RegisterWithToken.vue"),
+                //     meta: {
+                //         rule: "editor"
+                //     }
+                // },
                 {
                     path: "/pages/forgot-password",
                     name: "page-forgot-password",
@@ -368,7 +500,7 @@ const router = new Router({
                 {
                     path: "/pages/reset-password/:token/:email",
                     name: "page-reset-password",
-                    component: () => import("@/views/pages/RPassword.vue"),
+                    component: () => import("@/views/pages/ResetPassword.vue"),
                     meta: {
                         rule: "editor"
                     }
@@ -429,7 +561,8 @@ const router = new Router({
                     meta: {
                         rule: "editor"
                     }
-                }
+                },
+                
             ]
         },
         // Redirect to 404 page, if no match found
@@ -443,14 +576,13 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
     let isAuthenticated = false;
-    const expiresAt = localStorage.getItem("tokenExpires");
+    const expiresAt = localStorage.getItem("token_expires_at");
     if (expiresAt && expiresAt !== null) {
         axios.defaults.headers.common[
             "Authorization"
         ] = `Bearer ${localStorage.getItem("token")}`;
         isAuthenticated =
-            moment().unix() < expiresAt &&
-            localStorage.getItem("loggedIn") === "true";
+            moment().unix() < expiresAt && localStorage.getItem("logged_in");
     }
 
     if (
@@ -466,14 +598,14 @@ router.beforeEach((to, from, next) => {
     // If auth required, check login. If login fails redirect to login page
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
-            localStorage.setItem("loggedIn", false);
+            localStorage.setItem("logged_in", false);
             router.push({ path: "/pages/login", query: { to: to.path } });
         } else {
             // Update expireAt
             let newExpireAt = moment()
-                .add(2, "hours")
+                .add(8, "hours")
                 .unix();
-            localStorage.setItem("tokenExpires", newExpireAt);
+            localStorage.setItem("token_expires_at", newExpireAt);
         }
     }
 
@@ -490,5 +622,4 @@ router.afterEach(() => {
         appLoading.style.display = "none";
     }
 });
-
 export default router;

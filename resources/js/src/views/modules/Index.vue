@@ -8,33 +8,13 @@
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteItem('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="module"
+                            model-plurial="modules"
+                            :uses-soft-delete="false"
+                            :items="selectedItems"
+                            @on-action="onAction"
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -113,6 +93,7 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -125,7 +106,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -139,18 +119,27 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 
+// Components
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
+
 var modelTitle = "Module";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
 
         // Cell Renderer
         CellRendererActions,
-        CellRendererLink
+        CellRendererLink,
+
+        // Components
+        MultipleActions
     },
     data() {
         return {
@@ -217,7 +206,7 @@ export default {
     },
     computed: {
         modulesData() {
-            return this.$store.state.moduleManagement.modules;
+            return this.$store.getters["moduleManagement/getItems"];
         },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -228,7 +217,9 @@ export default {
             else return 0;
         },
         itemIdToEdit() {
-            return this.$store.state.moduleManagement.module.id || 0;
+            return (
+                this.$store.getters["moduleManagement/getSelectedItem"].id || 0
+            );
         },
         currentPage: {
             get() {
@@ -244,45 +235,6 @@ export default {
     methods: {
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
-        },
-        confirmDeleteItem(type) {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleModule = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces modules ?`
-                        : `Voulez vous vraiment supprimer le module ${singleModule.name} ?`,
-                accept: this.deleteItem,
-                acceptText: "Supprimer",
-                cancelText: "Annuler"
-            });
-        },
-        deleteItem() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("moduleManagement/removeItem", selectRow.id)
-                    .then(data => {
-                        this.$vs.notify({
-                            color: "success",
-                            title: "Succès",
-                            text: "Suppression terminée avec succès"
-                        });
-                    })
-                    .catch(err => {
-                        this.$vs.notify({
-                            color: "danger",
-                            title: "Erreur",
-                            text: err.message
-                        });
-                    });
-            });
         },
         onResize(event) {
             if (this.gridApi) {

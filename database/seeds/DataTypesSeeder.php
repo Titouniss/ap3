@@ -1,6 +1,15 @@
 <?php
 
+use App\Models\Customer;
 use App\Models\DataType;
+use App\Models\Project;
+use App\Models\Range;
+use App\Models\Skill;
+use App\Models\Task;
+use App\Models\TaskTimeSpent;
+use App\Models\Unavailability;
+use App\Models\Workarea;
+use App\User;
 use Illuminate\Database\Seeder;
 
 class DataTypesSeeder extends Seeder
@@ -13,74 +22,77 @@ class DataTypesSeeder extends Seeder
     public function run()
     {
         $type = $this->dataType('users');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Utilisateur',
-                'display_name_plurial' => 'Utilisateurs',
-                'model' => 'App\User',
-                'order' => 1
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Utilisateur',
+            'display_name_plurial' => 'Utilisateurs',
+            'model' => User::class,
+            'order' => 1
+        ])->save();
 
         $type = $this->dataType('customers');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Client',
-                'display_name_plurial' => 'Clients',
-                'model' => 'App\Models\Customers',
-                'order' => 1
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Client',
+            'display_name_plurial' => 'Clients',
+            'model' => Customer::class,
+            'order' => 1
+        ])->save();
 
         $type = $this->dataType('ranges');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Gamme',
-                'display_name_plurial' => 'Gammes',
-                'model' => 'App\Models\Range',
-                'order' => 1
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Gamme',
+            'display_name_plurial' => 'Gammes',
+            'model' => Range::class,
+            'order' => 1
+        ])->save();
 
         $type = $this->dataType('skills');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Compétence',
-                'display_name_plurial' => 'Compétences',
-                'model' => 'App\Models\Skill',
-                'order' => 1
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Compétence',
+            'display_name_plurial' => 'Compétences',
+            'model' => Skill::class,
+            'order' => 1
+        ])->save();
 
         $type = $this->dataType('workareas');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Îlot',
-                'display_name_plurial' => 'Îlots',
-                'model' => 'App\Models\Workarea',
-                'order' => 1
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Pôle de production',
+            'display_name_plurial' => 'Pôles de production',
+            'model' => Workarea::class,
+            'order' => 1
+        ])->save();
 
         $type = $this->dataType('projects');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Projet',
-                'display_name_plurial' => 'Projets',
-                'model' => 'App\Models\Project',
-                'order' => 2
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Projet',
+            'display_name_plurial' => 'Projets',
+            'model' => Project::class,
+            'order' => 2
+        ])->save();
 
         $type = $this->dataType('unavailabilities');
-        if (!$type->exists) {
-            $type->fill([
-                'display_name_singular' => 'Indisponibilité',
-                'display_name_plurial' => 'Indisponibilités',
-                'model' => 'App\Models\Unavailability',
-                'order' => 2
-            ])->save();
-        }
+        $type->fill([
+            'display_name_singular' => 'Indisponibilité',
+            'display_name_plurial' => 'Indisponibilités',
+            'model' => Unavailability::class,
+            'order' => 2
+        ])->save();
+
+        $type = $this->dataType('tasks');
+        $type->fill([
+            'display_name_singular' => 'Tâche',
+            'display_name_plurial' => 'Tâches',
+            'model' => Task::class,
+            'order' => 3
+        ])->save();
+
+
+        $type = $this->dataType('task_time_spent');
+        $type->fill([
+            'display_name_singular' => 'Pointage',
+            'display_name_plurial' => 'Pointages',
+            'model' => TaskTimeSpent::class,
+            'order' => 4
+        ])->save();
     }
 
     private function dataType($slug)

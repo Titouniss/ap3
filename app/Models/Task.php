@@ -2,24 +2,31 @@
 
 namespace App\Models;
 
+use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDocuments;
 
-    protected $fillable = ['name', 'order', 'description', 'date', 'estimated_time', 'time_spent', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
+    protected $fillable = ['name', 'order', 'description', 'date', 'date_end', 'estimated_time', 'tasks_bundle_id', 'workarea_id', 'created_by', 'status', 'user_id'];
 
-    protected $appends = ['dateEnd'];
+    protected $appends = ['project_id', 'time_spent'];
 
-
-
-    public function getDateEndAttribute()
+    public function getTimeSpentAttribute()
     {
-        //return $this->date;
-        return $this->date && $this->estimated_time ? Carbon::parse($this->date)->addHours($this->estimated_time) : null;
+        return TaskTimeSpent::where('task_id', $this->id)->sum('duration');
+    }
+
+    public function taskTimeSpent()
+    {
+        return $this->hasMany(TaskTimeSpent::class, 'task_id')->orderBy('date');
+    }
+
+    public function periods()
+    {
+        return $this->hasMany('App\Models\TaskPeriod')->orderBy('start_time');
     }
 
     public function workarea()
@@ -34,7 +41,7 @@ class Task extends Model
 
     public function skills()
     {
-        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id');
+        return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id', 'skill_id');
     }
 
     public function comments()
@@ -52,8 +59,8 @@ class Task extends Model
         return $this->hasOneThrough('App\Models\Project', 'App\Models\TasksBundle', 'id', 'id', 'tasks_bundle_id', 'project_id');
     }
 
-    public function documents()
+    public function getProjectIdAttribute()
     {
-        return $this->hasMany('App\Models\Document', 'id', 'task_id');
+        return $this->hasOneThrough('App\Models\Project', 'App\Models\TasksBundle', 'id', 'id', 'tasks_bundle_id', 'project_id')->first()->id;
     }
 }

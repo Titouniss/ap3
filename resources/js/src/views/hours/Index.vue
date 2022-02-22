@@ -7,18 +7,13 @@
             </div>
             <div class="flex flex-wrap justify-center items-end">
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-select
+                        header="Projet"
+                        model="project"
                         label="name"
-                        v-model="filters.project"
-                        :options="projects"
-                        @input="refreshData()"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: .8">Projet</div>
-                        </template>
-                    </v-select>
+                        v-model="filters.project_id"
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
                 <vs-dropdown vs-trigger-click class="cursor-pointer mx-4">
                     <div
@@ -46,29 +41,23 @@
                     </vs-dropdown-menu>
                 </vs-dropdown>
                 <div style="min-width: 15em">
-                    <v-select
-                        v-if="authorizedTo('read', 'users')"
+                    <infinite-select
+                        v-if="authorizedTo('show', 'users')"
+                        header="Utilisateur"
                         label="lastname"
-                        :options="users"
-                        v-model="filters.user"
-                        @input="refreshData()"
-                        @search:focus="clearRefreshDataTimeout"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: .8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                        model="user"
+                        v-model="filters.user_id"
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        @focus="clearRefreshDataTimeout"
+                    />
                 </div>
             </div>
             <div class="flex flex-wrap items-center">
                 <vs-row
-                    v-if="!isFullFilter()"
+                    v-if="!isFullFilter"
                     vs-justify="center"
                     vs-align="center"
                     vs-type="flex"
@@ -82,7 +71,7 @@
                         vs-align="center"
                     >
                         <vs-button
-                            v-if="isPeriodFilter()"
+                            v-if="isPeriodFilter"
                             radius
                             color="primary"
                             type="border"
@@ -93,7 +82,7 @@
                         <div class="m-3 flex" style="width: 300px">
                             <vs-row vs-type="flex" vs-justify="center">
                                 <vs-col vs-type="flex" vs-justify="center">
-                                    <h5 v-if="isPeriodFilter()">
+                                    <h5 v-if="isPeriodFilter">
                                         {{ filterDate }}
                                     </h5>
                                 </vs-col>
@@ -109,18 +98,17 @@
                                 </vs-col>
                                 <vs-col vs-type="flex" vs-justify="center">
                                     <flat-pickr
-                                        v-if="!isPeriodFilter()"
+                                        v-if="!isPeriodFilter"
                                         :config="configDatePicker()"
                                         placeholder="Date"
                                         v-model="filters.date"
-                                        @on-change="onFilterDateChange"
                                         @on-open="clearRefreshDataTimeout"
                                     />
                                 </vs-col>
                             </vs-row>
                         </div>
                         <vs-button
-                            v-if="isPeriodFilter()"
+                            v-if="isPeriodFilter"
                             radius
                             color="primary"
                             type="border"
@@ -138,6 +126,7 @@
                 <h4 class="ml-3">Résumé</h4>
             </div>
             <vs-row
+                v-if="showSummary"
                 vs-justify="center"
                 vs-align="center"
                 vs-type="flex"
@@ -152,77 +141,108 @@
                     Heures travaillées sur la période :
                     {{ " " + getStats("total") }}
                 </vs-col>
+                <!-- v-if="stats.overtime" -->
                 <vs-col
-                    v-if="stats.overtime"
                     vs-w="6"
                     vs-type="flex"
                     vs-justify="center"
                     vs-align="center"
                 >
-                    Heures supplémentaires sur la période :
-                    {{ " " + getStats("overtime") }}
+                    {{ lostTimeOrOvertime() + " " + getStats("overtime") }}
                 </vs-col>
             </vs-row>
+            <vs-row
+                v-else
+                vs-justify="center"
+                vs-align="center"
+                vs-type="flex"
+                vs-w="12"
+            >
+                Veuillez renseigner des heures sur cette période afin d'avoir le
+                résumé
+            </vs-row>
+            <vs-row
+                vs-justify="center"
+                vs-align="center"
+                vs-type="flex"
+                vs-w="12"
+                class="mt-6"
+            >
+            </vs-row>
         </div>
-        <div class="vx-card p-6 mt-1">
+        <div class="vx-card p-6 mt-1 mb-base">
             <div
                 class="d-theme-dark-light-bg flex flex-row justify-between items-center pb-3"
             >
-                <div class="flex flex-row justify-start items-center">
-                    <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
-                    <h4 class="ml-3">Heures effectuées</h4>
-                    <!-- <div class="px-6 py-2" v-if="authorizedTo('publish')">
-            <vs-button @click="addRecord">Ajouter des heures</vs-button>
-          </div>-->
-                    <div class="px-6 py-2" v-if="authorizedTo('publish')">
-                        <vs-button @click="readRecord">{{
-                            isAdmin() ? "Gérer les heures" : "Gérer mes heures"
-                        }}</vs-button>
-                    </div>
-                </div>
-                <vs-button type="border" @click="onExport">
-                    <div class="flex flex-row">
-                        <feather-icon
-                            icon="DownloadIcon"
-                            svgClasses="h-5 w-5"
-                            class="mr-2"
-                        />Exporter
-                    </div>
-                </vs-button>
+                <vs-row
+                    v-if="showSummary"
+                    vs-justify="center"
+                    vs-align="center"
+                    vs-type="flex"
+                    vs-w="12"
+                >
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="start"
+                        vs-align="center"
+                    >
+                        <feather-icon icon="ClockIcon" svgClasses="h-6 w-6" />
+                        <h4 class="ml-3">Heures effectuées</h4>
+                    </vs-col>
+                    <!-- v-if="stats.overtime" -->
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="center"
+                        vs-align="center"
+                    >
+                        <div class="px-6 py-2" v-if="authorizedTo('publish')">
+                            <vs-button @click="readRecord">
+                                {{
+                                    isAdmin
+                                        ? "Gérer les heures"
+                                        : "Gérer mes heures"
+                                }}
+                            </vs-button>
+                        </div>
+                    </vs-col>
+                    <vs-col
+                        vs-w="4"
+                        vs-type="flex"
+                        vs-justify="end"
+                        vs-align="center"
+                    >
+                        <vs-button type="border" @click="onExport">
+                            <div class="flex flex-row">
+                                <feather-icon
+                                    icon="DownloadIcon"
+                                    svgClasses="h-5 w-5"
+                                    class="mr-2"
+                                />
+                                Exporter
+                            </div>
+                        </vs-button>
+                    </vs-col>
+                </vs-row>
             </div>
             <div class="flex flex-wrap items-center">
                 <div class="flex-grow">
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="this.confirmDeleteRecord"
-                                    v-if="authorizedTo('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="hours"
+                            model-plurial="hours"
+                            :uses-soft-delete="false"
+                            :items="selectedItems"
+                            @on-action="
+                                () => {
+                                    this.onAction();
+                                    this.refreshData();
+                                }
+                            "
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -239,19 +259,14 @@
                         class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
                     >
                         <span class="mr-2">
-                            {{
-                                currentPage * paginationPageSize -
-                                    (paginationPageSize - 1)
-                            }}
+                            {{ currentPage * perPage - (perPage - 1) }}
                             -
                             {{
-                                hoursData.length -
-                                    currentPage * paginationPageSize >
-                                0
-                                    ? currentPage * paginationPageSize
-                                    : hoursData.length
+                                total - currentPage * perPage > 0
+                                    ? currentPage * perPage
+                                    : total
                             }}
-                            sur {{ hoursData.length }}
+                            sur {{ total }}
                         </span>
                         <feather-icon
                             icon="ChevronDownIcon"
@@ -260,25 +275,17 @@
                     </div>
                     <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
                     <vs-dropdown-menu>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(10)"
-                        >
+                        <vs-dropdown-item @click="itemsPerPage = 10">
                             <span>10</span>
                         </vs-dropdown-item>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(20)"
-                        >
+                        <vs-dropdown-item @click="itemsPerPage = 20">
                             <span>20</span>
                         </vs-dropdown-item>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(25)"
-                        >
-                            <span>25</span>
-                        </vs-dropdown-item>
-                        <vs-dropdown-item
-                            @click="gridApi.paginationSetPageSize(30)"
-                        >
+                        <vs-dropdown-item @click="itemsPerPage = 30">
                             <span>30</span>
+                        </vs-dropdown-item>
+                        <vs-dropdown-item @click="itemsPerPage = 50">
+                            <span>50</span>
                         </vs-dropdown-item>
                     </vs-dropdown-menu>
                 </vs-dropdown>
@@ -298,21 +305,22 @@
                 colResizeDefault="shift"
                 :animateRows="true"
                 :floatingFilter="false"
-                :pagination="true"
-                :paginationPageSize="paginationPageSize"
-                :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
         </div>
+
+        <edit-form :itemId="itemIdToEdit" v-if="itemIdToEdit" />
     </div>
 </template>
 
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
+
+import EditForm from "./EditForm.vue";
 
 // Store Module
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement.js";
@@ -328,7 +336,18 @@ import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 
+// Unavailabilities
+import UnavailabilitiesIndex from "../unavailabilities/Index.vue";
+
+// Components
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
+
 import moment from "moment";
+import _ from "lodash";
 
 var model = "hours";
 var modelPlurial = "hours";
@@ -337,17 +356,30 @@ var modelTitle = "Heures";
 moment.locale("fr");
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         flatPickr,
+        EditForm,
         // Cell Renderer
         CellRendererActions,
-        CellRendererRelations
+        CellRendererRelations,
+        //Unavailabilities
+        UnavailabilitiesIndex,
+
+        // Components
+        InfiniteSelect,
+        MultipleActions
     },
     data() {
         return {
             searchQuery: "",
+            page: 1,
+            perPage: 10,
+            totalPages: 0,
+            total: 0,
+
+            id_user: null,
             // AgGrid
             gridApi: null,
             gridOptions: {
@@ -371,12 +403,24 @@ export default {
                     field: "date",
                     cellRenderer: data => {
                         moment.locale("fr");
+                        
                         return moment(data.data.start_at).format("D MMMM YYYY");
                     }
                 },
                 {
                     headerName: "Durée",
                     field: "duration"
+                },
+                {
+                    headerName: "Opérateur",
+                    field: "user",
+                    cellRenderer: data => {
+                        return (
+                            data.data.user.firstname +
+                            " " +
+                            data.data.user.lastname
+                        );
+                    }
                 },
                 {
                     headerName: "Description",
@@ -397,7 +441,7 @@ export default {
                         model: "hours",
                         modelPlurial: "hours",
                         usesSoftDelete: false,
-                        canEdit: () => false,
+                        withPrompt: true,
                         name: data =>
                             data.duration == "01:00:00"
                                 ? `l'heure du ${
@@ -438,11 +482,22 @@ export default {
 
             // Filters
             filters: {
-                project: null,
-                user: null,
+                project_id: null,
+                user_id: null,
                 date: moment(),
-                period_type: "month"
+                period_type: "month",
+                hours_taken: null
             },
+            hours_type_names: [
+                "Heures supplémentaires payées",
+                "Utilisation heures supplémentaires",
+                "Jours fériés",
+                "Rendez-vous privé",
+                "Congés payés",
+                "Période de cours",
+                "Arrêt de travail"/*,
+                "Autre..."*/
+            ],
             period_type_names: ["date", "day", "week", "month", "year", "full"],
             period_types: {
                 date: {
@@ -490,7 +545,33 @@ export default {
             stats: { total: 0 }
         };
     },
+    watch: {
+        filterParams: {
+            handler(value, prev) {
+                if (!_.isEqual(value, prev)) {
+                    this.clearRefreshDataTimeout();
+                    this.refreshDataTimeout = setTimeout(() => {
+                        this.page = 1;
+                        this.refreshData();
+                    }, 1500);
+                }
+            },
+            deep: true
+        }
+    },
     computed: {
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
+        },
+        isManager() {
+            return this.$store.state.AppActiveUser.is_manager;
+        },
+        isFullFilter() {
+            return this.filters.period_type === "full";
+        },
+        isPeriodFilter() {
+            return this.filters.period_type !== "date";
+        },
         filterDate() {
             moment.locale("fr");
             if (this.filters.period_type === "week") {
@@ -510,38 +591,65 @@ export default {
             );
         },
         itemIdToEdit() {
-            return this.$store.state.hoursManagement.hours.id || 0;
-        },
-        projects() {
-            return this.$store.state.projectManagement.projects;
+            return (
+                this.$store.getters["hoursManagement/getSelectedItem"].id || 0
+            );
         },
         users() {
-            return this.$store.state.userManagement.users;
+            return this.$store.getters["userManagement/getItems"];
         },
         hoursData() {
-            return this.$store.state.hoursManagement.hours;
+            return this.$store.getters["hoursManagement/getItems"];
         },
-        paginationPageSize() {
-            if (this.gridApi) return this.gridApi.paginationGetPageSize();
-            else return 10;
+        showSummary() {
+            if (
+                this.stats.length === undefined &&
+                typeof this.stats.total === "object"
+            ) {
+                return false;
+            } else {
+                return true;
+            }
         },
-        totalPages() {
-            if (this.gridApi) return this.gridApi.paginationGetTotalPages();
-            else return 0;
+        filterParams() {
+            const filter = {};
+
+            if (this.filters.project_id) {
+                filter.project_id = this.filters.project_id;
+            }
+
+            if (this.filters.user_id) {
+                filter.user_id = this.filters.user_id;
+            }
+            if (this.filters.date) {
+                filter.date = moment(this.filters.date).format("DD-MM-YYYY");
+                if (this.isPeriodFilter) {
+                    filter.period_type = this.filters.period_type;
+                }
+            }
+            return filter;
+        },
+        itemsPerPage: {
+            get() {
+                return this.perPage;
+            },
+            set(val) {
+                this.perPage = val;
+                this.currentPage = 1;
+            }
         },
         currentPage: {
             get() {
-                if (this.gridApi)
-                    return this.gridApi.paginationGetCurrentPage() + 1;
-                else return 1;
+                return this.page;
             },
             set(val) {
-                this.gridApi.paginationGoToPage(val - 1);
+                this.page = val;
+                this.refreshData();
             }
         }
     },
     methods: {
-        authorizedTo(action, model = "hours") {
+        authorizedTo(action, model = modelPlurial) {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
             );
@@ -552,88 +660,82 @@ export default {
             }
         },
         getStats(name) {
-            return (this.stats[name]
-                ? parseFloat(this.stats[name])
-                : 0
-            ).toFixed(2);
+            if (name === "overtime") {
+                if (this.stats["overtime"]) {
+                    return (this.stats[name]
+                        ? parseFloat(this.stats[name])
+                        : 0
+                    ).toFixed(2);
+                    
+                } else {
+                            
+                    return (this.stats["lost_time"]
+                        ? parseFloat(this.stats["lost_time"])
+                        : 0
+                    ).toFixed(2);
+                }
+            } else {
+                return (this.stats[name]
+                    ? parseFloat(this.stats[name])
+                    : 0
+                ).toFixed(2);
+            }
+        },
+        lostTimeOrOvertime() {
+            if (this.stats["overtime"]) {
+                return "Heures supplémentaires sur la période :";
+            } else {
+                return "Heures manquantes sur la période :";
+            }
         },
         addToFilterDate() {
             this.filters.date = moment(this.filters.date).add(
                 1,
                 this.period_types[this.filters.period_type].symbol
             );
-            this.refreshData();
         },
         removeFromFilterDate() {
             this.filters.date = moment(this.filters.date).subtract(
                 1,
                 this.period_types[this.filters.period_type].symbol
             );
-            this.refreshData();
-        },
-        isAdmin() {
-            const user = this.$store.state.AppActiveUser;
-            if (
-                user.roles &&
-                user.roles.length > 0 &&
-                user.roles.find(
-                    r => r.name === "superAdmin" || r.name === "littleAdmin"
-                )
-            ) {
-                return true;
-            }
-            return false;
-        },
-        isFullFilter() {
-            return this.filters.period_type === "full";
-        },
-        isPeriodFilter() {
-            return this.filters.period_type !== "date";
         },
         setPeriodType(type) {
             this.filters.period_type = type;
             this.filters.date =
                 type === "date" || type === "full" ? null : moment();
-            this.refreshData();
         },
-        onFilterDateChange(selectedDates, dateStr, instance) {
-            //this.filters.date = selectedDates[0];
-            this.refreshData(selectedDates[0]);
-        },
-        refreshData(targetDate = this.filters.date) {
-            const filter = {};
-            if (this.filters.project) {
-                filter.project_id = this.filters.project.id;
-            }
-            if (this.isAdmin() && this.filters.user) {
-                filter.user_id = this.filters.user.id;
-            }
-            if (targetDate) {
-                filter.date = moment(targetDate).format("DD-MM-YYYY");
-                if (this.isPeriodFilter()) {
-                    filter.period_type = this.filters.period_type;
-                }
-            }
-            this.clearRefreshDataTimeout();
-            this.refreshDataTimeout = setTimeout(() => {
-                this.$vs.loading();
-                // refresh Hours
-                this.$store
-                    .dispatch("hoursManagement/fetchItems", filter)
-                    .then(response => {
-                        this.stats = response.data.stats;
-                    })
-                    .catch(error => {
-                        this.$vs.notify({
-                            title: "Erreur",
-                            text: error.message,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "danger"
-                        });
-                    })
-                    .finally(() => this.$vs.loading.close());
-            }, 1500);
+        refreshData() {
+            this.$vs.loading();
+            // refresh Hours
+            this.$store
+                .dispatch("hoursManagement/fetchItems", {
+                    ...this.filterParams,
+                    page: this.currentPage,
+                    per_page: this.perPage,
+                    q: this.searchQuery || undefined,
+                    order_by: "start_at",
+                    order_by_desc: 1
+                })
+                .then(data => {
+                    this.stats = data.stats;
+
+                    if (data.pagination) {
+                        const { total, last_page } = data.pagination;
+                        this.totalPages = last_page;
+                        this.total = total;
+                    }
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Erreur",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                })
+                .finally(() => this.$vs.loading.close());
         },
         setColumnFilter(column, val) {
             const filter = this.gridApi.getFilterInstance(column);
@@ -662,53 +764,6 @@ export default {
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
         },
-        confirmDeleteRecord() {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleHour = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title: "Confirmer suppression",
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces heures ?`
-                        : singleHour.duration == "01:00:00"
-                        ? `Voulez vous vraiment supprimer l'heure du ${
-                              singleHour.start_at.split(" ")[0]
-                          } pour le projet ${singleHour.project} ?`
-                        : `Voulez vous vraiment supprimer les ${
-                              singleHour.duration.split(":")[0]
-                          } heures du ${
-                              singleHour.start_at.split(" ")[0]
-                          } pour le projet ${singleHour.project.name} ?`,
-                accept: this.deleteRecord,
-                acceptText: "Supprimer",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("hoursManagement/removeItem", selectRow.id)
-                    .then(data => {
-                        this.showDeleteSuccess();
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-        },
-        showDeleteSuccess() {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Heures supprimés`
-                        : `Heure supprimé`
-            });
-        },
         onResize(event) {
             if (this.gridApi) {
                 // refresh the grid
@@ -725,6 +780,14 @@ export default {
             this.$router
                 .push(`/${modelPlurial}/${model}-view/`)
                 .catch(() => {});
+        },
+        goToUnavailabilities() {
+            this.$router.push({
+                path:
+                    `/users/user-profil-edit/` +
+                    this.$store.state.AppActiveUser.id,
+                query: { tab: 1 }
+            });
         },
         onExport() {
             import("@/vendor/Export2Excel").then(excel => {
@@ -762,6 +825,12 @@ export default {
     },
     mounted() {
         this.gridApi = this.gridOptions.api;
+
+        // Hide user column ?
+        this.gridOptions.columnApi.setColumnVisible(
+            "user",
+            this.isAdmin || this.isManager
+        );
 
         window.addEventListener("resize", this.onResize);
         if (this.gridApi) {
@@ -802,17 +871,10 @@ export default {
             moduleUserManagement.isRegistered = true;
         }
 
-        this.$store
-            .dispatch("hoursManagement/fetchItems", {
-                date: moment().format("DD-MM-YYYY"),
-                period_type: "month"
-            })
-            .then(response => (this.stats = response.data.stats));
-        this.$store.dispatch("projectManagement/fetchItems");
         if (this.authorizedTo("read", "users")) {
             this.$store.dispatch("userManagement/fetchItems");
         } else {
-            this.filters.user = this.$store.state.AppActiveUser;
+            this.filters.user_id = this.$store.state.AppActiveUser.id;
         }
     },
     beforeDestroy() {

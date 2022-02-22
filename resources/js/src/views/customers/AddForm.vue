@@ -1,193 +1,195 @@
+<!-- =========================================================================================
+  File Name: CompanyEdit.vue
+  Description: company Edit Page
+  ----------------------------------------------------------------------------------------
+  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+  Author: Pixinvent
+  Author URL: http://www.themeforest.net/role/pixinvent
+========================================================================================== -->
 <template>
-  <div class="p-3 mb-4 mr-4">
-    <vs-button @click="activePrompt = true" class="w-full">Ajouter un client</vs-button>
-    <vs-prompt
-      title="Ajouter un client"
-      accept-text="Ajouter"
-      cancel-text="Annuler"
-      button-cancel="border"
-      @cancel="clearFields"
-      @accept="addCompany"
-      @close="clearFields"
-      :is-valid="validateForm"
-      :active.sync="activePrompt"
-    >
-      <div>
-        <form>
-          <div class="vx-row">
-            <div class="vx-col w-full">
-              <v-select
-                v-if="(this.activeUserRole() == 'superAdmin')"
-                label="name"
-                v-validate="'required'"
-                v-model="itemLocal.company"
-                :options="companiesData"
-                class="w-full mb-4 mt-5"
-              >
-                <template #header>
-                  <div class="vs-select--label">Société</div>
-                </template>
-              </v-select>
-
-              <div>
-                <small class="ml-1" for>Professionnel</small>
-                <vs-switch v-model="itemLocal.professional" />
-              </div>
-              <vs-input
-                v-if="itemLocal.professional"
-                v-validate="itemLocal.professional ? 'required|max:50' : ''"
-                name="name"
-                class="w-full mb-4 mt-5"
-                label="Nom de la société"
-                placeholder="société..."
-                v-model="itemLocal.name"
-                :color="!errors.has('name') ? 'success' : 'danger'"
-              />
-              <span
-                v-if="itemLocal.professional"
-                class="text-danger text-sm"
-                v-show="errors.has('name')"
-              >{{ errors.first('name') }}</span>
-              <vs-input
-                v-if="itemLocal.professional"
-                v-validate="itemLocal.professional ? 'required|numeric|min:14|max:14' : ''"
-                name="siret"
-                class="w-full mb-4 mt-5"
-                label="Numéro de siret"
-                placeholder="n° siret..."
-                v-model="itemLocal.siret"
-              />
-              <span
-                v-if="itemLocal.professional"
-                class="text-danger text-sm"
-                v-show="errors.has('siret')"
-              >{{ errors.first('siret') }}</span>
-
-              <vs-input
-                v-validate="'required|max:50'"
-                name="lastname"
-                class="w-full mb-4 mt-5"
-                label="Nom du client"
-                placeholder="nom..."
-                v-model="itemLocal.lastname"
-                :color="!errors.has('lastname') ? 'success' : 'danger'"
-              />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('lastname')"
-              >{{ errors.first('lastname') }}</span>
-              
+    <div class="w-full">
+        <vx-card class="py-3 px-6">
+            <company-details :itemLocal="itemLocal" />
+            <div v-if="isAdmin" class="w-full">
+                <div class="pt-6 px-3 flex items-end">
+                    <feather-icon
+                        svgClasses="w-6 h-6"
+                        icon="LockIcon"
+                        class="mr-2"
+                    />
+                    <span class="font-medium text-lg leading-none">
+                        Admin
+                    </span>
+                </div>
+                <vs-divider />
+                <div class="w-full px-3">
+                    <infinite-select
+                        required
+                        header="Société"
+                        label="name"
+                        model="company"
+                        v-model="itemLocal.company_id"
+                    />
+                </div>
             </div>
-          </div>
-        </form>
-      </div>
-    </vs-prompt>
-  </div>
+            <!-- Save & Reset Button -->
+            <div class="vx-row">
+                <div class="vx-col w-full">
+                    <div class="mt-8 flex flex-wrap items-center justify-end">
+                        <vs-button
+                            class="ml-auto mt-2"
+                            @click="addClient"
+                            :disabled="!validateForm"
+                        >
+                            Ajouter
+                        </vs-button>
+                        <vs-button
+                            class="ml-4 mt-2"
+                            type="border"
+                            color="warning"
+                            @click="back"
+                        >
+                            Annuler
+                        </vs-button>
+                    </div>
+                </div>
+            </div>
+        </vx-card>
+    </div>
 </template>
 
 <script>
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
+import CompanyDetails from "@/components/forms/CompanyDetails.vue";
+
+// FlatPickr import
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
-
-
-// register custom messages
 Validator.localize("fr", errorMessage);
 
-export default {
-  components: {
-    vSelect
-  },
-  data() {
-    return {
-      activePrompt: false,
+// Store Module
+import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
+import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 
-      itemLocal: {
-        name: null,
-        lastname: null,
-        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null, 
-        siret: null,
-        professional: 0
-      }
-    };
-  },
-  computed: {
-    validateForm() {
-      if (this.itemLocal.professional || this.itemLocal.professional === 1) {
-        return (
-          !this.errors.any() &&
-          this.itemLocal.name !== null &&
-          this.itemLocal.lastname !== null &&
-          this.itemLocal.siret !== null
-        );
-      } else {
-        return !this.errors.any() && this.itemLocal.lastname !== null && this.itemLocal.company !== null;
-      }
+var model = "customer";
+var modelPlurial = "customers";
+
+export default {
+    components: {
+        InfiniteSelect,
+        flatPickr,
+        CompanyDetails
     },
-    companiesData() {
-      return this.$store.state.companyManagement.companies;
+    data() {
+        return {
+            itemLocal: {
+                name: "",
+                siret: "",
+                code: "",
+                type: "",
+                contact_firstname: "",
+                contact_lastname: "",
+                contact_function: "",
+                contact_tel1: "",
+                contact_tel2: "",
+                contact_email: "",
+                street_number: "",
+                street_name: "",
+                postal_code: "",
+                city: "",
+                country: "",
+                company_id: this.isAdmin
+                    ? null
+                    : this.$store.state.AppActiveUser.company_id
+            }
+        };
     },
-  },
-  methods: {
-    clearFields() {
-      Object.assign(this.itemLocal, {
-        name: null,
-        lastname: null,
-        company: (this.activeUserRole() != 'superAdmin') ? this.$store.state.AppActiveUser.company : null,
-        siret: null,
-        professional: 0
-      });
-    },
-    addCompany() {
-      this.$validator.validateAll().then(result => {
-        if (result) {
-          if (
-            this.itemLocal.professional ||
-            this.itemLocal.professional === 1
-          ) {
-            this.itemLocal.professional = 1;
-          } else if (
-            !this.itemLocal.professional ||
-            this.itemLocal.professional === 0
-          ) {
-            this.itemLocal.professional = 0;
-            this.itemLocal.name = null;
-            this.itemLocal.siret = null;
-          }
-          let itemLocal = Object.assign({}, this.itemLocal);
-          this.$store
-            .dispatch("customerManagement/addItem", itemLocal)
-            .then(() => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Ajout d'un client",
-                text: `"${itemLocal.name ? itemLocal.name : itemLocal.lastname}" ajoutée avec succès`,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
-              });
-            })
-            .catch(error => {
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Error",
-                text: error.message,
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "danger"
-              });
-            });
-          this.clearFields();
+    computed: {
+        validateForm() {
+            return (
+                !this.errors.any() &&
+                this.itemLocal.name !== "" &&
+                this.itemLocal.contact_firstname !== "" &&
+                this.itemLocal.contact_lastname !== "" &&
+                this.itemLocal.contact_function !== "" &&
+                this.itemLocal.contact_email !== "" &&
+                (this.itemLocal.contact_tel1 !== "" ||
+                    this.itemLocal.contact_tel2 !== "") &&
+                this.itemLocal.street_number !== "" &&
+                this.itemLocal.street_name !== "" &&
+                this.itemLocal.postal_code !== "" &&
+                this.itemLocal.country !== "" &&
+                this.itemLocal.company_id !== ""
+            );
+        },
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
         }
-      });
     },
-    activeUserRole() {
-      const user = this.$store.state.AppActiveUser;
-      if ( user.roles && user.roles.length > 0 ) {
-        return user.roles[0].name;
-      }
-      return false;
+    methods: {
+        authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
+        addClient() {
+            if (this.validateForm) {
+                const item = JSON.parse(JSON.stringify(this.itemLocal));
+                this.$store
+                    .dispatch("customerManagement/addItem", item)
+                    .then(() => {
+                        this.$vs.notify({
+                            title: "Ajout d'un client",
+                            text: `"${item.name}" ajoutée avec succès`,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
+                        });
+                        this.back();
+                    })
+                    .catch(error => {
+                        this.$vs.notify({
+                            title: "Error",
+                            text: error.message,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger"
+                        });
+                    })
+                    .finally(() => {
+                        this.$vs.loading.close();
+                    });
+            }
+        },
+        back() {
+            this.$router.push(`/${modelPlurial}`).catch(() => {});
+        }
     },
-  }
+    created() {
+        if (!moduleCustomerManagement.isRegistered) {
+            this.$store.registerModule(
+                "customerManagement",
+                moduleCustomerManagement
+            );
+            moduleCustomerManagement.isRegistered = true;
+        }
+        if (!moduleCompanyManagement.isRegistered) {
+            this.$store.registerModule(
+                "companyManagement",
+                moduleCompanyManagement
+            );
+            moduleCompanyManagement.isRegistered = true;
+        }
+    },
+    beforeDestroy() {
+        moduleCustomerManagement.isRegistered = false;
+        moduleCompanyManagement.isRegistered = false;
+
+        this.$store.unregisterModule("customerManagement");
+        this.$store.unregisterModule("companyManagement");
+    }
 };
 </script>

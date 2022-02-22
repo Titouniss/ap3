@@ -1,6 +1,8 @@
 <template>
   <div class="p-3 mb-4 mr-4">
-    <vs-button @click="activePrompt = true" class="w-full">Ajouter une tâche</vs-button>
+    <vs-button @click="activePrompt = true" class="w-full"
+      >Ajouter une tâche</vs-button
+    >
     <vs-prompt
       title="Ajouter une tâche"
       accept-text="Ajouter"
@@ -13,7 +15,7 @@
       :active.sync="showPrompt"
     >
       <div>
-        <form>
+        <form autocomplete="off">
           <div class="vx-row">
             <div class="vx-col w-full">
               <p>Nom</p>
@@ -24,10 +26,9 @@
                 v-model="itemLocal.title"
                 :color="!errors.has('title') ? 'success' : 'danger'"
               />
-              <span
-                class="text-danger text-sm"
-                v-show="errors.has('title')"
-              >{{ errors.first('title') }}</span>
+              <span class="text-danger text-sm" v-show="errors.has('title')">{{
+                errors.first("title")
+              }}</span>
 
               <p class="mt-5">Date de début</p>
               <flat-pickr
@@ -41,7 +42,8 @@
               <span
                 class="text-danger text-sm"
                 v-show="errors.has('startDate')"
-              >{{ errors.first('startDate') }}</span>
+                >{{ errors.first("startDate") }}</span
+              >
 
               <p class="mt-5">Date de fin</p>
               <flat-pickr
@@ -55,7 +57,8 @@
               <span
                 class="text-danger text-sm"
                 v-show="errors.has('endDate')"
-              >{{ errors.first('endDate') }}</span>
+                >{{ errors.first("endDate") }}</span
+              >
             </div>
           </div>
         </form>
@@ -85,19 +88,19 @@ export default {
   props: {
     handleClose: {
       type: Function,
-      required: true
+      required: true,
     },
     activeAddPrompt: {
       type: Boolean,
-      required: true
+      required: true,
     },
     dateData: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   components: {
-    flatPickr
+    flatPickr,
   },
   data() {
     return {
@@ -106,7 +109,7 @@ export default {
         title: "",
         start: "",
         end: "",
-        label: ""
+        label: "",
       },
       configDatePicker: () => ({
         disableMobile: "true",
@@ -114,8 +117,8 @@ export default {
         locale: FrenchLocale,
         dateFormat: "Y-m-d H:i",
         altFormat: "j F Y, H:i",
-        altInput: true
-      })
+        altInput: true,
+      }),
     };
   },
   computed: {
@@ -132,7 +135,7 @@ export default {
       },
       set(value) {
         return value;
-      }
+      },
     },
     validateForm() {
       return (
@@ -141,7 +144,7 @@ export default {
         this.itemLocal.start !== "" &&
         this.itemLocal.end !== ""
       );
-    }
+    },
   },
   methods: {
     clearFields() {
@@ -149,19 +152,19 @@ export default {
         title: "",
         start: "",
         end: "",
-        label: ""
+        label: "",
       };
       (this.activePrompt = false), this.handleClose();
     },
     addItem() {
-      this.$validator.validateAll().then(result => {
+      this.$validator.validateAll().then((result) => {
         if (result) {
-          this.$store.dispatch("scheduleManagement/addEvent", this.itemLocal);
+          this.$store.dispatch("scheduleManagement/addItem", this.itemLocal);
           this.clearFields();
         }
       });
-    }
+    },
   },
-  created() {}
+  created() {},
 };
 </script>

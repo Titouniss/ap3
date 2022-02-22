@@ -8,8 +8,8 @@ class UsersSkill extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = [ 'user_id', 'skill_id'];
-    
+    protected $fillable = ['user_id', 'skill_id'];
+
     protected $casts = [];
 
     public function user()
@@ -20,5 +20,4 @@ class UsersSkill extends Model
     {
         return $this->belongsTo('App\Models\Skill', 'skill_id');
     }
-
 }

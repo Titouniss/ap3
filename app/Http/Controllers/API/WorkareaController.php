@@ -2,157 +2,112 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Exceptions\ApiException;
+use App\Models\Company;
+use App\Models\Skill;
 use App\Models\Workarea;
-use App\Models\WorkareasSkill;
-use Illuminate\Support\Facades\Auth;
-use Validator;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\StoresDocuments;
+use Illuminate\Http\Request;
 
-class WorkareaController extends Controller
+class WorkareaController extends BaseApiController
 {
-    use SoftDeletes;
+    use StoresDocuments;
 
-    public $successStatus = 200;
+    protected static $index_load = ['company:companies.id,name', 'skills:skills.id,name,company_id', 'documents'];
+    protected static $index_append = null;
+    protected static $show_load = ['company:companies.id,name', 'skills:skills.id,name,company_id', 'documents'];
+    protected static $show_append = null;
+
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'company_id' => 'required',
+        'max_users' => 'required',
+        'skills' => 'required|array',
+        'token' => 'nullable'
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'company_id' => 'required',
+        'max_users' => 'nullable',
+        'skills' => 'required|array',
+        'token' => 'nullable',
+        'documents' => 'nullable|array'
+    ];
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        $user = Auth::user();
-        $items = [];
-        if ($user->hasRole('superAdmin')) {
-            $items = Workarea::withTrashed()->get()->load('company', 'skills');
-        } else if ($user->company_id != null) {
-            $items = Workarea::withTrashed()->where('company_id', $user->company_id)->get()->load('company', 'skills');
+        parent::__construct(Workarea::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            if (Company::where('id', $request->company_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('company_id', $request->company_id);
         }
-        return response()->json(['success' => $items], $this->successStatus);
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    protected function storeItem(array $arrayRequest)
     {
-        $item = Workarea::where('id', $id)->first()->load('skills', 'company');
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'company_id' => 'required'
+        $item = Workarea::create([
+            'name' => $arrayRequest['name'],
+            'company_id' => $arrayRequest['company_id'],
+            'max_users' => $arrayRequest['max_users'],
         ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
+
+        $this->setSkills($item, $arrayRequest['skills']);
+
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
         }
-        $item = Workarea::create($arrayRequest)->load('company');
-        if (!empty($arrayRequest['skills'])) {
-            foreach ($arrayRequest['skills'] as $skill_id) {
-                WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
+
+        return $item;
+    }
+
+    protected function updateItem($item, array $arrayRequest)
+    {
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'company_id' => $arrayRequest['company_id'],
+            'max_users' => $arrayRequest['max_users']
+        ]);
+
+        $this->setSkills($item, $arrayRequest['skills']);
+
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocumentsByToken($item, $arrayRequest['token'], $item->company);
+        }
+
+        if (isset($arrayRequest['documents'])) {
+            $this->deleteUnusedDocuments($item, $arrayRequest['documents']);
+        }
+
+        return $item;
+    }
+
+    /**
+     * Sets the skills of the role.
+     */
+    protected function setSkills(Workarea $item, array $skillIds)
+    {
+        $ids = collect($skillIds);
+        foreach ($ids as $id) {
+            $skill = Skill::find($id);
+            if (!$skill) {
+                throw new ApiException("Compétence '{$id}' inconnue.");
+            }
+            if ($item->company_id != $skill->company_id) {
+                throw new ApiException("Accès non autorisé à la compétence {$id}.");
             }
         }
 
-        return response()->json(['success' => $item->load('skills')], $this->successStatus);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'company_id' => 'required'
-        ]);
-        $item = Workarea::find($id);
-        if ($item != null) {
-            $item->name = $arrayRequest['name'];
-            $item->company_id = $arrayRequest['company_id'];
-
-            WorkareasSkill::where('workarea_id', $item->id)->delete();
-            if (!empty($arrayRequest['skills'])) {
-                foreach ($arrayRequest['skills'] as $skill_id) {
-                    WorkareasSkill::create(['workarea_id' => $item->id, 'skill_id' => $skill_id]);
-                }
-            }
-            $item->save();
-        }
-        $item = Workarea::find($id)->load('skills', 'company');
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    /**
-     * Restore the specified resource in storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function restore($id)
-    {
-        $item = Workarea::withTrashed()->findOrFail($id)->restore();
-        if ($item) {
-            $item = Workarea::where('id', $id)->first()->load('skills', 'company');
-            return response()->json(['success' => $item], $this->successStatus);
-        }
-    }
-
-    /**
-     * Archive the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        $item = Workarea::findOrFail($id);
-        $item->delete();
-
-        $item = Workarea::withTrashed()->where('id', $id)->first()->load('skills', 'company');
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    /**
-     * forceDelete the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function forceDelete($id)
-    {
-        $item = Workarea::withTrashed()->findOrFail($id);
-        $item->forceDelete();
-        return response()->json(['success' => true], $this->successStatus);
+        $item->skills()->sync($skillIds);
     }
 }

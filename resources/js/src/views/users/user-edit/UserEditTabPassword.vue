@@ -16,38 +16,42 @@
       v-model="old_password"
       v-validate="'required'"
       name="old_password"
+      :danger="errors.has('old_password')"
+      :danger-text="errors.first('old_password')"
     />
-    <span
-      class="text-danger text-sm"
-      v-show="errors.has('old_password')"
-    >{{ errors.first('old_password') }}</span>
 
     <vs-input
+      ref="password"
       type="password"
       class="w-full mb-base"
       label-placeholder="Nouveau mot de passe"
-      v-model="new_password"
-      v-validate="'required'"
+      v-model="password"
+      v-validate="'required|min:8|max:50'"
       name="password"
+      :danger="errors.has('password')"
+      :danger-text="errors.first('password')"
     />
-    <span class="text-danger text-sm" v-show="errors.has('password')">{{ errors.first('password') }}</span>
 
     <vs-input
       type="password"
       class="w-full mb-base"
       label-placeholder="Confirmation mot de passe"
-      v-model="confirm_new_password"
-      v-validate="'required'"
-      name="password_confirm"
+      v-model="confirm_password"
+      v-validate="'required|min:8|max:50|confirmed:password|'"
+      name="confirm_password"
+      :danger="errors.has('confirm_password')"
+      :danger-text="errors.first('confirm_password')"
     />
-    <span
-      class="text-danger text-sm"
-      v-show="errors.has('password_confirm')"
-    >{{ errors.first('password_confirm') }}</span>
 
     <!-- Save & Reset Button -->
     <div class="flex flex-wrap items-center justify-end">
-      <vs-button class="ml-auto mt-2" @click="change_password" :disabled="!validateForm">Sauvegarder</vs-button>
+      <vs-button
+        class="ml-auto mt-2"
+        @click="change_password"
+        :disabled="!validateForm"
+      >
+        Sauvegarder
+      </vs-button>
     </div>
   </vx-card>
 </template>
@@ -57,16 +61,16 @@ export default {
   props: {
     data: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       old_password: "",
-      new_password: "",
-      confirm_new_password: "",
+      password: "",
+      confirm_password: "",
       data_local: JSON.parse(JSON.stringify(this.data)),
-      message: ""
+      message: "",
     };
   },
   computed: {
@@ -76,91 +80,64 @@ export default {
     validateForm() {
       return (
         !this.errors.any() &&
-        this.new_password !== "" &&
-        this.confirm_new_password !== "" &&
+        this.password !== "" &&
+        this.confirm_password !== "" &&
         this.old_password !== ""
       );
-    }
+    },
   },
   methods: {
     capitalize(str) {
       if (!str) return "";
       return str.slice(0, 1).toUpperCase() + str.slice(1, str.length);
     },
+
     change_password() {
-      this.active_error = false;
-      this.active_success = false;
-      //Check same new password's
-      if (
-        this.new_password !== "" &&
-        this.confirm_new_password !== "" &&
-        this.new_password === this.confirm_new_password
-      ) {
-        //Check old password
-        const itemLocal = {
-          id_user: this.data_local.id,
-          old_password: this.old_password,
-          new_password: this.new_password
-        };
-        this.$store
-          .dispatch("userManagement/updatePassword", itemLocal)
-          .then(data => {
-
-            if (data.data === "success" && data.status === 200) {
-
-              this.$vs.loading.close();
-              this.$vs.notify({
-                title: "Modification du mot de passe",
-                text: "Votre mot de passe a bien été changé.",
-                iconPack: "feather",
-                icon: "icon-alert-circle",
-                color: "success"
-              });
-            }
-          })
-          .catch(error => {
-
-            // Wrong format message
-            if (error.response.data === "error_format") {
-
-              this.message =
-                "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
-            }
-            // Wrong old password message
-            else if (error.response.data === "error_old_password") {
-
-              this.message =
-                "Votre ancien mot de passe ne correspond pas. Veuillez réessayer.";
-            }
-            // Unknown error message
-            else {
-
-              this.message =
-                "Une erreur est survenu, veuillez réessayer plus tard.";
-            }
-            this.$vs.loading.close();
-            this.$vs.notify({
-              title: "Modification du mot de passe",
-              text: this.message,
-              iconPack: "feather",
-              icon: "icon-alert-circle",
-              color: "danger"
-            });
+      //Check old password
+      const itemLocal = {
+        id_user: this.data_local.id,
+        old_password: this.old_password,
+        new_password: this.password,
+      };
+      this.$vs.loading();
+      this.$store
+        .dispatch("userManagement/updatePassword", itemLocal)
+        .then(() => {
+          this.$vs.notify({
+            title: "Modification du mot de passe",
+            text: "Votre mot de passe a bien été changé.",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "success",
           });
-      } else {
-
-        this.message =
-          "Les champs du nouveau mot de passe no sont pas identiques.";
-        this.$vs.loading.close();
-        this.$vs.notify({
-          title: "Modification du mot de passe",
-          text: this.message,
-          iconPack: "feather",
-          icon: "icon-alert-circle",
-          color: "danger"
-        });
-      }
-    }
-  }
+        })
+        .catch((error) => {
+          // Wrong format message
+          if (error.data === "error_format") {
+            this.message =
+              "Le nouveau mot de passe doit comporter au moins 8 carractères, avoir au moins une minuscule, une majuscule et au moins un chiffre.";
+          }
+          // Wrong old password message
+          else if (error.data === "error_old_password") {
+            this.message =
+              "Votre ancien mot de passe ne correspond pas. Veuillez réessayer.";
+          }
+          // Unknown error message
+          else {
+            this.message =
+              "Une erreur est survenu, veuillez réessayer plus tard.";
+          }
+          this.$vs.notify({
+            title: "Modification du mot de passe",
+            text: this.message,
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+            time: 10000,
+          });
+        })
+        .finally(() => this.$vs.loading.close());
+    },
+  },
 };
 </script>

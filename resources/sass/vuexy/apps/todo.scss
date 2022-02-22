@@ -35,11 +35,15 @@
 
     // TRANSITION
     .todo_todo-item {
+      
         transition: all .35s;
+        
     }
 
     .list-item-component {
+      
         transition: background-color .2s, transform .2s;
+        background-color: white;
         border-top: 1px solid #dae1e7;
         &:hover {
             // background-color: #eee;

@@ -8,66 +8,44 @@
             <span class="ml-2">Retour aux heures</span>
         </router-link>
 
-        <div class="vx-card p-6 mt-3 mb-5">
+        <div v-if="isAdmin || isManager" class="vx-card p-6 mt-3 mb-5">
             <div class="d-theme-dark-light-bg flex flex-row justify-start pb-3">
                 <feather-icon icon="FilterIcon" svgClasses="h-6 w-6" />
                 <h4 class="ml-3">Filtres</h4>
             </div>
             <div class="flex flex-wrap justify-center items-end">
-                <div class="mr-10" style="min-width: 15em">
-                    <v-select
+                <div v-if="isAdmin" class="mr-10" style="min-width: 15em">
+                    <infinite-select
+                        header="Société"
                         label="name"
-                        v-model="filters.company"
-                        :options="companiesData"
-                        v-bind:class="{
-                            disabled:
-                                activeUserRole() != 'superAdmin' ? true : false
-                        }"
-                        @input="refreshDataUsers"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div style="opacity: .8">Société</div>
-                        </template>
-                    </v-select>
+                        model="company"
+                        v-model="filters.company_id"
+                    />
                 </div>
                 <div style="min-width: 15em">
-                    <v-select
+                    <infinite-select
+                        header="Utilisateur"
                         label="lastname"
-                        v-model="filters.user"
-                        :options="usersData"
-                        v-bind:class="{
-                            disabled:
-                                !filters.company ||
-                                (activeUserRole() != 'superAdmin' &&
-                                    activeUserRole() != 'Administrateur')
-                                    ? true
-                                    : false
-                        }"
+                        model="user"
+                        v-model="filters.user_id"
+                        :item-fields="['lastname', 'firstname']"
+                        :item-text="
+                            item => `${item.lastname} ${item.firstname}`
+                        "
+                        :filters="usersFilter"
                         @input="refreshDataCalendar"
-                        class="w-full"
-                    >
-                        <!-- Finir le filtre -->
-                        <template #header>
-                            <div style="opacity: .8">Utilisateur</div>
-                        </template>
-                        <template #option="user">
-                            <span>
-                                {{ `${user.lastname} ${user.firstname}` }}
-                            </span>
-                        </template>
-                    </v-select>
+                    />
                 </div>
             </div>
         </div>
 
-        <div class="vx-card w-full p-6" v-if="filters.user">
+        <div class="vx-card w-full p-6" v-if="filters.user_id">
             <add-form
-                :activeAddPrompt="this.activeAddPrompt"
-                :clickDate="this.dateData"
-                :hours_list="this.hoursData"
+                :activeAddPrompt="activeAddPrompt"
+                :clickDate="dateData"
+                :hours_list="hoursData"
                 :handleClose="handleClose"
-                :user="filters.user"
+                :user="selectedUser"
             />
 
             <FullCalendar
@@ -76,7 +54,6 @@
                 ref="fullCalendar"
                 defaultView="timeGridWeek"
                 :editable="true"
-                :eventStartEditable="false"
                 :droppable="false"
                 :header="{
                     left: 'prev today next',
@@ -100,20 +77,23 @@
                 :weekNumbers="true"
                 :businessHours="businessHours"
                 :events="calendarEvents"
+                @eventDrop="handleEventDrop"
                 @dateClick="handleDateClick"
                 @eventClick="handleEventClick"
+                @eventResize="handleEventResize"
+                @datesRender="fetchHours"
             />
             <edit-form
                 :reload="calendarEvents"
                 :itemId="itemIdToEdit"
-                v-if="itemIdToEdit && authorizedToEdit"
+                :company="selectedCompany"
+                v-if="itemIdToEdit && authorizedTo('edit')"
             />
         </div>
     </div>
 </template>
 
 <script>
-import vSelect from "vue-select";
 import moment from "moment";
 
 import FullCalendar from "@fullcalendar/vue";
@@ -124,17 +104,21 @@ import interactionPlugin from "@fullcalendar/interaction";
 // Store Module
 import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
 
 // Component
 import EditForm from "./EditForm.vue";
 import AddForm from "./AddForm.vue";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // must manually include stylesheets for each plugin
 import "@fullcalendar/core/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
+import { colors } from "../../../themeConfig";
 
 var model = "schedule";
 var modelPlurial = "schedules";
@@ -143,11 +127,11 @@ var modelTitle = "Plannings";
 export default {
     components: {
         FullCalendar,
-        vSelect,
+        InfiniteSelect,
         AddForm,
         EditForm
     },
-    data: function() {
+    data() {
         return {
             calendarPlugins: [
                 // plugins must be defined in the JS
@@ -173,52 +157,148 @@ export default {
             maxTime: "24:00",
             // Filters
             filters: {
-                company:
-                    this.activeUserRole() != "superAdmin"
-                        ? this.$store.state.AppActiveUser.company
-                        : null,
-                user:
-                    this.activeUserRole() != "superAdmin"
-                        ? this.$store.state.AppActiveUser
-                        : null
+                company_id: null,
+                user_id: null
             }
         };
     },
     computed: {
+        usersFilter() {
+            return {
+                company_id: this.filters.company_id || 0
+            };
+        },
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
+        },
+        isManager() {
+            return this.$store.state.AppActiveUser.is_manager;
+        },
         itemIdToEdit() {
-            return this.$store.state.hoursManagement.hour.id || -1;
+            const item = this.$store.getters["hoursManagement/getSelectedItem"];
+            return item ? item.id : -1;
         },
         calendarEvents() {
-            return this.filters.user
-                ? this.$store.state.hoursManagement.hoursCalendar.filter(
-                      item => item.user_id === this.filters.user.id
-                  )
+            let finalHours = [];
+            let hours = this.filters.user_id
+                ? this.$store.getters[
+                      "hoursManagement/getCalendarItems"
+                  ].filter(item => item.user_id === this.filters.user_id)
                 : [];
-        },
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
-        },
-        usersData() {
-            return this.filters.company
-                ? this.$store.state.userManagement.users.filter(
-                      item => item.company_id === this.filters.company.id
-                  )
-                : [];
-        },
-        authorizedToEdit() {
-            return (
-                this.$store.getters.userHasPermissionTo(
-                    `edit ${modelPlurial}`
-                ) > -1
+            finalHours = hours;
+
+            let paidHolidays = this.$store.getters[
+                "unavailabilityManagement/getItems"
+            ].filter(item => item.reason === "Congés payés");
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    color: "#AEAEAE ",
+                    title: "Congés payés",
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user_id
+                });
+            });
+            paidHolidays = this.$store.getters[
+                "unavailabilityManagement/getItems"
+            ].filter(item => item.reason === "Jours fériés");
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    color: "#AEAEAE ",
+                    title: "Jours fériés",
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user_id
+                });
+            });
+            paidHolidays = this.$store.getters[
+                "unavailabilityManagement/getItems"
+            ].filter(item => item.reason === "Période de cours");
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    color: "#AEAEAE ",
+                    title: "Période de cours",
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user_id
+                });
+            });
+            paidHolidays = this.$store.getters[
+                "unavailabilityManagement/getItems"
+            ].filter(
+                item => item.reason === "Utilisation heures supplémentaires"
             );
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    color: "#AEAEAE ",
+                    title: "Utilisation heures supplémentaires",
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user_id
+                });
+            });
+            /*//Indispo "Autre"
+            let typeIndispo=["Heures supplémentaires payées",
+                            "Utilisation heures supplémentaires",
+                            "Jours fériés",
+                            "Rendez-vous privé",
+                            "Congés payés",
+                            "Période de cours",
+                            "Arrêt de travail"];
+            paidHolidays = this.$store.getters[
+                "unavailabilityManagement/getItems"
+            ].filter(
+                item => !typeIndispo.includes(item.reason)
+            );
+            paidHolidays.forEach(pH => {
+                finalHours.push({
+                    color: "#AEAEAE ",
+                    title: pH.reason,
+                    end: pH.ends_at,
+                    start: pH.starts_at,
+                    user_id: this.filters.user_id
+                });
+            });*/
+            //   console.log("calendarEvents -> finalHours", finalHours);
+            return finalHours;
         },
         hoursData() {
-            return this.$store.state.hoursManagement
-                ? this.$store.state.hoursManagement.hours
-                : null;
+            return this.$store.getters["hoursManagement/getItems"];
+        },
+        selectedCompany() {
+            return this.$store.getters["companyManagement/getItem"](
+                this.filters.company_id
+            );
+        },
+        selectedUser() {
+            return this.$store.getters["userManagement/getItem"](
+                this.filters.user_id
+            );
         }
     },
     methods: {
+        fetchHours() {
+            const { user_id } = this.filters;
+            if (user_id && this.$refs.fullCalendar) {
+                const calendarApi = this.$refs.fullCalendar.getApi();
+                const unit = calendarApi.view.viewSpec.singleUnit;
+                const date = moment(calendarApi.getDate()).format("DD-MM-YYYY");
+           
+                // Refresh hours
+                this.$store.dispatch("hoursManagement/fetchItems", {
+                    date,
+                    period_type: unit,
+                    user_id
+                });
+
+                // Refresh unavailabilities
+                this.$store.dispatch("unavailabilityManagement/fetchItems", {
+                    date,
+                    period_type: unit,
+                    user_id
+                });
+            }
+        },
         authorizedTo(action, model = "hours") {
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
@@ -233,8 +313,36 @@ export default {
             calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
         },
         handleDateClick(arg) {
-            this.activeAddPrompt = true;
+           
+            const period_start = moment(arg.dateStr).format(
+                "YYYY-MM-DD HH:mm:ss"
+            );
+            
+            const period_end = moment(arg.dateStr)
+                .add(30, "m")
+                .format("YYYY-MM-DD HH:mm:ss");
+        
+            var targetsEvent = this.calendarEvents.filter(
+                item =>
+                    moment(item.end).format("YYYY-MM-DD HH:mm:ss") >
+                        period_start &&
+                    moment(item.end).format("YYYY-MM-DD HH:mm:ss") < period_end
+            );
+            if (targetsEvent.length == 1) {
+                arg.dateStr = targetsEvent[0].end;
+            } else if (targetsEvent.length > 1) {
+                let lastEvent = null;
+                targetsEvent.forEach(element => {
+                    if (lastEvent == null || element.end > lastEvent.end) {
+                        lastEvent = element;
+                    }
+                });
+
+                arg.dateStr = lastEvent.end;
+            }
+
             this.dateData = arg;
+            this.activeAddPrompt = true;
         },
         handleEventClick(arg) {
             var targetEvent = this.calendarEvents.find(
@@ -247,42 +355,100 @@ export default {
                     console.error(err);
                 });
         },
+        handleEventResize(arg) {
+            var itemTemp = this.calendarEvents.find(
+                e => e.id.toString() === arg.event.id
+            );
+
+            var itemToSave = {
+                id: itemTemp.id,
+                description: itemTemp.description,
+                start_at: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                task_id: itemTemp.task_id,
+                date: moment(arg.event.start).format("YYYY-MM-DD")
+            };
+            this.$vs.loading();
+            this.$store
+                .dispatch("hoursManagement/updateItem", itemToSave)
+                .then(data => {
+                    //this.refresh();
+                })
+                .catch(err => {
+                    console.error(err);
+                })
+                .finally(() => {
+                    this.$vs.loading.close();
+                });
+        },
+        handleEventDrop(arg) {
+            var itemTemp = this.calendarEvents.find(
+                e => e.id.toString() === arg.event.id
+            );
+
+            var itemToSave = {
+                id: itemTemp.id,
+                description: itemTemp.description,
+                start_at: moment(arg.event.start).format("YYYY-MM-DD HH:mm:ss"),
+                end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
+                user_id: itemTemp.user_id,
+                project_id: itemTemp.project_id,
+                task_id: itemTemp.task_id,
+                date: moment(arg.event.start).format("YYYY-MM-DD")
+            };
+
+            this.$vs.loading();
+
+            this.$store
+                .dispatch("hoursManagement/addItem", itemToSave)
+                .then(data => {
+                    this.$vs.notify({
+                        title: "Ajout d'un horaire",
+                        text: `Horaire ajouté avec succès`,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success"
+                    });
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Une erreur est survenue",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                })
+                .finally(() => {
+                    this.$vs.loading.close();
+                });
+            this.handleClose();
+        },
         handleClose() {
-            this.calendarEvents = [];
-            let test = this.calendarEvents;
+            //   let test = this.calendarEvents;
 
             //this.refresh();
-            (this.activeAddPrompt = false), (this.dateData = {});
+            this.activeAddPrompt = false;
         },
         refreshDataUsers() {
-            this.filters.user = null;
+            this.filters.user_id = null;
         },
         refreshDataCalendar() {
-            const filter = {};
-            if (this.filters.company) {
-                filter.company_id = this.filters.company.id;
-            }
-            if (this.filters.company && this.filters.user) {
-                filter.user_id = this.filters.user.id;
-            }
             // get user work hours
             this.getBusinessHours();
-        },
-        activeUserRole() {
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                return user.roles[0].name;
-            }
-            return false;
+            this.fetchHours();
         },
         getBusinessHours() {
             this.$store
-                .dispatch("userManagement/fetchItem", this.filters.user.id)
-                .then(res => {
-                    let item = res.data.success;
+                .dispatch("userManagement/fetchItem", this.filters.user_id)
+                .then(data => {
+                    let item = data.payload;
                     if (item.work_hours.length > 0) {
                         let businessHours = [];
                         item.work_hours.forEach(wH => {
+                            
                             if (wH.is_active === 1) {
                                 if (
                                     wH.morning_starts_at !== null &&
@@ -318,6 +484,7 @@ export default {
                             let minHour = null;
                             let maxHour = null;
                             businessHours.forEach(bH => {
+                                
                                 if (
                                     minHour === null ||
                                     minHour > bH.startTime
@@ -336,13 +503,14 @@ export default {
                                           .subtract(2, "hour")
                                           .format("HH:mm")
                                     : "00:00";
+                                
                             this.maxTime =
                                 maxHour <= "22:00"
                                     ? moment(maxHour, "HH:mm")
                                           .add(2, "hour")
                                           .format("HH:mm")
                                     : "24:00";
-
+                              
                             this.businessHours = businessHours;
                         } else {
                             this.businessHours = false;
@@ -413,13 +581,24 @@ export default {
             );
             moduleProjectManagement.isRegistered = true;
         }
+
+        if (!moduleTaskManagement.isRegistered) {
+            this.$store.registerModule("taskManagement", moduleTaskManagement);
+            moduleTaskManagement.isRegistered = true;
+        }
+
+        if (!moduleUnavailabilityManagement.isRegistered) {
+            this.$store.registerModule(
+                "unavailabilityManagement",
+                moduleUnavailabilityManagement
+            );
+            moduleUnavailabilityManagement.isRegistered = true;
+        }
+
         if (!moduleUserManagement.isRegistered) {
             this.$store.registerModule("userManagement", moduleUserManagement);
             moduleUserManagement.isRegistered = true;
         }
-        this.$store.dispatch("hoursManagement/fetchItems").catch(err => {
-            this.manageErrors(err);
-        });
 
         if (this.authorizedTo("read", "companies")) {
             this.$store.dispatch("companyManagement/fetchItems").catch(err => {
@@ -431,22 +610,26 @@ export default {
                 console.error(err);
             });
         }
-        if (this.authorizedTo("read", "projects")) {
-            this.$store.dispatch("projectManagement/fetchItems");
-        }
-        if (this.filters.user) {
+
+        if (!this.isAdmin) {
+            this.filters.user_id = this.$store.state.AppActiveUser.id;
+            this.filters.company_id = this.$store.state.AppActiveUser.company_id;
             this.getBusinessHours();
         }
     },
     beforeDestroy() {
         moduleHourManagement.isRegistered = false;
         moduleProjectManagement.isRegistered = false;
+        moduleTaskManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
         moduleUserManagement.isRegistered = false;
+        moduleUnavailabilityManagement.isRegistered = false;
         this.$store.unregisterModule("hoursManagement");
         this.$store.unregisterModule("projectManagement");
+        this.$store.unregisterModule("taskManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("userManagement");
+        this.$store.unregisterModule("unavailabilityManagement");
     }
 };
 </script>

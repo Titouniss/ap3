@@ -2,367 +2,429 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
+use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
+use App\Models\Hours;
 use App\Models\Task;
-use App\Models\Hour;
+use App\Models\TaskPeriod;
 use App\Models\TasksBundle;
 use App\Models\Project;
 use App\Models\TaskComment;
 use App\Models\PreviousTask;
+use App\Models\Skill;
 use App\Models\TasksSkill;
+use App\Models\TaskTimeSpent;
+use App\Models\Workarea;
+use App\Traits\StoresDocuments;
+use App\User;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Auth;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-class TaskController extends Controller
+class TaskController extends BaseApiController
 {
-    public $successStatus = 200;
+    use StoresDocuments;
+
+    protected static $index_load = ['workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods'];
+    protected static $index_append = null;
+    protected static $show_load = ['workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods'];
+    protected static $show_append = null;
+
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'description' => 'nullable',
+        'order' => 'nullable',
+        'status' => 'required|in:todo,doing,done',
+        'date' => 'nullable',
+        'date_end' => 'nullable',
+        'estimated_time' => 'required',
+        'time_spent' => 'nullable',
+        'project_id' => 'required',
+        'token' => 'nullable',
+        'comment' => 'nullable',
+        'skills' => 'required|array',
+        'previous_task_ids' => 'nullable|array',
+        'user_id' => 'nullable',
+        'workarea_id' => 'nullable',
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'description' => 'nullable',
+        'order' => 'nullable',
+        'status' => 'required|in:todo,doing,done',
+        'date' => 'nullable',
+        'date_end' => 'nullable',
+        'estimated_time' => 'required',
+        'time_spent' => 'nullable',
+        'token' => 'nullable',
+        'skills' => 'required|array',
+        'previous_task_ids' => 'nullable|array',
+        'user_id' => 'nullable',
+        'workarea_id' => 'nullable',
+    ];
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        $user = Auth::user();
-        $items = Task::all()->load('project', 'comments', 'skills');
-        return response()->json(['success' => $items], $this->successStatus);
+        parent::__construct(Task::class);
     }
 
-    /**
-     * Display a listing of the resource by bundle.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getByBundle(int $bundle_id)
+    protected function filterIndexQuery(Request $request, $query)
     {
-        $items = Task::where('tasks_bundle_id', $bundle_id)->with('workarea', 'skills', 'comments', 'previousTasks', 'project')->get();
-        return response()->json(['success' => $items], $this->successStatus);
-    }
+        if ($request->has('workarea_id')) {
+            if (Workarea::where('id', $request->workarea_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'workarea_id' n'est pas valide.");
+            }
 
-    /**
-     * Display a listing of the resource by skill.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getBySkill(int $skill_id)
-    {
-        $items = TasksSkill::select('task_id')->where('skill_id', $skill_id)->get();
-        return response()->json(['success' => $items], $this->successStatus);
-    }
+            $query->where('workarea_id', $request->workarea_id);
+        }
 
-    /**
-     * Display a listing of the resource by skills.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getBySkills(Request $request)
-    {
-        $arrayRequest = $request->all();
+        if ($request->has('tasks_bundle_id')) {
+            if (TasksBundle::where('id', $request->tasks_bundle_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'tasks_bundle_id' n'est pas valide.");
+            }
 
-        $items = [];
-        if (!empty($arrayRequest)) {
-            foreach ($arrayRequest as $skill_id) {
-                $tasks_id = TasksSkill::select('task_id')->where('skill_id', $skill_id)->get();
+            $query->where('tasks_bundle_id', $request->tasks_bundle_id);
+        }
 
-                //check if task_id is not already in $items
-                foreach ($tasks_id as $t_id) {
-                    if (!in_array($t_id, $items)) {
-                        array_push($items, $t_id);
-                    }
-                }
+        if ($request->has('project_id')) {
+            if (Project::where('id', $request->project_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'project_id' n'est pas valide.");
+            }
+
+            $query->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                ->where('tasks_bundles.project_id', $request->project_id);
+        }
+
+        if ($request->has('skill_id')) {
+            if (Skill::where('id', $request->skill_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'skill_id' n'est pas valide.");
+            }
+
+            $query->join('tasks_skills', function ($join) use ($request) {
+                $join->on('tasks_skills.task_id', '=', 'task.id')
+                    ->where('tasks_skills.skill_id', $request->skill_id);
+            });
+        }
+
+        if ($request->has('skill_ids')) {
+            if (Skill::whereIn('id', $request->skill_ids)->doesntExist()) {
+                throw new ApiException("Paramètre 'skill_ids' n'est pas valide.");
+            }
+
+            $query->join('tasks_skills', function ($join) use ($request) {
+                $join->on('tasks_skills.task_id', '=', 'tasks.id')
+                    ->whereIn('tasks_skills.skill_id', $request->skill_ids);
+            });
+        }
+
+        if ($request->has('user_id')) {
+            if (User::where('id', $request->user_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'user_id' n'est pas valide.");
+            }
+
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->has('date')) {
+            try {
+                $date = Carbon::createFromFormat('d-m-Y', $request->date);
+                $query->whereDate('date', $date);
+            } catch (\Throwable $th) {
+                throw new ApiException("Paramètre 'date' n'est pas valide.");
             }
         }
-
-        return response()->json(['success' => $items], $this->successStatus);
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    protected function storeItem(array $arrayRequest)
     {
-        $item = Task::where('id', $id)->first()->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents');
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-
-        $controllerLog = new Logger('task');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('task arrayRequest', [$arrayRequest]);
-
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'estimated_time' => 'required',
-        ]);
-        if ($validator->fails()) {
-
-            $controllerLog = new Logger('task');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('task', ['ici 1']);
-
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-        $taskBundle = $this->checkIfTaskBundleExist($arrayRequest['project_id']);
-        if (!$taskBundle) {
-
-            $controllerLog = new Logger('task');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('task', ['ici 2']);
-
-            return response()->json(['error' => 'error'], 401);
-        }
-        $user = Auth::user();
-        $arrayRequest['created_by'] = $user->id;
-        $arrayRequest['tasks_bundle_id'] = $taskBundle->id;
-
         $project = Project::find($arrayRequest['project_id']);
-
-        if($project->status == 'doing'){
-
-            $date = Carbon::parse($arrayRequest['date']);
-            $start_at = $date->format('Y-m-d H:i:s');
-            $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
-
-            $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at);
-            $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at);
-
-            if(!$userAvailable && !$workareaAvailable){
-                return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);
-            }
-            elseif(!$userAvailable){
-                return response()->json(['error' => 'L\'utilisateur n\'est pas disponible durant cette période.'], $this->successStatus);
-            }
-            elseif(!$workareaAvailable){
-                return response()->json(['error' => 'L\'ilôt n\'est pas disponible durant cette période.'], $this->successStatus);
-            }
-        }
-        else if($project->status == 'done'){
-            return response()->json(['error' => 'Vous ne pouvez ajouter une tâche à un projet terminé.'], $this->successStatus);
+        if ($error = $this->itemErrors($project, 'read')) {
+            return $error;
         }
 
-        $item = Task::create($arrayRequest);
-        $this->storeComment($item->id, $arrayRequest['comment']);
-        $this->storeSkills($item->id, $arrayRequest['skills']);
-        $this->storePreviousTask($item->id, $arrayRequest['previousTasksIds']);
+        switch ($project->status) {
+            case 'done':
+                throw new ApiException('Vous ne pouvez ajouter une tâche à un projet terminé.');
+                break;
 
-        $item = Task::find($item->id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
+            case 'doing':
+                $date = Carbon::parse($arrayRequest['date']);
+                $start_at = $date->format('Y-m-d H:i:s');
+                $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
 
-        return response()->json(['success' => $item], $this->successStatus);
+                $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at);
+                $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at);
+                // Expected hours for this day
+                $day = $date->dayName;
+                $workDuration = HoursController::getTargetWorkHours($arrayRequest['user_id'], $day);
+                if ($workDuration === 0) {
+                    throw new ApiException("L'utilisateur n'a pas d'heures de travail prévues pour " . $day . ".");
+                }
+                if (!$userAvailable && !$workareaAvailable) {
+                    throw new ApiException('L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.');
+                } elseif (!$userAvailable) {
+                    throw new ApiException('L\'utilisateur n\'est pas disponible durant cette période.');
+                } elseif (!$workareaAvailable) {
+                    throw new ApiException('L\'ilôt n\'est pas disponible durant cette période.');
+                }
+                break;
+            default:
+                break;
+        }
+
+        $item = Task::create([
+            'name' => $arrayRequest['name'],
+            'description' => $arrayRequest['order'] ?? null,
+            'order' => $arrayRequest['order'] ?? null,
+            'status' => $arrayRequest['status'],
+            'date' => $arrayRequest['date'] ?? null,
+            'date_end' => $arrayRequest['date_end'] ?? null,
+            'estimated_time' => $arrayRequest['estimated_time'],
+            'project_id' => $arrayRequest['project_id'],
+            'user_id' => $arrayRequest['user_id'] ?? null,
+            'workarea_id' => $arrayRequest['workarea_id'] ?? null,
+            'tasks_bundle_id' => $this->checkIfTaskBundleExist($project->id)->id,
+            'created_by' => Auth::id(),
+        ]);
+
+
+        if ($project->status == 'doing') {
+            TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
+        }
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocumentsByToken($item, $arrayRequest['token'], $project->company);
+        }
+
+        $this->storeComment($item->id, $arrayRequest['comment'] ?? null);
+        $this->storeSkills($item->id, $arrayRequest['skills'] ?? null);
+        $this->storePreviousTask($item->id, $arrayRequest['previous_task_ids'] ?? null);
+
+        return $item;
+    }
+
+    protected function updateItem($item, array $arrayRequest)
+    {
+        $project = Project::find($arrayRequest['project_id']);
+        if ($error = $this->itemErrors($project, 'read')) {
+            return $error;
+        }
+
+        switch ($project->status) {
+            case 'done':
+                throw new ApiException('Vous ne pouvez ajouter une tâche à un projet terminé.');
+                break;
+
+            case 'doing':
+                $date = Carbon::parse($arrayRequest['date']);
+                $start_at = $date->format('Y-m-d H:i:s');
+                $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
+
+                $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $item->id);
+                $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $item->id);
+
+                if (!$userAvailable && !$workareaAvailable) {
+                    throw new ApiException('L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.');
+                } elseif (!$userAvailable) {
+                    throw new ApiException('L\'utilisateur n\'est pas disponible durant cette période.');
+                } elseif (!$workareaAvailable) {
+                    throw new ApiException('L\'ilôt n\'est pas disponible durant cette période.');
+                }
+                break;
+            default:
+                break;
+        }
+
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'description' => $arrayRequest['description'] ?? null,
+            'order' => $arrayRequest['order'] ?? null,
+            'status' => $arrayRequest['status'],
+            'date' => $arrayRequest['date'] ?? null,
+            'date_end' => $arrayRequest['date_end'] ?? null,
+            'estimated_time' => $arrayRequest['estimated_time'],
+            'user_id' => $arrayRequest['user_id'] ?? null,
+            'workarea_id' => $arrayRequest['workarea_id'] ?? null,
+        ]);
+
+
+        // if ($project->status == 'doing') {
+        //     TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
+        // }
+        if (isset($arrayRequest['token'])) {
+            $this->storeDocumentsByToken($item, $arrayRequest['token'], $project->company);
+        }
+
+        if (isset($arrayRequest['documents'])) {
+            $this->deleteUnusedDocuments($item, $arrayRequest['documents']);
+        }
+
+        $this->updateSkills($item->id, $arrayRequest['skills'] ?? null);
+        $this->updatePreviousTasks($item->id, $arrayRequest['previous_task_ids'] ?? null);
+
+        return $item;
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function addComment(Request $request, $id)
+    public function addComment(Request $request, int $id)
     {
         $item = Task::find($id);
+        if ($error = $this->itemErrors($item, 'edit')) {
+            return $error;
+        }
+
         $arrayRequest = $request->all();
-        $this->storeComment($id, $arrayRequest['comment']);
-        $item = Task::find($id)->load('comments');
-
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null){
-
-        $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
-
-        $userTasks = $task_id ? Task::where('user_id', $user_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get() 
-                                : Task::where('user_id', $user_id)->where('status', '!=', 'done')->get() ;
-
-        if(count($userTasks) > 0){
-
-            foreach($userTasks as $task){
-                $date = Carbon::parse($task->date);
-                $task->start_at = $date->format('Y-m-d H:i:s');
-                $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
-
-                $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
-
-                if($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)){
-                    return false;
-                }
-                else {return true;}
-            }
+        $validator = Validator::make($arrayRequest, ['comment' => 'required']);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
         }
-        else{return true;}
-    }
 
-    private function checkIfWorkareaAvailable($workarea_id, $start_at, $end_at, $task_id = null){
+        $this->storeComment($item->id, $request->comment);
 
-        $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
-
-        $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=',$task_id)->get() 
-                                  : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
-
-        if(count($workareaTasks) > 0){
-
-            foreach($workareaTasks as $task){
-                $date = Carbon::parse($task->date);
-                $task->start_at = $date->format('Y-m-d H:i:s');
-                $task->end_at = $date->addHours((int)$task->estimated_time)->format('Y-m-d H:i:s');
-                
-                $taskPeriod = CarbonPeriod::create($task->start_at, $task->end_at);
-
-                if($taskPeriod->contains($start_at) || $taskPeriod->contains($end_at) || $newTaskPeriod->contains($task->start_at) || $newTaskPeriod->contains($task->end_at)){
-                    return false;
-                }
-                else {return true;}
-            }
+        if (static::$show_load) {
+            $item->load(static::$show_load);
         }
-        else{return true;}
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        if (static::$show_append) {
+            $item->append(static::$show_append);
+        }
+
+        return $this->successResponse($item, 'Commentaire ajouté avec succès');
     }
 
     /**
      * Update part of the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function updatePartial(Request $request, $id)
+    public function updatePartial(Request $request, int $id)
     {
-        $arrayRequest = $request->all();
+        $item = Task::find($id);
+        if ($error = $this->itemErrors($item, 'edit')) {
+            return $error;
+        }
 
+        $arrayRequest = $request->all();
         $validator = Validator::make($arrayRequest, [
             'time_spent' => 'required',
-            'notify' => 'required'
+            'notify' => 'required',
+            'comment' => 'nullable'
         ]);
+        if ($validator->fails()) {
+            return $this->errorResponse($validator->errors());
+        }
 
-        $update = Task::where('id', $id)
-            ->update([
-                'time_spent' => $arrayRequest['time_spent'],
-            ]);
 
         if (isset($arrayRequest['comment'])) {
-            $this->storeComment((int) $id, $arrayRequest['comment'], $arrayRequest['notify']);
+            $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
         }
 
-
-        if ($update) {
-            $item = Task::find($id)->load('project:name,status', 'skills:name', 'user', 'workarea', 'comments', 'documents');
-            return response()->json(['success' => $item], $this->successStatus);
-        } else {
-            return response()->json(['error' => 'error'], $this->errorStatus);
+        if (static::$show_load) {
+            $item->load(static::$show_load);
         }
+
+        if (static::$show_append) {
+            $item->append(static::$show_append);
+        }
+
+        return $this->successResponse($item, 'Mise à jour terminée avec succès');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
+    private function checkIfUserAvailable($user_id, $start_at, $end_at, $task_id = null)
     {
-        $arrayRequest = $request->all();
+        $available = true;
+        $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
 
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'estimated_time' => 'required',
-        ]);
+        $userTasks = $task_id ? Task::where('user_id', $user_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
+            : Task::where('user_id', $user_id)->where('status', '!=', 'done')->get();
 
-        // Pour un projet en cours, on regarde si la date et l'ilot sont dispo 
-        $project = Project::find($arrayRequest['project_id']);
+        if (count($userTasks) > 0) {
 
-        if($project->status == 'doing'){
+            foreach ($userTasks as $task) {
 
-            $date = Carbon::parse($arrayRequest['date']);
-            $start_at = $date->format('Y-m-d H:i:s');
-            $end_at = $date->addHours((int)$arrayRequest['estimated_time'])->format('Y-m-d H:i:s');
+                if ($available) {
+                    foreach ($task->periods as $task_period) {
 
-            $userAvailable = $this->checkIfUserAvailable($arrayRequest['user_id'], $start_at, $end_at, $id);
-            $workareaAvailable = $this->checkIfWorkareaAvailable($arrayRequest['workarea_id'], $start_at, $end_at, $id);
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
 
-            if(!$userAvailable && !$workareaAvailable){
-                return response()->json(['error' => 'L\'utilisateur et l\'ilôt ne sont pas disponibles durant cette période.'], $this->successStatus);
-            }
-            elseif(!$userAvailable){
-                return response()->json(['error' => 'L\'utilisateur n\'est pas disponible durant cette période.'], $this->successStatus);
-            }
-            elseif(!$workareaAvailable){
-                return response()->json(['error' => 'L\'ilôt n\'est pas disponible durant cette période.'], $this->successStatus);
+                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) ||
+                            ($period->contains($end_at) && $period->getStartDate() != $end_at) ||
+                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) ||
+                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)
+                        ) {
+                            $available = false;
+                            break;
+                        }
+                    }
+                }
             }
         }
-        else if($project->status == 'done'){
-            return response()->json(['error' => 'Vous ne pouvez ajouter une tâche à un projet terminé.'], $this->successStatus);
-        }
-
-
-        $update = Task::where('id', $id)
-            ->update([
-                'name' => $arrayRequest['name'],
-                'date' => $arrayRequest['date'],
-                'estimated_time' => $arrayRequest['estimated_time'],
-                'order' => $arrayRequest['order'],
-                'description' => $arrayRequest['description'],
-                'time_spent' => $arrayRequest['time_spent'],
-                'workarea_id' => $arrayRequest['workarea_id'],
-                'status' => $arrayRequest['status'],
-                'user_id' => $arrayRequest['user_id']
-            ]);
-
-        if (isset($arrayRequest['skills']) && isset($arrayRequest['previousTasksIds'])) {
-            $this->updateSkills($id, $arrayRequest['skills']);
-            $this->updatePreviousTasks($id, $arrayRequest['previousTasksIds']);
-        }
-
-
-        if ($update) {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
-            return response()->json(['success' => $item], $this->successStatus);
-        } else {
-            $item = Task::find($id)->load('workarea', 'skills', 'comments', 'previousTasks', 'project');
-            return response()->json(['error' => 'error'], $this->errorStatus);
-        }
+        return $available;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
+    private function checkIfWorkareaAvailable($workarea_id, $start_at, $end_at, $task_id = null)
     {
-        $item = Task::findOrFail($id);
-        $item->delete();
-        return response()->json(['success' => true], $this->successStatus);
-    }
+        $available = true;
+        $newTaskPeriod = CarbonPeriod::create($start_at, $end_at);
 
+        $workareaTasks = $task_id ? Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->where('id', '!=', $task_id)->get()
+            : Task::where('workarea_id', $workarea_id)->where('status', '!=', 'done')->get();
+        $workarea = Workarea::where('id', $workarea_id)->get();
+        $max_users = $workarea[0]['max_users'];
+        $nb_tasks = 0;
+
+        if (count($workareaTasks) > 0) {
+
+            if ($max_users == 1) {
+                foreach ($workareaTasks as $task) {
+                    if ($available) {
+                        foreach ($task->periods as $task_period) {
+
+                            $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+
+                            if (($period->contains($start_at) && $period->getEndDate() != $start_at) ||
+                                ($period->contains($end_at) && $period->getStartDate() != $end_at) ||
+                                ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) ||
+                                ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)
+                            ) {
+                                $available = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                foreach ($workareaTasks as $task) {
+                    foreach ($task->periods as $task_period) {
+                        $period = CarbonPeriod::create($task_period->start_time, $task_period->end_time);
+                        if (($period->contains($start_at) && $period->getEndDate() != $start_at) ||
+                            ($period->contains($end_at) && $period->getStartDate() != $end_at) ||
+                            ($newTaskPeriod->contains($task_period->start_time) && $newTaskPeriod->getEndDate() != $task_period->start_time) ||
+                            ($newTaskPeriod->contains($task_period->end_time) && $newTaskPeriod->getStartDate() != $task_period->end_time)
+                        ) {
+                            $nb_tasks++;
+                        }
+                    }
+                }
+                if ($nb_tasks >= $max_users) {
+                    $available = false;
+                }
+            }
+        }
+        return $available;
+    }
 
     private function checkIfTaskBundleExist(int $project_id)
     {
@@ -379,7 +441,7 @@ class TaskController extends Controller
 
     private function storeComment(int $task_id, $comment, $confirmed = true)
     {
-        if ($comment != '' && $task_id) {
+        if ($comment != null && $comment != '' && $task_id) {
             $user = Auth::user();
             TaskComment::create(['description' => $comment, 'confirmed' => !!$confirmed, 'task_id' => $task_id, 'created_by' => $user->id]);
         }
@@ -421,5 +483,104 @@ class TaskController extends Controller
                 PreviousTask::create(['task_id' => $task_id, 'previous_task_id' => $id]);
             }
         }
+    }
+
+
+
+    /**
+     * Display a listing of comments.
+     */
+    public function comments(Request $request)
+    {
+        try {
+            if ($error = $this->permissionErrors('read')) {
+                return $error;
+            }
+
+            $query = TaskComment::select('task_comments.*');
+
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                if ($user->is_manager) {
+                    $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
+                        ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                        ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
+                        ->where('projects.company_id', $user->company_id);
+                } else {
+                    $query->join('tasks', 'task_comments.task_id', '=', 'tasks.id')
+                        ->join('tasks_bundles', 'tasks.tasks_bundle_id', '=', 'tasks_bundles.id')
+                        ->join('projects', 'tasks_bundles.project_id', '=', 'projects.id')
+                        ->where('task_comments.created_by', $user->id);
+                }
+            }
+
+            $extra = collect([]);
+
+            if ($request->has('order_by')) {
+                try {
+                    $direction = 'asc';
+                    if ($request->has('order_by_desc')) {
+                        $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
+                    }
+
+                    $query->orderBy($request->order_by, $direction);
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramètre 'order_by' n'est pas valide.");
+                }
+            }
+
+            if ($request->has('q') && $request->q) {
+                try {
+                    $query->where('description', 'like', "%{$request->q}%");
+                } catch (\Throwable $th) {
+                    throw new ApiException("Paramêtre 'q' n'est pas valide.");
+                }
+            }
+
+            if ($request->has('page')) {
+                if (!is_numeric($request->page)) {
+                    throw new ApiException("Paramètre 'page' doit être un nombre.");
+                }
+
+                $per_page = static::$per_page;
+                if ($request->has('per_page')) {
+                    if (!is_numeric($request->per_page)) {
+                        throw new ApiException("Paramètre 'per_page' doit être un nombre.");
+                    }
+                    $per_page = $request->per_page;
+                }
+
+                $current_page = $request->page;
+                $paginator = $query->paginate($per_page, $current_page);
+
+                $pageParameter = 'page=' . $current_page;
+                $extra->put('pagination', [
+                    'first_page_url' => str_replace($pageParameter, 'page=1', $request->fullUrl()),
+                    'prev_page_url' => !$paginator->onFirstPage() ? str_replace($pageParameter, 'page=' . ($current_page - 1), $request->fullUrl()) : null,
+                    'next_page_url' => $current_page < $paginator->lastPage() ? str_replace($pageParameter, 'page=' . ($current_page + 1), $request->fullUrl()) : null,
+                    'last_page_url' => str_replace($pageParameter, 'page=' . $paginator->lastPage(), $request->fullUrl()),
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'count' => $paginator->count(),
+                    'total' => $paginator->total()
+                ]);
+            }
+            //commentaire dashboard liaison entre le commentaire -> la tâche -> le projet
+            $query->with('task', 'task.project')->get();
+
+            $items = $query->get();
+
+            return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
+    }
+    public function getTask(int $id)
+    {
+        $extra = collect([]);
+        $task = Task::where('id', $id)->first();
+        return $this->successResponse($task, 'Chargement terminé avec succès.', $extra->toArray());
     }
 }

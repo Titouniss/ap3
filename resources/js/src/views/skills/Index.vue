@@ -40,33 +40,17 @@
                     <vs-row vs-type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord()"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="skill"
+                            model-plurial="skills"
+                            :items="selectedItems"
+                            :foot-notes="{
+                                restore: restoreFootNote,
+                                archive: archiveFootNote,
+                                delete: deleteFootNote
+                            }"
+                            @on-action="onAction"
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -147,6 +131,7 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -159,7 +144,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -175,16 +159,21 @@ import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.j
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 var modelTitle = "Compétence";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
         AddForm,
         EditForm,
 
@@ -192,9 +181,11 @@ export default {
         CellRendererLink,
         CellRendererActions,
         CellRendererRelations,
+        CellRendererItemsList,
 
         // Components
-        RefreshModule
+        RefreshModule,
+        MultipleActions
     },
     data() {
         return {
@@ -225,8 +216,18 @@ export default {
                     filter: true
                 },
                 {
+                    headerName: "Utilisateurs",
+                    field: "users",
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        reduce: item =>
+                            `${item.lastname.toUpperCase()} ${item.firstname}`
+                    }
+                },
+                {
                     headerName: "Société",
                     field: "company",
+                    hide: !this.$store.state.AppActiveUser.is_admin,
                     filter: true,
                     cellRendererFramework: "CellRendererRelations"
                 },
@@ -241,7 +242,11 @@ export default {
                         modelPlurial: "skills",
                         name: data => `la compétence ${data.name}`,
                         withPrompt: true,
-                        linkedTables: ["tâches", "gammes"]
+                        footNotes: {
+                            restore: this.restoreFootNote(false),
+                            archive: this.archiveFootNote(false),
+                            delete: this.deleteFootNote(false)
+                        }
                     }
                 }
             ],
@@ -289,122 +294,6 @@ export default {
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
         },
-        confirmDeleteRecord() {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let workareas = this.$store.state.workareaManagement.workareas;
-
-            let selected_skills_id = [];
-            selectedRow.forEach(row => {
-                selected_skills_id.push(row.id);
-            });
-
-            // Check if the skills are in an workarea
-            let haveSkill = [];
-            if (workareas) {
-                workareas.forEach(w => {
-                    if (w.skills) {
-                        w.skills.forEach(ws => {
-                            if (
-                                selected_skills_id.find(ssi => ssi === ws.id) &&
-                                haveSkill.find(hs => hs.id === w.id) ===
-                                    undefined
-                            ) {
-                                haveSkill.push({ id: w.id, name: w.name });
-                            }
-                        });
-                    }
-                });
-            }
-
-            // Check if the skills are in an task
-            this.$store
-                .dispatch(
-                    "taskManagement/fetchItemsBySkills",
-                    selected_skills_id
-                )
-                .then(data => {
-                    if (data && data.data.success) {
-                        let tasks = data.data.success;
-
-                        let message = "";
-                        if (haveSkill.length > 0 && tasks.length > 0) {
-                            message =
-                                selectedRow.length > 1
-                                    ? "Ces compétences sont utilisées dans des îlots et des tâches. Voulez vous vraiment les supprimer ?"
-                                    : "La compétences " +
-                                      selectedRow[0].name +
-                                      " est utilisées dans des îlots et des tâches. Voulez vous vraiment la supprimer ?";
-                        } else if (tasks.length > 0) {
-                            message =
-                                selectedRow.length > 1
-                                    ? "Ces compétences sont utilisées dans des tâches. Voulez vous vraiment les supprimer ?"
-                                    : "La compétences " +
-                                      selectedRow[0].name +
-                                      " est utilisée dans des tâches. Voulez vous vraiment la supprimer ?";
-                        } else if (haveSkill.length > 0) {
-                            message =
-                                selectedRow.length > 1
-                                    ? "Ces compétences sont est utilisées dans des îlots. Voulez vous vraiment les supprimer ?"
-                                    : "La compétences " +
-                                      selectedRow[0].name +
-                                      " est est utilisée dans des îlots. Voulez vous vraiment la supprimer ?";
-                        }
-
-                        if (message !== "") {
-                            this.$vs.dialog({
-                                type: "confirm",
-                                color: "danger",
-                                title: "Confirmer suppression",
-                                text: message,
-                                accept: this.deleteRecord,
-                                acceptText: "Supprimer",
-                                cancelText: "Annuler"
-                            });
-                        } else {
-                            this.$vs.dialog({
-                                type: "confirm",
-                                color: "danger",
-                                title: "Confirmer suppression",
-                                text:
-                                    selectedRow.length > 1
-                                        ? `Voulez vous vraiment supprimer ces compétence ?`
-                                        : `Voulez vous vraiment supprimer la compétence ${selectedRow[0].name} ?`,
-                                accept: this.deleteRecord,
-                                acceptText: "Supprimer",
-                                cancelText: "Annuler"
-                            });
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                });
-        },
-        deleteRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("skillManagement/forceRemoveItem", selectRow.id)
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess(selectedRowLength);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-        },
-        showDeleteSuccess(selectedRowLength) {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    selectedRowLength > 1
-                        ? `Compétences supprimées`
-                        : `Compétence supprimée`
-            });
-        },
         onResize(event) {
             if (this.gridApi) {
                 // refresh the grid
@@ -413,6 +302,21 @@ export default {
                 // resize columns in the grid to fit the available space
                 this.gridApi.sizeColumnsToFit();
             }
+        },
+        restoreFootNote(multiple) {
+            return multiple
+                ? "Si vous restaurez les compétences elles seront utilisées à nouveau par les pôles de production, les tâches et les utilisateurs associés."
+                : "Si vous restaurez la compétence elle sera utilisée à nouveau par les pôles de production, les tâches et les utilisateurs associés.";
+        },
+        archiveFootNote(multiple) {
+            return multiple
+                ? "Si vous archivez les compétences elles ne seront plus utilisées par les pôles de production, les tâches et les utilisateurs associés."
+                : "Si vous archivez la compétence elle ne sera plus utilisée par les pôles de production, les tâches et les utilisateurs associés.";
+        },
+        deleteFootNote(multiple) {
+            return multiple
+                ? "Si vous supprimez les compétences elles ne seront plus associées à ses pôles de production, ses tâches et ses utilisateurs."
+                : "Si vous supprimez la compétence elle ne sera plus associée à ses pôles de production, ses tâches et ses utilisateurs.";
         }
     },
     mounted() {
@@ -470,9 +374,15 @@ export default {
             moduleTaskManagement.isRegistered = true;
         }
 
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        this.$store
+            .dispatch("skillManagement/fetchItems", {
+                loads: ["users", "company"],
+                order_by: "name",
+                with_trashed: true
+            })
+            .catch(err => {
+                console.error(err);
+            });
         if (this.authorizedTo("read", "companies")) {
             this.$store.dispatch("companyManagement/fetchItems").catch(err => {
                 console.error(err);
@@ -481,9 +391,9 @@ export default {
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
-        this.$store.dispatch("taskManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        // this.$store.dispatch("taskManagement/fetchItems").catch(err => {
+        //     console.error(err);
+        // });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

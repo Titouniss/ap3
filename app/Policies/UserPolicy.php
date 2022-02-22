@@ -5,30 +5,64 @@ namespace App\Policies;
 use App\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class UserPolicy
+class UserPolicy extends BasePolicy
 {
     use HandlesAuthorization;
+
     /**
-     * Determine whether the user can view any models.
+     * Create a new policy instance.
      *
-     * @param  \App\User  $user
-     * @param  \App\User  $model
-     * @return mixed
+     * @return void
      */
-    public function read(User $user, User $model)
+    public function __construct()
     {
-        return $user->id == $model->id || $user->can('read users');
+        parent::__construct('users', 'company_id');
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determine whether the item can view the item.
      *
      * @param  \App\User  $user
-     * @param  \App\User  $model
-     * @return mixed
+     * @param  \App\User  $item
+     * @return boolean
      */
-    public function edit(User $user, User $model)
+    public function show(User $user, User $item)
     {
-        return $user->id == $model->id || $user->can('edit users');
+        return $this->canShow($user, $item) || (!$item->exists || $user->id == $item->id);
+    }
+
+    /**
+     * Determine whether the item can publish an item.
+     *
+     * @param  \App\User  $user
+     * @return boolean
+     */
+    public function publish(User $user)
+    {
+        return $this->canPublish($user);
+    }
+
+    /**
+     * Determine whether the item can edit the item.
+     *
+     * @param  \App\User  $user
+     * @param  \App\User  $item
+     * @return boolean
+     */
+    public function edit(User $user, User $item)
+    {
+        return $this->canEdit($user, $item) || (!$item->exists || $user->id == $item->id);
+    }
+
+    /**
+     * Determine whether the item can delete the item.
+     *
+     * @param  \App\User  $user
+     * @param  \App\User  $item
+     * @return boolean
+     */
+    public function delete(User $user, User $item)
+    {
+        return $this->canDelete($user, $item) || (!$item->exists || $user->id != $item->id);
     }
 }

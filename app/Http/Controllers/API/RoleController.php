@@ -2,127 +2,118 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exceptions\ApiException;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
-use App\Http\Controllers\Controller;
-use App\User;
-
+use App\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
-use Validator;
-
-class RoleController extends Controller
+class RoleController extends BaseApiController
 {
-    public $successStatus = 200;
+    protected static $index_load = ['company:companies.id,name'];
+    protected static $index_append = null;
+    protected static $show_load = ['company:companies.id,name', 'permissions'];
+    protected static $show_append = null;
 
-    /** 
-     * list of items api 
-     * 
-     * @return \Illuminate\Http\Response 
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'description' => 'nullable',
+        // 'company_id' => 'required',
+        'is_public' => 'required',
+        'permissions' => 'required|array'
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'description' => 'nullable',
+        // 'company_id' => 'required',
+        'is_public' => 'required',
+        'permissions' => 'required|array'
+    ];
+
+    /**
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
+    {
+        parent::__construct(Role::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
     {
         $user = Auth::user();
-        $listObject = [];
-        if ($user->hasRole('superAdmin')) {
-            $listObject = Role::all()->load('permissions');
-        } else if ($user->company_id != null) {
-            $listObject = Role::where('company_id', $user->company_id)
-                ->orWhere(function ($query) {
-                    $query->where('company_id', '=', null)
-                        ->where('isPublic', true);
-                })->get()->load('permissions');
+        if (!$user->is_admin) {
+            $query->orWhere('is_public', true);
         }
-        return response()->json(['success' => $listObject], $this->successStatus);
+
+        if ($request->has('company_id')) {
+            if (Company::where('id', $request->company_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where(function ($q) use ($request) {
+                $q->where('company_id', $request->company_id)
+                    ->orWhere('is_public', true);
+            });
+        }
     }
 
-    /** 
-     * get single item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */
-    public function show($id)
-    {
-        $item = Role::where('id', $id)->first()->load('permissions');
-        return response()->json(['success' => $item], $this->successStatus);
-    }
-
-    /** 
-     * create item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */
-    public function store(Request $request)
+    protected function storeItem(array $arrayRequest)
     {
         $user = Auth::user();
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-        $permissions = $arrayRequest['permissions'];
 
-        // add permissions index for companies and permissions
-        $require_permissions = Permission::select('id')->where('name', 'read permissions')->orWhere('name', 'read companies')->get();
-        foreach ($require_permissions as $key => $rp) {
-            $id_perm = strval($rp->id);
-            if (in_array($id_perm, $permissions) == false) {
-                array_push($permissions, $id_perm);
-            }
-        }
-        sort($permissions);
-        
-        unset($arrayRequest['permissions']);
-        if ($user != null) {
-            $arrayRequest['company_id'] = $user->company_id;
-            $item = Role::create($arrayRequest);
-            if ($item != null) {
-                if (isset($permissions)) {
-                    $item->syncPermissions($permissions);
-                }
-            }
-            return response()->json(['success' => $item], $this->successStatus);
-        }
-        return response()->json(['success' => 'notAuthentified'], 500);
+        $item = Role::create([
+            'name' => $arrayRequest['name'],
+            'description' => $arrayRequest['description'],
+            'company_id' => $user->company_id,
+            'is_public' => $arrayRequest['is_public'] && $user->is_admin,
+            'guard_name' => 'web'
+        ]);
+
+        $this->setPermissions($item, $arrayRequest['permissions']);
+
+        return $item;
     }
 
-    /** 
-     * update item api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */
-    public function update(Request $request, $id)
+    protected function updateItem($item, array $arrayRequest)
     {
-        $arrayRequest = $request->all();
+        $user = Auth::user();
 
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required'
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'description' => $arrayRequest['description'],
+            'company_id' => $user->company_id,
+            'is_public' => $arrayRequest['is_public'] && $user->is_admin,
+            'guard_name' => 'web'
         ]);
-        $role = Role::where('id', $id)->first();
-        if ($role != null) {
-            $role->name = $arrayRequest['name'];
-            $role->description = $arrayRequest['description'];
-            $role->isPublic = $arrayRequest['isPublic'];
-            if (isset($arrayRequest['permissions'])) {
-                $role->syncPermissions($arrayRequest['permissions']);
-            }
-            $role->save();
-        }
-        return response()->json(['success' => $role], $this->successStatus);
+
+        $this->setPermissions($item, $arrayRequest['permissions']);
+
+        return $item;
     }
 
-    /** 
-     * delete item api 
-     * 
-     * @return \Illuminate\Http\Response 
+    /**
+     * Sets the permissions of the role.
      */
-    public function destroy($id)
+    protected function setPermissions(Role $item, array $permissionIds)
     {
-        $item = Role::where('id', $id)->delete();
-        return response()->json(['success' => $item], $this->successStatus);
+        $user = Auth::user();
+
+        $ids = collect($permissionIds);
+        foreach ($ids as $id) {
+            $permission = Permission::find($id);
+            if (!$permission) {
+                throw new ApiException("Permission '{$id}' inconnue.");
+            }
+            if (!$user->permissions->contains(function ($perm) use ($id) {
+                return $perm->id == $id;
+            })) {
+                throw new ApiException("Accès non autorisé à la permission {$id}.");
+            }
+        }
+
+        $permissionIds = array_merge($permissionIds, Permission::whereIn('name_fr', ['bugs'])->pluck('id')->toArray());
+        $item->syncPermissions($permissionIds);
     }
 }

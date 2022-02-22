@@ -1,12 +1,15 @@
 @component('mail::message')
 {{-- Greeting --}}
+<div style="text-align: center; padding: 25px">
+    <a href="https://numidev.fr"><img src="{{ asset('images/logo/logo.png') }}" alt="Plannigo Logo" width="100" height="auto"></a>
+</div>
 @if (! empty($greeting))
-# {{ $greeting }}
+ {{ $greeting }}
 @else
 @if ($level === 'error')
-# @lang('Whoops!')
+ @lang('Whoops!')
 @else
-# @lang('Hello!')
+ @lang('Hello!')
 @endif
 @endif
 
@@ -43,7 +46,7 @@
 @if (! empty($salutation))
 {{ $salutation }}
 @else
-{{ config('app.name') }}
+
 @endif
 
 
@@ -56,9 +59,9 @@
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                     <td style="text-align: left; padding-right: 10px;">
-                        <h3>A propos</h3>
-                        <p>Numidev est une société de développement informatique spécialisé dans la création d'applications web et mobile, logiciels, sites web sur mesure, maintenance & hébergement. Nous accompagnons les entreprises dans leur transformation digitale et numérique. Vous avez une idée ou un projet numérique ? Contactez-nous pour échanger.</p>
-                    </td>
+                        <h3>À propos</h3>
+                        <p>Plannigo est une application web et mobile qui vous permet de gérer votre société, vos salariés ainsi que vos projets. Vous êtes intéressé ? Contactez-nous pour échanger.</p>
+                    </td> 
                 </tr>
             </table>
         </td>
@@ -67,10 +70,8 @@
                 <tr>
                     <td style="text-align: left; padding-left: 5px; padding-right: 5px;">
                         <h3>Contact</h3>
-                        <ul>
-                            <li><p>12 Rue du Val de Mayenne, 53000 Laval<p></li>
-                            <li style="margin-top: 15px"><span style="font-size: 0.8em">02 43 53 86 97</span></a></li>
-                        </ul>
+                        <p>Batiment H - rue Louis de Broglie, 53810 Changé<p>
+                        <p style="font-size: 0.8em; margin-top: -15px">06.43.94.43.77</p>
                     </td>
                 </tr>
             </table>

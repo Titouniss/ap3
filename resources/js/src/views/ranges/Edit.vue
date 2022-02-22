@@ -20,7 +20,7 @@
                 ><router-link
                     :to="{ name: 'ranges' }"
                     class="text-inherit underline"
-                    >Toutes les games</router-link
+                    >Toutes les gammes</router-link
                 >
             </span>
         </vs-alert>
@@ -109,9 +109,9 @@
                                     </vs-td>
 
                                     <vs-td :data="data[indextr]">
-                                        <CellRendererActions
+                                        <cell-renderer-actions
                                             :item="data[indextr]"
-                                        ></CellRendererActions>
+                                        />
                                     </vs-td>
                                 </vs-tr>
                             </template>
@@ -127,15 +127,17 @@
                             class="ml-auto mt-2"
                             @click="save_changes"
                             :disabled="!validateForm"
-                            >Modifier</vs-button
                         >
+                            Modifier
+                        </vs-button>
                         <vs-button
                             class="ml-4 mt-2"
                             type="border"
                             color="warning"
                             @click="back"
-                            >Annuler</vs-button
                         >
+                            Annuler
+                        </vs-button>
                     </div>
                 </div>
             </div>
@@ -149,8 +151,6 @@
 </template>
 
 <script>
-import lodash from "lodash";
-
 //Repetitive Task
 import AddForm from "./repetitives-tasks/AddForm.vue";
 import EditForm from "./repetitives-tasks/EditForm.vue";
@@ -158,10 +158,10 @@ import CellRendererActions from "./repetitives-tasks/cell-renderer/CellRendererA
 
 // Store Module
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
-import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
+import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
 var model = "range";
 var modelPlurial = "ranges";
@@ -182,52 +182,55 @@ export default {
     },
     computed: {
         repetitiveTasksData() {
-            let repetitivesTasks = this.$store.state.repetitiveTaskManagement
-                .repetitivesTasks;
-
-            repetitivesTasks.forEach(task => {
+            const items = this.$store.getters[
+                "repetitiveTaskManagement/getItems"
+            ].map(task => {
                 if (task.skills.length > 0) {
                     let skillsNames = "";
                     task.skills.forEach(skill_id => {
-                        const skills = this.$store.state.skillManagement.skills;
-                        let skill = skills.find(s => s.id == parseInt(skill_id))
-                            .name;
-                        skillsNames = skill
-                            ? skillsNames == ""
-                                ? skill
-                                : skillsNames + " | " + skill
-                            : skillsNames;
+                        const skill = this.$store.getters[
+                            "skillManagement/getItem"
+                        ](parseInt(skill_id));
+
+                        if (skill) {
+                            skillsNames =
+                                skillsNames == ""
+                                    ? skill.name
+                                    : skillsNames + " | " + skill.name;
+                        }
                     });
                     task.skillsNames = skillsNames;
                 }
+                return task;
             });
-
-            return repetitivesTasks;
+            items.sort((a, b) => a.order - b.order);
+            return items;
         },
         validateForm() {
             return !this.errors.any();
         },
         itemIdToEdit() {
             return (
-                this.$store.state.repetitiveTaskManagement.repetitivesTask.id ||
-                0
+                this.$store.getters["repetitiveTaskManagement/getSelectedItem"]
+                    .id || 0
             );
         }
     },
     methods: {
-        fetch_data(id) {
+        init() {
+            this.$vs.loading();
+            let id = this.$route.params.id;
+
             this.$store
                 .dispatch("rangeManagement/fetchItem", id)
-                .then(res => {
-                    this.range_data = res.data.success;
+                .then(data => {
+                    const item = data.payload;
+                    this.range_data = item;
                 })
-                .catch(err => {
-                    if (err.response.status === 404) {
-                        this.range_not_found = true;
-                        return;
-                    }
-                    console.error(err);
-                });
+                .catch(error => {
+                    console.log(error);
+                })
+                .finally(() => this.$vs.loading.close());
         },
         save_changes() {
             /* eslint-disable */
@@ -235,7 +238,12 @@ export default {
             this.$vs.loading();
 
             const payload = { ...this.range_data };
-            payload.repetitive_tasks = this.repetitiveTasksData;
+            payload.repetitive_tasks = this.repetitiveTasksData.map(task => {
+                if (task.id && String(task.id).startsWith("TEMPORARY_ID_")) {
+                    task.id = undefined;
+                }
+                return task;
+            });
             this.$store
                 .dispatch("rangeManagement/updateItem", payload)
                 .then(() => {
@@ -286,7 +294,7 @@ export default {
                 "skillManagement",
                 moduleSkillManagement
             );
-            moduleCompanyManagement.isRegistered = true;
+            moduleSkillManagement.isRegistered = true;
         }
         if (!moduleWorkareaManagement.isRegistered) {
             this.$store.registerModule(
@@ -302,15 +310,24 @@ export default {
             );
             moduleRepetitiveTaskManagement.isRegistered = true;
         }
-        this.fetch_data(this.$route.params.id);
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        if (!moduleDocumentManagement.isRegistered) {
+            this.$store.registerModule(
+                "documentManagement",
+                moduleDocumentManagement
+            );
+            moduleDocumentManagement.isRegistered = true;
+        }
+        this.init();
+        this.$store
+            .dispatch("skillManagement/fetchItems", { order_by: "name" })
+            .catch(err => {
+                console.error(err);
+            });
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
         this.$store
-            .dispatch("repetitiveTaskManagement/cleanItems")
+            .dispatch("repetitiveTaskManagement/emptyItems")
             .catch(err => {
                 console.error(err);
             });
@@ -328,10 +345,12 @@ export default {
         moduleSkillManagement.isRegistered = false;
         moduleWorkareaManagement.isRegistered = false;
         moduleRepetitiveTaskManagement.isRegistered = false;
+        moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("repetitiveTaskManagement");
+        this.$store.unregisterModule("documentManagement");
     }
 };
 </script>

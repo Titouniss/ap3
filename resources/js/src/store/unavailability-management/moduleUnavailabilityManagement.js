@@ -1,17 +1,10 @@
-/*=========================================================================================
-  File Name: moduleUserManagement.js
-  Description: Calendar Module
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
+import { crud } from "../utils";
 
+const slug = "unavailability-management";
+const model = "unavailability";
+const model_plurial = "unavailabilities";
 
-import state from './moduleUnavailabilityManagementState.js'
-import mutations from './moduleUnavailabilityManagementMutations.js'
-import actions from './moduleUnavailabilityManagementActions.js'
-import getters from './moduleUnavailabilityManagementGetters.js'
+const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
 
 export default {
     isRegistered: false,
@@ -20,5 +13,4 @@ export default {
     mutations,
     actions,
     getters
-}
-
+};

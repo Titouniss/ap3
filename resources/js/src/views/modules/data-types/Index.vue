@@ -22,7 +22,7 @@
                     :title="item.display_name_plurial"
                     :title-color="statusColor(item.slug)"
                 >
-                    <form :data-vv-scope="item.slug">
+                    <form autocomplete="off" :data-vv-scope="item.slug">
                         <div class="w-full my-6 flex-row items-center">
                             <vs-input
                                 name="source"
@@ -50,7 +50,6 @@
                                 <vs-th>Source</vs-th>
                                 <vs-th>Valeur par défaut</vs-th>
                                 <vs-th>Détails</vs-th>
-                                <vs-th>Obligatoire ?</vs-th>
                             </template>
 
                             <template slot-scope="{ data }">
@@ -62,6 +61,9 @@
                                 >
                                     <vs-td :data="data[rowIndex].display_name">
                                         {{ data[rowIndex].display_name }}
+                                        <span v-if="data[rowIndex].required">
+                                            *
+                                        </span>
                                     </vs-td>
                                     <vs-td :data="data[rowIndex].type">
                                         {{
@@ -79,7 +81,9 @@
                                             "
                                             v-validate="
                                                 `max:255${
-                                                    data[rowIndex].required
+                                                    data[rowIndex].required &&
+                                                    !data[rowIndex]
+                                                        .default_value
                                                         ? '|required'
                                                         : ''
                                                 }`
@@ -100,10 +104,10 @@
                                                 )
                                             "
                                             :danger-text="
-                                                errors.first(
+                                                `${errors.first(
                                                     `${data[rowIndex].field}.source`,
                                                     item.slug
-                                                )
+                                                )} ou valeur par défaut`
                                             "
                                         />
                                     </vs-td>
@@ -112,7 +116,14 @@
                                             :name="
                                                 `${data[rowIndex].field}.default_value`
                                             "
-                                            v-validate="`max:255`"
+                                            v-validate="
+                                                `max:255${
+                                                    data[rowIndex].required &&
+                                                    !data[rowIndex].source
+                                                        ? '|required'
+                                                        : ''
+                                                }`
+                                            "
                                             v-model="
                                                 data[rowIndex].default_value
                                             "
@@ -131,10 +142,10 @@
                                                 )
                                             "
                                             :danger-text="
-                                                errors.first(
+                                                `${errors.first(
                                                     `${data[rowIndex].field}.default_value`,
                                                     item.slug
-                                                )
+                                                )} ou source`
                                             "
                                         />
                                     </vs-td>
@@ -167,25 +178,10 @@
                                             "
                                         />
                                     </vs-td>
-                                    <vs-td :data="data[rowIndex].required">
-                                        <div
-                                            class="flex justify-center items-center"
-                                        >
-                                            <feather-icon
-                                                :icon="
-                                                    `${
-                                                        data[rowIndex].required
-                                                            ? 'Check'
-                                                            : 'X'
-                                                    }Icon`
-                                                "
-                                                svgClasses="h-5 w-5"
-                                            />
-                                        </div>
-                                    </vs-td>
                                 </vs-tr>
                             </template>
                         </vs-table>
+                        <div class="mt-3 text-sm">Obligatoire*</div>
                     </form>
                 </vx-card>
             </vs-col>
@@ -205,12 +201,13 @@
                 vs-w="6"
                 vs-xs="12"
             >
-                <v-select
+                <simple-select
+                    required
+                    class="flex-1 mr-3"
+                    header="Type"
+                    label="display_name_plurial"
                     v-model="currentDataType"
                     :options="inactiveDataTypes"
-                    label="display_name_plurial"
-                    placeholder="Type"
-                    class="flex-1 mr-3"
                 />
 
                 <vs-button
@@ -226,11 +223,8 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import { Validator } from "vee-validate";
-
-// Store Module
-import moduleDataTypeManagement from "@/store/data-type-management/moduleDataTypeManagement.js";
 
 import errorMessage from "./errorValidForm";
 Validator.localize("fr", errorMessage);
@@ -240,7 +234,7 @@ export default {
         module
     },
     components: {
-        vSelect
+        SimpleSelect
     },
     data() {
         return {
@@ -251,7 +245,7 @@ export default {
     },
     computed: {
         dataTypes() {
-            return this.$store.state.dataTypeManagement.data_types;
+            return this.$store.getters["moduleManagement/getDataTypes"];
         },
         inactiveDataTypes() {
             return this.dataTypes.filter(
@@ -311,14 +305,14 @@ export default {
                 this.$validator.validate().then(result => {
                     this.hasValidated = true;
                     if (result) {
-                        this.updateModuleDataTypes().then(() => resolve(true));
+                        this.updateDataTypes().then(() => resolve(true));
                     } else {
                         reject("Error");
                     }
                 });
             });
         },
-        updateModuleDataTypes() {
+        updateDataTypes() {
             this.$vs.loading();
             const payload = {
                 id: this.module.id,
@@ -326,7 +320,7 @@ export default {
                     data_type_id: mdt.data_type_id,
                     source: mdt.source,
                     module_data_rows: mdt.module_data_rows
-                        .filter(mdr => mdr.source)
+                        .filter(mdr => mdr.source || mdr.default_value)
                         .map(mdr => ({
                             data_row_id: mdr.data_row_id,
                             source: mdr.source,
@@ -336,7 +330,7 @@ export default {
                 }))
             };
             return this.$store
-                .dispatch("moduleManagement/updateModuleDataTypes", payload)
+                .dispatch("moduleManagement/updateDataTypes", payload)
                 .then(response =>
                     this.$vs.notify({
                         title: "Succès",
@@ -361,16 +355,8 @@ export default {
         }
     },
     created() {
-        if (!moduleDataTypeManagement.isRegistered) {
-            this.$store.registerModule(
-                "dataTypeManagement",
-                moduleDataTypeManagement
-            );
-            moduleDataTypeManagement.isRegistered = true;
-        }
-
         this.$store
-            .dispatch("dataTypeManagement/fetchItems")
+            .dispatch("moduleManagement/fetchDataTypes")
             .then(response => {
                 this.module.module_data_types.forEach(mdt => {
                     const dt = this.dataTypes.find(
@@ -385,10 +371,6 @@ export default {
             .catch(err => {
                 console.error(err);
             });
-    },
-    beforeDestroy() {
-        moduleDataTypeManagement.isRegistered = false;
-        this.$store.unregisterModule("dataTypeManagement");
     }
 };
 </script>

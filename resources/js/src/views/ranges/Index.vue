@@ -15,7 +15,10 @@
                     vs-w="2"
                     vs-sm="6"
                 >
-                    <vs-button v-if="authorizedToPublish" @click="addRecord">
+                    <vs-button
+                        v-if="authorizedTo('publish')"
+                        @click="addRecord"
+                    >
                         Ajouter une gamme
                     </vs-button>
                 </vs-col>
@@ -34,47 +37,12 @@
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('delete')"
-                                    v-if="authorizedToDelete"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('archive')"
-                                    v-if="authorizedToDelete"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="ArchiveIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Archiver</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="range"
+                            model-plurial="ranges"
+                            :items="selectedItems"
+                            @on-action="onAction"
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -155,6 +123,7 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -165,7 +134,6 @@
 <script>
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 // Store Module
 import moduleRangeManagement from "@/store/range-management/moduleRangeManagement.js";
@@ -174,22 +142,27 @@ import moduleRangeManagement from "@/store/range-management/moduleRangeManagemen
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
+
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
 
 var model = "range";
 var modelPlurial = "ranges";
 var modelTitle = "Gamme";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         // Cell Renderer
         CellRendererActions,
 
         // Components
-        RefreshModule
+        RefreshModule,
+        MultipleActions
     },
     data() {
         return {
@@ -229,8 +202,7 @@ export default {
                     cellRendererParams: {
                         model: "range",
                         modelPlurial: "ranges",
-                        name: data => `la gamme ${data.name}`,
-                        linkedTables: ["tâches"]
+                        name: data => `la gamme ${data.name}`
                     }
                 }
             ],
@@ -242,21 +214,6 @@ export default {
         };
     },
     computed: {
-        authorizedToPublish() {
-            return this.$store.getters.userHasPermissionTo(
-                `publish ${modelPlurial}`
-            );
-        },
-        authorizedToDelete() {
-            return this.$store.getters.userHasPermissionTo(
-                `delete ${modelPlurial}`
-            );
-        },
-        authorizedToEdit() {
-            return this.$store.getters.userHasPermissionTo(
-                `edit ${modelPlurial}`
-            );
-        },
         itemIdToEdit() {
             return this.$store.state.rangeManagement.range.id || 0;
         },
@@ -283,6 +240,11 @@ export default {
         }
     },
     methods: {
+        authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
         setColumnFilter(column, val) {
             const filter = this.gridApi.getFilterInstance(column);
             let modelObj = null;
@@ -312,87 +274,6 @@ export default {
         },
         addRecord() {
             this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-        },
-        confirmDeleteRecord(type) {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleRange = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title:
-                    type === "delete"
-                        ? "Confirmer suppression"
-                        : "Confirmer archivage",
-                text:
-                    type === "delete" &&
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces gammes ?`
-                        : type === "delete" &&
-                          this.gridApi.getSelectedRows().length === 1
-                        ? `Voulez vous vraiment supprimer la gamme ${singleRange.name} ?`
-                        : this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment archiver ces gammes ?`
-                        : `Voulez vous vraiment archiver la gamme ${singleRange.name} ?`,
-                accept:
-                    type === "delete" ? this.deleteRecord : this.archiveRecord,
-                acceptText: type === "delete" ? "Supprimer" : "Archiver",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("rangeManagement/forceRemoveItem", selectRow.id)
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess("delete", selectedRowLength);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("delete", selectedRowLength);
-            }
-        },
-        archiveRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("rangeManagement/removeItem", selectRow.id)
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess(
-                                "archive",
-                                selectedRowLength
-                            );
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("archive", selectedRowLength);
-            }
-        },
-        showDeleteSuccess(type, selectedRowLength) {
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    type === "delete" && selectedRowLength > 1
-                        ? `Gammes supprimés`
-                        : type === "delete" && selectedRowLength === 1
-                        ? `Gamme supprimé`
-                        : selectedRowLength > 1
-                        ? `Gammes archivés`
-                        : `Gamme archivé`
-            });
         },
         onResize(event) {
             if (this.gridApi) {
@@ -438,9 +319,11 @@ export default {
             );
             moduleRangeManagement.isRegistered = true;
         }
-        this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        this.$store
+            .dispatch("rangeManagement/fetchItems", { with_trashed: true })
+            .catch(err => {
+                console.error(err);
+            });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());

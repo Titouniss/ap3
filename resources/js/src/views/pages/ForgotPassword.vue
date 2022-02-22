@@ -18,9 +18,10 @@
       <vx-card>
         <div class="vx-card__title mb-6">
           <h4 class="mb-4 text-center">Récupération de mot de passe</h4>
-          <p
-            class="text-center"
-          >Veuillez saisir votre adresse email nous vous enverrons un lien de réinitialisation.</p>
+          <p class="text-center">
+            Veuillez saisir votre adresse email nous vous enverrons un lien de
+            réinitialisation.
+          </p>
         </div>
 
         <vs-input
@@ -34,19 +35,22 @@
           :success="success"
         />
 
-        <p
-          class="text-center mb-6 text-5"
-          style="font-size: .70rem"
-        >Si vous n'avez pas d'adresse email, veuillez contacter votre administrateur.</p>
+        <p class="text-center mb-6 text-5" style="font-size: 0.7rem">
+          Si vous n'avez pas d'adresse email, veuillez contacter votre
+          administrateur.
+        </p>
 
         <vs-row vs-align="center" vs-type="flex" vs-justify="space-around">
-          <router-link to="login" @click="goLogin" class="ml-2 mr-2">retour</router-link>
+          <router-link to="login" @click="goLogin" class="ml-2 mr-2"
+            >retour</router-link
+          >
           <vs-button
             color="primary"
             text-color="white"
             class="float-right px-4 w-full md:w-auto mt-3 mb-8 md:mt-0 md:mb-0"
             @click="forgotPassword"
-          >Envoyer le lien</vs-button>
+            >Envoyer le lien</vs-button
+          >
         </vs-row>
       </vx-card>
     </div>
@@ -72,13 +76,13 @@ export default {
   methods: {
     checkLogin() {
       // If user is already logged in notify
-      if (this.$store.state.auth.isUserLoggedIn()) {
+      if (this.$store.getters["auth.isUserLoggedIn"]) {
         // Close animation if passed as payload
         // this.$vs.loading.close()
 
         this.$vs.notify({
           title: "Connexion",
-          text: "Vous êtes déjà connecté!",
+          text: "Vous êtes déjà connecté !",
           iconPack: "feather",
           icon: "icon-alert-circle",
           color: "warning",
@@ -97,14 +101,14 @@ export default {
       this.$vs.loading();
       this.$store
         .dispatch("auth/forgotPassword", payload)
-        .then((r) => {
-          this.danger = r.data.message === "Failed";
-          this.success = r.data.message === "Success";
+        .then(() => {
+          this.success = true;
           this.$vs.loading.close();
         })
         .catch((error) => {
           console.log(error);
 
+          this.danger = true;
           this.$vs.loading.close();
           this.$vs.notify({
             title: "Echec",

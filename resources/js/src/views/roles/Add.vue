@@ -12,14 +12,13 @@
     <vx-card>
       <div slot="no-body" class="tabs-container px-6 pt-6">
         <div class="vx-row" v-if="!disabled">
-          <vs-switch v-model="role_data.isPublic" name="isPublic">
+          <vs-switch v-model="role_data.is_public" name="is_public">
             <span slot="on">Publique</span>
             <span slot="off">Privé</span>
           </vs-switch>
-          <span
-            class="text-danger text-sm"
-            v-show="errors.has('isPublic')"
-          >{{ errors.first('isPublic') }}</span>
+          <span class="text-danger text-sm" v-show="errors.has('is_public')">{{
+            errors.first("is_public")
+          }}</span>
         </div>
         <div class="vx-row">
           <vs-input
@@ -29,7 +28,9 @@
             v-validate="'max:250|required'"
             name="title"
           />
-          <span class="text-danger text-sm" v-show="errors.has('title')">{{ errors.first('title') }}</span>
+          <span class="text-danger text-sm" v-show="errors.has('title')">{{
+            errors.first("title")
+          }}</span>
         </div>
         <div class="vx-row">
           <vs-textarea
@@ -43,7 +44,8 @@
           <span
             class="text-danger text-sm"
             v-show="errors.has('description')"
-          >{{ errors.first('description') }}</span>
+            >{{ errors.first("description") }}</span
+          >
         </div>
         <!-- Permissions -->
         <div class="vx-row mt-4">
@@ -66,16 +68,33 @@
               -->
               <th
                 class="font-semibold text-base text-left px-3 py-2"
-                v-for="heading in ['Module', 'Tout', 'Consulter', 'Lecture', 'Créer', 'Editer', 'Supprimer']"
+                v-for="heading in [
+                  'Module',
+                  'Tout',
+                  'Consulter',
+                  'Lecture',
+                  'Créer',
+                  'Editer',
+                  'Supprimer',
+                ]"
                 :key="heading"
-              >{{ heading }}</th>
+              >
+                {{ heading }}
+              </th>
             </tr>
-            <tr v-for="(items,index) in permissions" :key="index">
+            <tr v-for="(items, index) in permissions" :key="index">
               <td class="px-3 py-2">{{ capitalizeFirstLetter(index) }}</td>
               <td class="px-3 py-2">
-                <vs-checkbox v-on:change="checkAll(items)" :checked="checkOrNot(items)" />
+                <vs-checkbox
+                  v-on:change="checkAll(items)"
+                  :checked="checkOrNot(items)"
+                />
               </td>
-              <td v-for="(item,name) in items" class="px-3 py-2" :key="index+name+item.id">
+              <td
+                v-for="(item, name) in items"
+                class="px-3 py-2"
+                :key="index + name + item.id"
+              >
                 <vs-checkbox
                   :disabled="forceLecture(items, item)"
                   v-on:change="checkLecture(items, item)"
@@ -90,8 +109,19 @@
       <div class="vx-row">
         <div class="vx-col w-full">
           <div class="mt-8 flex flex-wrap items-center justify-end">
-            <vs-button class="ml-auto mt-2" @click="save_changes" :disabled="!validateForm">Ajouter</vs-button>
-            <vs-button class="ml-4 mt-2" type="border" color="warning" @click="back">Annuler</vs-button>
+            <vs-button
+              class="ml-auto mt-2"
+              @click="save_changes"
+              :disabled="!validateForm"
+              >Ajouter</vs-button
+            >
+            <vs-button
+              class="ml-4 mt-2"
+              type="border"
+              color="warning"
+              @click="back"
+              >Annuler</vs-button
+            >
           </div>
         </div>
       </div>
@@ -120,7 +150,7 @@ export default {
         name: "",
         guard_name: "web",
         description: "",
-        isPublic: false,
+        is_public: false,
         company_id: null,
       },
       selected: [],
@@ -128,22 +158,19 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.$store.state.AppActiveUser.is_admin;
+    },
     disabled() {
-      const user = this.$store.state.AppActiveUser;
-      if (user.roles && user.roles.length > 0) {
-        if (
-          user.roles.find(
-            (r) => r.name === "superAdmin" || r.name === "littleAdmin"
-          )
-        ) {
-          return false;
-        }
-        return true;
-      } else return true;
+      if (this.isAdmin) {
+        return false;
+      }
+      return true;
     },
     permissions() {
-      const permissionsStore = this.$store.state.permissionManagement
-        .permissions;
+      const permissionsStore = this.$store.getters[
+        "permissionManagement/getItems"
+      ];
       let permissions = [];
       if (permissionsStore && permissionsStore.length > 0) {
         permissions = permissionsStore.reduce(function (acc, valeurCourante) {
@@ -267,8 +294,8 @@ export default {
       this.dependencyChecking("check", items.show);
 
       // Required read perms
-      this.checkRequired()
-      
+      this.checkRequired();
+
       this.selected = Object.assign({}, this.selected);
     },
     checkLecture(items, item) {
@@ -288,7 +315,7 @@ export default {
       this.dependencyChecking("check", item);
 
       // Required read perms
-      this.checkRequired()
+      this.checkRequired();
 
       this.selected = Object.assign({}, this.selected);
     },
@@ -300,8 +327,8 @@ export default {
           this.selected[items.publish.id] === true)
       ) {
         return true;
-      } else if (item.name.split(' ')[0] === 'read') {
-          return true;
+      } else if (item.name.split(" ")[0] === "read") {
+        return true;
       }
 
       return false;
@@ -323,26 +350,35 @@ export default {
     dependencyChecking(type, item) {
       switch (item.name) {
         case "show workareas":
-          if (this.selected[this.permissions.îlots.show.id]) {
-            this.selected[this.permissions.îlots.read.id] = true;
+          if (this.selected[this.permissions.pôles_de_productions.show.id]) {
+            this.selected[this.permissions.pôles_de_productions.read.id] = true;
             this.selected[this.permissions.compétences.read.id] = true;
           } else {
-            this.selected[this.permissions.îlots.read.id] = false;
-            this.selected[this.permissions.compétences.read.id] = false;
+            const dependencies = ["pôles_de_productions", "compétences"];
+            this.otherModuleNeedRead("pôles_de_productions", dependencies);
           }
           break;
         case "show users":
           if (this.selected[this.permissions.utilisateurs.show.id]) {
-              this.selected[this.permissions.utilisateurs.read.id] = true;
+            this.selected[this.permissions.utilisateurs.read.id] = true;
+            this.selected[this.permissions.compétences.read.id] = true;
+            this.selected[this.permissions.roles.read.id] = true;
           } else {
-              this.selected[this.permissions.utilisateurs.read.id] = false;
+            const dependencies = [
+              "utilisateurs",
+              "compétences",
+              "roles",
+              "entreprises",
+            ];
+            this.otherModuleNeedRead("utilisateurs", dependencies);
           }
           break;
         case "show unavailabilities":
           if (this.selected[this.permissions.indiponibilités.show.id]) {
             this.selected[this.permissions.indiponibilités.read.id] = true;
           } else {
-            this.selected[this.permissions.indiponibilités.read.id] = false;
+            const dependencies = ["indiponibilités"];
+            this.otherModuleNeedRead("indiponibilités", dependencies);
           }
           break;
         case "show tasks":
@@ -350,63 +386,72 @@ export default {
             this.selected[this.permissions.tâches.read.id] = true;
             this.selected[this.permissions.utilisateurs.read.id] = true;
           } else {
-            this.selected[this.permissions.tâches.read.id] = false;
-            this.selected[this.permissions.utilisateurs.read.id] = false;
+            const dependencies = ["tâches", "utilisateurs"];
+            this.otherModuleNeedRead("tâches", dependencies);
           }
           break;
         case "show skills":
           if (this.selected[this.permissions.compétences.show.id]) {
-          this.selected[this.permissions.compétences.read.id] = true;
-            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.compétences.read.id] = true;
+            this.selected[this.permissions.pôles_de_productions.read.id] = true;
             this.selected[this.permissions.tâches.read.id] = true;
           } else {
-            this.selected[this.permissions.compétences.read.id] = false;
-            this.selected[this.permissions.îlots.read.id] = false;
-            this.selected[this.permissions.tâches.read.id] = false;
+            const dependencies = [
+              "compétences",
+              "pôles_de_productions",
+              "tâches",
+            ];
+            this.otherModuleNeedRead("compétences", dependencies);
           }
           break;
         case "show schedules":
           if (this.selected[this.permissions.planning.show.id]) {
             this.selected[this.permissions.planning.read.id] = true;
             this.selected[this.permissions.projets.read.id] = true;
-            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.pôles_de_productions.read.id] = true;
             this.selected[this.permissions.tâches.read.id] = true;
             this.selected[this.permissions.compétences.read.id] = true;
             this.selected[this.permissions.utilisateurs.read.id] = true;
           } else {
-            this.selected[this.permissions.planning.read.id] = false;
-            this.selected[this.permissions.projets.read.id] = false;
-            this.selected[this.permissions.îlots.read.id] = false;
-            this.selected[this.permissions.tâches.read.id] = false;
-            this.selected[this.permissions.compétences.read.id] = false;
-            this.selected[this.permissions.utilisateurs.read.id] = false;
+            const dependencies = [
+              "planning",
+              "projets",
+              "pôles_de_productions",
+              "tâches",
+              "compétences",
+              "utilisateurs",
+            ];
+            this.otherModuleNeedRead("planning", dependencies);
           }
-          
+
           break;
         case "show roles":
           if (this.selected[this.permissions.roles.show.id]) {
             this.selected[this.permissions.roles.read.id] = true;
             this.selected[this.permissions.utilisateurs.read.id] = true;
           } else {
-            this.selected[this.permissions.roles.read.id] = false;
-            this.selected[this.permissions.utilisateurs.read.id] = false;
+            const dependencies = ["roles", "utilisateurs"];
+            this.otherModuleNeedRead("roles", dependencies);
           }
           break;
         case "show projects":
           if (this.selected[this.permissions.projets.show.id]) {
             this.selected[this.permissions.projets.read.id] = true;
-            this.selected[this.permissions.îlots.read.id] = true;
+            this.selected[this.permissions.pôles_de_productions.read.id] = true;
             this.selected[this.permissions.compétences.read.id] = true;
             this.selected[this.permissions.clients.read.id] = true;
             this.selected[this.permissions.gammes.read.id] = true;
           } else {
-            this.selected[this.permissions.projets.read.id] = false;
-            this.selected[this.permissions.îlots.read.id] = false;
-            this.selected[this.permissions.compétences.read.id] = false;
-            this.selected[this.permissions.clients.read.id] = false;
-            this.selected[this.permissions.gammes.read.id] = false;
+            const dependencies = [
+              "projets",
+              "pôles_de_productions",
+              "compétences",
+              "clients",
+              "gammes",
+            ];
+            this.otherModuleNeedRead("projets", dependencies);
           }
-          
+
           break;
         case "show hours":
           if (this.selected[this.permissions.heures.show.id]) {
@@ -415,31 +460,110 @@ export default {
             this.selected[this.permissions.utilisateurs.read.id] = true;
             this.selected[this.permissions.planning.read.id] = true;
           } else {
-            this.selected[this.permissions.heures.read.id] = false;
-            this.selected[this.permissions.projets.read.id] = false;
-            this.selected[this.permissions.utilisateurs.read.id] = false;
-            this.selected[this.permissions.planning.read.id] = false;
+            const dependencies = [
+              "heures",
+              "projets",
+              "utilisateurs",
+              "planning",
+            ];
+            this.otherModuleNeedRead("heures", dependencies);
           }
           break;
         case "show dealingHours":
           if (this.selected[this.permissions.heures_supplémentaires.show.id]) {
-            this.selected[this.permissions.heures_supplémentaires.read.id] = true;
+            this.selected[
+              this.permissions.heures_supplémentaires.read.id
+            ] = true;
           } else {
-            this.selected[this.permissions.heures_supplémentaires.read.id] = false;
+            const dependencies = ["heures_supplémentaires"];
+            this.otherModuleNeedRead("heures_supplémentaires", dependencies);
           }
           break;
         case "show customers":
           if (this.selected[this.permissions.clients.show.id]) {
             this.selected[this.permissions.clients.read.id] = true;
           } else {
-            this.selected[this.permissions.clients.read.id] = false;
+            const dependencies = ["clients"];
+            this.otherModuleNeedRead("clients", dependencies);
           }
           break;
-  
+
         default:
           break;
       }
-    }
+    },
+    otherModuleNeedRead(origin, moduleDependencies) {
+      // Get all show module
+      const modules = [
+        "pôles_de_productions",
+        "utilisateurs",
+        "indiponibilités",
+        "compétences",
+        "tâches",
+        "planning",
+        "roles",
+        "projets",
+        "heures",
+        "heures_supplémentaires",
+        "clients",
+      ];
+      let modulesShow = [];
+      modules.forEach((m) => {
+        if (this.selected[this.permissions[m].show.id] === true) {
+          modulesShow.push(m);
+        }
+      });
+
+      // Define all dependences
+      const dependencies = {
+        pôles_de_productions: [
+          "pôles_de_productions",
+          "compétences",
+          "entreprise",
+        ],
+        utilisateurs: ["utilisateurs", "roles", "entreprises", "compétences"],
+        indisponibilités: [],
+        tâches: ["utilisateurs"],
+        compétences: ["compétences", "entreprises", "pôles_de_productions"],
+        planning: [
+          "planning",
+          "pôles_de_productions",
+          "compétences",
+          "utilisateurs",
+        ],
+        roles: ["roles", "utilisateurs", "permissions"],
+        projets: ["entreprises", "gammes", "clients", "pôles_de_productions"],
+        heures: ["heures", "utilisateurs", "entreprise", "planning"],
+        clients: ["clients", "entreprise"],
+        entreprises: ["entreprises"],
+      };
+      delete dependencies[origin];
+
+      // Keep only dependencies that are displayed
+      let sortedDependencies = [];
+      for (const [key, value] of Object.entries(dependencies)) {
+        if (modulesShow.includes(key)) {
+          if (value) {
+            value.forEach((v) => {
+              if (sortedDependencies.indexOf(v) === -1) {
+                sortedDependencies.push(v);
+              }
+            });
+          }
+        }
+      }
+
+      // Check if read permission is used in other module
+      if (moduleDependencies != []) {
+        moduleDependencies.forEach((mD) => {
+          if (sortedDependencies.indexOf(mD) === -1) {
+            this.selected[this.permissions[mD].read.id] = false;
+          } else {
+            this.selected[this.permissions[mD].read.id] = true;
+          }
+        });
+      }
+    },
   },
   created() {
     // Register Module roleManagement Module
@@ -447,9 +571,9 @@ export default {
       this.$store.registerModule("roleManagement", moduleRoleManagement);
       moduleRoleManagement.isRegistered = true;
     }
-    this.$store.dispatch("roleManagement/fetchItems").catch(err => {
-        console.error(err);
-      });
+    this.$store.dispatch("roleManagement/fetchItems").catch((err) => {
+      console.error(err);
+    });
 
     if (!modulePermissionManagement.isRegistered) {
       this.$store.registerModule(

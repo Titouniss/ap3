@@ -47,31 +47,13 @@ class MailVerifyEmailNotification extends Notification
 
         return (new MailMessage)
             ->subject(Lang::get('Verification de votre adresse e-mail'))
-            ->greeting('Bonjour '.$notifiable->firstname.' '.$notifiable->lastname.' !')
-            ->line('Afin de vous connecter vous devrez utiliser votre identifiant :')
+            ->greeting('Bonjour ' . $notifiable->firstname . ' ' . $notifiable->lastname . ' !')
+            ->line('Afin de vous connecter, vous devrez utiliser votre identifiant :')
             ->line($notifiable->login)
-            ->line('Vous pourrez le modifier une fois connecter.')
+            ->line('Vous pourrez le modifier une fois connecté.')
             ->line(Lang::get('Cliquez sur le lien ci-dessous afin de confirmer votre adresse e-mail.'))
-            ->action(Lang::get('Vérifier adresse e-mail'), $verificationUrl)
-            ->line(Lang::get('Si vous n\'avez pas fait de demandes ignorez ce message.'));
-    }
-
-    /**
-     * Get the verification URL for the given notifiable.
-     *
-     * @param  mixed  $notifiable
-     * @return string
-     */
-    protected function verificationUrl($notifiable)
-    {
-        return URL::temporarySignedRoute(
-            'api.verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
-            [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->getEmailForVerification()),
-            ]
-        );
+            ->action(Lang::get('Vérifier l\'adresse e-mail'), $verificationUrl)
+            ->line(Lang::get("Si vous n'avez pas fait de demande, veuillez ignorer ce message."));
     }
 
     /**

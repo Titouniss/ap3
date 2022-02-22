@@ -14,6 +14,30 @@ export default [
         icon: "HomeIcon"
     },
     {
+        url: "/projects",
+        name: "Projets",
+        slug: "projects",
+        icon: "ActivityIcon"
+    },
+    {
+        url: "/ranges",
+        name: "Gammes",
+        slug: "ranges",
+        icon: "ClipboardIcon"
+    },
+    {
+        url: "/workareas",
+        name: "Pôles de production",
+        slug: "workareas",
+        icon: "ArchiveIcon"
+    },
+    {
+        url: "/schedules",
+        name: "Plannings",
+        slug: "schedules",
+        icon: "CalendarIcon"
+    },
+    {
         url: "/users",
         name: "Utilisateurs",
         slug: "users",
@@ -24,6 +48,12 @@ export default [
         name: "Rôles",
         slug: "roles",
         icon: "AwardIcon"
+    },
+    {
+        url: "/skills",
+        name: "Compétences",
+        slug: "skills",
+        icon: "BookOpenIcon"
     },
     {
         url: "/companies",
@@ -38,38 +68,20 @@ export default [
         icon: "UsersIcon"
     },
     {
-        url: "/skills",
-        name: "Compétences",
-        slug: "skills",
-        icon: "BookOpenIcon"
-    },
-    {
-        url: "/workareas",
-        name: "Ilots",
-        slug: "workareas",
-        icon: "ArchiveIcon"
-    },
-    {
-        url: "/projects",
-        name: "Projets",
-        slug: "projects",
-        icon: "ActivityIcon"
-    },
-    {
-        url: "/ranges",
-        name: "Gammes",
-        slug: "ranges",
-        icon: "ClipboardIcon"
-    },
-    {
-        url: "/schedules",
-        name: "Plannings",
-        slug: "schedules",
-        icon: "CalendarIcon"
+        url: "/hours",
+        name: "Heures",
+        slug: "hours",
+        icon: "ClockIcon"
     },
     {
         url: "/hours",
-        name: "Heures",
+        name: "Gérer les heures",
+        slug: "hours",
+        icon: "ClockIcon"
+    },
+    {
+        url: "/hours",
+        name: "Gérer les indisponibilités",
         slug: "hours",
         icon: "ClockIcon"
     },
@@ -78,5 +90,24 @@ export default [
         name: "Modules",
         slug: "modules",
         icon: "PackageIcon"
+    },
+    {
+        url: "/doc",
+        name: "Documentation",
+        slug: "doc",
+        icon: "BookIcon"
+    },
+    {
+        url: "/todos",
+        name: "TodoList",
+        slug: "todos",
+        icon: "CheckSquareIcon",
+    },
+    {
+        url: "/bugs",
+        name: "Remontées de bugs",
+        slug: "bugs",
+        icon: "TerminalIcon"
     }
+   
 ];

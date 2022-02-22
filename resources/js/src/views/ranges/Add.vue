@@ -24,17 +24,14 @@
                     </div>
                     <vs-divider />
 
-                    <v-select
+                    <infinite-select
+                        required
+                        header="Société"
                         label="name"
-                        v-validate="'required'"
-                        v-model="range_data.company"
-                        :options="companiesData"
-                        class="w-full"
-                    >
-                        <template #header>
-                            <div class="vs-select--label">Société</div>
-                        </template>
-                    </v-select>
+                        model="company"
+                        v-model="range_data.company_id"
+                        @input="onCompanyChange"
+                    />
 
                     <vs-divider />
                 </div>
@@ -84,8 +81,8 @@
                                 Liste des étapes de la gamme
                             </span>
                             <add-form
-                                v-if="range_data.company != null"
-                                :company_id="range_data.company.id"
+                                v-if="range_data.company_id != null"
+                                :company_id="range_data.company_id"
                             ></add-form>
                         </div>
                         <vs-divider />
@@ -171,12 +168,9 @@
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
-
-import lodash from "lodash";
 
 //Repetitive Task
 import AddForm from "./repetitives-tasks/AddForm.vue";
@@ -189,6 +183,9 @@ import moduleCompanyManagement from "@/store/company-management/moduleCompanyMan
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleRepetitiveTaskManagement from "@/store/repetitives-task-management/moduleRepetitiveTaskManagement.js";
+import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
+
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 var model = "range";
 var modelPlurial = "ranges";
@@ -196,8 +193,8 @@ var modelTitle = "Gammes";
 
 export default {
     components: {
+        InfiniteSelect,
         AddForm,
-        vSelect,
         EditForm,
         CellRendererActions
     },
@@ -213,14 +210,13 @@ export default {
         };
     },
     computed: {
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
         },
         repetitiveTasksData() {
-            let repetitivesTasks = this.$store.state.repetitiveTaskManagement
-                .repetitivesTasks;
-
-            repetitivesTasks.forEach(task => {
+            const items = this.$store.getters[
+                "repetitiveTaskManagement/getItems"
+            ].map(task => {
                 if (task.skills.length > 0) {
                     let skillsNames = "";
                     task.skills.forEach(skill_id => {
@@ -235,41 +231,48 @@ export default {
                     });
                     task.skillsNames = skillsNames;
                 }
+                return task;
             });
 
-            return repetitivesTasks;
+            items.sort((a, b) => a.order - b.order);
+
+            return items;
         },
         disabled() {
             const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    return false;
-                } else {
-                    this.range_data.company_id = user.company_id;
-                    return true;
-                }
-            } else return true;
+            if (this.isAdmin) {
+                return false;
+            } else {
+                this.range_data.company_id = user.company_id;
+                return true;
+            }
         },
         validateForm() {
             return (
                 !this.errors.any() &&
                 this.range_data.name != "" &&
-                this.$store.state.repetitiveTaskManagement.repetitivesTasks
+                this.$store.state.repetitiveTaskManagement.repetitive_tasks
                     .length > 0
             );
         },
         itemIdToEdit() {
             return (
-                this.$store.state.repetitiveTaskManagement.repetitivesTask.id ||
+                this.$store.state.repetitiveTaskManagement.repetitive_task.id ||
                 0
             );
         }
     },
     methods: {
+        onCompanyChange() {
+            this.$store
+                .dispatch("skillManagement/fetchItems", {
+                    order_by: "name",
+                    company_id: this.range_data.company_id
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
         save_changes() {
             /* eslint-disable */
             if (!this.validateForm) return;
@@ -278,7 +281,7 @@ export default {
 
             let payload = { ...this.range_data };
             payload.repetitive_tasks = this.repetitiveTasksData;
-            payload.company_id = payload.company.id;
+            payload.company_id = payload.company_id;
 
             this.$store
                 .dispatch("rangeManagement/addItem", payload)
@@ -314,18 +317,12 @@ export default {
         capitalizeFirstLetter(word) {
             if (typeof word !== "string") return "";
             return word.charAt(0).toUpperCase() + word.slice(1);
-        },
-        activeUserRole() {
-            const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                return user.roles[0].name;
-            }
-            return false;
         }
     },
     mounted() {
-        if (this.activeUserRole() != "superAdmin") {
+        if (!this.isAdmin) {
             this.range_data.company = this.$store.state.AppActiveUser.company;
+            this.range_data.company_id = this.range_data.company.id;
         }
     },
     created() {
@@ -365,17 +362,18 @@ export default {
             );
             moduleRepetitiveTaskManagement.isRegistered = true;
         }
-        this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        if (!moduleDocumentManagement.isRegistered) {
+            this.$store.registerModule(
+                "documentManagement",
+                moduleDocumentManagement
+            );
+            moduleDocumentManagement.isRegistered = true;
+        }
         this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
             console.error(err);
         });
         this.$store
-            .dispatch("repetitiveTaskManagement/cleanItems")
+            .dispatch("repetitiveTaskManagement/emptyItems")
             .catch(err => {
                 console.error(err);
             });
@@ -387,11 +385,13 @@ export default {
         moduleCompanyManagement.isRegistered = false;
         moduleWorkareaManagement.isRegistered = false;
         moduleRepetitiveTaskManagement.isRegistered = false;
+        moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("repetitiveTaskManagement");
+        this.$store.unregisterModule("documentManagement");
     }
 };
 </script>

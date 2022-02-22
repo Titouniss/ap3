@@ -1,7 +1,7 @@
 <template>
     <div class="p-3 mb-4 mr-4">
         <vs-prompt
-            title="Mofidier une tâche"
+            title="Modifier une tâche"
             accept-text="Modifier"
             cancel-text="Annuler"
             button-cancel="border"
@@ -13,12 +13,12 @@
             class="task-compose"
         >
             <div>
-                <form>
+                <form class="editTaskForm" autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div
                             class="vx-col flex-1"
-                            style="border-right: 1px solid #d6d6d6;"
+                            style="border-right: 1px solid #d6d6d6"
                         >
                             <div class="mb-4">
                                 <small class="date-label">Ordre</small>
@@ -60,28 +60,16 @@
                         </div>
                         <!-- Right -->
                         <div class="vx-col flex-1">
-                            <vs-select
-                                label="Compétences"
-                                v-on:change="updateWorkareasList"
-                                v-model="itemLocal.skills"
-                                class="w-full"
+                            <simple-select
+                                required
+                                header="Compétences"
+                                label="name"
                                 multiple
-                                autocomplete
-                                v-validate="'required'"
-                                name="skills"
-                            >
-                                <vs-select-item
-                                    :key="index"
-                                    :value="item.id"
-                                    :text="item.name"
-                                    v-for="(item, index) in skillsData"
-                                />
-                            </vs-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('skills')"
-                                >{{ errors.first("skills") }}</span
-                            >
+                                v-model="itemLocal.skills"
+                                :reduce="item => item.id"
+                                :options="skillsData"
+                                @input="updateWorkareasList"
+                            />
 
                             <span
                                 v-if="
@@ -89,15 +77,11 @@
                                         workareasDataFiltered.length == 0
                                 "
                                 class="text-danger text-sm"
-                                >Attention, aucun îlot ne possède cette
-                                combinaison de compétences</span
                             >
+                                Attention, aucun pôle de production ne possède
+                                cette combinaison de compétences
+                            </span>
 
-                            <!-- <div v-if="itemLocal.skills.length > 0 && workareasDataFiltered.length > 0">
-                      <vs-select name="workarea" label="Ilot" v-model="itemLocal.workarea_id" class="w-full mt-3">
-                          <vs-select-item :key="index" :value="item.id" :text="item.name" v-for="(item,index) in workareasDataFiltered" />
-                      </vs-select>
-                    </div> -->
                             <div class="my-4">
                                 <small class="date-label"
                                     >Temps estimé (en h)</small
@@ -107,6 +91,12 @@
                                     name="estimatedTime"
                                     class="inputNumber"
                                     v-model="itemLocal.estimated_time"
+                                />
+                            </div>
+                            <div class="my-4">
+                                <file-input
+                                    :items="itemLocal.documents"
+                                    :token="token"
                                 />
                             </div>
                         </div>
@@ -121,13 +111,20 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect";
+import FileInput from "@/components/inputs/FileInput.vue";
+
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
+    components: {
+        SimpleSelect,
+        FileInput
+    },
     props: {
         itemId: {
-            type: Number,
+            type: [Number, String],
             required: true
         },
         companyId: {
@@ -136,17 +133,28 @@ export default {
         }
     },
     data() {
-        return {
-            itemLocal: Object.assign(
-                {},
+        const item = JSON.parse(
+            JSON.stringify(
                 this.$store.getters["repetitiveTaskManagement/getItem"](
                     this.itemId
                 )
-            ),
+            )
+        );
+        return {
+            itemLocal: item,
+            token:
+                item.token ||
+                "token_" +
+                    Math.random()
+                        .toString(36)
+                        .substring(2, 15),
             workareasDataFiltered: []
         };
     },
     computed: {
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
+        },
         validateForm() {
             return (
                 !this.errors.any() &&
@@ -158,7 +166,7 @@ export default {
         },
         activePrompt: {
             get() {
-                return this.itemId && this.itemId > 0 ? true : false;
+                return this.itemId ? true : false;
             },
             set(value) {
                 this.$store
@@ -182,6 +190,7 @@ export default {
     },
     methods: {
         clear() {
+            this.deleteFiles();
             this.itemLocal = {};
             this.workareasDataFiltered = [];
         },
@@ -190,11 +199,10 @@ export default {
                 //this.itemLocal.workarea = this.workareasDataFiltered.find((workarea) => workarea.id === this.itemLocal.workarea_id)
 
                 if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    item.token = this.token;
                     this.$store
-                        .dispatch(
-                            "repetitiveTaskManagement/updateItem",
-                            Object.assign({}, this.itemLocal)
-                        )
+                        .dispatch("repetitiveTaskManagement/updateItem", item)
                         .then(() => {
                             this.$vs.loading.close();
                             this.$vs.notify({
@@ -218,6 +226,16 @@ export default {
                 }
             });
         },
+        deleteFiles() {
+            const ids = this.itemLocal.documents
+                .filter(item => item.token)
+                .map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/removeItems", ids)
+                    .catch(error => {});
+            }
+        },
         updateWorkareasList(ids) {
             this.workareasDataFiltered = this.workareasData.filter(function(
                 workarea
@@ -236,23 +254,15 @@ export default {
                 this.itemLocal.workarea_id = null;
             }
         },
-        filterItemsAdmin($items) {
-            let $filteredItems = [];
+        filterItemsAdmin(items) {
+            let filteredItems = items;
             const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    $filteredItems = $items.filter(
-                        item => item.company_id === this.companyId
-                    );
-                } else {
-                    $filteredItems = $items;
-                }
+            if (this.isAdmin) {
+                filteredItems = items.filter(
+                    item => item.company_id === this.companyId
+                );
             }
-            return $filteredItems;
+            return filteredItems;
         }
     }
 };
@@ -261,7 +271,7 @@ export default {
 .con-vs-dialog.task-compose .vs-dialog {
     max-width: 700px;
 }
-.edit-task-form {
+.editTaskForm {
     max-height: 450px;
     overflow-y: auto;
     overflow-x: hidden;

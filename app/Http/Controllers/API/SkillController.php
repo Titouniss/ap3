@@ -2,197 +2,84 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Exceptions\ApiException;
+use App\Models\Company;
 use App\Models\Skill;
-use App\Models\TasksSkill;
-use Exception;
-use Illuminate\Support\Facades\Auth;
-use Validator;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Task;
+use App\Models\Workarea;
+use Illuminate\Http\Request;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-class SkillController extends Controller
+class SkillController extends BaseApiController
 {
-    use SoftDeletes;
+    protected static $index_load = ['company:companies.id,name'];
+    protected static $index_append = null;
+    protected static $show_load = ['company:companies.id,name'];
+    protected static $show_append = null;
 
-    public $successStatus = 200;
-    public $errorStatus = 400;
+    protected static $store_validation_array = [
+        'name' => 'required',
+        'company_id' => 'required'
+    ];
+
+    protected static $update_validation_array = [
+        'name' => 'required',
+        'company_id' => 'required'
+    ];
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        $user = Auth::user();
-        $items = [];
-        if ($user->hasRole('superAdmin')) {
-            $items = Skill::withTrashed()->get()->load('company');
-        } else if ($user->company_id != null) {
-            $items = Skill::withTrashed()->where('company_id', $user->company_id)->get()->load('company');
+        parent::__construct(Skill::class);
+    }
+
+    protected function filterIndexQuery(Request $request, $query)
+    {
+        if ($request->has('company_id')) {
+            $item = Company::find($request->company_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'company_id' n'est pas valide.");
+            }
+
+            $query->where('skills.company_id', $request->company_id);
         }
-        return response()->json(['success' => $items], $this->successStatus);
+
+        if ($request->has('workarea_id')) {
+            if (Workarea::where('id', $request->workarea_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'workarea_id' n'est pas valide.");
+            }
+
+            $query->join('workareas_skills', function ($join) use ($request) {
+                $join->on('workareas_skills.skill_id', '=', 'skills.id')
+                    ->where('workareas_skills.workarea_id', $request->workarea_id);
+            });
+        }
+
+        if ($request->has('task_id')) {
+            $item = Task::find($request->task_id);
+            if (!$item) {
+                throw new ApiException("Paramètre 'task_id' n'est pas valide.");
+            }
+
+            $query->whereIn('id', $item->skills->pluck('id'));
+        }
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    protected function storeItem(array $arrayRequest)
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $arrayRequest = $request->all();
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'company_id' => 'required'
+        return Skill::create([
+            'name' => $arrayRequest['name'],
+            'company_id' => $arrayRequest['company_id'],
         ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 401);
-        }
-        $item = Skill::create($arrayRequest)->load('company');
-        return response()->json(['success' => $item], $this->successStatus);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    protected function updateItem($item, array $arrayRequest)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        $arrayRequest = $request->all();
-
-        $validator = Validator::make($arrayRequest, [
-            'name' => 'required',
-            'company_id' => 'required'
+        $item->update([
+            'name' => $arrayRequest['name'],
+            'company_id' => $arrayRequest['company_id']
         ]);
-
-        $update = Skill::where('id', $id)->update(['name' => $arrayRequest['name'], 'company_id' => $arrayRequest['company_id']]);
-        if ($update) {
-            $item = Skill::find($id)->load('company');
-            return response()->json(['success' => $item], $this->successStatus);
-        } else {
-            return response()->json(['errore' => 'error'], $this->errorStatus);
-        }
-    }
-
-    /**
-     * Restore the specified resource in storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function restore($id)
-    {
-        try {
-            $item = Skill::withTrashed()->findOrFail($id);
-            $success = $item->restore();
-
-            if ($success) {
-                return response()->json(['success' => $item->load('company')], $this->successStatus);
-            } else {
-                throw new Exception('Impossible de restaurer la compétence');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        $controllerLog = new Logger('skill');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('skill', ['destroy']);
-
-        try {
-            $item = Skill::findOrFail($id);
-            $success = $item->delete();
-
-            if ($success) {
-                return response()->json(['success' => $item->load('company')], $this->successStatus);
-            } else {
-                throw new Exception('Impossible d\'archiver la compétence');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
-    }
-
-    /**
-     * forceDelete the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function forceDelete($id)
-    {
-        $controllerLog = new Logger('skill');
-        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-        $controllerLog->info('skill', ['forceDelete']);
-
-
-        try {
-            $item = Skill::withTrashed()->findOrFail($id);
-            $success = $item->forceDelete();
-
-            if ($success) {
-                return response()->json(['success' => true], $this->successStatus);
-            } else {
-                throw new Exception('Impossible de supprimer la compétence');
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'error' => $th->getMessage()], 400);
-        }
-    }
-
-    /**
-     * getting skills by task.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function getByTaskId(int $task_id)
-    {
-        $items = TasksSkill::select('skill_id')->where('task_id', $task_id)->get();
-
-        if ($items) {
-            return response()->json(['success' => $items], $this->successStatus);
-        } else {
-            return response()->json(['errore' => 'error'], $this->errorStatus);
-        }
+        return $item;
     }
 }

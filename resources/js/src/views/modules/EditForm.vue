@@ -20,21 +20,15 @@
         :active.sync="activePrompt"
     >
         <div>
-            <form>
+            <form autocomplete="off" v-submit.prevent>
                 <div class="vx-row">
                     <div class="vx-col w-full">
-                        <v-select
+                        <infinite-select
+                            header="Société"
+                            model="company"
                             label="name"
-                            v-model="item.company"
-                            :options="companiesData"
-                            class="w-full my-8"
-                        >
-                            <template #header>
-                                <div class="vs-select--label">
-                                    Société
-                                </div>
-                            </template>
-                        </v-select>
+                            v-model="item.company_id"
+                        />
                         <vs-input
                             v-validate="'required|max:255'"
                             label-placeholder="Nom"
@@ -87,14 +81,14 @@
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect
+        InfiniteSelect
     },
     props: {
         itemId: {
@@ -104,10 +98,7 @@ export default {
     },
     data() {
         return {
-            item: Object.assign(
-                {},
-                this.$store.getters["moduleManagement/getItem"](this.itemId)
-            )
+            item: {}
         };
     },
     computed: {
@@ -115,7 +106,7 @@ export default {
             return (
                 !this.errors.any() &&
                 this.item.name != "" &&
-                this.item.company != null
+                this.item.company_id != null
             );
         },
         activePrompt: {
@@ -125,22 +116,15 @@ export default {
             set(value) {
                 this.$store
                     .dispatch("moduleManagement/editItem", {})
-                    .then(() => {})
                     .catch(err => {
                         console.error(err);
                     });
             }
-        },
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
         }
     },
     methods: {
         init() {
-            this.item = Object.assign(
-                {},
-                this.$store.getters["moduleManagement/getItem"](this.itemId)
-            );
+            this.item = this.$store.getters["moduleManagement/getSelectedItem"];
         },
         submitItem() {
             this.$validator.validateAll().then(result => {
@@ -148,7 +132,7 @@ export default {
                     const localItem = {
                         id: this.item.id,
                         name: this.item.name,
-                        company_id: this.item.company.id,
+                        company_id: this.item.company_id,
                         modulable_id: this.item.modulable_id,
                         type: this.item.type,
                         is_active: this.item.is_active
@@ -177,6 +161,9 @@ export default {
                 }
             });
         }
+    },
+    created() {
+        this.init();
     }
 };
 </script>

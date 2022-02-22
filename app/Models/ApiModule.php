@@ -5,25 +5,33 @@ namespace App\Models;
 class ApiModule extends BaseModule
 {
     protected $fillable = ['url', 'auth_headers'];
+    protected $hidden = ['connection'];
 
     public $timestamps = false;
+
+    public function getConnectionAttribute()
+    {
+        return [
+            'id' => $this->id,
+            'url' => $this->url ?? "",
+            'auth_headers' => $this->auth_headers ?? "",
+        ];
+    }
 
     public function module()
     {
         return $this->morphOne(BaseModule::class, 'modulable');
     }
 
-    public function getData()
+    public function getRows(ModuleDataType $mdt)
     {
-        $data = [];
+        $rows = [];
         try {
-            foreach ($this->module->sortedModuleDataTypes() as $mdt) {
-                // TODO
-            }
+            // TODO
         } catch (\Throwable $th) {
-            $data = [];
+            $rows = [];
             echo $th->getMessage();
         }
-        return $data;
+        return $rows;
     }
 }

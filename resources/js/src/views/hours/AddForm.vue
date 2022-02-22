@@ -1,8 +1,8 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button @click="activePrompt = true" class="w-full"
-            >Saisie des temps</vs-button
-        >
+        <vs-button @click="activePrompt = true" class="w-full">
+            Saisie des temps
+        </vs-button>
         <vs-prompt
             title="Saisies des temps"
             accept-text="Ajouter"
@@ -15,63 +15,27 @@
             :active.sync="showPrompt"
         >
             <div>
-                <form>
+                <form autocomplete="off" v-submit.prevent>
                     <div class="vx-row">
                         <div class="vx-col w-full">
-                            <v-select
-                                v-validate="'required'"
-                                name="project_id"
+                            <infinite-select
+                                required
+                                header="Projet"
+                                model="project"
                                 label="name"
-                                :multiple="false"
                                 v-model="itemLocal.project_id"
-                                :reduce="name => name.id"
-                                class="w-full"
-                                autocomplete
-                                :options="projectsData"
-                            >
-                                <template #header>
-                                    <div style="opacity: .8 font-size: .60rem">
-                                        Projet
-                                    </div>
-                                </template>
-                                <template #option="project">
-                                    <span>{{ `${project.name}` }}</span>
-                                </template>
-                            </v-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('project_id')"
-                                >{{ errors.first("project_id") }}</span
-                            >
-
-                            <!-- <v-select
-                                v-validate="'required'"
-                                name="user_id"
-                                label="lastname"
-                                :multiple="false"
-                                v-model="itemLocal.user_id"
-                                :reduce="lastname => lastname.id"
-                                class="w-full"
-                                autocomplete
-                                :options="usersData"
-                            >
-                                <template #header>
-                                    <div style="opacity: .8 font-size: .60rem">
-                                        Utilisateur
-                                    </div>
-                                </template>
-                                <template #option="user">
-                                    <span>{{
-                                        `${user.firstname} ${user.lastname}`
-                                    }}</span>
-                                </template>
-                            </v-select>
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('user_id')"
-                                >{{ errors.first("user_id") }}</span
-                            > -->
-
+                                :filters="{
+                                    company_id
+                                }"
+                            />
+                            <infinite-select
+                                required
+                                header="Tâche"
+                                model="task"
+                                label="name"
+                                v-model="itemLocal.task_id"
+                                :filters="tasksFilter"
+                            />
                             <p class="mt-5">Date</p>
                             <flat-pickr
                                 v-validate="'required'"
@@ -156,11 +120,8 @@
 </template>
 
 <script>
-// Store Module
-import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
-
 import moment from "moment";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // register custom messages
 import { Validator } from "vee-validate";
@@ -195,7 +156,7 @@ export default {
     },
     components: {
         flatPickr,
-        vSelect
+        InfiniteSelect
     },
     data() {
         const user = this.user || this.$store.state.AppActiveUser;
@@ -207,8 +168,10 @@ export default {
                 date: "",
                 description: "",
                 project_id: null,
+                task_id: null,
                 user_id: user.id
             },
+            company_id: user.company_id,
             updateEndHour: 12,
             endDisable: true,
             configDatePicker: () => ({
@@ -225,6 +188,7 @@ export default {
         user(newUser, oldUser) {
             if (newUser) {
                 this.itemLocal.user_id = newUser.id;
+                this.company_id = newUser.company_id;
             }
         }
     },
@@ -304,6 +268,8 @@ export default {
             return (
                 !this.errors.any() &&
                 this.itemLocal.project_id !== null &&
+                this.itemLocal.task_id &&
+                this.itemLocal.task_id !== null &&
                 this.itemLocal.user_id !== "" &&
                 this.itemLocal.date !== "" &&
                 this.itemLocal.startHour !== "" &&
@@ -311,64 +277,65 @@ export default {
             );
         },
         projectsData() {
-            return this.$store.state.projectManagement.projects;
-        }
+            return this.$store.getters["projectManagement/getItems"]
+                .filter(p => p.company_id === this.company_id)
+                .sort(function(a, b) {
+                    var textA = a.name.toUpperCase();
+                    var textB = b.name.toUpperCase();
+                    return textA < textB ? -1 : textA > textB ? 1 : 0;
+                });
+        },
+        tasksFilter() {
+            return {
+                project_id: this.itemLocal.project_id || 0
+            };
+        },
     },
     methods: {
         clearFields() {
             const user = this.$store.state.AppActiveUser;
-            this.itemLocal = {
+            this.itemLocal = Object.assign(this.itemLocal, {
                 date: "",
                 startHour: "",
                 endHour: "",
                 description: "",
                 project_id: null,
-                user_id: user.id
-            };
-            (this.activePrompt = false), this.handleClose();
+                task_id: null
+            });
+            this.activePrompt = false;
+            this.handleClose();
         },
         addItem() {
+           
             this.$validator.validateAll().then(result => {
                 if (result) {
-                    this.itemLocal.start_at =
-                        this.itemLocal.date + " " + this.itemLocal.startHour;
-                    this.itemLocal.end_at =
-                        this.itemLocal.date + " " + this.itemLocal.endHour;
-
+                    const payload = JSON.parse(JSON.stringify(this.itemLocal));
+                    payload.start_at = payload.date + " " + payload.startHour;
+                    payload.end_at = payload.date + " " + payload.endHour;
                     this.$store
-                        .dispatch("hoursManagement/addItem", this.itemLocal)
-                        .then(response => {
-                            if (response.data.success) {
-                                this.$vs.loading.close();
-                                this.$vs.notify({
-                                    title: "Ajout d'un horaire",
-                                    text: `Horaire ajouté avec succès`,
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "success"
-                                });
-                            } else {
-                                this.$vs.loading.close();
-                                this.$vs.notify({
-                                    title: "Une erreur est survenue",
-                                    text: response.data.error,
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "danger"
-                                });
-                            }
+                        .dispatch("hoursManagement/addItem", payload)
+                        .then(data => {
+                            this.$vs.notify({
+                                title: "Ajout d'un horaire",
+                                text: `Horaire ajouté avec succès`,
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "success"
+                            });
                         })
                         .catch(error => {
-                            this.$vs.loading.close();
                             this.$vs.notify({
-                                title: "Une erreur est survenue",
+                                title: "Erreur",
                                 text: error.message,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "danger"
                             });
+                        })
+                        .finally(() => {
+                            this.$vs.loading.close();
+                            this.clearFields();
                         });
-                    this.clearFields();
                 }
             });
             this.handleClose();

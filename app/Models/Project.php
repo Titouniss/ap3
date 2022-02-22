@@ -2,61 +2,53 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Task;
+use App\Traits\HasCompany;
+use App\Traits\HasDocuments;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 
 class Project extends Model
 {
-    use SoftDeletes;
+    use HasDocuments, SoftDeletes, HasCompany;
 
+    protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
 
-    protected $fillable = ['name', 'date', 'status', 'company_id', 'color', 'customer_id'];
+    protected $appends = ['progress'];
 
-    protected $appends = ['tasks'];
-
-    public function company()
+    public function getProgressAttribute()
     {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
+        $progress = [];
+        $tasks = $this->hasManyThrough(Task::class, TasksBundle::class, 'project_id', 'tasks_bundle_id')->get();
+        $tasks->load('taskTimeSpent');
+
+        $progress['nb_task'] = $tasks->count();
+        $progress['nb_task_done'] = $tasks->isNotEmpty() ? $tasks->filter(function ($task) { return $task->status === "done"; })->count() : 0;
+        $progress['task_percent'] = $progress['nb_task'] ? floor(100 * $progress['nb_task_done'] / $tasks->count()) : 0;
+
+        $progress['nb_task_time'] = 0;
+        $progress['nb_task_time_done'] = 0;
+        foreach($tasks as $task){
+            $progress['nb_task_time'] += $task->estimated_time;
+            $progress['nb_task_time_done'] += $task->time_spent;
+        }
+        $progress['task_time_percent'] = $progress['nb_task_time'] ? floor(100 * $progress['nb_task_time_done'] / $progress['nb_task_time']) : 0;
+
+        return $progress;
     }
 
     public function customer()
     {
-        return $this->belongsTo('App\Models\Customers', 'customer_id', 'id');
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
     public function tasksBundles()
     {
-        return $this->hasMany('App\Models\TasksBundle');
+        return $this->hasMany(TasksBundle::class);
     }
 
-    public function getTasksAttribute()
+    public function tasks()
     {
-        $tasksBundles = $this->tasksBundles;
-        $tasks = [];
-        foreach ($tasksBundles as $t) {
-            $tasks = Task::where('tasks_bundle_id', $t->id)->with('skills', 'previousTasks')->get();
-        }
-        return $tasks;
-    }
-
-    public function restoreCascade()
-    {
-        $this->restore();
-        TasksBundle::withTrashed()->where('project_id', $this->id)->restore();
-        foreach ($this->tasksBundles as $t) {
-            Task::where('tasks_bundle_id', $t->id)->restore();
-        }
-        return true;
-    }
-
-    public function deleteCascade()
-    {
-        foreach ($this->tasksBundles as $t) {
-            Task::where('tasks_bundle_id', $t->id)->delete();
-        }
-        TasksBundle::where('project_id', $this->id)->delete();
-        return $this->delete();
+        return $this->hasManyThrough(Task::class, TasksBundle::class, 'project_id', 'tasks_bundle_id')->with('skills', 'previousTasks');
     }
 }

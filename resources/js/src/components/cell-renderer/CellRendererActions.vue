@@ -5,9 +5,9 @@
         v-if="!disabled"
     >
         <vx-tooltip
-            v-if="authorizedToEdit && !params.data.deleted_at && canEdit"
+            v-if="authorizedTo('edit') && !params.data.deleted_at && canEdit"
             text="Modifier"
-            delay=".5s"
+            delay="5000s"
             class="mx-2"
         >
             <feather-icon
@@ -17,9 +17,9 @@
             />
         </vx-tooltip>
         <vx-tooltip
-            v-if="authorizedToDelete && usesSoftDelete && canArchive"
+            v-if="authorizedTo('delete') && usesSoftDelete && canArchive"
             :text="params.data.deleted_at ? 'Restaurer' : 'Archiver'"
-            delay=".5s"
+            delay="5000s"
             class="mx-2"
         >
             <feather-icon
@@ -34,18 +34,30 @@
         </vx-tooltip>
         <vx-tooltip
             v-if="
-                authorizedToDelete &&
+                authorizedTo('delete') &&
                     (params.data.deleted_at || !usesSoftDelete) &&
                     canDelete
             "
             text="Supprimer"
-            delay=".5s"
+            delay="5000s"
             class="mx-2"
         >
             <feather-icon
                 icon="Trash2Icon"
                 svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                 @click="confirmActionRecord(dialogTypes.delete)"
+            />
+        </vx-tooltip>
+        <vx-tooltip
+            v-if="isAdmin && this.params.model == 'company'"
+            text="Dupliquer"
+            delay="5000s"
+            class="mx-2"
+        >
+            <feather-icon
+                icon="CopyIcon"
+                svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
+                @click="confirmActionRecord('duplicate')"
             />
         </vx-tooltip>
 
@@ -61,9 +73,7 @@
         >
             <div>
                 <div>{{ dialogMessage }}</div>
-                <div v-if="dialogFootNote" class="mt-3">
-                    <small>{{ dialogFootNote }}</small>
-                </div>
+                <small v-if="footNote" class="mt-3">{{ footNote }}</small>
             </div>
         </vs-prompt>
     </div>
@@ -76,32 +86,36 @@ export default {
         return {
             dialogOpen: false,
             dialogMessage: "",
-            dialogFootNote: "",
             dialogType: "",
             dialogTypes: {
                 restore: "restore",
                 archive: "archive",
-                delete: "delete"
+                delete: "delete",
+                duplicate: "duplicate"
             },
             dialogColors: {
                 restore: "success",
                 archive: "warning",
-                delete: "danger"
+                delete: "danger",
+                duplicate: "primary"
             },
             dialogTitles: {
                 restore: "Confirmer restauration",
                 archive: "Confirmer archivage",
-                delete: "Confirmer suppression"
+                delete: "Confirmer suppression",
+                duplicate: "Confirmer duplication"
             },
             dialogAcceptText: {
                 restore: "Restaurer",
                 archive: "Archiver",
-                delete: "Supprimer"
+                delete: "Supprimer",
+                duplicate: "Dupliquer"
             },
             dialogActions: {
                 restore: this.restoreRecord,
                 archive: this.archiveRecord,
-                delete: this.deleteRecord
+                delete: this.deleteRecord,
+                duplicate: this.duplicateRecord
             }
         };
     },
@@ -120,42 +134,15 @@ export default {
         withPrompt() {
             return this.params.withPrompt;
         },
+        footNote() {
+            return (
+                this.params.footNotes && this.params.footNotes[this.dialogType]
+            );
+        },
         usesSoftDelete() {
             return this.params.usesSoftDelete !== undefined
                 ? this.params.usesSoftDelete
                 : true;
-        },
-        linkedTables() {
-            let returnString = "";
-            if (this.params.linkedTables) {
-                let lastElement = "";
-                if (this.params.linkedTables.length > 1) {
-                    lastElement = this.params.linkedTables[
-                        this.params.linkedTables.length - 1
-                    ];
-                    if (this.params.linkedTables.length > 3) {
-                        returnString =
-                            this.params.linkedTables
-                                .filter((table, index) => index <= 3)
-                                .map(table => `ses ${table}`)
-                                .join(", ") + "...";
-                    } else {
-                        returnString =
-                            this.params.linkedTables
-                                .filter(
-                                    (table, index) =>
-                                        index !==
-                                        this.params.linkedTables.length - 1
-                                )
-                                .map(table => `ses ${table}`)
-                                .join(", ") +
-                            (lastElement ? ` et ses ${lastElement}` : "");
-                    }
-                } else {
-                    returnString = `ses ${this.params.linkedTables[0]}`;
-                }
-            }
-            return returnString;
         },
         canEdit() {
             return this.params.canEdit
@@ -192,18 +179,36 @@ export default {
                 ? "h-5 w-5 text-success cursor-pointer"
                 : "h-5 w-5 hover:text-warning cursor-pointer";
         },
-        authorizedToDelete() {
-            return this.$store.getters.userHasPermissionTo(
-                `delete ${this.modelPlurial}`
-            );
-        },
-        authorizedToEdit() {
-            return this.$store.getters.userHasPermissionTo(
-                `edit ${this.modelPlurial}`
-            );
+        isAdmin() {
+            return this.$store.getters.AppActiveUser.is_admin;
         }
     },
     methods: {
+        authorizedTo(action, model = this.modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
+        onArchive() {
+            if (this.params.onArchive) {
+                this.params.onArchive(this.params.data);
+            }
+        },
+        onRestore() {
+            if (this.params.onRestore) {
+                this.params.onRestore(this.params.data);
+            }
+        },
+        onDelete() {
+            if (this.params.onDelete) {
+                this.params.onDelete(this.params.data);
+            }
+        },
+        onDuplicate() {
+            if (this.params.onDuplicate) {
+                this.params.onDuplicate(this.params.data);
+            }
+        },
         confirmActionRecord(type) {
             if (this.blockDelete && type === this.dialogTypes.delete) {
                 this.$vs.dialog({
@@ -215,6 +220,9 @@ export default {
             } else {
                 let message = "";
                 switch (type) {
+                    case "duplicate":
+                        message = `Voulez vous vraiment dupliquer ${this.name} ?`;
+                        break;
                     case "archive":
                         message = `Voulez vous vraiment archiver ${this.name} ?`;
                         break;
@@ -224,9 +232,6 @@ export default {
                     default:
                         message = `Voulez vous vraiment restaurer ${this.name} ?`;
                         break;
-                }
-                if (this.linkedTables) {
-                    this.dialogFootNote = `De même sera fait pour ${this.linkedTables}`;
                 }
                 this.dialogType = this.dialogTypes[type];
                 this.dialogMessage = message;
@@ -247,12 +252,12 @@ export default {
         },
         archiveRecord() {
             this.$store
-                .dispatch(
-                    `${this.model}Management/removeItem`,
+                .dispatch(`${this.model}Management/removeItems`, [
                     this.params.data.id
-                )
-                .then(response => {
+                ])
+                .then(data => {
                     this.showActionSuccess("archive");
+                    this.onArchive();
                 })
                 .catch(err => {
                     console.error(err);
@@ -261,12 +266,12 @@ export default {
         },
         restoreRecord() {
             this.$store
-                .dispatch(
-                    `${this.model}Management/restoreItem`,
+                .dispatch(`${this.model}Management/restoreItems`, [
                     this.params.data.id
-                )
-                .then(response => {
+                ])
+                .then(data => {
                     this.showActionSuccess("restore");
+                    this.onRestore();
                 })
                 .catch(err => {
                     console.error(err);
@@ -277,12 +282,27 @@ export default {
             this.$store
                 .dispatch(
                     `${this.model}Management/${
-                        this.usesSoftDelete ? "forceRemoveItem" : "removeItem"
+                        this.usesSoftDelete ? "forceRemoveItems" : "removeItems"
                     }`,
-                    this.params.data.id
+                    [this.params.data.id]
                 )
-                .then(response => {
+                .then(data => {
                     this.showActionSuccess("delete");
+                    this.onDelete();
+                })
+                .catch(err => {
+                    console.error(err);
+                    this.showActionError(err);
+                });
+        },
+        duplicateRecord() {
+            this.$store
+                .dispatch(`${this.model}Management/duplicateItem`, [
+                    this.params.data.id
+                ])
+                .then(data => {
+                    this.showActionSuccess("duplicate");
+                    this.onDuplicate();
                 })
                 .catch(err => {
                     console.error(err);
@@ -295,10 +315,12 @@ export default {
                 title: "Succès",
                 text:
                     type === "delete"
-                        ? `Suppression terminée avec succès`
+                        ? "Suppression terminée avec succès"
                         : type === "archive"
-                        ? `Archivage terminé avec succès`
-                        : `Restauration terminée avec succès`
+                        ? "Archivage terminé avec succès"
+                        : type === "duplicate"
+                        ? "Duplication terminée avec succès"
+                        : "Restauration terminée avec succès"
             });
         },
         showActionError(error) {

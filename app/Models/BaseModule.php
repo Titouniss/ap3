@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +11,8 @@ use Monolog\Logger;
 
 class BaseModule extends Model
 {
+    use HasCompany;
+
     protected $fillable = ['name', 'modulable_id', 'modulable_type', 'last_synced_at', 'is_active', 'company_id'];
     protected $appends = ['type'];
 
@@ -18,14 +21,14 @@ class BaseModule extends Model
         return $this->modulable_type === SqlModule::class ? "sql" : "api";
     }
 
+    public function getConnectionAttribute()
+    {
+        return $this->modulable->connection_data;
+    }
+
     public function modulable()
     {
         return $this->morphTo();
-    }
-
-    public function company()
-    {
-        return $this->belongsTo('App\Models\Company', 'company_id', 'id')->withTrashed();
     }
 
     public function moduleDataTypes()
@@ -40,36 +43,56 @@ class BaseModule extends Model
         });
     }
 
+    public function hasModuleDataTypeForSlug($slug)
+    {
+        return $this->sortedModuleDataTypes()->first(function ($mdt) use ($slug) {
+            return $mdt->dataType->slug === $slug;
+        });
+    }
+
     public function sync()
     {
         try {
-            DB::beginTransaction();
-            foreach ($this->modulable->getData() as $tableName => $tableData) {
-                $dataType = DataType::where('slug', $tableName)->firstOrFail();
+            foreach ($this->sortedModuleDataTypes() as $mdt) {
+                DB::beginTransaction();
+
+                $dataType = $mdt->dataType;
                 $table = app($dataType->model);
-                foreach ($tableData as $rowData) {
-                    $data = array_filter(get_object_vars($rowData), function ($key) {
+
+                foreach ($this->modulable->getRows($mdt) as $row) {
+                    $data = array_filter(get_object_vars($row), function ($key) {
                         return $key !== "id";
                     }, ARRAY_FILTER_USE_KEY);
-                    $oldId = ModelHasOldId::firstOrNew(['old_id' => $rowData->id, 'model' => $dataType->model]);
-                    if ($oldId->new_id) {
-                        $table->find($oldId->new_id)->update($data);
+                    $oldId = ModelHasOldId::firstOrNew(['old_id' => $row->id, 'model' => $dataType->model, 'company_id' => $this->company_id]);
+                    if (isset($oldId->new_id)) {
+                        if ($model = $table->find($oldId->new_id)) {
+                            $model->update($data);
+                        } else {
+                            ModelHasOldId::where([
+                                'old_id' => $row->id,
+                                'model' => $dataType->model,
+                                'company_id' => $this->company_id
+                            ])->update(['new_id' => $table->create($data)->id]);
+                        }
                     } else {
-                        $oldId->new_id = $table->create($data)->id;
-                        $oldId->save();
+                        ModelHasOldId::create([
+                            'old_id' => $row->id,
+                            'model' => $dataType->model,
+                            'company_id' => $this->company_id,
+                            'new_id' => $table->create($data)->id
+                        ]);
                     }
                 }
+
+                DB::commit();
             }
-            DB::commit();
+
             $this->last_synced_at = Carbon::now();
             $this->save();
             return true;
         } catch (\Throwable $th) {
-            echo $th->getMessage();
+            echo $th->getMessage() . "\n\r";
             DB::rollBack();
-            $controllerLog = new Logger('BaseModule');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('BaseModule', [$th->getMessage()]);
             return false;
         }
     }

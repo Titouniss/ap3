@@ -15,21 +15,15 @@
             :active.sync="activePrompt"
         >
             <div>
-                <form>
+                <form autocomplete="off" v-submit.prevent>
                     <div class="vx-row">
                         <div class="vx-col w-full">
-                            <v-select
+                            <infinite-select
+                                header="Société"
+                                model="company"
                                 label="name"
-                                v-model="item.company"
-                                :options="companiesData"
-                                class="w-full my-8"
-                            >
-                                <template #header>
-                                    <div class="vs-select--label">
-                                        Société
-                                    </div>
-                                </template>
-                            </v-select>
+                                v-model="item.company_id"
+                            />
                             <vs-input
                                 v-validate="'required|max:255'"
                                 label-placeholder="Nom"
@@ -83,14 +77,14 @@
 <script>
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect
+        InfiniteSelect
     },
     data() {
         return {
@@ -98,7 +92,7 @@ export default {
 
             item: {
                 name: "",
-                company: null,
+                company_id: null,
                 type: "sql",
                 is_active: true
             }
@@ -109,18 +103,15 @@ export default {
             return (
                 !this.errors.any() &&
                 this.item.name != "" &&
-                this.item.company != null
+                this.item.company_id != null
             );
-        },
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
         }
     },
     methods: {
         clearFields() {
             this.item = {
                 name: "",
-                company: null,
+                company_id: null,
                 type: "sql"
             };
         },
@@ -129,17 +120,17 @@ export default {
                 if (result) {
                     const localItem = {
                         name: this.item.name,
-                        company_id: this.item.company.id,
+                        company_id: this.item.company_id,
                         type: this.item.type,
                         is_active: this.item.is_active
                     };
                     this.$store
                         .dispatch("moduleManagement/addItem", localItem)
-                        .then(response => {
+                        .then(data => {
                             this.clearFields();
                             this.$vs.notify({
                                 title: "Ajout d'un module",
-                                text: `"${response.data.success.name}" ajouté avec succès`,
+                                text: `"${data.payload.name}" ajouté avec succès`,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "success"

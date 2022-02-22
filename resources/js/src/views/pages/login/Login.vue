@@ -18,12 +18,12 @@
                 <img
                     src="@assets/images/login/plan-icon.png"
                     alt="login"
-                    class="w-2/5 ml-auto mr-auto"
+                    class="w-4/5 ml-auto mr-auto"
                 />
                 <div class="p-8 login-tabs-container">
                     <div class="vx-card__title mb-4">
                         <h4 class="mb-4 text-center">
-                            Bienvenue sur votre outil de plannification
+                            Bienvenue sur votre outil de planification
                         </h4>
                         <p class="text-center">Connexion</p>
                     </div>
@@ -48,7 +48,7 @@
                             placeholder="Mot de passe"
                             v-model="password"
                             class="w-full mt-6"
-                            v-on:keyup.enter="loginJWT"
+                            v-on:keyup.enter="executeLogin"
                         />
 
                         <div class="flex justify-center my-5 ml-auto mr-auto">
@@ -71,7 +71,7 @@
                                 color="primary"
                                 text-color="white"
                                 :disabled="!validateForm"
-                                @click="loginJWT"
+                                @click="executeLogin"
                                 >Connexion</vs-button
                             >
                         </vs-row>
@@ -84,6 +84,7 @@
 
 <script>
 import themeConfig from "@/../themeConfig.js";
+import moment from "moment";
 
 export default {
     data() {
@@ -106,13 +107,28 @@ export default {
             );
         }
     },
+    mounted() {
+        let expiresAt = localStorage.getItem("token_expires_at");
+        if (expiresAt && expiresAt < moment().unix()) {
+            localStorage.removeItem("logged_in");
+            localStorage.removeItem("token");
+            localStorage.removeItem("token_expires_at");
+            localStorage.removeItem("user_info");
+            this.$vs.notify({
+                color: "danger",
+                title: "Déconnexion",
+                text: "Vous avez été déconnecté automatiquement.",
+                time: 10000
+            });
+        }
+    },
     methods: {
         checkLogin() {
             // If user is already logged in notify
-            if (this.$store.state.auth.isUserLoggedIn()) {
+            if (this.$store.getters["auth.isUserLoggedIn"]) {
                 this.$vs.notify({
                     title: "Connexion",
-                    text: "Vous êtes déjà connecté!",
+                    text: "Vous êtes déjà connecté !",
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "warning"
@@ -122,39 +138,19 @@ export default {
             }
             return true;
         },
-        loginJWT() {
+        executeLogin() {
             if (!this.checkLogin()) return;
-
-            // Loading
-            this.$vs.loading();
 
             const payload = {
                 checkbox_remember_me: this.checkbox_remember_me,
-                userDetails: {
-                    login: this.login,
-                    email: this.email,
-                    password: this.password
-                }
+                login: this.login,
+                password: this.password
             };
 
+            this.$vs.loading();
             this.$store
-                .dispatch("auth/loginJWT", payload)
-                .then(r => {
-                    this.$vs.loading.close();
-                    if (r.activeResend) {
-
-                        this.$vs.notify({
-                            title: "Echec",
-                            text: r.message,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "danger"
-                        });
-                        this.$router.push("/pages/verify").catch(() => {});
-                    }
-                })
+                .dispatch("auth/login", payload)
                 .catch(error => {
-                    this.$vs.loading.close();
                     this.$vs.notify({
                         title: "Echec",
                         text: error.message,
@@ -162,10 +158,8 @@ export default {
                         icon: "icon-alert-circle",
                         color: "danger"
                     });
-                    if (error.activeResend) {
-                        this.$router.push("/pages/verify").catch(() => {});
-                    }
-                });
+                })
+                .finally(() => this.$vs.loading.close());
         },
         registerUser() {
             if (!this.checkLogin()) return;

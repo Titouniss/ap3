@@ -16,19 +16,15 @@ export default {
         } else {
           text = "Pas de société";
         }
-      } else if (this.params.colDef.field === "roles") {
+      } else if (this.params.colDef.field === "role") {
         if (this.params.value !== null && this.params.value !== undefined) {
-          this.params.value.forEach(element => {
-            if (text !== "") {
-              text = " |" + element.name;
-            } else text = element.name;
-          });
+          text = this.params.value.name;
         } else {
           text = "Pas de rôle";
         }
       }
       return text;
-    }
-  }
+    },
+  },
 };
 </script>

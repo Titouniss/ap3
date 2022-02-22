@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use stdClass;
 
-class SqlModule extends BaseModule
+class SqlModule extends Model
 {
     protected $fillable = ['driver', 'host', 'port', 'charset', 'database', 'username', 'password'];
+    protected $hidden = ['connection'];
 
     public $timestamps = false;
 
@@ -20,100 +22,95 @@ class SqlModule extends BaseModule
         return $this->morphOne(BaseModule::class, 'modulable');
     }
 
-    public function connectionData()
+    public function getConnectionDataAttribute($includePassword = false)
     {
         $data = [
-            'driver' => $this->driver,
-            'host' => $this->host,
-            'charset' => $this->charset,
-            'database' => $this->database,
-            'username' => $this->username,
-            'password' => $this->password,
+            'id' => $this->id,
+            'driver' => $this->driver ?? "",
+            'host' => $this->host ?? "",
+            'port' => $this->port ?? "",
+            'charset' => $this->charset ?? "",
+            'database' => $this->database ?? "",
+            'username' => $this->username ?? "",
         ];
 
-        if ($this->driver !== 'sqlite') {
-            $port = $this->port;
-            if (!$port) {
-                switch ($this->driver) {
-                    case 'pgsql':
-                        $port = '5432';
-                        break;
-                    case 'sqlsrv':
-                        $port = '1433';
-                        break;
-                    default: // MySQL
-                        $port = '3306';
-                        break;
-                }
-            }
-            $data['port'] = $port;
+        if ($includePassword) {
+            $data['password'] = $this->password;
+        } else {
+            $data['has_password'] = $this->password !== null;
         }
+
         return $data;
     }
 
-    public function getData()
+    public function getRows(ModuleDataType $mdt)
     {
-        $data = [];
+        $rows = [];
+        $lowestUniqueId = 0;
         try {
-            Config::set('database.connections.' . $this->module->name, $this->connectionData());
+            Config::set('database.connections.' . $this->module->name, $this->getConnectionDataAttribute(true));
             DB::purge($this->module->name);
-            foreach ($this->module->sortedModuleDataTypes() as $mdt) {
-                $query = DB::connection($this->module->name)->table($mdt->source)->limit(10);
-                foreach ($mdt->moduleDataRows as $mdr) {
-                    $query->selectRaw($mdr->source . ' AS ' . $mdr->dataRow->field);
+
+            $query = DB::connection($this->module->name)->table($mdt->source);
+            $onlyDefaultValueRows = [];
+            foreach ($mdt->moduleDataRows as $mdr) {
+                if ($mdr->source) {
+                    $query->selectRaw($mdr->source . ' AS field_' . $mdr->dataRow->field);
+                } else {
+                    // Set default value directly without getting from source
+                    array_push($onlyDefaultValueRows, $mdr);
                 }
-                $results = $query->get()->map(function ($result) use ($mdt) {
-                    $object = new stdClass();
-                    if ($mdt->dataType->slug !== "unavailabilities") {
-                        $object->company_id = $this->module->company_id;
-                    }
-                    foreach (get_object_vars($result) as $key => $value) {
+            }
+
+            foreach ($query->get() as $result) {
+                $row = new stdClass();
+                if (!in_array($mdt->dataType->slug, ["unavailabilities", "tasks", "task_time_spent"])) {
+                    $row->company_id = $this->module->company_id;
+                }
+
+                try {
+                    foreach (get_object_vars($result) as $k => $value) {
+                        $key = str_replace('field_', "", $k);
                         $dataRow = DataRow::where('data_type_id', $mdt->data_type_id)->where('field', $key)->firstOrFail();
                         $mdr = ModuleDataRow::where('module_data_type_id', $mdt->id)->where('data_row_id', $dataRow->id)->firstOrFail();
-                        $newValue = $value ?? $mdr->default_value;
-                        if ($newValue) {
-                            $details = null;
-                            if ($mdr->details) {
-                                $details = json_decode($mdr->details);
-                            }
-                            switch ($dataRow->type) {
-                                case 'integer':
-                                    $newValue = intval($newValue);
-                                    break;
-                                case 'datetime':
-                                    $newValue = new Carbon($newValue);
-                                    break;
-                                case 'enum':
-                                    if ($details && $details->options) {
-                                        $newValue = $details->options->{$newValue} ?? $mdr->default_value;
-                                    }
-                                    break;
-                                case 'relationship':
-                                    if ($details && $details->model) {
-                                        $newValue = ModelHasOldId::where('model', $details->model)->where('old_id', $result->id)->firstOrFail()->id;
-                                    }
-                                    break;
-                                default: // String
-                                    if ($details && $details->max_length) {
-                                        $newValue = substr($newValue, 0, intval($details->max_length));
-                                    }
-                                    break;
-                            }
-                        }
-                        $object->{$key} = $newValue;
-                    }
-                    return $object;
-                });
+                        $details = json_decode($mdr->details);
 
-                $data[$mdt->dataType->slug] = $results;
+                        $newValue = $value ?? $mdr->default_value;
+                        if ($details && isset($details->only_if_null)) {
+                            if (
+                                $details->only_if_null
+                                && $currentModel = app($mdr->moduleDataType->dataType->model)->find(
+                                    ModelHasOldId::firstOrNew([
+                                        'company_id' => $this->module->company_id,
+                                        'model' => $mdr->moduleDataType->dataType->model,
+                                        'old_id' => $result->field_id
+                                    ])->new_id
+                                )
+                            ) {
+                                $newValue = $currentModel->{$mdr->dataRow->field};
+                            } else {
+                                $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
+                            }
+                        } else {
+                            $newValue = $mdr->applyDetailsToValue($newValue, $lowestUniqueId);
+                        }
+                        $row->{$key} = $newValue;
+                    }
+
+                    foreach ($onlyDefaultValueRows as $mdr) {
+                        $row->{$mdr->dataRow->field} = $mdr->applyDetailsToValue($mdr->default_value, $lowestUniqueId);
+                    }
+
+                    array_push($rows, $row);
+                } catch (\Throwable $th) {
+                    echo $th->getMessage() . "\n\r";
+                }
             }
         } catch (\Throwable $th) {
-            $data = [];
-            echo $th->getMessage();
-            $controllerLog = new Logger('SQLModule');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')), Logger::INFO);
-            $controllerLog->info('SQLModule', [$th->getMessage()]);
+            $rows = [];
+            echo $th->getMessage() . "\n\r";
         }
-        return $data;
+
+        return $rows;
     }
 }

@@ -1,299 +1,125 @@
-/*=========================================================================================
-  File Name: moduleAuthActions.js
-  Description: Auth Module Actions
-  ----------------------------------------------------------------------------------------
-  Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
-  Author: Pixinvent
-  Author URL: http://www.themeforest.net/user/pixinvent
-==========================================================================================*/
-
-import jwt from "../../http/requests/auth/jwt/index.js";
+import { apiRequest } from "@/http/requests";
 import router from "@/router";
 import moment from "moment";
-import axios from "@/axios.js";
+
+const slug = "auth";
+
 export default {
-    updateUsername({ commit }, payload) {
-        payload.user
-            .updateProfile({
-                displayName: payload.displayName
-            })
-            .then(() => {
-                // If username update is success
-                // update in localstorage
-                const newUserData = Object.assign(
-                    {},
-                    payload.user.providerData[0]
-                );
-                newUserData.displayName = payload.displayName;
-                commit("UPDATE_USER_INFO", newUserData, { root: true });
+    login: ({ commit }, user) => {
+        return new Promise((resolve, reject) => {
+            const { login, password } = user;
 
-                // If reload is required to get fresh data after update
-                // Reload current page
-                if (payload.isReloadRequired) {
+            return apiRequest(`${slug}/login`, "post", null, {
+                login,
+                password
+            })
+                .then(data => {
+                    commit("UPDATE_USER_INFO", data.payload, {
+                        root: true
+                    });
+                    commit("SET_BEARER", data.token.value);
+                    localStorage.setItem("logged_in", true);
+                    localStorage.setItem("token", data.token.value);
+                    localStorage.setItem(
+                        "token_expires_at",
+                        moment(data.token.expires_at).unix() || moment().unix()
+                    );
+
                     router.push(router.currentRoute.query.to || "/");
-                }
-            })
-            .catch(err => {
-                payload.notify({
-                    time: 8800,
-                    title: "Error",
-                    text: err.message,
-                    iconPack: "feather",
-                    icon: "icon-alert-circle",
-                    color: "danger"
-                });
-            });
-    },
-    // JWT
-    loginJWT({ commit }, payload) {
-        return new Promise((resolve, reject) => {
-            jwt.login(payload.userDetails.login, payload.userDetails.password)
-                .then(response => {
-                    const data = response.data;
-                    // If there's user data in response
-                    if (data && data.success) {
-                        // Set accessToken
-                        if (data.userData) {
-                            // Update user details
-                            commit("UPDATE_USER_INFO", data.userData, {
-                                root: true
-                            });
-                        }
-                        if (data.module) {
-                            commit("SET_MODULE", data.module, {
-                                root: true
-                            });
-                        }
-                        if (data.success.token) {
-                            // Set bearer token in axios
-                            commit("SET_BEARER", data.success.token);
-                        }
-                        localStorage.setItem("loggedIn", true);
-                        localStorage.setItem("token", data.success.token);
-                        localStorage.setItem(
-                            "tokenExpires",
-                            moment(data.success.tokenExpires).unix() ||
-                            moment().unix()
-                        );
-                        // Navigate User to homepage
-                        if (data.userData.is_password_change === 0) {
-                            router.push(router.currentRoute.query.to || "/pages/change-password");
-                        } else {
-                            router.push(router.currentRoute.query.to || "/");
-                        }
-                        resolve(response);
-                    } else if (data && data.verify === false) {
-                        reject({
-                            message:
-                                "Veuillez valider votre adresse e-mail avant de vous connecter.",
-                            activeResend: true
-                        });
-                    } else if (data.error.includes("deactivated")) {
-                        reject({
-                            message:
-                                "Connexion impossible le compte est désactivé."
-                        });
-                    } else if (data.error.includes("Trial")) {
-                        reject({
-                            message:
-                                "Connexion impossible la période d'essaie est terminée."
-                        });
-                    } else {
-                        reject({
-                            message:
-                                "Connexion impossible l’identifiant ou le mot de passe est incorrect."
-                        });
-                    }
+                    resolve(data);
                 })
                 .catch(error => {
-                    let message =
-                        "Connexion au serveur impossible, Veuillez réessayer ultérieurement.";
-                    let activeResend = false;
-                    if (
-                        error.response.data.message ===
-                        "Your email address is not verified."
-                    ) {
-                        activeResend = true;
-                        message =
-                            "Veuillez valider votre adresse e-mail avant de vous connecter.";
+                    if (error.payload) {
+                        if (error.payload.change_password) {
+                            router.push({
+                                name: "page-change-password",
+                                query: { token: error.payload.register_token }
+                            });
+                        } else if (error.payload.email_not_verified) {
+                            router.push("/pages/verify");
+                        }
                     }
-                    reject({ message: message, activeResend: activeResend });
-                });
-        });
-    },
-    registerUserJWT({ commit }, payload) {
-        const {
-            firstname,
-            lastname,
-            email,
-            password,
-            confirmPassword,
-            companyName,
-            isTermsConditionAccepted
-        } = payload.userDetails;
-
-        return new Promise((resolve, reject) => {
-            jwt.registerUser(
-                firstname,
-                lastname,
-                email,
-                password,
-                confirmPassword,
-                companyName,
-                isTermsConditionAccepted
-            )
-                .then(response => {
-                    const data = response.data;
-                    // Redirect User
-                    if (data && data.success) {
-                        localStorage.setItem("loggedIn", true);
-                        localStorage.setItem("token", data.success.token);
-                        localStorage.setItem(
-                            "tokenExpires",
-                            data.success.tokenExpires || new Date()
-                        );
-                        commit("SET_BEARER", data.success.token);
-                        commit("UPDATE_USER_INFO", data.userData, {
-                            root: true
-                        });
-                        // Update data in localStorage
-                        router.push(router.currentRoute.query.to || "/");
-                        resolve(response);
-                    }
-                    reject({ message: response.data.error });
-                })
-                .catch(error => {
                     reject(error);
                 });
         });
     },
-    updateUserJWT({ commit }, payload) {
+    register: ({ commit }, user) => {
         const {
             firstname,
             lastname,
+            company_name,
+            contact_function,
+            email,
+            contact_tel1,
+            password,
+            c_password,
+            terms_accepted,
+            registerLink,
+            recaptcha
+        } = user;
+
+        return apiRequest(
+            `${slug}/register`,
+            "post",
+            payload => router.push("/pages/login"),
+            {
+                firstname,
+                lastname,
+                company_name,
+                contact_function,
+                email,
+                contact_tel1,
+                password,
+                c_password,
+                terms_accepted,
+                registerLink,
+                "g-recaptcha-response": recaptcha
+            }
+        );
+    },
+    logout: ({ commit }) => {
+        return apiRequest(`${slug}/logout`, "post", payload => {
+            commit("CLEAN_USER_INFO", {}, { root: true });
+            localStorage.removeItem("logged_in");
+            localStorage.removeItem("token");
+            localStorage.removeItem("token_expires_at");
+            localStorage.removeItem("user_info");
+        });
+    },
+    forgotPassword: ({ commit }, user) => {
+        const { email } = user;
+
+        return apiRequest(`${slug}/password/forgot`, "post", null, { email });
+    },
+    resetPassword: ({ commit }, user) => {
+        const { email, password, c_password, token } = user;
+
+        return apiRequest(`${slug}/password/reset`, "post", null, {
             email,
             password,
-            confirmPassword,
-            isTermsConditionAccepted,
+            password_confirmation: c_password,
             token
-        } = payload.userDetails;
+        });
+    },
+    updatePassword: ({ commit }, user) => {
+        const { register_token, new_password } = user;
 
-        return new Promise((resolve, reject) => {
-            jwt.registerUserWithToken(
-                firstname,
-                lastname,
-                email,
-                password,
-                confirmPassword,
-                isTermsConditionAccepted,
-                token
-            )
-                .then(response => {
-                    const data = response.data;
-                    // Redirect User
-                    if (data && data.success) {
-                        localStorage.setItem("loggedIn", true);
-                        localStorage.setItem("token", data.success.token);
-                        localStorage.setItem(
-                            "tokenExpires",
-                            data.success.tokenExpires || new Date()
-                        );
-                        commit("SET_BEARER", data.success.token);
-                        commit("UPDATE_USER_INFO", data.userData, {
-                            root: true
-                        });
-                        // Update data in localStorage
-                        router.push(router.currentRoute.query.to || "/");
-                    }
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
+        return apiRequest(`${slug}/password/update`, "post", null, {
+            register_token,
+            new_password
         });
     },
-    fetchAccessToken() {
-        return new Promise(resolve => {
-            jwt.refreshToken().then(response => {
-                resolve(response);
-            });
-        });
+    verify({ commit }, user) {
+        const { email } = user;
+
+        return apiRequest(`${slug}/email/resend`, "post", null, { email });
     },
-    fetchItemWithToken(context, token) {
-        return new Promise((resolve, reject) => {
-            axios
-                .get(`/api/auth/user/registration/${token}`)
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
-    },
-    forgotPassword({ commit }, payload) {
-        return new Promise(resolve => {
-            jwt.forgotPassword(payload.email)
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
-    },
-    resetPassword({ commit }, payload) {
-        return new Promise((resolve, reject) => {
-            jwt.resetPassword(
-                payload.email,
-                payload.password,
-                payload.c_password,
-                payload.token
-            )
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
-    },
-    logoutJWT({ commit }) {
-        return new Promise((resolve, reject) => {
-            jwt.logout()
-                .then(response => {
-                    commit("CLEAN_USER_INFO", {}, { root: true });
-                    localStorage.removeItem("loggedIn");
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("tokenExpires");
-                    localStorage.removeItem("userInfo");
-                    resolve(response);
-                })
-                .catch(error => {
-                    let message =
-                        "Connexion au serveur impossible, Veuillez réessayer ultérieurement.";
-                    reject({ message: message });
-                });
-        });
-    },
-    verify({ commit }, payload) {
-        return new Promise((resolve, reject) => {
-            jwt.verify(payload.email)
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    let message =
-                        "Connexion au serveur impossible, Veuillez réessayer ultérieurement.";
-                    if (
-                        error.response.data.message ===
-                        "Your email address is not verified."
-                    ) {
-                        message =
-                            "Veuillez valider votre adresse e-mail avant de vous connecter.";
-                    }
-                    reject({ message: message });
-                });
+    registrationLink({ commit }, user) {
+        const { id, email } = user;
+
+        return apiRequest(`${slug}/email/registrationLink`, "post", null, {
+            id,
+            email
         });
     }
 };

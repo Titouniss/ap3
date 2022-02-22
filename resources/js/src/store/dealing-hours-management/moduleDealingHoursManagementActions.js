@@ -60,9 +60,9 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
-  getOvertimes({ commit }) {
+  getOvertimes({ commit }, user_id) {
     return new Promise((resolve, reject) => {
-      axios.get(`/api/dealing-hours-management/overtimes`)
+      axios.get(`/api/dealing-hours-management/overtimes/${user_id}`)
         .then((response) => {
           commit('EDIT_ITEM', response.data.success)
           resolve(response)
@@ -75,6 +75,7 @@ export default {
       axios.post(`/api/dealing-hours-management/update/${payload.id}`, payload)
         .then((response) => {
           resolve(response)
+          
         })
         .catch((error) => { reject(error) })
     })

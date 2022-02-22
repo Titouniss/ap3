@@ -40,46 +40,12 @@
                     <vs-row type="flex">
                         <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
 
-                        <!-- ACTION - DROPDOWN -->
-                        <vs-dropdown vs-trigger-click class="cursor-pointer">
-                            <div
-                                class="p-3 shadow-drop rounded-lg d-theme-dark-light-bg cursor-pointer flex items-end justify-center text-lg font-medium w-32"
-                            >
-                                <span class="mr-2 leading-none">Actions</span>
-                                <feather-icon
-                                    icon="ChevronDownIcon"
-                                    svgClasses="h-4 w-4"
-                                />
-                            </div>
-
-                            <vs-dropdown-menu>
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('delete')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="TrashIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Supprimer</span>
-                                    </span>
-                                </vs-dropdown-item>
-
-                                <vs-dropdown-item
-                                    @click="confirmDeleteRecord('archive')"
-                                >
-                                    <span class="flex items-center">
-                                        <feather-icon
-                                            icon="ArchiveIcon"
-                                            svgClasses="h-4 w-4"
-                                            class="mr-2"
-                                        />
-                                        <span>Archiver</span>
-                                    </span>
-                                </vs-dropdown-item>
-                            </vs-dropdown-menu>
-                        </vs-dropdown>
+                        <multiple-actions
+                            model="workarea"
+                            model-plurial="workareas"
+                            :items="selectedItems"
+                            @on-action="onAction"
+                        />
 
                         <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
                         <vs-input
@@ -160,6 +126,7 @@
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
+                @selection-changed="onSelectedItemsChanged"
             ></ag-grid-vue>
 
             <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
@@ -172,16 +139,16 @@
 <script>
 var model = "workarea";
 var modelPlurial = "workareas";
-var modelTitle = "Ilot";
+var modelTitle = "Pôle de production";
 
 import { AgGridVue } from "ag-grid-vue";
 import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
-import vSelect from "vue-select";
 
 // Store Module
 import moduleSkillManagement from "@/store/skill-management/moduleSkillManagement.js";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
+import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 
 //CRUD
 import AddForm from "./AddForm.vue";
@@ -192,16 +159,21 @@ import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererRelationSkills from "./cell-renderer/CellRendererRelationSkills.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererItemsList from "@/components/cell-renderer/CellRendererItemsList.vue";
 
 // Components
-import RefreshModule from "@/components/buttons/RefreshModule.vue";
+import RefreshModule from "@/components/inputs/buttons/RefreshModule.vue";
+import MultipleActions from "@/components/inputs/buttons/MultipleActions.vue";
 
-var modelTitle = "Ilot";
+// Mixins
+import { multipleActionsMixin } from "@/mixins/lists";
+
+var modelTitle = "Pôle de production";
 
 export default {
+    mixins: [multipleActionsMixin],
     components: {
         AgGridVue,
-        vSelect,
 
         AddForm,
         EditForm,
@@ -211,9 +183,11 @@ export default {
         CellRendererActions,
         CellRendererRelations,
         CellRendererRelationSkills,
+        CellRendererItemsList,
 
         // Components
-        RefreshModule
+        RefreshModule,
+        MultipleActions
     },
     data() {
         return {
@@ -222,7 +196,9 @@ export default {
             // AgGrid
             gridApi: null,
             gridOptions: {
-                localeText: { noRowsToShow: "Aucun îlot à afficher" }
+                localeText: {
+                    noRowsToShow: "Aucun pôle de production à afficher"
+                }
             },
             defaultColDef: {
                 sortable: true,
@@ -244,15 +220,25 @@ export default {
                     filter: true
                 },
                 {
-                    headerName: "Société",
-                    field: "company",
-                    filter: true,
-                    cellRendererFramework: "CellRendererRelations"
-                },
-                {
                     headerName: "Compétences",
                     field: "skills",
-                    cellRendererFramework: "CellRendererRelationSkills"
+                    cellRendererFramework: "CellRendererItemsList",
+                    cellRendererParams: {
+                        label: "name"
+                    }
+                },
+                {
+                    headerName: "Max opérateurs",
+                    field: "max_users",
+                    filter: true,
+                    width: 110
+                },
+                {
+                    headerName: "Société",
+                    field: "company",
+                    hide: !this.$store.state.AppActiveUser.is_admin,
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations"
                 },
                 {
                     sortable: false,
@@ -264,8 +250,9 @@ export default {
                         model: "workarea",
                         modelPlurial: "workareas",
                         withPrompt: true,
-                        name: data => `l'îlot ${data.name}`
-                    }
+                        name: data => `le pôle de production ${data.name}`
+                    },
+                    width: 60
                 }
             ],
 
@@ -280,7 +267,7 @@ export default {
     },
     computed: {
         workareasData() {
-            return this.$store.state.workareaManagement.workareas;
+            return this.$store.getters["workareaManagement/getItems"];
         },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -291,7 +278,10 @@ export default {
             else return 0;
         },
         itemIdToEdit() {
-            return this.$store.state.workareaManagement.workarea.id || 0;
+            return (
+                this.$store.getters["workareaManagement/getSelectedItem"].id ||
+                0
+            );
         },
         currentPage: {
             get() {
@@ -310,91 +300,6 @@ export default {
         },
         addRecord() {
             this.$router.push(`/${modelPlurial}/${model}-add/`).catch(() => {});
-        },
-        confirmDeleteRecord(type) {
-            let selectedRow = this.gridApi.getSelectedRows();
-            let singleWorkarea = selectedRow[0];
-
-            this.$vs.dialog({
-                type: "confirm",
-                color: "danger",
-                title:
-                    type === "delete"
-                        ? "Confirmer suppression"
-                        : "Confirmer archivage",
-                text:
-                    type === "delete" &&
-                    this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment supprimer ces îlots ?`
-                        : type === "delete" &&
-                          this.gridApi.getSelectedRows().length === 1
-                        ? `Voulez vous vraiment supprimer l'îlot ${singleWorkarea.name} ?`
-                        : this.gridApi.getSelectedRows().length > 1
-                        ? `Voulez vous vraiment archiver ces îlots ?`
-                        : `Voulez vous vraiment archiver l'îlot ${singleWorkarea.name} ?`,
-                accept:
-                    type === "delete" ? this.deleteRecord : this.archiveRecord,
-                acceptText: type === "delete" ? "Supprimer" : "Archiver",
-                cancelText: "Annuler"
-            });
-        },
-        deleteRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch(
-                        "workareaManagement/forceRemoveItem",
-                        selectRow.id
-                    )
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess("delete", selectedRowLength);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("delete", selectedRowLength);
-            }
-        },
-        archiveRecord() {
-            const selectedRowLength = this.gridApi.getSelectedRows().length;
-            this.gridApi.getSelectedRows().map(selectRow => {
-                this.$store
-                    .dispatch("workareaManagement/removeItem", selectRow.id)
-                    .then(data => {
-                        if (selectedRowLength === 1) {
-                            this.showDeleteSuccess(
-                                "archive",
-                                selectedRowLength
-                            );
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-            });
-            if (selectedRowLength > 1) {
-                this.showDeleteSuccess("archive", selectedRowLength);
-            }
-        },
-        showDeleteSuccess(type, selectedRowLength) {
-
-            this.$vs.notify({
-                color: "success",
-                title: modelTitle,
-                text:
-                    type === "delete" && selectedRowLength > 1
-                        ? `Îlots supprimés`
-                        : type === "delete" && selectedRowLength === 1
-                        ? `Îlot supprimé`
-                        : selectedRowLength > 1
-                        ? `Îlots archivés`
-                        : `Îlot archivé`
-            });
         },
         onResize(event) {
             if (this.gridApi) {
@@ -456,15 +361,18 @@ export default {
             );
             moduleCompanyManagement.isRegistered = true;
         }
-        this.$store.dispatch("workareaManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        this.$store.dispatch("companyManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
-        this.$store.dispatch("skillManagement/fetchItems").catch(err => {
-            console.error(err);
-        });
+        if (!moduleDocumentManagement.isRegistered) {
+            this.$store.registerModule(
+                "documentManagement",
+                moduleDocumentManagement
+            );
+            moduleDocumentManagement.isRegistered = true;
+        }
+        this.$store
+            .dispatch("workareaManagement/fetchItems", { with_trashed: true })
+            .catch(err => {
+                console.error(err);
+            });
     },
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
@@ -472,9 +380,11 @@ export default {
         moduleWorkareaManagement.isRegistered = false;
         moduleSkillManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
+        moduleDocumentManagement.isRegistered = false;
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("companyManagement");
+        this.$store.unregisterModule("documentManagement");
     }
 };
 </script>

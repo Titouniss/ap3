@@ -1,10 +1,10 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button @click="activePrompt = true" class="w-full"
-            >Ajouter un îlot</vs-button
-        >
+        <vs-button @click="activePrompt = true" class="w-full">
+            Ajouter un pôle de production
+        </vs-button>
         <vs-prompt
-            title="Ajouter un îlot"
+            title="Ajouter un pôle de production"
             accept-text="Ajouter"
             cancel-text="Annuler"
             button-cancel="border"
@@ -15,7 +15,7 @@
             :active.sync="activePrompt"
         >
             <div>
-                <form>
+                <form autocomplete="off" v-submit.prevent>
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <vs-input
@@ -24,43 +24,57 @@
                                 class="w-full mb-4 mt-5"
                                 placeholder="Nom"
                                 v-model="itemLocal.name"
+                                :success="
+                                    itemLocal.name.length > 0 &&
+                                        !errors.has('name')
+                                "
+                                :danger="errors.has('name')"
+                                :danger-text="errors.first('name')"
                             />
-                            <span
-                                class="text-danger text-sm"
-                                v-show="errors.has('name')"
-                                >{{ errors.first("name") }}</span
-                            >
 
-                            <div
-                                v-if="itemLocal.company_id && disabled"
-                                class="mt-5"
-                            >
+                            <div class="ml-1 mb-2">
+                                <small>
+                                    Nombre d'opérateur maximum
+                                </small>
+                                <vs-row vs-w="12">
+                                    <vs-col vs-w="6">
+                                        <vs-input-number
+                                            min="1"
+                                            max="25"
+                                            name="max_users"
+                                            class="inputNumber"
+                                            v-model="itemLocal.max_users"
+                                        />
+                                    </vs-col>
+                                </vs-row>
                                 <span
-                                    v-if="skillsData.length == 0"
-                                    class="msgTxt"
-                                    >Aucune compétences trouvées.</span
+                                    class="text-danger text-sm"
+                                    v-show="errors.has('max_users')"
+                                    >{{ errors.first("max_users") }}</span
                                 >
-                                <span
-                                    v-if="skillsData.length == 0"
-                                    class="linkTxt"
-                                    >Ajouter une compétence</span
-                                >
-                                <vs-select
-                                    v-if="skillsData.length > 0"
-                                    v-validate="'required'"
-                                    label="Compétences"
-                                    v-model="itemLocal.skills"
-                                    class="w-full"
+                            </div>
+
+                            <div v-if="itemLocal.company_id" class="mt-5">
+                                <div v-if="skillsData.length === 0">
+                                    <span class="msgTxt">
+                                        Aucune compétences trouvées.
+                                    </span>
+                                    <router-link to="/skills">
+                                        <span class="linkTxt">
+                                            Ajouter une compétence
+                                        </span>
+                                    </router-link>
+                                </div>
+                                <infinite-select
+                                    v-else
+                                    required
+                                    header="Compétences"
+                                    label="name"
+                                    model="skill"
                                     multiple
-                                    autocomplete
-                                >
-                                    <vs-select-item
-                                        :key="index"
-                                        :value="item.id"
-                                        :text="item.name"
-                                        v-for="(item, index) in skillsData"
-                                    />
-                                </vs-select>
+                                    v-model="itemLocal.skills"
+                                    :filters="skillsFilter"
+                                />
                             </div>
                             <div class="vx-row mt-4" v-if="!disabled">
                                 <div class="vx-col w-full">
@@ -72,93 +86,29 @@
                                         />
                                         <span
                                             class="font-medium text-lg leading-none"
-                                            >Admin</span
                                         >
+                                            Admin
+                                        </span>
                                     </div>
                                     <vs-divider />
-                                    <div>
-                                        <v-select
-                                            v-validate="'required'"
-                                            @input="selectCompanySkills"
-                                            name="company"
+                                    <div class="w-full mt-5">
+                                        <infinite-select
+                                            required
+                                            header="Société"
                                             label="name"
-                                            :multiple="false"
+                                            model="company"
                                             v-model="itemLocal.company_id"
-                                            :reduce="name => name.id"
-                                            class="w-full mt-5"
-                                            autocomplete
-                                            :options="companiesData"
-                                        >
-                                            <template #header>
-                                                <div
-                                                    style="opacity: .8 font-size: .85rem"
-                                                >
-                                                    Société
-                                                </div>
-                                            </template>
-                                            <template #option="company">
-                                                <span>{{
-                                                    `${company.name}`
-                                                }}</span>
-                                            </template>
-                                        </v-select>
-                                        <span
-                                            class="text-danger text-sm"
-                                            v-show="errors.has('company_id')"
-                                            >{{
-                                                errors.first("company_id")
-                                            }}</span
-                                        >
-                                    </div>
-                                    <div
-                                        v-if="itemLocal.company_id"
-                                        class="mt-5"
-                                    >
-                                        <span
-                                            v-if="companySkills.length == 0"
-                                            class="msgTxt"
-                                            >Aucune compétences trouvées.</span
-                                        >
-                                        <router-link
-                                            v-if="companySkills.length > 0"
-                                            class="linkTxt"
-                                            :to="{ path: '/skills' }"
-                                            >Ajouter une compétence</router-link
-                                        >
-                                        <v-select
-                                            v-validate="'required'"
-                                            v-if="companySkills.length !== 0"
-                                            name="skill"
-                                            label="name"
-                                            :multiple="true"
-                                            v-model="itemLocal.skills"
-                                            :reduce="name => name.id"
-                                            class="w-full mt-5"
-                                            autocomplete
-                                            :options="companySkills"
-                                        >
-                                            <template #header>
-                                                <div
-                                                    style="opacity: .8 font-size: .85rem"
-                                                >
-                                                    Compétences
-                                                </div>
-                                            </template>
-                                            <template #option="companyskill">
-                                                <span>{{
-                                                    `${companyskill.name}`
-                                                }}</span>
-                                            </template>
-                                        </v-select>
-                                        <span
-                                            class="text-danger text-sm"
-                                            v-show="errors.has('company_id')"
-                                            >{{
-                                                errors.first("company_id")
-                                            }}</span
-                                        >
+                                            @input="itemLocal.skills = []"
+                                        />
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <file-input
+                                    :items="uploadedFiles"
+                                    :token="token"
+                                />
                             </div>
                         </div>
                     </div>
@@ -169,16 +119,18 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
+import FileInput from "@/components/inputs/FileInput.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
 
 export default {
     components: {
-        vSelect
+        InfiniteSelect,
+        FileInput
     },
     data() {
         return {
@@ -186,62 +138,72 @@ export default {
 
             itemLocal: {
                 name: "",
+                max_users: 1,
                 company_id: null,
                 skills: []
             },
-            companySkills: []
+
+            token:
+                "token_" +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 15),
+            uploadedFiles: []
         };
     },
     computed: {
-        companiesData() {
-            return this.$store.state.companyManagement.companies;
+        skillsFilter() {
+            return { company_id: this.itemLocal.company_id };
+        },
+        isAdmin() {
+            return this.$store.state.AppActiveUser.is_admin;
         },
         skillsData() {
-            return this.$store.state.skillManagement.skills;
+            return this.$store.getters["skillManagement/getItems"];
         },
         disabled() {
             const user = this.$store.state.AppActiveUser;
-            if (user.roles && user.roles.length > 0) {
-                if (
-                    user.roles.find(
-                        r => r.name === "superAdmin" || r.name === "littleAdmin"
-                    )
-                ) {
-                    return false;
-                } else {
-                    this.itemLocal.company_id = user.company_id;
-                    return true;
-                }
-            } else return true;
+            if (this.isAdmin) {
+                return false;
+            } else {
+                this.itemLocal.company_id = this.$store.state.AppActiveUser.company_id;
+                return true;
+            }
         },
         validateForm() {
-            return !this.errors.any() && this.itemLocal.name != "";
+            return (
+                !this.errors.any() &&
+                this.itemLocal.name != "" &&
+                this.itemLocal.skills &&
+                this.itemLocal.skills.length > 0 &&
+                this.itemLocal.company_id != null
+            );
         }
     },
     methods: {
-        clearFields() {
+        clearFields(deleteFiles = true) {
+            if (deleteFiles) {
+                this.deleteFiles();
+            }
             this.itemLocal = {
                 name: "",
+                max_users: 1,
                 company_id: null,
                 skills: []
             };
         },
-        selectCompanySkills(item) {
-            this.companySkills = this.companiesData.find(
-                company => company.id === item
-            ).skills;
-        },
         addItem() {
             this.$validator.validateAll().then(result => {
                 if (result) {
+                    const item = JSON.parse(JSON.stringify(this.itemLocal));
+                    if (this.uploadedFiles.length) {
+                        item.token = this.token;
+                    }
                     this.$store
-                        .dispatch(
-                            "workareaManagement/addItem",
-                            Object.assign({}, this.itemLocal)
-                        )
+                        .dispatch("workareaManagement/addItem", item)
                         .then(() => {
                             this.$vs.notify({
-                                title: "Ajout d'un îlot",
+                                title: "Ajout d'un pôle de production",
                                 text: `"${this.itemLocal.name}" ajoutée avec succès`,
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
@@ -258,11 +220,22 @@ export default {
                             });
                         })
                         .finally(() => {
-                            this.clearFields();
+                            this.clearFields(false);
                             this.$vs.loading.close();
                         });
                 }
             });
+        },
+        deleteFiles() {
+            const ids = this.uploadedFiles.map(item => item.id);
+            if (ids.length > 0) {
+                this.$store
+                    .dispatch("documentManagement/removeItems", ids)
+                    .then(response => {
+                        this.uploadedFiles = [];
+                    })
+                    .catch(error => {});
+            }
         }
     }
 };
