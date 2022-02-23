@@ -269,6 +269,15 @@ class TaskController extends BaseApiController
         return $item;
     }
 
+    protected function forceDestroyItem($item)
+    {
+        if($item->time_spent>0){
+            throw new ApiException("Vous ne pouvez pas supprimer cette tâche car il y a des heures de travail enregistrées.");
+        }
+
+        return parent::forceDestroyItem($item);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -582,5 +591,27 @@ class TaskController extends BaseApiController
         $extra = collect([]);
         $task = Task::where('id', $id)->first();
         return $this->successResponse($task, 'Chargement terminé avec succès.', $extra->toArray());
+    }
+
+    /**
+     * Display a listing of task time spent.
+     */
+    public function taskTimeSpent(Request $request)
+    {
+        $extra = collect([]);
+        try {
+            if ($error = $this->permissionErrors('read')) {
+                return $error;
+            }
+
+            $query = TaskTimeSpent::where('task_id', $request->task_id);
+            $items = $query->get();
+
+            return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 }

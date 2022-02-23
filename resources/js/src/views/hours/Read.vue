@@ -40,13 +40,28 @@
         </div>
 
         <div class="vx-card w-full p-6" v-if="filters.user_id">
-            <add-form
-                :activeAddPrompt="activeAddPrompt"
-                :clickDate="dateData"
-                :hours_list="hoursData"
-                :handleClose="handleClose"
-                :user="selectedUser"
-            />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form
+                        :activeAddPrompt="activeAddPrompt"
+                        :clickDate="dateData"
+                        :hours_list="hoursData"
+                        :handleClose="handleClose"
+                        :user="selectedUser"
+                    />
+                </vs-col>
+            </vs-row>
 
             <FullCalendar
                 locale="fr"

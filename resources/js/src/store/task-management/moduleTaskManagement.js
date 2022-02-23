@@ -39,6 +39,25 @@ mutations.SET_COMMENTS = (state, items) => (state.comments = items);
 
 //#endregion
 
+//#region TaskTimeSpent
+
+state.taskTimeSpent = [];
+
+getters.getTaskTimeSpent = state => JSON.parse(JSON.stringify(state.taskTimeSpent || []));
+
+actions.fetchTaskTimeSpent = ({ commit }, params = null) => {
+    return apiRequest(
+        `${slug}/taskTimeSpent`,
+        "get",
+        payload => commit("SET_TASK_TIME_SPENT", payload),
+        params
+    );
+};
+
+mutations.SET_TASK_TIME_SPENT = (state, items) => (state.taskTimeSpent = items);
+
+//#endregion
+
 const actionsCopy = Object.assign({}, actions);
 
 actions.removeItems = ({ commit }, ids) => {
@@ -47,11 +66,11 @@ actions.removeItems = ({ commit }, ids) => {
         .then(() => commit("REMOVE_ITEMS", ids));
 };
 
-actions.forceRemoveItems = ({ commit }, ids) => {
-    actionsCopy
-        .forceRemoveItems({ commit }, ids)
-        .then(() => commit("REMOVE_ITEMS", ids));
-};
+// actions.forceRemoveItems = ({ commit }, ids) => {
+//     actionsCopy
+//         .forceRemoveItems({ commit }, ids)
+//         .then(() => commit("REMOVE_ITEMS", ids));
+// };
 
 actions.addComment = ({ commit }, item) => {
     return apiRequest(

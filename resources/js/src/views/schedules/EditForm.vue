@@ -126,7 +126,6 @@
                 @click="confirmDeleteTask(itemLocal.id)"
                 color="danger"
                 type="filled"
-                size="small"
                 >Supprimer la tâche</vs-button
             >
         </vs-row>
@@ -350,6 +349,13 @@ export default {
                 .then(() => {})
                 .catch(err => {
                     console.error(err);
+                    this.$vs.notify({
+                        title: "Error",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
                 });
 
             this.init();
