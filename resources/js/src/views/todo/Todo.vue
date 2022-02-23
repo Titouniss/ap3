@@ -197,8 +197,111 @@
         ref="todoDataPS"
         :key="$vs.rtl"
       >
+          <div v-if="todoData.length > 0 && this.filtersImportantAndCompleted.is_completed == true">
+              <div v-if="tasksAfterTomorrow.length > 0">
+            <h3 class="m-5">Plus tard dans la semaine</h3>
+            <draggable
+              tag="ul"
+              :list="tasksAfterTomorrow"
+              group="todo"
+              :move="onMoveCallback"
+              class="afterTomorrow"
+            >
+              <li
+                v-for="(task, index) in tasksAfterTomorrow"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+   <div v-if="tasksTomorrow.length > 0">
+            <h3 class="m-5">Demain</h3>
+            <draggable
+              tag="ul"
+              :list="tasksTomorrow"
+              group="todo"
+              :move="onMoveCallback"
+              class="tomorrow"
+            >
+              <li
+                v-for="(task, index) in tasksTomorrow"
+                :key="task.id"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+  <div v-if="tasksToday.length > 0">
+            <h3 class="m-5">Aujourd'hui</h3>
+            <draggable
+              tag="ul"
+              :list="tasksToday"
+              group="todo"
+              :move="onMoveCallback"
+              class="today"
+            >
+              <li
+                v-for="(task, index) in tasksToday"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+ <div v-if="tasksYesterday.length > 0">
+            <h3 class="m-5">En retard</h3>
+            <draggable
+              tag="ul"
+              :list="tasksYesterday"
+              group="todo"
+              :move="onMoveCallback"
+              class="yesterday"
+            >
+              <li
+                v-for="(task, index) in tasksYesterday"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+        </div>
+    
+        
+
+
         <!-- Toute les tâches  -->
-        <div v-if="todoData.length > 0">
+        <div v-if="this.filtersImportantAndCompleted.is_completed == false">
+        <div v-if="todoData.length > 0 ">
           <div v-if="tasksYesterday.length > 0">
             <h3 class="m-5">En retard</h3>
             <draggable
@@ -302,6 +405,7 @@
         <div v-else>
           <div class="text-center ">Vous n'avez actuellement aucune tâche</div>
         </div>
+        </div>
       </component>
     </div>
     <!-- /TODO LIST -->
@@ -376,7 +480,7 @@ export default {
       if (this.filtersImportantAndCompleted.is_completed == 1) {
         return this.$store.getters["todoManagement/getItems"].filter(
           (todo) => todo.is_completed == true
-        );
+        ).slice(0,25);
       } else {
         return this.$store.getters["todoManagement/getItems"].filter(
           (todo) => todo.is_completed == false
@@ -406,10 +510,7 @@ export default {
     tagData() {
       return this.$store.getters["tagManagement/getItems"];
     },
-    // searchQuery:   {
-    //   get ()        { return this.$store.state.todo.todoSearchQuery        },
-    //   set (val)     { this.$store.dispatch('todoManagement/setTodoSearchQuery', val) }
-    // },
+
     scrollbarTag() {
       return this.$store.getters.scrollbarTag;
     },
@@ -471,7 +572,8 @@ export default {
       this.$store
         .dispatch("todoManagement/fetchItems", {
           q: this.searchQuery || undefined,
-          order_by: "due_date",
+          order_by: 'due_date',
+          order_by_desc: 1,
           is_completed:
             this.filtersImportantAndCompleted.is_completed || undefined,
           is_important:

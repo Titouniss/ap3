@@ -260,7 +260,6 @@
                     </vx-card>
                 </div>
             </div>
-
             <edit-form
                 :itemId="itemIdToEdit"
                 v-if="itemIdToEdit"
@@ -279,6 +278,7 @@ import moduleRangeManagement from "@/store/range-management/moduleRangeManagemen
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
+import moduleSupplyManagement from "@/store/supply-management/moduleSupplyManagement.js";
 
 import moment from "moment";
 
@@ -287,12 +287,14 @@ import AddRangeForm from "./AddRangeForm.vue";
 import StartProjectPrompt from "./StartProjectPrompt.vue";
 import IndexTasks from "./../tasks/Index.vue";
 
+
 export default {
     components: {
         EditForm,
         AddRangeForm,
         StartProjectPrompt,
-        IndexTasks
+        IndexTasks,
+        
     },
     data() {
         return {
@@ -541,6 +543,13 @@ export default {
             );
             moduleSkillManagement.isRegistered = true;
         }
+        if (!moduleSupplyManagement.isRegistered) {
+            this.$store.registerModule(
+                "supplyManagement",
+                moduleSupplyManagement
+            );
+            moduleSupplyManagement.isRegistered = true;
+        }
         if (!moduleCompanyManagement.isRegistered) {
             this.$store.registerModule(
                 "companyManagement",
@@ -611,6 +620,13 @@ export default {
                     console.error(err);
                 });
         }
+         if (this.authorizedTo("read", "supplies")) {
+            this.$store
+                .dispatch("supplyManagement/fetchItems", { order_by: "name" })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
 
         //if (this.authorizedTo("read", "customers")) {
         this.$store.dispatch("customerManagement/fetchItems").catch(err => {
@@ -627,10 +643,12 @@ export default {
         moduleCustomerManagement.isRegistered = false;
         moduleDocumentManagement.isRegistered = false;
         moduleScheduleManagement.isRegistered = false;
+        moduleSupplyManagement.isRegistered = false;
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("skillManagement");
+        this.$store.unregisterModule("supplyManagement");
         this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("customerManagement");
         this.$store.unregisterModule("documentManagement");

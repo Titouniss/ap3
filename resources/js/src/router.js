@@ -416,7 +416,17 @@ const router = new Router({
                         rule: "admin",
                         requiresAuth: true
                     }
-                }
+                },
+                {
+                    path: "/supplies",
+                    name: "/supplies",
+                    component: () => import("@/views/supplies/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        pageTitle: "Gestion des approvisionnements",
+                        requiresAuth: true
+                    }
+                },
             ]
         },
         // =============================================================================

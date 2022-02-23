@@ -79,6 +79,15 @@ actions.updateTaskPeriod = ({ commit }, item) => {
         item
     );
 };
+actions.updateTaskSupplyReceived = ({ commit }, item) => {
+    console.log(item)
+    return apiRequest(
+        `supply-management/updateTaskSupplyReceived`,
+        "post",
+        payload => commit("ADD_OR_UPDATE_ITEMS", payload),
+        item
+    );
+};
 
 export default {
     isRegistered: false,
