@@ -112,7 +112,7 @@
                         </vs-radio>
                     </small>
                     <datepicker
-                        placeholder="Filtre par date"
+                        placeholder="Date de livraison"
                         class="pickadate"
                         name="date"
                         :format="formatDatePicker"

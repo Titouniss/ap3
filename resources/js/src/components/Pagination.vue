@@ -14,7 +14,7 @@
     
     <button 
     v-if="showNextLink()" 
-    class=" ml-5 vs-pagination--buttons " 
+    class=" ml-5 vs-pagination--buttons btn-next-pagination" 
     v-on:click="updatePage(currentPage + 1)"> 
        <feather-icon icon="ChevronRightIcon" size="18"/>
       </button>
@@ -42,6 +42,9 @@ export default {
 }
 </script>
 <style> 
+.btn-prev-pagination:hover, .btn-next-pagination:hover{
+  background-color: rgb(var(--vs-primary));
+}
     
   </style>
   
