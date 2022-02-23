@@ -109,7 +109,6 @@
                     @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
                     type="filled"
-                    size="small"
                 >
                     Supprimer la tâche
                 </vs-button>

@@ -170,12 +170,27 @@
                     }}</span
                 >
             </div>
-            <add-payed-hours-form
-                v-if="isAdmin || isManager"
-                :id_user="user_id"
-                @on-submit="fetchOvertimes"
-                :fetchOvertimes="fetchOvertimes"
-            />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-payed-hours-form
+                        v-if="isAdmin || isManager"
+                        :id_user="user_id"
+                        @on-submit="fetchOvertimes"
+                        :fetchOvertimes="fetchOvertimes"
+                    />
+                </vs-col>
+            </vs-row>
         </div>
 
         <div class="vx-card mt-1 p-6 mb-base">

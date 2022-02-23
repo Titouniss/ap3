@@ -120,6 +120,7 @@ import moduleUserManagement from "@/store/user-management/moduleUserManagement.j
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement.js";
+import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 
 // Component
 import EditForm from "../tasks/EditForm.vue";
@@ -923,6 +924,11 @@ export default {
             moduleDocumentManagement.isRegistered = true;
         }
 
+        if (!moduleHourManagement.isRegistered) {
+            this.$store.registerModule("hoursManagement", moduleHourManagement);
+            moduleHourManagement.isRegistered = true;
+        }
+
         //this.$store.state.taskManagement.tasks = [];
 
         if (this.$route.query.type === "projects") {
@@ -1007,12 +1013,14 @@ export default {
         moduleDocumentManagement.isRegistered = false;
         moduleProjectManagement.isRegistered = false;
         moduleWorkareaManagement.isRegistered = false;
+        moduleHourManagement.isRegistered = false;
         this.$store.unregisterModule("scheduleManagement");
         this.$store.unregisterModule("taskManagement");
         this.$store.unregisterModule("skillManagement");
         this.$store.unregisterModule("documentManagement");
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("workareaManagement");
+        this.$store.unregisterModule("hoursManagement");
     }
 };
 </script>

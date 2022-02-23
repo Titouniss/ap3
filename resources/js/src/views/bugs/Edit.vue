@@ -33,7 +33,6 @@
                         @click="() => confirmDeleteRecord(bug_data.id)"
                         color="danger"
                         type="filled"
-                        size="small"
                     >
                         Supprimer le bug
                     </vs-button>

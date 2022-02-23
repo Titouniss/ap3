@@ -310,80 +310,12 @@
                                     "
                                 />
                             </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
-                                Ajout d'heures travaillées :
-                            </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
-                                <small class="date-label">
-                                    Temps passé (en h)
-                                </small>
-                                <vs-input-number
-                                    :min="-(itemLocal.time_spent || 0)"
-                                    name="timeSpent"
-                                    class="inputNumber"
-                                    v-model="current_time_spent"
+                            <div v-if="itemLocal.status != 'todo'">
+                                <add-worked-hours
+                                    :itemId="itemId"
+                                    :current_time_spent="current_time_spent"
+                                    :refreshData="submitItem"
                                 />
-                            </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin && isManager">
-                                <infinite-select
-                                    header="Utilisateur"
-                                    label="lastname"
-                                    model="user"
-                                    v-model="itemLocal.userTask"
-                                    :item-fields="['lastname', 'firstname']"
-                                    :item-text="
-                                        item => `${item.lastname} ${item.firstname}`
-                                    "
-                                    :filters="usersFilter"
-                                />
-                            </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
-                                <small class="date-label">
-                                    Description
-                                </small>
-                                <vs-textarea
-                                    rows="1"
-                                    label="Description travail réalisé"
-                                    name="descriptionHours"
-                                    class="w-full mb-1 mt-1"
-                                    v-model="itemLocal.descriptionHours"
-                                    :color="validateForm ? 'success' : 'danger'"
-                                />
-                            </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
-                                <small
-                                        class="date-label mb-1"
-                                        style="display: block"
-                                    >
-                                    Date
-                                </small>
-                                <flat-pickr
-                                    :config="configDatePicker"
-                                    v-model="itemLocal.dateHours"
-                                    placeholder="Date"
-                                    class="w-full"
-                                />
-                            </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo' && !isAdmin">
-                                <p class="mt-5">Heure de début</p>
-                                <flat-pickr
-                                    v-validate="'required'"
-                                    name="startHour"
-                                    :config="configStartHourPicker"
-                                    class="w-full"
-                                    v-model="itemLocal.startHour"
-                                    :color="
-                                        !errors.has('startHour')
-                                            ? 'success'
-                                            : 'danger'
-                                    "
-                                    :onChange="definedMinEndHour()"
-                                />
-                                <span
-                                    class="text-danger text-sm"
-                                    v-show="errors.has('startHour')"
-                                    >{{ errors.first("startHour") }}</span
-                                >
                             </div>
                             <div class="my-2" v-if="itemLocal.status != 'todo'">
                                 <small class="date-label">
@@ -403,10 +335,35 @@
                         </div>
                     </div>
 
-                    <div class="my-3">
-                        <div>
-                            <small class="date-label">Commentaires</small>
+                    <vs-row class="chooseTaskDisplay">
+                        <div 
+                            v-bind:class="[
+                                isActive == 'commentaire'
+                                    ? 'btnChooseDisplayFormatActive p-3'
+                                    : 'btnFormatTaskListT p-3'
+                            ]"
+                            @click="isActive = 'commentaire'">
+                            <feather-icon
+                                icon="EditIcon"
+                                svgClasses="h-5 w-5"
+                            />
+                            <span class="date-label">Commentaires</span>
                         </div>
+                        <div
+                            v-bind:class="[
+                                isActive == 'journal'
+                                    ? 'btnChooseDisplayFormatActive p-3'
+                                    : 'btnFormatTaskListT p-3'
+                            ]"
+                            @click="isActive = 'journal'">
+                            <feather-icon
+                                icon="ListIcon"
+                                svgClasses="h-5 w-5"
+                            />
+                            <span>Journal de travail</span>
+                        </div>
+                    </vs-row>
+                    <div class="my-3" v-if="isActive == 'commentaire'" style="overflow-y:scroll; height: 210px;">
                         <vs-textarea
                             rows="1"
                             label="Ajouter un commentaire"
@@ -471,6 +428,34 @@
                             </div>
                         </div>
                     </div>
+                    {{taskTimeSpent}}
+                    <div class="my-3" v-if="isActive == 'journal'">
+                        <div>
+                            <ul
+                                v-if="itemLocal.taskTimeSpent.length > 0"
+                                class="w-full"
+                                style="color: gray; overflow-y:scroll; height: 210px;"
+                            >
+                                <li
+                                    v-for="(taskTimeSpent, index) in itemLocal.taskTimeSpent"
+                                    :key="index"
+                                    class="py-3"
+                                >
+                                    <vs-row>
+                                        <feather-icon
+                                            svgClasses="w-6 h-6"
+                                            icon="UserIcon"
+                                            class="mr-2"
+                                        />
+                                        <span style="color:#2196F3">{{getUserName(taskTimeSpent.user_id)}}</span>
+                                        <span> - {{moment(taskTimeSpent.created_at)}} à {{ momentTime(taskTimeSpent.created_at) }} - 
+                                            Ajout de <b>{{taskTimeSpent.duration}}h</b> le <b>{{getFormattedDate(taskTimeSpent.date)}}</b>
+                                        </span>
+                                    </vs-row>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </form>
             </div>
             <vs-row
@@ -483,7 +468,6 @@
                     @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
                     type="filled"
-                    size="small"
                 >
                     Supprimer la tâche
                 </vs-button>
@@ -511,6 +495,7 @@ import errorMessage from "./errorValidForm";
 
 import AddPreviousTasks from "./AddPreviousTasks.vue";
 import FileInput from "@/components/inputs/FileInput.vue";
+import AddWorkedHours from "./AddWorkedHours.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
@@ -521,7 +506,8 @@ export default {
         InfiniteSelect,
         flatPickr,
         AddPreviousTasks,
-        FileInput
+        FileInput,
+        AddWorkedHours
     },
     props: {
         itemId: {
@@ -541,11 +527,8 @@ export default {
             )
         );
         item.skills = item.skills ? item.skills.map(skill => skill.id) : []
-        item.userTask = null;
         item.date = moment(item.date).format("DD-MM-YYYY HH:mm")
-        item.descriptionHours = ""
-        item.dateHours = moment().format("YYYY-MM-DD")
-        item.startHour= moment().format("HH:mm")
+        item.taskTimeSpent=[];
         return {
             configdateTimePicker: {
                 disableMobile: "true",
@@ -553,13 +536,6 @@ export default {
                 dateFormat: "d-m-Y H:i",
                 locale: FrenchLocale
             },
-            configDatePicker: {
-                disableMobile: "true",
-                enableTime: false,
-                dateFormat: "Y-m-d",
-                locale: FrenchLocale
-            },
-
             itemLocal: item,
             companyId: item.project.company_id,
             token:
@@ -576,26 +552,11 @@ export default {
             deleteWarning: false,
             orderDisplay: false,
             descriptionDisplay: false,
-            commentDisplay: false
+            commentDisplay: false,
+            isActive: "commentaire"
         };
     },
     computed: {
-        configStartHourPicker: {
-            get() {
-                return {
-                    disableMobile: "true",
-                    enableTime: true,
-                    locale: FrenchLocale,
-                    noCalendar: true,
-                    dateFormat: "H:i",
-                    altFormat: "H:i",
-                    altInput: true,
-                };
-            },
-            set(value) {
-                return value;
-            }
-        },
         totalTimeSpent() {
             return (this.itemLocal.time_spent || 0) + this.current_time_spent;
         },
@@ -615,11 +576,6 @@ export default {
         isManager() {
             return this.$store.state.AppActiveUser.is_manager;
         },
-        usersFilter() {
-            return {
-                company_id: this.$store.state.AppActiveUser.company_id || 0
-            };
-        },
         validateForm() {
             const {
                 name,
@@ -627,19 +583,8 @@ export default {
                 date,
                 skills,
                 workarea_id,
-                user_id,
-                userTask,
-                descriptionHours,
-                dateHours,
-                startHour
+                user_id
             } = this.itemLocal;
-
-            let validFormAddHours=true;
-            if(this.current_time_spent>0){
-                if(descriptionHours=="" || dateHours==null || (this.isManager && userTask==null)){
-                    validFormAddHours=false;
-                }
-            }
 
             return (
                 !this.errors.any() &&
@@ -648,7 +593,6 @@ export default {
                 estimated_time != "" &&
                 skills &&
                 skills.length > 0 &&
-                validFormAddHours &&
                 (this.type === "users" ||
                     this.type === "workarea" ||
                     (this.hasAvailableUsers && this.hasAvailableWorkareas)) &&
@@ -739,9 +683,26 @@ export default {
                     return false;
                 }
             }
-        }
+        },
+        taskTimeSpent(){
+            this.$store
+                .dispatch("taskManagement/fetchTaskTimeSpent", {task_id : this.itemLocal.id})
+                .then((data)=>{
+                    console.log("data",data.payload);
+                    this.itemLocal.taskTimeSpent=data.payload
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
     },
     methods: {
+        getUserName(id) {
+            return this.$store.getters["userManagement/getItem"](id).firstname+" "+this.$store.getters["userManagement/getItem"](id).lastname;
+        },
+        getFormattedDate(date){
+            return moment(date).format("DD/MM/YYYY");
+        },
         clear() {
             this.deleteFiles();
             this.itemLocal = {};
@@ -804,6 +765,7 @@ export default {
                         icon: "icon-alert-circle",
                         color: "success"
                     });
+                    this.activePrompt=false;
                 })
                 .catch(error => {
                     this.$vs.notify({
@@ -817,42 +779,6 @@ export default {
                 .finally(() => {
                     this.$vs.loading.close();
                 });
-            if(item.time_spent>0){
-                const payload = {
-                    startHour: item.startHour,
-                    endHour: moment(item.startHour, "HH:mm").add(item.time_spent, "hours").format("HH:mm"),
-                    date: item.dateHours,
-                    description: item.descriptionHours,
-                    project_id: item.project_id,
-                    task_id: item.id,
-                    user_id: item.userTask ? item.userTask : this.$store.state.AppActiveUser.id
-                }
-                payload.start_at = payload.date + " " + payload.startHour;
-                payload.end_at = payload.date + " " + payload.endHour;
-                this.$store
-                    .dispatch("hoursManagement/addItem", payload)
-                    .then(data => {
-                        this.$vs.notify({
-                            title: "Ajout d'un horaire",
-                            text: `Horaire ajouté avec succès`,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "success"
-                        });
-                    })
-                    .catch(error => {
-                        this.$vs.notify({
-                            title: "Erreur",
-                            text: error.message,
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "danger"
-                        });
-                    })
-                    .finally(() => {
-                        this.$vs.loading.close();
-                    });
-            }
         },
         deleteFiles() {
             const ids = this.itemLocal.documents
@@ -980,6 +906,7 @@ export default {
             this.deleteWarning = false;
         },
         deleteTask() {
+            this.deleteWarning = false;
             this.$store
                 .dispatch("scheduleManagement/removeItem", this.idEvent)
                 .catch(err => {
@@ -1039,5 +966,24 @@ export default {
     font-size: 0.9em;
     margin: -17px 35px 0 35px;
     display: table;
+}
+.chooseTaskDisplay {
+    border: 1px solid #b3b3b3;
+    border-radius: 1px;
+    background-color: #e2e2e2;
+    width: max-content !important;
+}
+.btnChooseDisplayFormatActive {
+    background-color: #2196f3;
+    color: white;
+    border-radius: 1px;
+}
+.btnFormatTaskListT {
+    background-color: white;
+    color: #2196f3;
+}
+.btnFormatTaskListT:hover {
+    cursor: pointer;
+    border-radius: "5px";
 }
 </style>

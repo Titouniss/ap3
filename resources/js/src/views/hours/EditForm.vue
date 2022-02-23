@@ -20,9 +20,7 @@
                             model="project"
                             label="name"
                             v-model="itemLocal.project_id"
-                            :filters="{
-                                company_id: itemLocal.user.company_id
-                            }"
+                            :filters="projectsFilter"
                         />
                         <infinite-select
                             required
@@ -113,7 +111,6 @@
                 @click="confirmDeleteHour(itemLocal.id)"
                 color="danger"
                 type="filled"
-                size="small"
             >
                 Supprimer l'horaire
             </vs-button>
@@ -251,6 +248,12 @@ export default {
                 this.itemLocal.startHour !== "" &&
                 this.itemLocal.endHour !== ""
             );
+        },
+        projectsFilter() {
+            return {
+                company_id: this.itemLocal.user.company_id || 0, 
+                status: "doing"
+            };
         },
         tasksFilter() {
             return {
