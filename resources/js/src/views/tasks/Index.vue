@@ -425,6 +425,11 @@ export default {
                 })
                 .catch(err => {
                     console.error(err);
+                    this.$vs.notify({
+                        color: "danger",
+                        title: "Erreur",
+                        text: err.message
+                    });
                 });
 
             this.itemToDel = null;

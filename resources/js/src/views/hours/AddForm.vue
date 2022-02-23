@@ -24,9 +24,7 @@
                                 model="project"
                                 label="name"
                                 v-model="itemLocal.project_id"
-                                :filters="{
-                                    company_id
-                                }"
+                                :filters="projectsFilter"
                             />
                             <infinite-select
                                 required
@@ -284,6 +282,12 @@ export default {
                     var textB = b.name.toUpperCase();
                     return textA < textB ? -1 : textA > textB ? 1 : 0;
                 });
+        },
+        projectsFilter() {
+            return {
+                company_id: this.company_id || 0, 
+                status: "doing"
+            };
         },
         tasksFilter() {
             return {
