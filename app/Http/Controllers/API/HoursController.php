@@ -9,6 +9,7 @@ use App\Models\Unavailability;
 use App\Models\DealingHours;
 use App\Models\Project;
 use App\Models\WorkHours;
+use App\Models\TaskTimeSpent;
 use App\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -619,11 +620,27 @@ class HoursController extends BaseApiController
         $item = Hours::create([
             'user_id' => $arrayRequest['user_id'],
             'project_id' => $arrayRequest['project_id'],
+            'task_id' => $arrayRequest['task_id'],
             'start_at' => $arrayRequest['start_at'],
             'end_at' => $arrayRequest['end_at'],
             'date' => $arrayRequest['date'],
         ]);
 
+        $TaskTimeSpentOfDay=TaskTimeSpent::where('task_id', $arrayRequest['task_id'])->where('user_id', $arrayRequest['user_id'])->where('date', $arrayRequest['date'])->get();
+       
+        if($TaskTimeSpentOfDay->isEmpty()){
+            TaskTimeSpent::create([
+                'date' => Carbon::parse($arrayRequest['start_at'])->startOfDay(),
+                'duration' => $parseDuration,
+                'user_id' => $arrayRequest['user_id'],
+                'task_id' => $arrayRequest['task_id'],
+            ]);
+        } 
+        else{
+            $TaskTimeSpentOfDay[0]->update([
+                'duration' => $TaskTimeSpentOfDay[0]['duration']+$parseDuration,
+            ]);
+        }       
 
         // How many hour user worked this week
         $listDealingHour = array();
@@ -769,6 +786,7 @@ class HoursController extends BaseApiController
         $start_at = Carbon::parse($arrayRequest['start_at']);
         $end_at = Carbon::parse($arrayRequest['end_at']);
 
+        $parseDuration = $start_at->floatDiffInHours($end_at);
         // Expected hours for this week
         $workWeekHours = WorkHours::where('user_id', $arrayRequest['user_id'])->where('is_active', 1)->get()->map(function ($day) {
             $morning = CarbonInterval::createFromFormat('H:i:s', $day->morning_ends_at)->subtract(CarbonInterval::createFromFormat('H:i:s', $day->morning_starts_at));
@@ -784,9 +802,12 @@ class HoursController extends BaseApiController
             throw new ApiException("Attention, vous ne pouvez pas superposer deux horaires.");
         }
 
+        $oldDuration=$item['durationInFloatHour'];
+
         $item->update([
             'user_id' => $arrayRequest['user_id'],
             'project_id' => $arrayRequest['project_id'],
+            'task_id' => $arrayRequest['task_id'],
             'start_at' => $arrayRequest['start_at'],
             'end_at' => $arrayRequest['end_at'],
         ]);
@@ -794,6 +815,22 @@ class HoursController extends BaseApiController
         if (isset($arrayRequest['description'])) {
             $item->update(['description' => $arrayRequest['description']]);
         }
+
+        $TaskTimeSpentOfDay=TaskTimeSpent::where('task_id', $arrayRequest['task_id'])->where('user_id', $arrayRequest['user_id'])->where('date', $arrayRequest['date'])->get();
+       
+        if($TaskTimeSpentOfDay->isEmpty()){
+            TaskTimeSpent::create([
+                'date' => Carbon::parse($arrayRequest['start_at'])->startOfDay(),
+                'duration' => $parseDuration,
+                'user_id' => $arrayRequest['user_id'],
+                'task_id' => $arrayRequest['task_id'],
+            ]);
+        } 
+        else{
+            $TaskTimeSpentOfDay[0]->update([
+                'duration' => $TaskTimeSpentOfDay[0]['duration']+$parseDuration-$oldDuration,
+            ]);
+        }     
 
         // How many new hour user worked this week
         $listDealingHour = array();
@@ -818,9 +855,6 @@ class HoursController extends BaseApiController
             }
             // Update dealing_hour with difference between nb_worked_hours and $target_work_hours for overtime column
             $listDealingHour[0]->update(['overtimes' => ($nb_worked_hours - $workWeekHours)]);
-            $controllerLog = new Logger('hours');
-            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
-            $controllerLog->info('$listDealingHour[0]',[$listDealingHour[0]]);
 
         } elseif (empty($listDealingHour[0]) && ($nb_worked_hours - $workWeekHours != 0)) {
             //Create new tuple in dealing_hours with user_id, date and overtimes
@@ -944,6 +978,14 @@ class HoursController extends BaseApiController
     protected function destroyItem($item)
     {
         $date = Carbon::parse($item->start_at);
+
+        $TaskTimeSpentOfDay=TaskTimeSpent::where('task_id', $item['task_id'])->where('user_id', $item['user_id'])->where('date', Carbon::parse($item['start_at'])->format('Y-m-d'))->get();
+       
+        if(!$TaskTimeSpentOfDay->isEmpty()){
+            $TaskTimeSpentOfDay[0]->update([
+                'duration' => $TaskTimeSpentOfDay[0]['duration']-$item['durationInFloatHour'],
+            ]);
+        } 
 
         // How many hour worked this week
         $listDealingHour = array();

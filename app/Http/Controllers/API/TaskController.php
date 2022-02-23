@@ -206,9 +206,6 @@ class TaskController extends BaseApiController
             'created_by' => Auth::id(),
         ]);
 
-        if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
-        }
 
         if ($project->status == 'doing') {
             TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -268,9 +265,6 @@ class TaskController extends BaseApiController
             'workarea_id' => $arrayRequest['workarea_id'] ?? null,
         ]);
 
-        if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
-        }
 
         // if ($project->status == 'doing') {
         //     TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -286,6 +280,15 @@ class TaskController extends BaseApiController
         $this->updatePreviousTasks($item->id, $arrayRequest['previous_task_ids'] ?? null);
         $this->updateSupplies($item->id, $arrayRequest['supplies'][0] ?? null);
         return $item;
+    }
+
+    protected function forceDestroyItem($item)
+    {
+        if($item->time_spent>0){
+            throw new ApiException("Vous ne pouvez pas supprimer cette tâche car il y a des heures de travail enregistrées.");
+        }
+
+        return parent::forceDestroyItem($item);
     }
 
     /**
@@ -345,7 +348,6 @@ class TaskController extends BaseApiController
             return $this->errorResponse($validator->errors());
         }
 
-        $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
 
         if (isset($arrayRequest['comment'])) {
             $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
@@ -530,24 +532,7 @@ class TaskController extends BaseApiController
         }
     }
 
-    private function addTimeSpent(int $taskId, float $duration)
-    {
-        if ($duration != 0) {
-            $timeSpent = TaskTimeSpent::firstOrCreate([
-                'date' => Carbon::now()->startOfDay(),
-                'user_id' => Auth::id(),
-                'task_id' => $taskId,
-            ]);
 
-            if (($newDuration = $duration + $timeSpent->duration) != 0) {
-                $timeSpent->update([
-                    'duration' => $newDuration
-                ]);
-            } else {
-                $timeSpent->delete();
-            }
-        }
-    }
 
     /**
      * Display a listing of comments.
@@ -644,5 +629,27 @@ class TaskController extends BaseApiController
         $extra = collect([]);
         $task = Task::where('id', $id)->first();
         return $this->successResponse($task, 'Chargement terminé avec succès.', $extra->toArray());
+    }
+
+    /**
+     * Display a listing of task time spent.
+     */
+    public function taskTimeSpent(Request $request)
+    {
+        $extra = collect([]);
+        try {
+            if ($error = $this->permissionErrors('read')) {
+                return $error;
+            }
+
+            $query = TaskTimeSpent::where('task_id', $request->task_id);
+            $items = $query->get();
+
+            return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 }

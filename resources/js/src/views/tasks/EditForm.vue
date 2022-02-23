@@ -381,6 +381,7 @@ import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
 import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
@@ -834,5 +835,24 @@ export default {
   font-size: 0.9em;
   margin: -17px 35px 0 35px;
   display: table;
+}
+.chooseTaskDisplay {
+    border: 1px solid #b3b3b3;
+    border-radius: 1px;
+    background-color: #e2e2e2;
+    width: max-content !important;
+}
+.btnChooseDisplayFormatActive {
+    background-color: #2196f3;
+    color: white;
+    border-radius: 1px;
+}
+.btnFormatTaskListT {
+    background-color: white;
+    color: #2196f3;
+}
+.btnFormatTaskListT:hover {
+    cursor: pointer;
+    border-radius: "5px";
 }
 </style>
