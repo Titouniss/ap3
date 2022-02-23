@@ -56,6 +56,7 @@ class MailNewBugNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
+            ->cc('alexislepage@numidev.fr', 'arlenegautre@numidev.fr', 'sebastiensalido@numidev.fr', 'florentinmerlet@numidev.fr', 'juliannebarbot@numidev.fr')
             ->subject('Nouveau bug')
             ->greeting('Bonjour,')
             ->line('Un nouveau bug a été remonté par '.$this->user_firstname.' '.$this->user_lastname.' de la société '.$this->company_name)
