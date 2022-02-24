@@ -13,7 +13,7 @@ class RemoveCompanyDetailsTable extends Migration
      */
     public function up()
     {
-        Schema::create('company_details', function (Blueprint $table) {
+        Schema::table('company_details', function (Blueprint $table) {
             $table->dropColumn('authorize_supply');
         });
     }
