@@ -25,6 +25,9 @@ class RemoveCompanyDetailsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('company_details');
+       
+        Schema::table('company_details', function (Blueprint $table) {
+            $table->boolean('authorize_supply');
+        });
     }
 }
