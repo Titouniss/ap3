@@ -347,6 +347,8 @@ export default {
       this.selected[this.permissions.indiponibilités.read.id] = true;
       this.selected[this.permissions.heures_supplémentaires.read.id] = true;
       this.selected[this.permissions.todos.read.id] = true;
+      this.selected[this.permissions.approvisionnements.read.id] = true;
+
     },
     dependencyChecking(type, item) {
       switch (item.name) {

@@ -332,7 +332,7 @@
                 colResizeDefault="shift"
                 :animateRows="true"
                 :floatingFilter="false"
-                :pagination="false"
+                :pagination="true"
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"
@@ -400,7 +400,6 @@ export default {
             searchQuery: "",
             showEditDeleteByIndex: null,
             formatActive: "grid",
-            perPage: 2,
 
             // AgGrid
             gridApi: null,
@@ -532,13 +531,10 @@ export default {
     computed: {
         supplyData()
         {
-            console.log(this.$store.getters["supplyManagement/getItems"])
-                       return this.$store.getters["supplyManagement/getItems"];
+            return this.$store.getters["supplyManagement/getItems"];
  
         },
         tasksData() {
-                        console.log(this.$store.getters["supplyManagement/getItems"])
-
             return this.$store.getters["taskManagement/getItems"];
         },
         taskSupplyFilter()
@@ -569,7 +565,6 @@ export default {
     },
     methods: {
          authorizedTo(action, model = modelPlurial) {
-             console.log(action)
             return this.$store.getters.userHasPermissionTo(
                 `${action} ${model}`
             );
@@ -691,15 +686,24 @@ export default {
 
         this.$store
             .dispatch("taskManagement/fetchItems", {
-                project_id: this.project_data.id
-            })
+                project_id: this.project_data.id,
+                per_page: this.perPage,
+                page: this.page
+            }).then(data => {
+
+                    if (data.pagination) {
+                        data.pagination
+                        const { total, last_page } = data.pagination;
+                        this.totalPages = last_page;
+                        this.total = total;
+                    }
+                })
             .catch(err => {
                 console.error(err);
             });
                this.$store
             .dispatch("supplyManagement/fetchItems", {
                 company_id: this.project_data.company_id,
-                per_page: this.perPage
             })
             .catch(err => {
                 console.error(err);
@@ -715,8 +719,6 @@ export default {
             this.$store
                 .dispatch("taskManagement/fetchItem", this.taskIdToEdit)
                 .then(reponse => {
-                    console.log(reponse);
-
                     this.$store
                         .dispatch("taskManagement/editItem", reponse.payload)
                         .then(() => {})
@@ -725,7 +727,6 @@ export default {
                         });
                 })
                 .catch(err => {
-                    console.log("erreur");
                     console.error(err);
                 });
         }

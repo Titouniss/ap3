@@ -127,7 +127,7 @@
                 colResizeDefault="shift"
                 :animateRows="true"
                 :floatingFilter="false"
-                :pagination="false"
+                :pagination="true"
                 :paginationPageSize="paginationPageSize"
                 :suppressPaginationPanel="true"
                 :enableRtl="$vs.rtl"

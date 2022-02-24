@@ -41,7 +41,7 @@ class PermissionsRoleTableSeeder extends Seeder
             ['doc', 'documents', true],
             ['todos', 'todos', true],
             ['tags', 'tags', true],
-            ['supplies', 'approvisionnements', false],
+            ['supplies', 'approvisionnements', true],
 
         ];
         // create permissions

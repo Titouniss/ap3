@@ -373,6 +373,7 @@ export default {
       this.selected[this.permissions.indiponibilités.read.id] = true;
       this.selected[this.permissions.heures_supplémentaires.read.id] = true;
       this.selected[this.permissions.todos.read.id] = true;
+      this.selected[this.permissions.approvisionnements.read.id] = true;
     },
     dependencyChecking(type, item) {
       switch (item.name) {
@@ -390,6 +391,7 @@ export default {
             this.selected[this.permissions.utilisateurs.read.id] = true;
             this.selected[this.permissions.compétences.read.id] = true;
             this.selected[this.permissions.roles.read.id] = true;
+
           } else {
             const dependencies = [
               "utilisateurs",
