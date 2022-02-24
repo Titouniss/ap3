@@ -374,6 +374,7 @@ export default {
       this.selected[this.permissions.heures_supplémentaires.read.id] = true;
       this.selected[this.permissions.todos.read.id] = true;
       this.selected[this.permissions.approvisionnements.read.id] = true;
+
     },
     dependencyChecking(type, item) {
       switch (item.name) {
@@ -471,6 +472,7 @@ export default {
             this.selected[this.permissions.compétences.read.id] = true;
             this.selected[this.permissions.clients.read.id] = true;
             this.selected[this.permissions.gammes.read.id] = true;
+
           } else {
             const dependencies = [
               "projets",
@@ -478,6 +480,7 @@ export default {
               "compétences",
               "clients",
               "gammes",
+              "approvisionnements"
             ];
             this.otherModuleNeedRead("projets", dependencies);
           }
@@ -536,6 +539,7 @@ export default {
         "heures",
         "heures_supplémentaires",
         "clients",
+        "approvisionnements"
       ];
       let modulesShow = [];
       modules.forEach((m) => {
@@ -566,6 +570,7 @@ export default {
         heures: ["heures", "utilisateurs", "entreprise", "planning"],
         clients: ["clients", "entreprise"],
         entreprises: ["entreprises"],
+        approvisionnements: ["approvisionnements"]
       };
       delete dependencies[origin];
 

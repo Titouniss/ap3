@@ -444,6 +444,7 @@ export default {
             this.selected[this.permissions.compétences.read.id] = true;
             this.selected[this.permissions.clients.read.id] = true;
             this.selected[this.permissions.gammes.read.id] = true;
+
           } else {
             const dependencies = [
               "projets",
@@ -509,6 +510,7 @@ export default {
         "heures",
         "heures_supplémentaires",
         "clients",
+        "approvisionnements"
       ];
       let modulesShow = [];
       modules.forEach((m) => {
@@ -539,6 +541,7 @@ export default {
         heures: ["heures", "utilisateurs", "entreprise", "planning"],
         clients: ["clients", "entreprise"],
         entreprises: ["entreprises"],
+        approvisionnements: ["approvisionnements"]
       };
       delete dependencies[origin];
 

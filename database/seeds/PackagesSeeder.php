@@ -19,7 +19,7 @@ class PackagesSeeder extends Seeder
                 'display_name' => 'Heures',
             ])->save();
         }
-        $package->syncPermissions(Permission::whereIn('name_fr', ['entreprises', 'roles', 'utilisateurs', 'projets', 'tâches', 'clients', 'heures', 'heures_supplémentaires', 'indiponibilités', 'bugs', 'documents','todos','tags'])
+        $package->syncPermissions(Permission::whereIn('name_fr', ['entreprises', 'roles', 'utilisateurs', 'projets', 'tâches', 'clients', 'heures', 'heures_supplémentaires', 'indiponibilités', 'bugs', 'documents','todos','tags','approvisionnements'])
             ->orWhereIn('name', ['read skills', 'read ranges', 'read workareas', 'read schedules'])->get());
 
         $package = $this->package('schedules');
@@ -28,7 +28,7 @@ class PackagesSeeder extends Seeder
                 'display_name' => 'Plannings',
             ])->save();
         }
-        $package->syncPermissions(Permission::whereIn('name_fr', ['entreprises', 'roles', 'utilisateurs', 'projets', 'clients', 'pôles_de_productions', 'tâches', 'compétences', 'planning', 'indiponibilités', 'gammes', 'bugs', 'documents','todos','tags'])
+        $package->syncPermissions(Permission::whereIn('name_fr', ['entreprises', 'roles', 'utilisateurs', 'projets', 'clients', 'pôles_de_productions', 'tâches', 'compétences', 'planning', 'indiponibilités', 'gammes', 'bugs', 'documents','todos','tags','approvisionnements'])
             ->orWhereIn('name', ['read permissions'])->get());
     
     $package = $this->package('supplies');
