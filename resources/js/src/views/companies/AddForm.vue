@@ -139,7 +139,7 @@ export default {
                 street_name: "",
                 postal_code: "",
                 city: "",
-                country: ""
+                country: "",
             },
             subscription: {
                 starts_at: null,

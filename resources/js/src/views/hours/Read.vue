@@ -40,13 +40,28 @@
         </div>
 
         <div class="vx-card w-full p-6" v-if="filters.user_id">
-            <add-form
-                :activeAddPrompt="activeAddPrompt"
-                :clickDate="dateData"
-                :hours_list="hoursData"
-                :handleClose="handleClose"
-                :user="selectedUser"
-            />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form
+                        :activeAddPrompt="activeAddPrompt"
+                        :clickDate="dateData"
+                        :hours_list="hoursData"
+                        :handleClose="handleClose"
+                        :user="selectedUser"
+                    />
+                </vs-col>
+            </vs-row>
 
             <FullCalendar
                 locale="fr"
@@ -104,6 +119,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 // Store Module
 import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
@@ -282,7 +298,7 @@ export default {
                 const calendarApi = this.$refs.fullCalendar.getApi();
                 const unit = calendarApi.view.viewSpec.singleUnit;
                 const date = moment(calendarApi.getDate()).format("DD-MM-YYYY");
-
+           
                 // Refresh hours
                 this.$store.dispatch("hoursManagement/fetchItems", {
                     date,
@@ -312,13 +328,15 @@ export default {
             calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
         },
         handleDateClick(arg) {
+           
             const period_start = moment(arg.dateStr).format(
                 "YYYY-MM-DD HH:mm:ss"
             );
+            
             const period_end = moment(arg.dateStr)
                 .add(30, "m")
                 .format("YYYY-MM-DD HH:mm:ss");
-
+        
             var targetsEvent = this.calendarEvents.filter(
                 item =>
                     moment(item.end).format("YYYY-MM-DD HH:mm:ss") >
@@ -364,6 +382,7 @@ export default {
                 end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
                 user_id: itemTemp.user_id,
                 project_id: itemTemp.project_id,
+                task_id: itemTemp.task_id,
                 date: moment(arg.event.start).format("YYYY-MM-DD")
             };
             this.$vs.loading();
@@ -391,6 +410,7 @@ export default {
                 end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
                 user_id: itemTemp.user_id,
                 project_id: itemTemp.project_id,
+                task_id: itemTemp.task_id,
                 date: moment(arg.event.start).format("YYYY-MM-DD")
             };
 
@@ -443,6 +463,7 @@ export default {
                     if (item.work_hours.length > 0) {
                         let businessHours = [];
                         item.work_hours.forEach(wH => {
+                            
                             if (wH.is_active === 1) {
                                 if (
                                     wH.morning_starts_at !== null &&
@@ -478,6 +499,7 @@ export default {
                             let minHour = null;
                             let maxHour = null;
                             businessHours.forEach(bH => {
+                                
                                 if (
                                     minHour === null ||
                                     minHour > bH.startTime
@@ -496,13 +518,14 @@ export default {
                                           .subtract(2, "hour")
                                           .format("HH:mm")
                                     : "00:00";
+                                
                             this.maxTime =
                                 maxHour <= "22:00"
                                     ? moment(maxHour, "HH:mm")
                                           .add(2, "hour")
                                           .format("HH:mm")
                                     : "24:00";
-
+                              
                             this.businessHours = businessHours;
                         } else {
                             this.businessHours = false;
@@ -574,6 +597,11 @@ export default {
             moduleProjectManagement.isRegistered = true;
         }
 
+        if (!moduleTaskManagement.isRegistered) {
+            this.$store.registerModule("taskManagement", moduleTaskManagement);
+            moduleTaskManagement.isRegistered = true;
+        }
+
         if (!moduleUnavailabilityManagement.isRegistered) {
             this.$store.registerModule(
                 "unavailabilityManagement",
@@ -607,11 +635,13 @@ export default {
     beforeDestroy() {
         moduleHourManagement.isRegistered = false;
         moduleProjectManagement.isRegistered = false;
+        moduleTaskManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
         moduleUserManagement.isRegistered = false;
         moduleUnavailabilityManagement.isRegistered = false;
         this.$store.unregisterModule("hoursManagement");
         this.$store.unregisterModule("projectManagement");
+        this.$store.unregisterModule("taskManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("userManagement");
         this.$store.unregisterModule("unavailabilityManagement");

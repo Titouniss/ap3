@@ -3,8 +3,8 @@
         <div class="vx-card pt-5" style="border: 1px solid #c1c1c1">
             <vs-row vs-type="flex" vs-justify="space-around">
                 <p>
-                    Commencez ici pour apprendre les bases de l'applications
-                    Plannigo. Sélectionner un modules pour en savoir plus.
+                    Commencez ici pour apprendre les bases de l'application
+                    Plannigo. Sélectionnez un module pour en savoir plus.
                 </p>
             </vs-row>
             <vs-row vs-type="flex" vs-justify="flex-start">
@@ -40,7 +40,7 @@
                         svgClasses="h-7 w-7"
                         class="ml-1"
                     />
-                    <p>Pôles de productions</p>
+                    <p>Pôles de production</p>
                 </div>
                 <div
                     v-if="authorizedToRead('schedules')"
@@ -62,7 +62,7 @@
                         svgClasses="h-7 w-7"
                         class="ml-1"
                     />
-                    <p>Utilisateur</p>
+                    <p>Utilisateurs</p>
                 </div>
                 <div
                     v-if="authorizedToRead('roles')"

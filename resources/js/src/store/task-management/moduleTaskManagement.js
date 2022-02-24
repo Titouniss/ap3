@@ -6,6 +6,19 @@ const model = "task";
 const model_plurial = "tasks";
 
 const { state, getters, actions, mutations } = crud(slug, model, model_plurial);
+state.task = {};
+getters.getTask = state => JSON.parse(JSON.stringify(state.task || {}));
+
+actions.getTasksById = ({ commit }, params = null) => {
+    return apiRequest(
+        `${slug}/task/${params}`,
+        "get",
+        payload => commit("SET_TASK", payload),
+        params
+    );
+}
+mutations.SET_TASK = (state, items) => (state.task = items);
+
 
 //#region Comments
 
@@ -26,6 +39,25 @@ mutations.SET_COMMENTS = (state, items) => (state.comments = items);
 
 //#endregion
 
+//#region TaskTimeSpent
+
+state.taskTimeSpent = [];
+
+getters.getTaskTimeSpent = state => JSON.parse(JSON.stringify(state.taskTimeSpent || []));
+
+actions.fetchTaskTimeSpent = ({ commit }, params = null) => {
+    return apiRequest(
+        `${slug}/taskTimeSpent`,
+        "get",
+        payload => commit("SET_TASK_TIME_SPENT", payload),
+        params
+    );
+};
+
+mutations.SET_TASK_TIME_SPENT = (state, items) => (state.taskTimeSpent = items);
+
+//#endregion
+
 const actionsCopy = Object.assign({}, actions);
 
 actions.removeItems = ({ commit }, ids) => {
@@ -34,11 +66,11 @@ actions.removeItems = ({ commit }, ids) => {
         .then(() => commit("REMOVE_ITEMS", ids));
 };
 
-actions.forceRemoveItems = ({ commit }, ids) => {
-    actionsCopy
-        .forceRemoveItems({ commit }, ids)
-        .then(() => commit("REMOVE_ITEMS", ids));
-};
+// actions.forceRemoveItems = ({ commit }, ids) => {
+//     actionsCopy
+//         .forceRemoveItems({ commit }, ids)
+//         .then(() => commit("REMOVE_ITEMS", ids));
+// };
 
 actions.addComment = ({ commit }, item) => {
     return apiRequest(
@@ -62,6 +94,15 @@ actions.updateTaskPeriod = ({ commit }, item) => {
     return apiRequest(
         `project-management/updateTaskPeriod`,
         "get",
+        payload => commit("ADD_OR_UPDATE_ITEMS", payload),
+        item
+    );
+};
+actions.updateTaskSupplyReceived = ({ commit }, item) => {
+    console.log(item)
+    return apiRequest(
+        `supply-management/updateTaskSupplyReceived`,
+        "post",
         payload => commit("ADD_OR_UPDATE_ITEMS", payload),
         item
     );

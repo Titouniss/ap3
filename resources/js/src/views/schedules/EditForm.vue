@@ -69,6 +69,7 @@
                             v-model="itemLocal.user_id"
                             class="w-full"
                             autocomplete
+                            v-on:keydown.enter="ignore_enter"
                         >
                             <vs-select-item
                                 :key="index"
@@ -102,6 +103,7 @@
                             v-model="itemLocal.workarea_id"
                             class="w-full"
                             autocomplete
+                            v-on:keydown.enter="ignore_enter"
                         >
                             <vs-select-item
                                 :key="index"
@@ -124,7 +126,6 @@
                 @click="confirmDeleteTask(itemLocal.id)"
                 color="danger"
                 type="filled"
-                size="small"
                 >Supprimer la tâche</vs-button
             >
         </vs-row>
@@ -229,6 +230,8 @@ export default {
         }
     },
     methods: {
+        ignore_enter(){
+        },
         init() {
             this.itemLocal = Object.assign(
                 {},
@@ -346,6 +349,13 @@ export default {
                 .then(() => {})
                 .catch(err => {
                     console.error(err);
+                    this.$vs.notify({
+                        title: "Error",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
                 });
 
             this.init();

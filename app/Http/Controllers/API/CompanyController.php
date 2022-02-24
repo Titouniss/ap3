@@ -68,6 +68,7 @@ class CompanyController extends BaseApiController
         'city' => 'required',
         'country' => 'required',
         'subscription' => 'required',
+
     ];
 
     protected static $update_validation_array = [
@@ -86,6 +87,7 @@ class CompanyController extends BaseApiController
         'postal_code' => 'required',
         'city' => 'required',
         'country' => 'required',
+
     ];
 
     /**
@@ -210,6 +212,7 @@ class CompanyController extends BaseApiController
             'postal_code' => $arrayRequest['postal_code'],
             'city' => $arrayRequest['city'],
             'country' => $arrayRequest['country'],
+
         ]);
 
         return $item;

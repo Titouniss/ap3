@@ -78,20 +78,24 @@ export default {
             },
             configStartsAtDateTimePicker: {
                 disableMobile: "true",
-                enableTime: false,
+                enableTime: true,
                 locale: FrenchLocale,
-                dateFormat: "Y-m-d",
-                altFormat: "j F Y",
+                dateFormat: "Y-m-d H:i:ss",
+                altFormat: "j F Y H:i:ss",
                 altInput: true,
                 minDate: new Date(
                     new Date().getFullYear(),
                     new Date().getMonth(),
-                    new Date().getDate() + 1
+                    new Date().getDate(),
+                    new Date().getHours(),
+                    new Date().getMinutes()
                 ),
                 maxDate: new Date(
                     new Date(this.project_data.date).getFullYear(),
                     new Date(this.project_data.date).getMonth(),
-                    new Date(this.project_data.date).getDate() - 1
+                    new Date(this.project_data.date).getDate() - 1,
+                    new Date().getHours(),
+                    new Date().getMinutes()
                 )
             }
         };
@@ -113,8 +117,10 @@ export default {
                 new Date(
                     new Date(this.project_data.date).getFullYear(),
                     new Date(this.project_data.date).getMonth(),
-                    new Date(this.project_data.date).getDate() - 1
-                )
+                    new Date(this.project_data.date).getDate() - 1,
+                    new Date().getHours(),
+                    new Date().getMinutes()
+                ),
             );
         },
         clearFields() {
@@ -123,6 +129,7 @@ export default {
             });
         },
         start() {
+            console.log(this.itemLocal.start_at);
             this.project_data.start_date = this.itemLocal.start_at;
             this.startProject();
         }

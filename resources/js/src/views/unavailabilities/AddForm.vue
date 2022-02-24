@@ -1,6 +1,6 @@
 <template>
     <div class="p-3 mb-4 mr-4">
-        <vs-button class="items-center p-3 w-full" @click="activePrompt = true">
+        <vs-button class="items-center p-3 w-full" @click="activePrompt = true" >
             Ajouter une indisponibilité
         </vs-button>
         <vs-prompt
@@ -13,9 +13,10 @@
             @close="clearFields"
             :is-valid="validateForm"
             :active.sync="activePrompt"
+            
         >
             <div>
-                <form autocomplete="off">
+                <form autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <div class="vx-col w-full">
                             <simple-select
@@ -26,7 +27,14 @@
                                 v-model="itemLocal.reason"
                                 :options="reasons"
                                 :reduce="item => item.name"
+                                v-if="Overtimes"
                             />
+                                <div
+                                v-if="itemLocal.reason =='Utilisation heures supplémentaires' && this.totalOvertimes<0"
+                                class="text-danger text-sm"
+                            >
+                                Attention, vos heures supplémentaires sont dans le négatif
+                            </div>
                             <vs-input
                                 v-if="itemLocal.reason === 'Autre...'"
                                 name="custom_reason"
@@ -99,7 +107,11 @@ export default {
         id_user: {
             required: true
         },
-        fetchOvertimes: {},
+        filterParams:
+        {
+            required: false
+        },
+        fetchOvertimes:{},
         workHours: {
             type: Array,
             default: () => []
@@ -108,13 +120,15 @@ export default {
     data() {
         return {
             activePrompt: false,
-
+            totalOvertimes: "",
             itemLocal: {
                 user_id: null,
                 starts_at: null,
                 ends_at: null,
                 reason: ""
+                
             },
+           
             custom_reason: "",
             reasons: [
                 { name: "Utilisation heures supplémentaires" },
@@ -144,6 +158,31 @@ export default {
         };
     },
     computed: {
+        Overtimes()
+        {         
+         if(this.activePrompt ==true)
+            {  
+            const item = JSON.parse(JSON.stringify(this.itemLocal));
+            item.user_id = this.id_user;
+  
+            return(
+             this.$store
+                    .dispatch(
+                        "dealingHoursManagement/getOvertimes",
+                        this.id_user
+                    )
+                    .then(data => {
+                        if (data && data.status === 200) {
+                            this.overtimes = data.data.success.overtimes;
+                            this.totalOvertimes = this.overtimes;
+                        }
+                    })
+                );
+            }
+           
+    
+   
+        },
         validateForm() {
             /*if (this.itemLocal.reason === "Autre...") {
                 return (
@@ -175,12 +214,14 @@ export default {
         }
     },
     methods: {
+        
         clearFields() {
             Object.assign(this.itemLocal, {
                 user_id: null,
                 starts_at: null,
                 ends_at: null,
-                reason: ""
+                reason: "",
+                overtimes: null
             });
             this.custom_reason = "";
             Object.assign(this.configStartsAtDateTimePicker, {
@@ -270,6 +311,7 @@ export default {
                     );
 
                     item.user_id = this.id_user;
+               
                     this.$store
                         .dispatch("unavailabilityManagement/addItem", item)
                         .then(data => {
@@ -301,7 +343,7 @@ export default {
             });
         }
     },
-    mounted() {
+    mounted() {     
         if (
             this.$store.state.AppActiveUser.is_admin ||
             this.$store.state.AppActiveUser.is_manager
@@ -309,5 +351,6 @@ export default {
             this.reasons.unshift({ name: "Heures supplémentaires payées" });
         }
     }
+    
 };
 </script>

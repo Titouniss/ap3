@@ -163,6 +163,16 @@ trait HasCompanyDetails
         $this->details->country = $value;
     }
 
+    public function getAuthorizeSupplyAttribute()
+    {
+        return $this->details->authorize_supply;
+    }
+
+    public function setAuthorizeSupplyAttribute($value)
+    {
+        $this->details->authorize_supply = $value;
+    }
+
     /**
      * The associated details
      */

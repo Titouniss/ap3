@@ -147,15 +147,17 @@
                             </tr>
                             <tr>
                                 <td class="font-semibold">
-                                    Temps estimé sur le projet :
+                                    Temps estimé sur le projet : 
                                 </td>
-                                <td>{{ estimatedTimeData }} heures</td>
+                                <td> {{ estimatedTimeData }} heures</td>
                             </tr>
                             <tr v-if="project_data.status != 'todo'">
                                 <td class="font-semibold">
                                     Temps réalisé sur le projet :
                                 </td>
-                                <td>{{ achievedTimeData }} heures</td>
+                                <td>{{ achievedTimeData > 0
+                                            ? achievedTimeData  + " " + "heures"
+                                            : achievedTimeData + " " + "heure"}} </td>
                             </tr>
                         </table>
                     </div>
@@ -169,6 +171,7 @@
                             :startProject="startProject"
                         ></start-project-prompt>
                         <vs-button
+                            class="mr-3"
                             v-if="project_data.status != 'todo'"
                             type="gradient"
                             color="#208ee7"
@@ -178,6 +181,39 @@
                             @click="redirectToShedule"
                         >
                             Voir le planning
+                        </vs-button>
+                        <vs-button
+                            class="mr-3"
+                            v-if="project_data.status == 'doing'"
+                            color="#E7A720"
+                            icon-pack="feather"
+                            icon="icon-send"
+                             @click="changeStatus('waiting')"
+                        >
+                            Passer le projet en attente de livraison
+                        </vs-button>
+                        <vs-prompt
+                            title="Passer le projet en attente de livraison"
+                            type="alert"
+                            color="warning"
+                            acceptText="J'ai compris"
+                            cancelText="Retour"
+                            :active.sync="activePrompt"
+                        >
+                            <div>
+                                Vous ne pouvez pas mettre fin au projet, car une ou plusieurs tâches ne sont pas finies. Veuillez terminer toutes vos tâches avant de mettre fin au projet. 
+                            </div>
+                        </vs-prompt>
+                        <vs-button
+                            class="mr-3"
+                            v-if="project_data.status == 'waiting'"
+                            color="#E72020"
+                            gradient-color-secondary="#0c3352"
+                            icon-pack="feather"
+                            icon="icon-truck"
+                            @click="changeStatus('done')"
+                        >
+                            Livrer le projet
                         </vs-button>
                     </div>
                 </div>
@@ -219,11 +255,11 @@
                         <index-tasks
                             :project_data="this.project_data"
                             :refreshData="refreshData"
+                            :taskIdToEdit =this.$route.params.taskEdit
                         />
                     </vx-card>
                 </div>
             </div>
-
             <edit-form
                 :itemId="itemIdToEdit"
                 v-if="itemIdToEdit"
@@ -242,6 +278,7 @@ import moduleRangeManagement from "@/store/range-management/moduleRangeManagemen
 import moduleCustomerManagement from "@/store/customer-management/moduleCustomerManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
 import moduleScheduleManagement from "@/store/schedule-management/moduleScheduleManagement.js";
+import moduleSupplyManagement from "@/store/supply-management/moduleSupplyManagement.js";
 
 import moment from "moment";
 
@@ -250,15 +287,19 @@ import AddRangeForm from "./AddRangeForm.vue";
 import StartProjectPrompt from "./StartProjectPrompt.vue";
 import IndexTasks from "./../tasks/Index.vue";
 
+
 export default {
     components: {
         EditForm,
         AddRangeForm,
         StartProjectPrompt,
-        IndexTasks
+        IndexTasks,
+        
     },
     data() {
         return {
+            activePrompt: false,
+
             project_data: null,
             project_not_found: false
         };
@@ -268,6 +309,15 @@ export default {
             return (
                 this.$store.getters["projectManagement/getSelectedItem"].id || 0
             );
+        },
+        allTasksDone() {
+            let allTasksDone = true;
+            this.project_data.tasks.map(task => {
+                if(task.status != 'done'){
+                    allTasksDone = false;
+                }
+            });
+            return allTasksDone;
         },
         estimatedTimeData() {
             let time = 0;
@@ -350,6 +400,41 @@ export default {
                     });
                 })
                 .finally(() => this.$vs.loading.close());
+        },
+        changeStatus (status) { 
+            
+            if(status == 'waiting' && !this.allTasksDone){
+                this.activePrompt = true;
+            }
+            else{
+                this.$vs.loading()
+                const payload = { ...this.project_data }
+                payload.status = status
+
+                this.$store
+                    .dispatch("projectManagement/updateItem", payload)
+                    .then(() => {
+                        this.$vs.loading.close();
+                        this.$vs.notify({
+                            title: "Ajout",
+                            text: "Status modifié avec succès",
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "success"
+                        });
+                        this.refreshData()
+                    })
+                    .catch(error => {
+                        this.$vs.loading.close();
+                        this.$vs.notify({
+                            title: "Error",
+                            text: error.message,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger"
+                        });
+                    });
+            }
         },
         editRecord() {
             this.$store
@@ -458,6 +543,13 @@ export default {
             );
             moduleSkillManagement.isRegistered = true;
         }
+        if (!moduleSupplyManagement.isRegistered) {
+            this.$store.registerModule(
+                "supplyManagement",
+                moduleSupplyManagement
+            );
+            moduleSupplyManagement.isRegistered = true;
+        }
         if (!moduleCompanyManagement.isRegistered) {
             this.$store.registerModule(
                 "companyManagement",
@@ -528,6 +620,13 @@ export default {
                     console.error(err);
                 });
         }
+         if (this.authorizedTo("read", "supplies")) {
+            this.$store
+                .dispatch("supplyManagement/fetchItems", { order_by: "name" })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
 
         //if (this.authorizedTo("read", "customers")) {
         this.$store.dispatch("customerManagement/fetchItems").catch(err => {
@@ -544,10 +643,12 @@ export default {
         moduleCustomerManagement.isRegistered = false;
         moduleDocumentManagement.isRegistered = false;
         moduleScheduleManagement.isRegistered = false;
+        moduleSupplyManagement.isRegistered = false;
         this.$store.unregisterModule("projectManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("workareaManagement");
         this.$store.unregisterModule("skillManagement");
+        this.$store.unregisterModule("supplyManagement");
         this.$store.unregisterModule("rangeManagement");
         this.$store.unregisterModule("customerManagement");
         this.$store.unregisterModule("documentManagement");

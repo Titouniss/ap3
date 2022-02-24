@@ -192,6 +192,18 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+
+                {
+                    path: "/projects/project-view/:id/:taskEdit",
+                    name: 'projects-project-view',
+                    component: () => import("@/views/projects/Read.vue"),
+                    meta: {
+                        parent: "projects",
+                        rule: "admin",
+                        requiresAuth: true,
+    
+                        },  
+                },
                 /////---RANGES---/////
                 {
                     path: "/ranges",
@@ -340,6 +352,17 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                  /////---Todo---/////
+                {
+                    path: "/todos",
+                    name: "todos",
+                    component: () => import("@/views/todo/Todo.vue"),
+                    meta: {
+                        pageTitle: "Todos List",
+                        rule: "admin",
+                        requiresAuth: true
+                    }
+                },
                 /////---Bugs---/////
                 {
                     path: "/bugs",
@@ -393,7 +416,17 @@ const router = new Router({
                         rule: "admin",
                         requiresAuth: true
                     }
-                }
+                },
+                {
+                    path: "/supplies",
+                    name: "/supplies",
+                    component: () => import("@/views/supplies/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        pageTitle: "Gestion des approvisionnements",
+                        requiresAuth: true
+                    }
+                },
             ]
         },
         // =============================================================================
@@ -538,7 +571,8 @@ const router = new Router({
                     meta: {
                         rule: "editor"
                     }
-                }
+                },
+                
             ]
         },
         // Redirect to 404 page, if no match found
@@ -598,5 +632,4 @@ router.afterEach(() => {
         appLoading.style.display = "none";
     }
 });
-
 export default router;

@@ -113,6 +113,10 @@
                             @click="editRecord(item)"
                         />
                         <feather-icon
+                            v-if="
+                                project_data.status != 'waiting' &&
+                                    project_data.status != 'done'
+                            "
                             icon="Trash2Icon"
                             svgClasses="h-5 w-5 hover:text-danger cursor-pointer"
                             @click="confirmDeleteRecord(item)"
@@ -181,12 +185,12 @@
                 </div>
 
                 <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
-                <vs-input
+                <!-- <vs-input
                     class="sm:mr-4 mr-0 sm:w-auto w-full sm:order-normal order-3 sm:mt-0 mt-4"
                     v-model="searchQuery"
                     @input="updateSearchQuery"
                     placeholder="Rechercher..."
-                />
+                /> -->
                 <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
             </div>
 
@@ -220,6 +224,123 @@
             :tasks_list="tasksData"
             :refreshData="refreshData"
         />
+
+       <div class="vx-card p-6" v-if="authorizedTo('publish')"
+>
+           <h4 class="mb-5">Approvisionnement</h4>
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <!-- <add-form /> -->
+                </vs-col>
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-end"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                </vs-col>
+            </vs-row>
+            <div class="flex flex-wrap items-center">
+                <div class="flex-grow">
+                    <vs-row vs-type="flex">
+                        <!-- <vs-button class="mb-4 md:mb-0" @click="gridApi.exportDataAsCsv()">Export as CSV</vs-button> -->
+
+                        <!-- TABLE ACTION COL-2: SEARCH & EXPORT AS CSV -->
+                        <vs-input
+                            class="ml-5"
+                            v-model="searchQuery"
+                            @input="updateSearchQuery"
+                            placeholder="Rechercher..."
+                        />
+                    </vs-row>
+                </div>
+
+                <!-- ITEMS PER PAGE -->
+                <vs-dropdown vs-trigger-click class="cursor-pointer">
+                    <div
+                        class="p-4 border border-solid d-theme-border-grey-light rounded-full d-theme-dark-bg cursor-pointer flex items-center justify-between font-medium"
+                    >
+                        <span class="mr-2">
+                            {{
+                                currentPage * paginationPageSize -
+                                    (paginationPageSize - 1)
+                            }}
+                            -
+                            {{
+                                taskSupplyFilter.length -
+                                    currentPage * paginationPageSize >
+                                0
+                                    ? currentPage * paginationPageSize
+                                    : taskSupplyFilter.length
+                            }}
+                            sur {{ taskSupplyFilter.length }}
+                        </span>
+                        <feather-icon
+                            icon="ChevronDownIcon"
+                            svgClasses="h-4 w-4"
+                        />
+                    </div>
+                    <!-- <vs-button class="btn-drop" type="line" color="primary" icon-pack="feather" icon="icon-chevron-down"></vs-button> -->
+                    <vs-dropdown-menu>
+                        <vs-dropdown-item
+                            @click="gridApi.paginationSetPageSize(10)"
+                        >
+                            <span>10</span>
+                        </vs-dropdown-item>
+                        <vs-dropdown-item
+                            @click="gridApi.paginationSetPageSize(20)"
+                        >
+                            <span>20</span>
+                        </vs-dropdown-item>
+                        <vs-dropdown-item
+                            @click="gridApi.paginationSetPageSize(25)"
+                        >
+                            <span>25</span>
+                        </vs-dropdown-item>
+                        <vs-dropdown-item
+                            @click="gridApi.paginationSetPageSize(30)"
+                        >
+                            <span>30</span>
+                        </vs-dropdown-item>
+                    </vs-dropdown-menu>
+                </vs-dropdown>
+            </div>
+
+            <!-- AgGrid Table -->
+            <ag-grid-vue
+                ref="agGridTable"
+                :components="components"
+                :gridOptions="gridOptions1"
+                class="ag-theme-material w-100 my-4 ag-grid-table"
+                overlayLoadingTemplate="Chargement..."
+                :columnDefs="columnDefs2"
+                :defaultColDef="defaultColDef"
+                :rowData="taskSupplyFilter"
+                rowSelection="multiple"
+                colResizeDefault="shift"
+                :animateRows="true"
+                :floatingFilter="false"
+                :pagination="true"
+                :paginationPageSize="paginationPageSize"
+                :suppressPaginationPanel="true"
+                :enableRtl="$vs.rtl"
+            ></ag-grid-vue>
+
+            <vs-pagination :total="totalPages" :max="7" v-model="currentPage" />
+        </div>
+
     </div>
 </template>
 
@@ -238,17 +359,23 @@ import EditForm from "./EditForm.vue";
 import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleDocumentManagement from "@/store/document-management/moduleDocumentManagement.js";
+import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 
 // Cell Renderer
 import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
 import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import checkboxCellRenderer from "./cell-renderer/checkboxCellRenderer.vue";
 import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
-
+import CellRendererRelationSupply from "./cell-renderer/CellRendererRelationSupply.vue";
+var modelPlurial = 'supplies'
 export default {
     props: {
         project_data: {
             required: true
+        },
+        taskIdToEdit: {
+            required: false
         },
         refreshData: {
             required: true
@@ -263,7 +390,9 @@ export default {
         CellRendererLink,
         CellRendererActions,
         CellRendererRelations,
-        CellRendererStatus
+        CellRendererStatus,
+        checkboxCellRenderer,
+        CellRendererRelationSupply
     },
     data() {
         return {
@@ -276,6 +405,9 @@ export default {
             gridApi: null,
             gridOptions: {
                 localeText: { noRowsToShow: "Aucune tâche à afficher" }
+            },
+            gridOptions1: {
+                localeText: { noRowsToShow: "Aucune tâche avec un approvisionnement à afficher" }
             },
             defaultColDef: {
                 sortable: true,
@@ -333,18 +465,115 @@ export default {
                     }
                 }
             ],
+               columnDefs2: [
+                         {
+                    headerName: "Approvisionnement",
+                    field: "supplies",
+                    filter: true,
+                     valueGetter: params => { 
+                         return params.data.supplies.map(s=>s.supply.name).join(", ")
+                    },                 
+
+                },
+                {
+                    headerName: "Tâche",
+                    field: "name",
+                    filter: true,
+                },
+                      {
+                    headerName: "Date",
+                    field: "supplies",
+                    filter: true,
+                     valueGetter: params => { 
+                        return moment(params.data.supplies[0].date).format("DD MMMM YYYY");          
+                        },           
+                },
+                {
+                    headerName: "Avancement",
+                    field: "supplies",
+                    filter: true,
+                    cellRendererFramework:"CellRendererRelationSupply",
+
+                },
+                  {
+                    headerName: "Reçu",  
+                    field: "supplies",
+                    filter: true,
+                    cellRendererFramework:"checkboxCellRenderer",
+                },
+                    {
+                    sortable: false,
+                    headerName: "Actions",
+                    field: "transactions",
+                    type: "numericColumn",
+                    cellRendererFramework: "CellRendererActions",
+                    cellRendererParams: {
+                        model: "task",
+                        modelPlurial: "tasks",
+                        name: data => `la tâche ${data.name}`,
+                        usesSoftDelete: false,
+                        withPrompt: true
+                    }
+                    
+                },
+            ],
 
             // Cell Renderer Components
             components: {
                 CellRendererLink,
                 CellRendererActions,
-                CellRendererRelations
+                CellRendererRelations,
+                checkboxCellRenderer,
+                CellRendererRelationSupply
             }
         };
     },
     computed: {
+        supplyData()
+        {
+            return this.$store.getters["supplyManagement/getItems"];
+ 
+        },
         tasksData() {
-            return this.$store.getters["taskManagement/getItems"];
+            let taskArray=this.$store.getters["taskManagement/getItems"];
+            let taskByOrder=[];
+            taskArray.sort(function(a, b) { 
+                if(a.date && b.date){
+                    a = new Date(a.date);
+                    b = new Date(b.date);
+                    return a-b;
+                }
+            })
+            let allPreviousTaskIn=false;
+            if(this.project_data.status=="todo"){
+                for(let i=0;i<taskArray.length;i++){
+                    if(!taskArray[i].previous_tasks.length){
+                        taskByOrder.push(taskArray[i]);
+                    }
+                }
+                while(taskByOrder.length<taskArray.length){
+                    for(let i=0;i<taskArray.length;i++){
+                        if(taskArray[i].previous_tasks.length){
+                            for(let p=0;p<taskArray[i].previous_tasks.length;p++){
+                                if(taskByOrder.find(task => task.id==taskArray[i].previous_tasks[p].previous_task_id) &&
+                                    !taskByOrder.find(task => task.id==taskArray[i].id)){
+                                    allPreviousTaskIn=true;
+                                }else{
+                                    allPreviousTaskIn=false;
+                                }
+                            }
+                            if(allPreviousTaskIn){
+                                taskByOrder.push(taskArray[i]);
+                            }
+                        }
+                    }
+                }
+            }
+            return taskByOrder.length ? taskByOrder : taskArray;
+        },
+        taskSupplyFilter()
+        {
+            return this.tasksData.filter(t=>t.supplies.length > 0)
         },
         paginationPageSize() {
             if (this.gridApi) return this.gridApi.paginationGetPageSize();
@@ -369,6 +598,11 @@ export default {
         }
     },
     methods: {
+         authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
         updateSearchQuery(val) {
             if (this.gridApi) this.gridApi.setQuickFilter(val);
         },
@@ -408,13 +642,20 @@ export default {
         },
         deleteRecord() {
             this.$store
-                .dispatch("taskManagement/forceRemoveItems", [this.itemToDel.id])
+                .dispatch("taskManagement/forceRemoveItems", [
+                    this.itemToDel.id
+                ])
                 .then(() => {
                     this.refreshData();
                     this.showDeleteSuccess();
                 })
                 .catch(err => {
                     console.error(err);
+                    this.$vs.notify({
+                        color: "danger",
+                        title: "Erreur",
+                        text: err.message
+                    });
                 });
 
             this.itemToDel = null;
@@ -423,12 +664,13 @@ export default {
             this.$vs.notify({
                 color: "success",
                 title: "Tâche",
-                text: `${modelTitle} supprimé`
+                text: `${modelTitle} supprimée`
             });
         }
     },
     mounted() {
         this.gridApi = this.gridOptions.api;
+        this.gridApi = this.gridOptions1.api;
 
         window.addEventListener("resize", this.onResize);
         if (this.gridApi) {
@@ -471,17 +713,59 @@ export default {
             );
             moduleDocumentManagement.isRegistered = true;
         }
+        if (!moduleHourManagement.isRegistered) {
+            this.$store.registerModule("hoursManagement", moduleHourManagement);
+            moduleHourManagement.isRegistered = true;
+        }
 
         this.$store
             .dispatch("taskManagement/fetchItems", {
-                project_id: this.project_data.id
+                project_id: this.project_data.id,
+                per_page: this.perPage,
+                page: this.page
+            }).then(data => {
+
+                    if (data.pagination) {
+                        data.pagination
+                        const { total, last_page } = data.pagination;
+                        this.totalPages = last_page;
+                        this.total = total;
+                    }
+                })
+            .catch(err => {
+                console.error(err);
+            });
+               this.$store
+            .dispatch("supplyManagement/fetchItems", {
+                company_id: this.project_data.company_id,
             })
             .catch(err => {
                 console.error(err);
             });
 
         this.$store.dispatch("userManagement/fetchItems");
+
+        let tasks = this.$store.getters["taskManagement/getItems"];
+
+        if (this.taskIdToEdit) {
+            let task = tasks.filter(x => x.id == this.taskIdToEdit);
+
+            this.$store
+                .dispatch("taskManagement/fetchItem", this.taskIdToEdit)
+                .then(reponse => {
+                    this.$store
+                        .dispatch("taskManagement/editItem", reponse.payload)
+                        .then(() => {})
+                        .catch(err => {
+                            console.error(err);
+                        });
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
     },
+
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 
@@ -498,6 +782,11 @@ export default {
         if (moduleDocumentManagement.isRegistered) {
             moduleDocumentManagement.isRegistered = false;
             this.$store.unregisterModule("documentManagement");
+        }
+
+        if (moduleHourManagement.isRegistered) {
+            moduleHourManagement.isRegistered = false;
+            this.$store.unregisterModule("hoursManagement");
         }
     }
 };

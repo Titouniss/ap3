@@ -1,5 +1,6 @@
 <template>
     <vs-select
+    v-on:keydown.enter="ignore_enter"
         class="w-full"
         :ref="`${model}Select`"
         :value="value"
@@ -116,6 +117,9 @@ export default {
         }
     },
     methods: {
+        ignore_enter(){
+
+        },
         clearFetchTimeout() {
             if (this.fetchTimeout) {
                 clearTimeout(this.fetchTimeout);

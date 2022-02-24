@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\Range;
 use App\Models\Role;
 use App\Models\Skill;
+use App\Models\Supply;
 use App\Models\Subscription;
 use App\Models\Task;
 use App\Models\TasksBundle;
@@ -92,6 +93,12 @@ class RouteServiceProvider extends ServiceProvider
         });
         Route::bind('document', function ($id) {
             return Document::find($id);
+        });
+        Route::bind('todos', function ($id) {
+            return Todo::find($id);
+        });
+        Route::bind('supplies', function ($id) {
+            return Supply::find($id);
         });
     }
 

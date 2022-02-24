@@ -1,14 +1,14 @@
 <template>
     <div>
         <vs-button
-            v-if="customTask == false"
+            v-if="customTask == false && project_data.status != 'done'"
             @click="activePrompt = true"
             class="w-full p-3 mb-4 mr-4"
         >
             Ajouter une tâche
         </vs-button>
         <div
-            v-if="customTask == true"
+            v-if="customTask == true && project_data.status != 'done'"
             @click="activePrompt = true"
             class="card-task-add p-2 m-3"
         >
@@ -32,7 +32,7 @@
             class="task-compose"
         >
             <div>
-                <form autocomplete="off">
+                <form autocomplete="off" v-on:submit.prevent>
                     <div class="vx-row">
                         <!-- Left -->
                         <div
@@ -204,7 +204,18 @@
                                     >
                                         + Ajouter un commentaire
                                     </span>
-                                </div>
+                                </div>  
+                             
+                                     <add-supply-tasks
+                                     required
+                                     v-if="authorizedTo('publish')"
+                                    :addSupply="addSupply"
+                                    :tasks_list="tasks_list"
+                                    :supply="
+                                        itemLocal.supplies
+                                    "/>
+                               
+                                
                             </div>
                             <div class="mb-4">
                                 <div v-if="orderDisplay">
@@ -253,6 +264,21 @@
                             </div>
                         </div>
                     </div>
+                          <div class="my-3" v-if=" customSupplies && customSupplies.length > 0">
+                                <span> Approvisionnement le : {{format_date(customSupplies[0].date)}}</span> 
+                                <li
+                                    :key="index"
+                                    v-for="(item, index) in customSupplies[0].id"
+                                >
+                                <div v-for="items in supplyData" :key="items.id">
+                               
+                                    <span v-if="items.id == item">{{ items.name }}</span>  
+
+                                </div>
+                                </li>
+                              
+                            </div>
+                 
 
                     <div class="my-3">
                         <div v-if="commentDisplay">
@@ -266,6 +292,7 @@
                             />
                         </div>
                     </div>
+                    
                 </form>
             </div>
         </vs-prompt>
@@ -281,18 +308,22 @@ import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
+import AddSupplyTasks from "./AddSupplyTasks.vue";
 import AddPreviousTask from "./AddPreviousTasks.vue";
 import FileInput from "@/components/inputs/FileInput.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
-
+const model = "company";
+const modelPlurial = "supplies";
+const modelTitle = "Société";
 export default {
     components: {
         SimpleSelect,
         flatPickr,
         AddPreviousTask,
-        FileInput
+        FileInput,
+        AddSupplyTasks
     },
     props: {
         project_data: {},
@@ -336,6 +367,7 @@ export default {
                 project_id:
                     this.project_data != null ? this.project_data.id : null,
                 comment: "",
+                supplies: [],
                 skills: [],
                 previous_task_ids: [],
                 workarea_id: this.type === "workarea" ? this.idType : null,
@@ -353,6 +385,11 @@ export default {
             workareasDataFiltered: [],
             usersDataFiltered: [],
             comments: [],
+            customSupplies: 
+            {
+                id: "",
+                date: ""
+            },
             isSubmiting: false,
 
             orderDisplay: false,
@@ -372,7 +409,7 @@ export default {
                 estimated_time,
                 skills,
                 workarea_id,
-                user_id
+                user_id,
             } = this.itemLocal;
 
             return (
@@ -405,6 +442,9 @@ export default {
                 this.$store.getters["workareaManagement/getItems"]
             );
         },
+           supplyData() {
+      return this.$store.getters["supplyManagement/getItems"];
+    },
         skillsData() {
             if (this.type === "workarea") {
                 let workarea = this.workareasData.find(
@@ -429,6 +469,7 @@ export default {
                 this.$store.getters["userManagement/getItems"]
             );
         },
+            
         projectsData() {
             const projects = this.$store.getters["projectManagement/getItems"];
 
@@ -473,7 +514,18 @@ export default {
         }
     },
     methods: {
+   authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
+format_date(value) {
+      if (value) {
+        return moment(value).format("DD MMMM YYYY ");
+      }
+    },
         clearFields(deleteFiles = true) {
+             this.supplies= {id:"",date:""}
             deleteFiles ? this.deleteFiles() : null;
             Object.assign(this.itemLocal, {
                 name: "",
@@ -491,6 +543,7 @@ export default {
                 created_by: "",
                 status: "todo",
                 skills: [],
+                supplies:[],
                 project_id:
                     this.project_data != null
                         ? this.project_data.id
@@ -532,14 +585,12 @@ export default {
             } else if (this.type && this.type === "users") {
             } else {
             }
-
             let dateFormat = item.date;
             item.date = item.date
                 ? moment(item.date).format("YYYY-MM-DD HH:mm")
                 : null;
 
             this.uploadedFiles.length > 0 ? (item.token = this.token) : null;
-
             this.$store
                 .dispatch("taskManagement/addItem", item)
                 .then(data => {
@@ -636,6 +687,22 @@ export default {
         showComment() {
             this.commentDisplay = true;
         },
+        
+         addSupply(value)
+         {
+             let supplies_local = [];
+            let list = [];
+             supplies_local.push(value)
+             this.itemLocal.supplies = supplies_local;
+            supplies_local.forEach(supply => {
+               list = supply.id
+            });
+        this.customSupplies =[
+        {
+            id: list,
+            date: value.date
+        }];
+         },
         addPreviousTask(taskIds) {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];
