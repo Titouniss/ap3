@@ -370,6 +370,7 @@
                             <span>Journal de travail</span>
                         </div>
                          <div
+                         v-if="authorizedTo('publish')"
                             v-bind:class="[
                                 isActive == 'customSupplies'
                                     ? 'btnChooseDisplayFormatActive p-3'
