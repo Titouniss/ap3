@@ -69,8 +69,8 @@ class DealingHoursController extends Controller
             }
             else
             { 
-                $users = User::where('id', $id)->whereBetween('start_employment', [Carbon::now()->startOfWeek()->format('Y-m-d H:i:s'), Carbon::now()->endOfWeek()->format('Y-m-d H:i:s')])->get();
-                $totalOvertimes = DealingHours::where('user_id', $id)->whereBetween('date', [$start_employment->format('Y-m-d H:i:s'), Carbon::now()->startOfWeek()->format('Y-m-d H:i:s')])->sum('overtimes');
+                // $users = User::where('id', $id)->whereBetween('start_employment', [Carbon::now()->startOfWeek()->format('Y-m-d H:i:s'), Carbon::now()->endOfWeek()->format('Y-m-d H:i:s')])->get();
+                $totalOvertimes = DealingHours::where('user_id', $id)->where('date', '>=', $start_employment->format('Y-m-d H:i:s'))->where('date', '<', Carbon::now()->startOfWeek())->orWhere('date', '=', '2001-01-01')->where('user_id', $id)->sum('overtimes');
             }
 
             // Get nb used and payed overtimes

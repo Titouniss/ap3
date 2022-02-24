@@ -82,11 +82,18 @@ class TodoController extends BaseApiController
         }
         $query->where('is_important',$request->is_important)->get();
     }
-    
-    if($request->has('order_by'))
-    {
-        $query->orderBy($request->order_by);
+if ($request->has('order_by')) {
+    try {
+        $direction = 'asc';
+        if ($request->has('order_by_desc')) {
+            $direction = filter_var($request->order_by_desc, FILTER_VALIDATE_BOOLEAN) ? 'desc' : 'asc';
+        }
+
+        $query->orderBy($request->order_by, $direction);
+    } catch (\Throwable $th) {
+        throw new ApiException("Paramètre 'order_by' n'est pas valide.");
     }
+}
  }
 
 

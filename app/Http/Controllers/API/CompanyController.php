@@ -49,7 +49,6 @@ class CompanyController extends BaseApiController
         'postal_code',
         'city',
         'country',
-        'authorize_supply',
     ];
 
     protected static $store_validation_array = [
@@ -69,7 +68,6 @@ class CompanyController extends BaseApiController
         'city' => 'required',
         'country' => 'required',
         'subscription' => 'required',
-        'authorize_supply' =>'required'
 
     ];
 
@@ -89,7 +87,6 @@ class CompanyController extends BaseApiController
         'postal_code' => 'required',
         'city' => 'required',
         'country' => 'required',
-        'authorize_supply' =>'required'
 
     ];
 
@@ -145,7 +142,6 @@ class CompanyController extends BaseApiController
             'postal_code' => $arrayRequest['postal_code'],
             'city' => $arrayRequest['city'],
             'country' => $arrayRequest['country'],
-            'authorize_supply' => $arrayRequest['authorize_supply'],
         ]);
 
         $subscriptionArray = $arrayRequest['subscription'];
@@ -216,7 +212,6 @@ class CompanyController extends BaseApiController
             'postal_code' => $arrayRequest['postal_code'],
             'city' => $arrayRequest['city'],
             'country' => $arrayRequest['country'],
-            'authorize_supply' => $arrayRequest['authorize_supply'],
 
         ]);
 

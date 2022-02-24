@@ -330,6 +330,21 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('force-destroy/{id?}', 'API\TagController@forceDestroy');
 
     });
+
+      /***********************************************************************************/
+    /*********************************   Supply   **************************************/
+    /***********************************************************************************/
+    Route::prefix('supply-management')->group(function () {
+        Route::get('index', 'API\SupplyController@index');
+        Route::get('index/task/{id}', 'API\SupplyController@getByTaskId');
+        Route::get('show/{id}', 'API\SupplyController@show');
+        Route::post('store', 'API\SupplyController@store');
+        Route::put('update/{id}', 'API\SupplyController@update');
+        Route::post('updateTaskSupplyReceived', 'API\SupplyController@updateTaskSupplyReceived');
+        Route::put('restore/{id?}', 'API\SupplyController@restore');
+        Route::put('destroy/{id?}', 'API\SupplyController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SupplyController@forceDestroy');
+    });
 });
 /***********************************************************************************/
 /***************************** NOT AUTHENTICATED ***********************************/

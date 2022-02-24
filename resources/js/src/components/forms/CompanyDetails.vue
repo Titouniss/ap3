@@ -31,12 +31,6 @@
           :danger-text="errors.first('siret')"
         />
       </vs-col>
-        <vs-row  vs-type="flex" class="mb-6" >
-        <vs-col vs-w="6" vs-xs="12" class="pt-3 px-3">
-          <label style="font-size: .85rem; padding-left: 5px; margin-bottom: 5px" for="switch">{{itemLocal.authorize_supply == 1 ? 'Module d\' approvisionnement : Activer' : 'Module d\' approvisionnement : Désactiver'}}</label>
-          <vs-switch class="ml-5" v-validate="'required'" color="success" v-model="itemLocal.authorize_supply"/>
-          </vs-col>
-        </vs-row>
       <vs-col v-if="showAll || isAdmin" vs-w="6" vs-xs="12" class="pt-3 px-3">
         <vs-input
           v-validate="'max:255'"

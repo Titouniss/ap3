@@ -86,6 +86,12 @@ export default [
         icon: "ClockIcon"
     },
     {
+        url: "/supplies",
+        name: "Approvisionnement",
+        slug: "supplies",
+        icon: "TruckIcon",
+    },
+    {
         url: "/modules",
         name: "Modules",
         slug: "modules",

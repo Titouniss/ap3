@@ -240,6 +240,13 @@
                                     </span>
                                 </div>
                             </div>
+                              <edit-supply-tasks
+                              v-if="authorizedTo('publish')" 
+                              :addSupply="addSupply"
+                              :tasks_list="tasks_list"
+                              :customSupplies="customSupplies"
+                              :current_task_id="this.itemId"
+                            />
                             <div
                                 class="mb-4"
                                 :class="
@@ -362,6 +369,20 @@
                             />
                             <span>Journal de travail</span>
                         </div>
+                         <div
+                            v-bind:class="[
+                                isActive == 'customSupplies'
+                                    ? 'btnChooseDisplayFormatActive p-3'
+                                    : 'btnFormatTaskListT p-3'
+                            ]"
+                            @click="isActive = 'customSupplies'">
+                            <feather-icon
+                                icon="TruckIcon"
+                                svgClasses="h-5 w-5"
+                            />
+                            <span>Approvisionnement</span>
+                            
+                        </div>
                     </vs-row>
                     <div class="my-3" v-if="isActive == 'commentaire'" style="overflow-y:scroll; height: 210px;">
                         <vs-textarea
@@ -430,6 +451,7 @@
                     </div>
                     {{taskTimeSpent}}
                     <div class="my-3" v-if="isActive == 'journal'">
+                      
                         <div>
                             <ul
                                 v-if="itemLocal.taskTimeSpent.length > 0"
@@ -456,6 +478,19 @@
                             </ul>
                         </div>
                     </div>
+                     <div class="my-3" v-if="isActive == 'customSupplies'">
+                        <div class="my-3" v-if="customSupplies.id.length > 0">
+                          <span>
+                            Approvisionnement le :
+                            {{ format_date(customSupplies.date) }}</span
+                          >
+                          <li :key="index" v-for="(item, index) in customSupplies.id">
+                            <div v-for="items in supplyData" :key="items.id">
+                              <span v-if="items.id == item">{{ items.name }}</span>
+                            </div>
+                          </li>
+                        </div>
+                     </div>
                 </form>
             </div>
             <vs-row
@@ -496,10 +531,11 @@ import errorMessage from "./errorValidForm";
 import AddPreviousTasks from "./AddPreviousTasks.vue";
 import FileInput from "@/components/inputs/FileInput.vue";
 import AddWorkedHours from "./AddWorkedHours.vue";
+import EditSupplyTasks from "./EditSupplyTasks.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
-
+var modelPlurial = "supplies"
 export default {
     components: {
         SimpleSelect,
@@ -507,7 +543,8 @@ export default {
         flatPickr,
         AddPreviousTasks,
         FileInput,
-        AddWorkedHours
+        AddWorkedHours,
+        EditSupplyTasks
     },
     props: {
         itemId: {
@@ -526,10 +563,27 @@ export default {
                 this.$store.getters["taskManagement/getItem"](this.itemId)
             )
         );
+         
+    let customSupplies = {};
+    if (item.supplies != "") {
+      customSupplies = {
+        id: item.supplies.map((supply) => supply.supply_id),
+        date: item.supplies[0].date,
+        task_id: item.supplies[0].task_id,
+      };
+    } else {
+      customSupplies = {
+        id: "",
+        date: new Date(),
+        task_id: "",
+      };
+    }
+        item.supplies = customSupplies;
         item.skills = item.skills ? item.skills.map(skill => skill.id) : []
         item.date = moment(item.date).format("DD-MM-YYYY HH:mm")
         item.taskTimeSpent=[];
         return {
+          customSupplies,
             configdateTimePicker: {
                 disableMobile: "true",
                 enableTime: true,
@@ -553,10 +607,16 @@ export default {
             orderDisplay: false,
             descriptionDisplay: false,
             commentDisplay: false,
-            isActive: "commentaire"
+            isActive: "commentaire",
+            supplies: [],
+
         };
     },
     computed: {
+      supplyData() 
+      {
+        return this.$store.getters["supplyManagement/getItems"];
+      },
         totalTimeSpent() {
             return (this.itemLocal.time_spent || 0) + this.current_time_spent;
         },
@@ -697,6 +757,16 @@ export default {
         },
     },
     methods: {
+       authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
+  format_date(value) {
+      if (value) {
+        return moment(value).format("DD MMMM YYYY ");
+      }
+      },
         getUserName(id) {
             return this.$store.getters["userManagement/getItem"](id).firstname+" "+this.$store.getters["userManagement/getItem"](id).lastname;
         },
@@ -865,6 +935,12 @@ export default {
             }
             return filteredItems;
         },
+      addSupply(value) {
+      let supplies_local = [];
+      supplies_local.push(value);
+      this.itemLocal.supplies = supplies_local;
+    },
+
         addPreviousTask(taskIds) {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];

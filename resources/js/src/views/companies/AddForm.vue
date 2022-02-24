@@ -140,7 +140,6 @@ export default {
                 postal_code: "",
                 city: "",
                 country: "",
-                authorize_supply: false
             },
             subscription: {
                 starts_at: null,
@@ -174,7 +173,6 @@ export default {
                 this.itemLocal.postal_code !== "" &&
                 this.itemLocal.city !== "" &&
                 this.itemLocal.country !== "" &&
-                this.itemLocal.authorize_supply !== "" &&
                 this.subscription.starts_at &&
                 this.subscription.ends_at &&
                 this.subscription.packages &&

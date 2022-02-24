@@ -30,7 +30,16 @@ class PackagesSeeder extends Seeder
         }
         $package->syncPermissions(Permission::whereIn('name_fr', ['entreprises', 'roles', 'utilisateurs', 'projets', 'clients', 'pôles_de_productions', 'tâches', 'compétences', 'planning', 'indiponibilités', 'gammes', 'bugs', 'documents','todos','tags'])
             ->orWhereIn('name', ['read permissions'])->get());
+    
+    $package = $this->package('supplies');
+    if (!$package->exists) {
+        $package->fill([
+            'display_name' => 'Approvisionnement',
+        ])->save();
     }
+    $package->syncPermissions(Permission::whereIn('name_fr', ['entreprises', 'roles', 'utilisateurs', 'projets', 'clients', 'pôles_de_productions', 'tâches', 'compétences', 'gammes', 'bugs', 'documents','todos','tags','approvisionnements'])
+        ->orWhereIn('name', ['read permissions'])->get());
+}
 
     private function package($name)
     {

@@ -43,7 +43,12 @@ class Task extends Model
     {
         return $this->belongsToMany('App\Models\Skill', 'tasks_skills', 'task_id', 'skill_id');
     }
-
+    
+    public function supplies()
+    {
+        return $this->hasMany('App\Models\TasksSupply');
+    }
+    
     public function comments()
     {
         return $this->hasMany('App\Models\TaskComment')->orderBy('created_at', 'DESC');
