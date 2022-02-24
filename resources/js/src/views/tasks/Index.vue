@@ -537,9 +537,41 @@ export default {
  
         },
         tasksData() {
-                        console.log(this.$store.getters["supplyManagement/getItems"])
-
-            return this.$store.getters["taskManagement/getItems"];
+            let taskArray=this.$store.getters["taskManagement/getItems"];
+            let taskByOrder=[];
+            taskArray.sort(function(a, b) { 
+                if(a.date && b.date){
+                    a = new Date(a.date);
+                    b = new Date(b.date);
+                    return a-b;
+                }
+            })
+            let allPreviousTaskIn=false;
+            if(this.project_data.status=="todo"){
+                for(let i=0;i<taskArray.length;i++){
+                    if(!taskArray[i].previous_tasks.length){
+                        taskByOrder.push(taskArray[i]);
+                    }
+                }
+                while(taskByOrder.length<taskArray.length){
+                    for(let i=0;i<taskArray.length;i++){
+                        if(taskArray[i].previous_tasks.length){
+                            for(let p=0;p<taskArray[i].previous_tasks.length;p++){
+                                if(taskByOrder.find(task => task.id==taskArray[i].previous_tasks[p].previous_task_id) &&
+                                    !taskByOrder.find(task => task.id==taskArray[i].id)){
+                                    allPreviousTaskIn=true;
+                                }else{
+                                    allPreviousTaskIn=false;
+                                }
+                            }
+                            if(allPreviousTaskIn){
+                                taskByOrder.push(taskArray[i]);
+                            }
+                        }
+                    }
+                }
+            }
+            return taskByOrder.length ? taskByOrder : taskArray;
         },
         taskSupplyFilter()
         {
