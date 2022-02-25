@@ -13,8 +13,11 @@ use App\Models\Role;
 use App\Models\Bug;
 use App\Models\Package;
 use App\Models\Skill;
+use App\Models\Todo;
 use App\Models\Subscription;
+use App\Models\Tag;
 use App\Models\Task;
+use App\Models\Supply;
 use App\Models\Unavailability;
 use App\Models\Workarea;
 use App\Policies\BaseModulePolicy;
@@ -30,7 +33,10 @@ use App\Policies\BugPolicy;
 use App\Policies\PackagePolicy;
 use App\Policies\SkillPolicy;
 use App\Policies\SubscriptionPolicy;
+use App\Policies\TagPolicy;
 use App\Policies\TaskPolicy;
+use App\Policies\TodoPolicy;
+use App\Policies\SupplyPolicy;
 use App\Policies\UnavailabilityPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WorkareaPolicy;
@@ -64,7 +70,12 @@ class AuthServiceProvider extends ServiceProvider
         Task::class => TaskPolicy::class,
         Unavailability::class => UnavailabilityPolicy::class,
         Workarea::class => WorkareaPolicy::class,
-        Package::class => PackagePolicy::class
+        Package::class => PackagePolicy::class,
+        Todo::class =>TodoPolicy::class,
+        Tag::class =>TagPolicy::class,     
+        Supply::class =>SupplyPolicy::class             
+        
+
     ];
 
     /**

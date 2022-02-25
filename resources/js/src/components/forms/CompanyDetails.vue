@@ -220,8 +220,12 @@
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 Validator.localize("fr", errorMessage);
+import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 
 export default {
+  components:{
+    SimpleSelect
+  },
   props: {
     itemLocal: {
       type: Object,

@@ -13,6 +13,7 @@ use App\Models\TaskComment;
 use App\Models\PreviousTask;
 use App\Models\Skill;
 use App\Models\TasksSkill;
+use App\Models\TasksSupply;
 use App\Models\TaskTimeSpent;
 use App\Models\Workarea;
 use App\Traits\StoresDocuments;
@@ -21,14 +22,15 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 class TaskController extends BaseApiController
 {
     use StoresDocuments;
 
-    protected static $index_load = ['workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods'];
+    protected static $index_load = ['workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods', 'supplies'];
     protected static $index_append = null;
-    protected static $show_load = ['workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods'];
+    protected static $show_load = ['workarea', 'skills', 'comments', 'previousTasks', 'project', 'documents', 'periods', 'supplies'];
     protected static $show_append = null;
 
     protected static $store_validation_array = [
@@ -43,6 +45,7 @@ class TaskController extends BaseApiController
         'project_id' => 'required',
         'token' => 'nullable',
         'comment' => 'nullable',
+        'supplies' => 'nullable',
         'skills' => 'required|array',
         'previous_task_ids' => 'nullable|array',
         'user_id' => 'nullable',
@@ -60,6 +63,7 @@ class TaskController extends BaseApiController
         'time_spent' => 'nullable',
         'token' => 'nullable',
         'skills' => 'required|array',
+        'supplies' => 'nullable',
         'previous_task_ids' => 'nullable|array',
         'user_id' => 'nullable',
         'workarea_id' => 'nullable',
@@ -108,6 +112,16 @@ class TaskController extends BaseApiController
             $query->join('tasks_skills', function ($join) use ($request) {
                 $join->on('tasks_skills.task_id', '=', 'task.id')
                     ->where('tasks_skills.skill_id', $request->skill_id);
+            });
+        }
+        if ($request->has('supply_id')) {
+            if (Supply::where('id', $request->supply_id)->doesntExist()) {
+                throw new ApiException("Paramètre 'supply_id' n'est pas valide.");
+            }
+
+            $query->join('tasks_supply', function ($join) use ($request) {
+                $join->on('tasks_supply.task_id', '=', 'task.id')
+                    ->where('tasks_supply.supply_id', $request->supply_id);
             });
         }
 
@@ -192,9 +206,6 @@ class TaskController extends BaseApiController
             'created_by' => Auth::id(),
         ]);
 
-        if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
-        }
 
         if ($project->status == 'doing') {
             TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -205,8 +216,8 @@ class TaskController extends BaseApiController
 
         $this->storeComment($item->id, $arrayRequest['comment'] ?? null);
         $this->storeSkills($item->id, $arrayRequest['skills'] ?? null);
+        $this->storeSupplies($item->id, $arrayRequest['supplies'][0] ?? null);
         $this->storePreviousTask($item->id, $arrayRequest['previous_task_ids'] ?? null);
-
         return $item;
     }
 
@@ -254,9 +265,6 @@ class TaskController extends BaseApiController
             'workarea_id' => $arrayRequest['workarea_id'] ?? null,
         ]);
 
-        if (isset($arrayRequest['time_spent'])) {
-            $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
-        }
 
         // if ($project->status == 'doing') {
         //     TaskPeriod::create(['task_id' => $item->id, 'start_time' => $start_at, 'end_time' => $end_at]);
@@ -267,12 +275,20 @@ class TaskController extends BaseApiController
 
         if (isset($arrayRequest['documents'])) {
             $this->deleteUnusedDocuments($item, $arrayRequest['documents']);
-        }
-
+        }       
         $this->updateSkills($item->id, $arrayRequest['skills'] ?? null);
         $this->updatePreviousTasks($item->id, $arrayRequest['previous_task_ids'] ?? null);
-
+        $this->updateSupplies($item->id, $arrayRequest['supplies'][0] ?? null);
         return $item;
+    }
+
+    protected function forceDestroyItem($item)
+    {
+        if($item->time_spent>0){
+            throw new ApiException("Vous ne pouvez pas supprimer cette tâche car il y a des heures de travail enregistrées.");
+        }
+
+        return parent::forceDestroyItem($item);
     }
 
     /**
@@ -332,7 +348,6 @@ class TaskController extends BaseApiController
             return $this->errorResponse($validator->errors());
         }
 
-        $this->addTimeSpent($item->id, $arrayRequest['time_spent']);
 
         if (isset($arrayRequest['comment'])) {
             $this->storeComment((int) $item->id, $arrayRequest['comment'], $arrayRequest['notify']);
@@ -358,7 +373,6 @@ class TaskController extends BaseApiController
             : Task::where('user_id', $user_id)->where('status', '!=', 'done')->get();
 
         if (count($userTasks) > 0) {
-
             foreach ($userTasks as $task) {
 
                 if ($available) {
@@ -462,6 +476,19 @@ class TaskController extends BaseApiController
             }
         }
     }
+    private function storeSupplies(int $task_id, $supplies)
+    {     
+        if($supplies != null)
+        {
+            if (count($supplies) > 0 && $task_id) {
+     
+                foreach ($supplies['id'] as $supply_id) {
+                TasksSupply::create(['date' => $supplies['date'],'task_id' => $task_id, 'supply_id' => $supply_id]);
+                }
+            }
+        }
+       
+    }
 
     private function storePreviousTask(int $task_id, $previousTaskIds)
     {
@@ -481,7 +508,20 @@ class TaskController extends BaseApiController
             }
         }
     }
-
+    private function updateSupplies(int $task_id, $supplies)
+    {
+       
+        TasksSupply::where('task_id', $task_id)->delete();
+        if($supplies !=null)
+        {
+          if (count($supplies) > 0 && $task_id) {
+            foreach ($supplies['id'] as $supply_id) {
+        
+                TasksSupply::create(['date' => $supplies['date'],'task_id' => $task_id, 'supply_id' => $supply_id]);
+            }
+        }
+    }
+    }
     private function updatePreviousTasks(int $task_id, $previousTasksIds)
     {
         PreviousTask::where('task_id', $task_id)->delete();
@@ -492,24 +532,7 @@ class TaskController extends BaseApiController
         }
     }
 
-    private function addTimeSpent(int $taskId, float $duration)
-    {
-        if ($duration != 0) {
-            $timeSpent = TaskTimeSpent::firstOrCreate([
-                'date' => Carbon::now()->startOfDay(),
-                'user_id' => Auth::id(),
-                'task_id' => $taskId,
-            ]);
 
-            if (($newDuration = $duration + $timeSpent->duration) != 0) {
-                $timeSpent->update([
-                    'duration' => $newDuration
-                ]);
-            } else {
-                $timeSpent->delete();
-            }
-        }
-    }
 
     /**
      * Display a listing of comments.
@@ -606,5 +629,27 @@ class TaskController extends BaseApiController
         $extra = collect([]);
         $task = Task::where('id', $id)->first();
         return $this->successResponse($task, 'Chargement terminé avec succès.', $extra->toArray());
+    }
+
+    /**
+     * Display a listing of task time spent.
+     */
+    public function taskTimeSpent(Request $request)
+    {
+        $extra = collect([]);
+        try {
+            if ($error = $this->permissionErrors('read')) {
+                return $error;
+            }
+
+            $query = TaskTimeSpent::where('task_id', $request->task_id);
+            $items = $query->get();
+
+            return $this->successResponse($items, 'Chargement terminé avec succès.', $extra->toArray());
+        } catch (ApiException $th) {
+            return $this->errorResponse($th->getMessage(), $th->getHttpCode());
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 }

@@ -112,7 +112,7 @@
                         </vs-radio>
                     </small>
                     <datepicker
-                        placeholder="Filtre par date"
+                        placeholder="Date de livraison"
                         class="pickadate"
                         name="date"
                         :format="formatDatePicker"
@@ -327,8 +327,17 @@ export default {
                     cellRendererFramework: "CellRendererLink"
                 },
                 {
-                    headerName: "Date de création",
+                    headerName: "Date de début du projet",
                     field: "created_at",
+                    filter: true,
+                    cellRenderer: data => {
+                        moment.locale("fr");
+                        return moment(data.value).format("DD MMMM YYYY");
+                    }
+                },
+                 {
+                    headerName: "Date de livraison",
+                    field: "date",
                     filter: true,
                     cellRenderer: data => {
                         moment.locale("fr");
@@ -494,7 +503,10 @@ export default {
                     year: year || undefined,
                     month: month || undefined,
                     deleted_at: this.filters.deleted_at || undefined,
-                    order_by: "status"
+                    order_by: "date",
+                    order_by_desc: 1
+
+
                 })
                 .then(data => {
                     that.projectsLoaded = true;

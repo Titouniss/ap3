@@ -165,6 +165,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('task-management')->group(function () {
         Route::get('index', 'API\TaskController@index');
         Route::get('comments', 'API\TaskController@comments');
+        Route::get('taskTimeSpent', 'API\TaskController@taskTimeSpent');
         Route::get('task/{id}', 'API\TaskController@getTask');
         Route::get('show/{id}', 'API\TaskController@show');
         Route::post('store', 'API\TaskController@store');
@@ -300,8 +301,51 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('index', 'API\PackageController@index');
         Route::get('show/{id}', 'API\PackageController@show');
     });
-});
+    
+    /************************************************************************************/
+    /***********************************  Todo List  ************************************/
+    /***********************************************************************************/
+    Route::prefix('todo-management')->group(function () {
+        Route::get('index', 'API\TodoController@index');
+        Route::get('todo/{id}', 'API\TodoController@getTodo');
+        Route::get('show/{id}', 'API\TodoController@show');
+        Route::post('store', 'API\TodoController@store');
+        Route::put('update/{id}', 'API\TodoController@update');
+        Route::put('update-partial/{id}', 'API\TodoController@updatePartial');
+        Route::put('destroy/{id?}', 'API\TodoController@destroy');
+        Route::put('force-destroy/{id?}', 'API\TodoController@forceDestroy');
 
+    });
+     /************************************************************************************/
+    /***********************************  Tag  ************************************/
+    /***********************************************************************************/
+    Route::prefix('tag-management')->group(function () {
+        Route::get('index', 'API\TagController@index');
+        Route::get('tag/{id}', 'API\TagController@getTag');
+        Route::get('show/{id}', 'API\TagController@show');
+        Route::post('store', 'API\TagController@store');
+        Route::put('update/{id}', 'API\TagController@update');
+        Route::put('update-partial/{id}', 'API\TagController@updatePartial');
+        Route::put('destroy/{id?}', 'API\TagController@destroy');
+        Route::put('force-destroy/{id?}', 'API\TagController@forceDestroy');
+
+    });
+
+      /***********************************************************************************/
+    /*********************************   Supply   **************************************/
+    /***********************************************************************************/
+    Route::prefix('supply-management')->group(function () {
+        Route::get('index', 'API\SupplyController@index');
+        Route::get('index/task/{id}', 'API\SupplyController@getByTaskId');
+        Route::get('show/{id}', 'API\SupplyController@show');
+        Route::post('store', 'API\SupplyController@store');
+        Route::put('update/{id}', 'API\SupplyController@update');
+        Route::post('updateTaskSupplyReceived', 'API\SupplyController@updateTaskSupplyReceived');
+        Route::put('restore/{id?}', 'API\SupplyController@restore');
+        Route::put('destroy/{id?}', 'API\SupplyController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SupplyController@forceDestroy');
+    });
+});
 /***********************************************************************************/
 /***************************** NOT AUTHENTICATED ***********************************/
 /***********************************************************************************/

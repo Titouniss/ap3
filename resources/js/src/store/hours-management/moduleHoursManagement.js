@@ -56,6 +56,7 @@ mutations.SET_ITEMS = (currentState, items) => {
                 description: t.description,
                 user_id: t.user_id,
                 project_id: t.project_id,
+                task_id: t.task_id,
                 color: t.project.color
             });
         });
@@ -78,6 +79,7 @@ mutations.ADD_OR_UPDATE_ITEMS = (currentState, items) => {
             description: new_item.description,
             user_id: new_item.user_id,
             project_id: new_item.project_id,
+            task_id: new_item.task_id,
             color: new_item.project.color
         };
 

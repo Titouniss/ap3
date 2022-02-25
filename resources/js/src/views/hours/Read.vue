@@ -40,13 +40,28 @@
         </div>
 
         <div class="vx-card w-full p-6" v-if="filters.user_id">
-            <add-form
-                :activeAddPrompt="activeAddPrompt"
-                :clickDate="dateData"
-                :hours_list="hoursData"
-                :handleClose="handleClose"
-                :user="selectedUser"
-            />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form
+                        :activeAddPrompt="activeAddPrompt"
+                        :clickDate="dateData"
+                        :hours_list="hoursData"
+                        :handleClose="handleClose"
+                        :user="selectedUser"
+                    />
+                </vs-col>
+            </vs-row>
 
             <FullCalendar
                 locale="fr"
@@ -104,6 +119,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 // Store Module
 import moduleHourManagement from "@/store/hours-management/moduleHoursManagement.js";
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
+import moduleTaskManagement from "@/store/task-management/moduleTaskManagement.js";
 import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleCompanyManagement from "@/store/company-management/moduleCompanyManagement.js";
 import moduleUnavailabilityManagement from "@/store/unavailability-management/moduleUnavailabilityManagement.js";
@@ -366,6 +382,7 @@ export default {
                 end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
                 user_id: itemTemp.user_id,
                 project_id: itemTemp.project_id,
+                task_id: itemTemp.task_id,
                 date: moment(arg.event.start).format("YYYY-MM-DD")
             };
             this.$vs.loading();
@@ -393,6 +410,7 @@ export default {
                 end_at: moment(arg.event.end).format("YYYY-MM-DD HH:mm:ss"),
                 user_id: itemTemp.user_id,
                 project_id: itemTemp.project_id,
+                task_id: itemTemp.task_id,
                 date: moment(arg.event.start).format("YYYY-MM-DD")
             };
 
@@ -579,6 +597,11 @@ export default {
             moduleProjectManagement.isRegistered = true;
         }
 
+        if (!moduleTaskManagement.isRegistered) {
+            this.$store.registerModule("taskManagement", moduleTaskManagement);
+            moduleTaskManagement.isRegistered = true;
+        }
+
         if (!moduleUnavailabilityManagement.isRegistered) {
             this.$store.registerModule(
                 "unavailabilityManagement",
@@ -612,11 +635,13 @@ export default {
     beforeDestroy() {
         moduleHourManagement.isRegistered = false;
         moduleProjectManagement.isRegistered = false;
+        moduleTaskManagement.isRegistered = false;
         moduleCompanyManagement.isRegistered = false;
         moduleUserManagement.isRegistered = false;
         moduleUnavailabilityManagement.isRegistered = false;
         this.$store.unregisterModule("hoursManagement");
         this.$store.unregisterModule("projectManagement");
+        this.$store.unregisterModule("taskManagement");
         this.$store.unregisterModule("companyManagement");
         this.$store.unregisterModule("userManagement");
         this.$store.unregisterModule("unavailabilityManagement");

@@ -20,7 +20,7 @@
             :active.sync="activePrompt"
         >
             <div>
-                <form autocomplete="off" v-submit.prevent>
+                <form autocomplete="off">
                     <vx-tooltip
                         style="z-index: 52007"
                         title="Information"
@@ -98,7 +98,7 @@ export default {
             return this.$store.state.AppActiveUser.is_admin;
         },
         validateForm() {
-            return this.itemLocal.prefix != "" && this.itemLocal.rangeId;
+            return this.itemLocal.prefix != "" && this.itemLocal.rangeId !="";
         },
         rangesData() {
             return this.$store.getters["rangeManagement/getItems"];

@@ -12,6 +12,7 @@
             :active.sync="activePrompt"
             class="task-compose"
         >
+
             <div
                 :class="
                     project_data.status == 'waiting' ||
@@ -239,6 +240,13 @@
                                     </span>
                                 </div>
                             </div>
+                              <edit-supply-tasks
+                              v-if="authorizedTo('publish')" 
+                              :addSupply="addSupply"
+                              :tasks_list="tasks_list"
+                              :customSupplies="customSupplies"
+                              :current_task_id="this.itemId"
+                            />
                             <div
                                 class="mb-4"
                                 :class="
@@ -309,15 +317,11 @@
                                     "
                                 />
                             </div>
-                            <div class="my-2" v-if="itemLocal.status != 'todo'">
-                                <small class="date-label">
-                                    Temps passé (en h)
-                                </small>
-                                <vs-input-number
-                                    :min="-(itemLocal.time_spent || 0)"
-                                    name="timeSpent"
-                                    class="inputNumber"
-                                    v-model="current_time_spent"
+                            <div v-if="itemLocal.status != 'todo'">
+                                <add-worked-hours
+                                    :itemId="itemId"
+                                    :current_time_spent="current_time_spent"
+                                    :refreshData="submitItem"
                                 />
                             </div>
                             <div class="my-2" v-if="itemLocal.status != 'todo'">
@@ -338,10 +342,50 @@
                         </div>
                     </div>
 
-                    <div class="my-3">
-                        <div>
-                            <small class="date-label">Commentaires</small>
+                    <vs-row class="chooseTaskDisplay">
+                        <div 
+                            v-bind:class="[
+                                isActive == 'commentaire'
+                                    ? 'btnChooseDisplayFormatActive p-3'
+                                    : 'btnFormatTaskListT p-3'
+                            ]"
+                            @click="isActive = 'commentaire'">
+                            <feather-icon
+                                icon="EditIcon"
+                                svgClasses="h-5 w-5"
+                            />
+                            <span class="date-label">Commentaires</span>
                         </div>
+                        <div
+                            v-bind:class="[
+                                isActive == 'journal'
+                                    ? 'btnChooseDisplayFormatActive p-3'
+                                    : 'btnFormatTaskListT p-3'
+                            ]"
+                            @click="isActive = 'journal'">
+                            <feather-icon
+                                icon="ListIcon"
+                                svgClasses="h-5 w-5"
+                            />
+                            <span>Journal de travail</span>
+                        </div>
+                         <div
+                         v-if="authorizedTo('publish')"
+                            v-bind:class="[
+                                isActive == 'customSupplies'
+                                    ? 'btnChooseDisplayFormatActive p-3'
+                                    : 'btnFormatTaskListT p-3'
+                            ]"
+                            @click="isActive = 'customSupplies'">
+                            <feather-icon
+                                icon="TruckIcon"
+                                svgClasses="h-5 w-5"
+                            />
+                            <span>Approvisionnement</span>
+                            
+                        </div>
+                    </vs-row>
+                    <div class="my-3" v-if="isActive == 'commentaire'" style="overflow-y:scroll; height: 210px;">
                         <vs-textarea
                             rows="1"
                             label="Ajouter un commentaire"
@@ -406,6 +450,48 @@
                             </div>
                         </div>
                     </div>
+                    {{taskTimeSpent}}
+                    <div class="my-3" v-if="isActive == 'journal'">
+                      
+                        <div>
+                            <ul
+                                v-if="itemLocal.taskTimeSpent.length > 0"
+                                class="w-full"
+                                style="color: gray; overflow-y:scroll; height: 210px;"
+                            >
+                                <li
+                                    v-for="(taskTimeSpent, index) in itemLocal.taskTimeSpent"
+                                    :key="index"
+                                    class="py-3"
+                                >
+                                    <vs-row>
+                                        <feather-icon
+                                            svgClasses="w-6 h-6"
+                                            icon="UserIcon"
+                                            class="mr-2"
+                                        />
+                                        <span style="color:#2196F3">{{getUserName(taskTimeSpent.user_id)}}</span>
+                                        <span> - {{moment(taskTimeSpent.created_at)}} à {{ momentTime(taskTimeSpent.created_at) }} - 
+                                            Ajout de <b>{{taskTimeSpent.duration}}h</b> le <b>{{getFormattedDate(taskTimeSpent.date)}}</b>
+                                        </span>
+                                    </vs-row>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="my-3" v-if="isActive == 'customSupplies'">
+                        <div class="my-3" v-if="customSupplies.id.length > 0">
+                          <span>
+                            Approvisionnement le :
+                            {{ format_date(customSupplies.date) }}</span
+                          >
+                          <li :key="index" v-for="(item, index) in customSupplies.id">
+                            <div v-for="items in supplyData" :key="items.id">
+                              <span v-if="items.id == item">{{ items.name }}</span>
+                            </div>
+                          </li>
+                        </div>
+                     </div>
                 </form>
             </div>
             <vs-row
@@ -418,7 +504,6 @@
                     @click="() => confirmDeleteTask(itemLocal.id)"
                     color="danger"
                     type="filled"
-                    size="small"
                 >
                     Supprimer la tâche
                 </vs-button>
@@ -440,21 +525,27 @@ import "flatpickr/dist/flatpickr.css";
 import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
 import moment from "moment";
 import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
+import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
 import { Validator } from "vee-validate";
 import errorMessage from "./errorValidForm";
 
 import AddPreviousTasks from "./AddPreviousTasks.vue";
 import FileInput from "@/components/inputs/FileInput.vue";
+import AddWorkedHours from "./AddWorkedHours.vue";
+import EditSupplyTasks from "./EditSupplyTasks.vue";
 
 // register custom messages
 Validator.localize("fr", errorMessage);
-
+var modelPlurial = "supplies"
 export default {
     components: {
         SimpleSelect,
+        InfiniteSelect,
         flatPickr,
         AddPreviousTasks,
-        FileInput
+        FileInput,
+        AddWorkedHours,
+        EditSupplyTasks
     },
     props: {
         itemId: {
@@ -473,16 +564,33 @@ export default {
                 this.$store.getters["taskManagement/getItem"](this.itemId)
             )
         );
-        item.skills = item.skills.map(skill => skill.id);
-        item.date = moment(item.date).format("DD-MM-YYYY HH:mm");
+         
+    let customSupplies = {};
+    if (item.supplies != "") {
+      customSupplies = {
+        id: item.supplies.map((supply) => supply.supply_id),
+        date: item.supplies[0].date,
+        task_id: item.supplies[0].task_id,
+      };
+    } else {
+      customSupplies = {
+        id: "",
+        date: new Date(),
+        task_id: "",
+      };
+    }
+        item.supplies = customSupplies;
+        item.skills = item.skills ? item.skills.map(skill => skill.id) : []
+        item.date = moment(item.date).format("DD-MM-YYYY HH:mm")
+        item.taskTimeSpent=[];
         return {
+          customSupplies,
             configdateTimePicker: {
                 disableMobile: "true",
                 enableTime: true,
                 dateFormat: "d-m-Y H:i",
                 locale: FrenchLocale
             },
-
             itemLocal: item,
             companyId: item.project.company_id,
             token:
@@ -499,10 +607,17 @@ export default {
             deleteWarning: false,
             orderDisplay: false,
             descriptionDisplay: false,
-            commentDisplay: false
+            commentDisplay: false,
+            isActive: "commentaire",
+            supplies: [],
+
         };
     },
     computed: {
+      supplyData() 
+      {
+        return this.$store.getters["supplyManagement/getItems"];
+      },
         totalTimeSpent() {
             return (this.itemLocal.time_spent || 0) + this.current_time_spent;
         },
@@ -518,6 +633,9 @@ export default {
         },
         isAdmin() {
             return this.$store.state.AppActiveUser.is_admin;
+        },
+        isManager() {
+            return this.$store.state.AppActiveUser.is_manager;
         },
         validateForm() {
             const {
@@ -626,9 +744,36 @@ export default {
                     return false;
                 }
             }
-        }
+        },
+        taskTimeSpent(){
+            this.$store
+                .dispatch("taskManagement/fetchTaskTimeSpent", {task_id : this.itemLocal.id})
+                .then((data)=>{
+                    console.log("data",data.payload);
+                    this.itemLocal.taskTimeSpent=data.payload
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        },
     },
     methods: {
+       authorizedTo(action, model = modelPlurial) {
+            return this.$store.getters.userHasPermissionTo(
+                `${action} ${model}`
+            );
+        },
+  format_date(value) {
+      if (value) {
+        return moment(value).format("DD MMMM YYYY ");
+      }
+      },
+        getUserName(id) {
+            return this.$store.getters["userManagement/getItem"](id).firstname+" "+this.$store.getters["userManagement/getItem"](id).lastname;
+        },
+        getFormattedDate(date){
+            return moment(date).format("DD/MM/YYYY");
+        },
         clear() {
             this.deleteFiles();
             this.itemLocal = {};
@@ -691,6 +836,7 @@ export default {
                         icon: "icon-alert-circle",
                         color: "success"
                     });
+                    this.activePrompt=false;
                 })
                 .catch(error => {
                     this.$vs.notify({
@@ -762,12 +908,15 @@ export default {
             if (ids) {
                 this.usersDataFiltered = this.usersData.filter(function(user) {
                     for (let i = 0; i < ids.length; i++) {
-                        if (
-                            user.skills.filter(skill => skill.id == ids[i])
-                                .length == 0
-                        ) {
-                            return false;
+                        if(user.skills){
+                            if (
+                                user.skills.filter(skill => skill.id == ids[i])
+                                    .length == 0
+                            ) {
+                                return false;
+                            }
                         }
+                        
                     }
                     return true;
                 });
@@ -787,6 +936,12 @@ export default {
             }
             return filteredItems;
         },
+      addSupply(value) {
+      let supplies_local = [];
+      supplies_local.push(value);
+      this.itemLocal.supplies = supplies_local;
+    },
+
         addPreviousTask(taskIds) {
             this.itemLocal.previous_task_ids = taskIds;
             let previousTasks_local = [];
@@ -801,6 +956,15 @@ export default {
         },
         showDescription() {
             this.descriptionDisplay = true;
+        },
+        definedMinEndHour() {
+            if (this.itemLocal !== null && this.itemLocal.startHour !== null) {
+                let result =
+                    parseInt(this.itemLocal.startHour.split(":")[0]) + 1;
+                if (result !== NaN) {
+                    this.configEndHourPicker = result;
+                }
+            }
         },
         confirmDeleteTask(idEvent) {
             this.deleteWarning = true;
@@ -819,6 +983,7 @@ export default {
             this.deleteWarning = false;
         },
         deleteTask() {
+            this.deleteWarning = false;
             this.$store
                 .dispatch("scheduleManagement/removeItem", this.idEvent)
                 .catch(err => {
@@ -878,5 +1043,24 @@ export default {
     font-size: 0.9em;
     margin: -17px 35px 0 35px;
     display: table;
+}
+.chooseTaskDisplay {
+    border: 1px solid #b3b3b3;
+    border-radius: 1px;
+    background-color: #e2e2e2;
+    width: max-content !important;
+}
+.btnChooseDisplayFormatActive {
+    background-color: #2196f3;
+    color: white;
+    border-radius: 1px;
+}
+.btnFormatTaskListT {
+    background-color: white;
+    color: #2196f3;
+}
+.btnFormatTaskListT:hover {
+    cursor: pointer;
+    border-radius: "5px";
 }
 </style>

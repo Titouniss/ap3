@@ -1,7 +1,22 @@
 <template>
     <div id="page-modules-list">
         <div class="vx-card p-6">
-            <add-form />
+            <vs-row
+                vs-type="flex"
+                vs-justify="space-between"
+                vs-align="center"
+                vs-w="12"
+            >
+                <vs-col
+                    vs-type="flex"
+                    vs-justify="flex-start"
+                    vs-align="center"
+                    vs-w="2"
+                    vs-sm="6"
+                >
+                    <add-form />
+                </vs-col>
+            </vs-row>
             <div class="flex flex-wrap items-center">
                 <!-- ITEMS PER PAGE -->
                 <div class="flex-grow">
