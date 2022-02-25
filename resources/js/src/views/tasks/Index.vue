@@ -535,7 +535,6 @@ export default {
  
         },
         tasksData() {
-            return this.$store.getters["taskManagement/getItems"];
             let taskArray=this.$store.getters["taskManagement/getItems"];
             let taskByOrder=[];
             taskArray.sort(function(a, b) { 
