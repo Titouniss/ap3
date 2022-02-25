@@ -403,7 +403,7 @@ export default {
                     field: "date",
                     cellRenderer: data => {
                         moment.locale("fr");
-                        
+
                         return moment(data.data.start_at).format("D MMMM YYYY");
                     }
                 },
@@ -660,15 +660,16 @@ export default {
             }
         },
         getStats(name) {
+            console.log(this.hoursData)
             if (name === "overtime") {
                 if (this.stats["overtime"]) {
                     return (this.stats[name]
                         ? parseFloat(this.stats[name])
                         : 0
                     ).toFixed(2);
-                    
+
                 } else {
-                            
+
                     return (this.stats["lost_time"]
                         ? parseFloat(this.stats["lost_time"])
                         : 0

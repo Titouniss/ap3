@@ -7,7 +7,7 @@
   Author URL: http://www.themeforest.net/user/pixinvent
 ========================================================================================== -->
 
-<template>
+ <template>
     <div id="page-skills-list">
         <div class="vx-card p-6">
             <vs-row

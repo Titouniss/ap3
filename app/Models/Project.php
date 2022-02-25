@@ -51,4 +51,9 @@ class Project extends Model
     {
         return $this->hasManyThrough(Task::class, TasksBundle::class, 'project_id', 'tasks_bundle_id')->with('skills', 'previousTasks');
     }
+
+    public function hours()
+    {
+        return $this->hasMany(Hours::class, "project_id");
+    }
 }

@@ -147,9 +147,9 @@
                             </tr>
                             <tr>
                                 <td class="font-semibold">
-                                    Temps estimé sur le projet : 
+                                    Temps estimé sur le projet :
                                 </td>
-                                <td> {{ estimatedTimeData }} heures</td>
+                                <td> {{ estimatedTimeData}} heures</td>
                             </tr>
                             <tr v-if="project_data.status != 'todo'">
                                 <td class="font-semibold">
@@ -201,7 +201,7 @@
                             :active.sync="activePrompt"
                         >
                             <div>
-                                Vous ne pouvez pas mettre fin au projet, car une ou plusieurs tâches ne sont pas finies. Veuillez terminer toutes vos tâches avant de mettre fin au projet. 
+                                Vous ne pouvez pas mettre fin au projet, car une ou plusieurs tâches ne sont pas finies. Veuillez terminer toutes vos tâches avant de mettre fin au projet.
                             </div>
                         </vs-prompt>
                         <vs-button
@@ -297,7 +297,6 @@ export default {
     data() {
         return {
             activePrompt: false,
-
             project_data: null,
             project_not_found: false
         };
@@ -399,8 +398,8 @@ export default {
                 })
                 .finally(() => this.$vs.loading.close());
         },
-        changeStatus (status) { 
-            
+        changeStatus (status) {
+
             if(status == 'waiting' && !this.allTasksDone){
                 this.activePrompt = true;
             }
@@ -589,6 +588,7 @@ export default {
             .catch(err => {
                 console.error(err);
             });
+
         if (this.authorizedTo("read", "ranges")) {
             this.$store.dispatch("rangeManagement/fetchItems").catch(err => {
                 console.error(err);

@@ -2,6 +2,7 @@
     <vs-select
     v-on:keydown.enter="ignore_enter"
         class="w-full"
+        :placeholder="placeholder"
         :ref="`${model}Select`"
         :value="value"
         :label="header"
@@ -47,6 +48,10 @@ export default {
         label: {
             type: String,
             required: true
+        },
+        placeholder:{
+            type: String,
+            default: ()=> null
         },
         itemText: {
             type: Function,

@@ -70,12 +70,33 @@ export default {
         .catch((error) => { reject(error) })
     })
   },
+  getPlannedTimes({ commit }, user_id){
+      return new Promise((resolve, reject) => {
+          axios.get(`/api/dealing-hours-management/planned/${user_id}`)
+              .then((response) => {
+                  commit('EDIT_ITEM', response.data.success)
+                  resolve(response)
+              })
+              .catch((error) => { reject(error) })
+      })
+  },
+  getWorkedHours({ commit }, user_id){
+      return new Promise((resolve, reject) => {
+          axios.get(`/api/dealing-hours-management/workedHours/${user_id}`)
+              .then((response) => {
+                  commit('EDIT_ITEM', response.data.success)
+                  resolve(response)
+              })
+              .catch((error) => { reject(error) })
+      })
+  },
+
   updateItem({ commit }, payload) {
     return new Promise((resolve, reject) => {
       axios.post(`/api/dealing-hours-management/update/${payload.id}`, payload)
         .then((response) => {
           resolve(response)
-          
+
         })
         .catch((error) => { reject(error) })
     })

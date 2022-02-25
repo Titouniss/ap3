@@ -56,6 +56,12 @@ export default [
         icon: "BookOpenIcon"
     },
     {
+        url: "/analytics",
+        name: "Statistiques",
+        slug: "analitycs",
+        icon: "TrendingUpIcon"
+    },
+    {
         url: "/companies",
         name: "Sociétés",
         slug: "companies",
