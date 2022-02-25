@@ -215,17 +215,28 @@ class HoursController extends BaseApiController
                 $premierJour = Carbon::parse($request->start_at)->startOfWeek()->format('Y-m-d H:i');
                 $dernierJour = Carbon::parse($request->start_at)->endOfWeek()->format('Y-m-d H:i');
                 $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
-               
-                $users = User::where('id', $request->user_id)->whereBetween('start_employment', [Carbon::parse($request->date)->startOfWeek()->format('Y-m-d H:i:s'), Carbon::parse($request->date)->endOfWeek()->format('Y-m-d H:i:s')])->get();
+                $controllerLog = new Logger('hours');
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+                $controllerLog->info('periodWeek',[$periodWeek]);
+                $user = Auth::user();
+                $users = ($user->is_admin || $user->is_manager) ? User::where('id', $request->user_id)->whereBetween('start_employment', [Carbon::parse($request->date)->startOfWeek()->format('Y-m-d H:i:s'), Carbon::parse($request->date)->endOfWeek()->format('Y-m-d H:i:s')])->get() 
+                : User::where('id', $user->id)->whereBetween('start_employment', [Carbon::parse($request->date)->startOfWeek()->format('Y-m-d H:i:s'), Carbon::parse($request->date)->endOfWeek()->format('Y-m-d H:i:s')])->get();
+                $controllerLog = new Logger('hours');
+                $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+                $controllerLog->info('user',[$users]);
                 if(!$users->isEmpty())
                 {
+                    
                     $firstDateContains = $periodWeek->contains($users[0]->start_employment);
+                    $controllerLog = new Logger('hours');
+                    $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+                    $controllerLog->info('user',[$firstDateContains]);
                 }
                 else
                 {
                     $firstDateContains = false;
                 }
-              
+               
                 if($firstDateContains) 
                 {
                     $premierJour = Carbon::parse($users[0]->start_employment)->format('Y-m-d H:i');
@@ -237,7 +248,6 @@ class HoursController extends BaseApiController
         
                     foreach($daysUpdate as $day)
                     {   
-                       
                             $workDayHours = WorkHours::where('user_id',$request->user_id)->where('is_active', 1)->where('day','=',$day)->get()->map(function ($day) {      
                         
                                 
@@ -276,8 +286,7 @@ class HoursController extends BaseApiController
                                     }
                                
                                
-                                } 
-                                
+                                }      
                     }
                 }
                 else{
@@ -440,9 +449,11 @@ class HoursController extends BaseApiController
                     switch ($request->period_type) {
                         case 'day':
                             $defaultWorkHours = $workDayHours;
+                            
                             break;
                         case 'week':
                             $defaultWorkHours = $workWeekHours;
+              
                             break;
                         case 'month':
                             $nbWorkDaysPerMonth = $this->calculeNbWorkDaysPerMonth($request, $ListOfWorkDays, null, 1);
@@ -502,11 +513,17 @@ class HoursController extends BaseApiController
 
         $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
        
-        $users = User::where('id', $request->user_id)->get();
+        $user = Auth::user();
+        $users = ($user->is_admin || $user->is_manager) ? User::where('id', $request->user_id)->get() : User::where('id', $user->id)->get();
+        $controllerLog = new Logger('hours');
+        $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+        $controllerLog->info('firstDateContains',[$users]);
         if(!$users->isEmpty())
         {
             $firstDateContains = $periodWeek->contains($users[0]->start_employment);
-
+            $controllerLog = new Logger('hours');
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            $controllerLog->info('firstDateContains',[$users]);
         }
         else
         {
@@ -514,13 +531,18 @@ class HoursController extends BaseApiController
         }
         if($firstDateContains)
         {
-         
+     
             $premierJour = Carbon::createFromFormat('Y-m-d H:i:s', $users[0]->start_employment)->format("Y-m-d");
+            $controllerLog = new Logger('hours');
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            $controllerLog->info('premier',[$premierJour]);
         }
             $periodWeek = CarbonPeriod::create($premierJour, '1 day', $dernierJour);
-            
+            $controllerLog = new Logger('hours');
+            $controllerLog->pushHandler(new StreamHandler(storage_path('logs/debug.log')),Logger::INFO);
+            $controllerLog->info('day',[$periodWeek]);
             foreach ($periodWeek as $day) {
-             
+     
                 foreach ($ListOfWorkDays as $workDay) {
                     if ($day->isMonday() && $workDay == "lundi") {
                         $countMonday++;
@@ -539,7 +561,9 @@ class HoursController extends BaseApiController
                     }
                 }
             }
+
             $nbWorkDaysPerMonth = $countMonday + $countTuesday + $countWednesday + $countThursday + $countFriday + $countSaturday + $countSunday;
+      
         return $nbWorkDaysPerMonth;
     }
 
