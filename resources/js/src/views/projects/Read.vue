@@ -188,7 +188,7 @@
                             color="#E7A720"
                             icon-pack="feather"
                             icon="icon-send"
-                             @click="changeStatus('waiting')"
+                            @click="changeStatus('waiting')"
                         >
                             Passer le projet en attente de livraison
                         </vs-button>
@@ -202,6 +202,72 @@
                         >
                             <div>
                                 Vous ne pouvez pas mettre fin au projet, car une ou plusieurs tâches ne sont pas finies. Veuillez terminer toutes vos tâches avant de mettre fin au projet. 
+                            </div>
+                        </vs-prompt>
+                        <vs-button
+                            class="mr-3"
+                            v-if="project_data.status == 'doing'"
+                            color="#cc0000"
+                            icon-pack="feather"
+                            icon="icon-stop-circle"
+                            @click="activePromptStandby=true"
+                        >
+                            Mettre le projet en stand-by
+                        </vs-button>
+                        <vs-prompt
+                            title="Passer le projet en stand-by"
+                            type="confirm"
+                            acceptText="Confirmer"
+                            cancelText="Annuler"
+                            @accept="setProjectStandby()"
+                            :active.sync="activePromptStandby"
+                        >
+                            <div>
+                                <form autocomplete="off">
+                                    <template>
+                                        <div class="vs-select--label">Veuillez sélectionner la date et l'heure à partir de laquelle le projet sera en stand-by</div>
+                                    </template>
+                                    <flat-pickr
+                                        name="starts_at"
+                                        class="w-full mb-4 mt-5"
+                                        :config="configStartsAtDateTimePicker"
+                                        v-model="dateStandby"
+                                        placeholder="Saisir une date"
+                                    />
+                                </form>
+                            </div>
+                        </vs-prompt>
+                        <vs-button
+                            class="mr-3"
+                            v-if="project_data.status == 'standby'"
+                            color="#3ad687"
+                            icon-pack="feather"
+                            icon="icon-play"
+                            @click="activePromptReStart=true"
+                        >
+                            Redémarrer le projet
+                        </vs-button>
+                        <vs-prompt
+                            title="Redémarrer le projet"
+                            type="confirm"
+                            acceptText="Confirmer"
+                            cancelText="Annuler"
+                            @accept="reStartProject()"
+                            :active.sync="activePromptReStart"
+                        >
+                            <div>
+                                <form autocomplete="off">
+                                    <template>
+                                        <div class="vs-select--label">Veuillez sélectionner la date et l'heure à partir de laquelle le projet sera redémarré</div>
+                                    </template>
+                                    <flat-pickr
+                                        name="starts_at"
+                                        class="w-full mb-4 mt-5"
+                                        :config="configStartsAtDateTimePicker"
+                                        v-model="dateRestart"
+                                        placeholder="Saisir une date"
+                                    />
+                                </form>
                             </div>
                         </vs-prompt>
                         <vs-button
@@ -281,6 +347,8 @@ import moduleScheduleManagement from "@/store/schedule-management/moduleSchedule
 import moduleSupplyManagement from "@/store/supply-management/moduleSupplyManagement.js";
 
 import moment from "moment";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
+import flatPickr from "vue-flatpickr-component";
 
 import EditForm from "./EditForm.vue";
 import AddRangeForm from "./AddRangeForm.vue";
@@ -294,14 +362,33 @@ export default {
         AddRangeForm,
         StartProjectPrompt,
         IndexTasks,
-        
+        flatPickr
     },
     data() {
         return {
             activePrompt: false,
-
+            activePromptStandby: false,
+            activePromptReStart: false,
             project_data: null,
-            project_not_found: false
+            project_not_found: false,
+            dateStandby: null,
+            dateRestart: null,
+            configStartsAtDateTimePicker: {
+                disableMobile: "true",
+                enableTime: true,
+                locale: FrenchLocale,
+                dateFormat: "Y-m-d H:i:ss",
+                altFormat: "j F Y H:i:ss",
+                altInput: true,
+                minDate: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(),
+                    new Date().getDate(),
+                    new Date().getHours(),
+                    new Date().getMinutes()
+                ),
+                maxDate: null
+            }
         };
     },
     computed: {
@@ -396,7 +483,86 @@ export default {
                         text: err.message,
                         iconPack: "feather",
                         icon: "icon-alert-circle",
-                        color: "danger"
+                        color: "danger",
+                    });
+                })
+                .finally(() => this.$vs.loading.close());
+        },
+        setProjectStandby(){
+            var itemToSend = {
+                project_id: this.project_data.id,
+                dateStandby: this.dateStandby
+            };
+            this.$vs.loading();
+            this.$store
+                .dispatch(
+                    "projectManagement/setProjectStandby",
+                    itemToSend
+                )
+                .then(data => {
+                    this.changeStatus("standby")
+                    this.$vs.notify({
+                        title: "Modification du projet",
+                        text: `Projet en stand-by`,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success",
+                    });
+                    this.$router
+                        .push({
+                            path: `/projects`
+                        })
+                        .catch(() => {});
+                })
+                .catch(error => {
+                    this.$vs.notify({
+                        title: "Erreur",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger",
+                        time: 10000
+                    });
+                })
+                .finally(() => {
+                    this.$vs.loading.close();
+                });
+        },
+        reStartProject(){
+            var itemToSend = {
+                project_id: this.project_data.id,
+                dateRestart: this.dateRestart
+            };
+            this.$vs.loading({
+                color: this.colorLoading,
+                type: "material",
+                text: "Planification en cours ..."
+            });
+            this.$store
+                .dispatch("projectManagement/reStart", itemToSend)
+                .then(response => {
+                    this.$vs.notify({
+                        title: "Planification",
+                        text: "Projet planifié avec succès",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success"
+                    });
+
+                    this.$router
+                        .push({
+                            path: `/schedules`
+                        })
+                        .catch(() => {});
+                })
+                .catch(err => {
+                    this.$vs.notify({
+                        title: "Planification",
+                        text: err.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger",
+                        time: 10000
                     });
                 })
                 .finally(() => this.$vs.loading.close());
@@ -586,6 +752,7 @@ export default {
             .dispatch("projectManagement/fetchItem", projectId)
             .then(data => {
                 this.project_data = data.payload;
+                this.$set(this.configStartsAtDateTimePicker, 'maxDate', this.project_data.date)
                 this.project_data.date_string = moment(
                     this.project_data.date
                 ).format("DD MMMM YYYY");

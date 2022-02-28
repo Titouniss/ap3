@@ -272,7 +272,7 @@
                                 class="mt-3"
                                 v-if="
                                     project_data &&
-                                        project_data.status == 'doing'
+                                        project_data.status == 'doing' || project_data.status == 'standby'
                                 "
                             >
                                 <li class="mr-3">
@@ -320,6 +320,7 @@
                             <div v-if="itemLocal.status != 'todo'">
                                 <add-worked-hours
                                     :itemId="itemId"
+                                    :status="itemLocal.status"
                                     :current_time_spent="current_time_spent"
                                     :refreshData="submitItem"
                                 />

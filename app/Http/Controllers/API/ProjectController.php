@@ -155,6 +155,38 @@ class ProjectController extends BaseApiController
         return $item;
     }
 
+    protected function setProjectStandby(Request $request){
+        try {
+            $taskBundle = TasksBundle::where('project_id', $request->project_id)->get();
+            $bundle_id = $taskBundle[0]['id'];
+            $tasks = Task::where('tasks_bundle_id', $bundle_id)->get();
+
+            foreach ($tasks as $task) {
+                $tasksPeriodWithSameDate=TaskPeriod::where('task_id',$task->id)
+                    ->where('start_time', '<', Carbon::parse($request->dateStandby))
+                    ->where('end_time', '>', Carbon::parse($request->dateStandby))->get();
+                
+                if(!$tasksPeriodWithSameDate->isEmpty()){
+                    throw new Exception("Vous ne pouvez pas mettre le projet en stand-by le ".Carbon::parse($request->dateStandby)->format("d/m/Y")." à ".Carbon::parse($request->dateStandby)->format("H:i")." car il y a déjà des heures planifiées sur cette période sur la tâche ".$task->name.". Veuillez sélectionner une date en dehors des heures planifiées.");
+                }
+
+                if($task->status != "done"){
+                    $tasksPeriodAfterDate=TaskPeriod::where('task_id',$task->id)->where('start_time', '>=', Carbon::parse($request->dateStandby))->get();
+                    if(!$tasksPeriodAfterDate->isEmpty()){
+                        $tasksPeriodAfterDate[0]->delete();
+                        $task->update([
+                            'date' => null,
+                            'date_end' => null,
+                        ]);
+                    }
+                }
+            }
+            return $this->successResponse(true, 'Projet en stand-by');
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
+    }
+
     protected function updateTaskPeriod(Request $request)
     {
         try {
@@ -3066,10 +3098,82 @@ class ProjectController extends BaseApiController
         $timeData = $this->calculTimeAvailable($users, $project, $users);
 
         if ($timeData['total_hours_available'] < $nbHoursRequired) {
-            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
+            return $this->errorResponse("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
         }
 
         return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
+    }
+
+    public function reStart(Request $request)
+    {
+        try {
+            $project = Project::find($request->project_id);
+            $project->start_date=Carbon::parse($request->dateRestart);
+            if ($error = $this->itemErrors($project, 'edit')) {
+                return $error;
+            }
+
+            $arrayRequest = $request->all();
+            $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
+            $workareas = Workarea::where('company_id', $project->company_id)->with('skills')->get();
+
+            // Alertes pour l'utilisateur
+            if ($error = $this->checkForStartErrors($project, $users, $workareas)) {
+                return $error;
+            }
+
+            $nbHoursRequired = 0;
+            $tasksToPlan=[];
+            $taskToFinish="";
+            $nbTasksToFinish=0;
+            foreach ($project->tasks as $task) {
+                if($task->date_end==null){
+                    $task->estimated_time=$task->estimated_time-$task->time_spent;
+
+                    array_push($tasksToPlan, $task);
+                    $nbHoursRequired += $task->estimated_time;
+                }
+
+                if($task->date_end!=null && $task->date_end<$request->dateRestart){
+                    if($task->status!="done"){
+                        $taskToFinish.=$task->name." ";
+                        $nbTasksToFinish++;
+                    }
+                }
+
+                $tasks_period=TaskPeriod::where('task_id',$task->id)->get();
+                foreach($tasks_period as $task_period){
+                    if($task_period->end_time>$request->dateRestart){
+                        throw new Exception("Vous ne pouvez pas redémarrer le projet le ".Carbon::parse($request->dateRestart)->format("d/m/Y")." à ".Carbon::parse($request->dateRestart)->format("H:i")." car la tâche ".$task->name." est déjà planifiée à cette date et se termine à ".Carbon::parse($task->date_end)->format("H:i").".");
+                    }
+                }
+            }
+
+            if($nbTasksToFinish==1){
+                throw new Exception("Vous ne pouvez pas redémarrer le projet car la tâche ".$taskToFinish."n'est pas finie.");
+            }else if($nbTasksToFinish>0){
+                throw new Exception("Vous ne pouvez pas redémarrer le projet car les tâches ".$taskToFinish."ne sont pas finies.");
+            }
+
+            $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->start_date);
+            $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->date)->subDays('1')->endOfDay();
+            $period = CarbonPeriod::create($start_date, $end_date);
+
+            if(sizeof($period)==0){
+                throw new Exception("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
+            }
+
+            // Hours Available & Hours Unavailable
+            $timeData = $this->calculTimeAvailable($users, $project);
+
+            if ($timeData['total_hours_available'] < $nbHoursRequired) {
+                throw new Exception("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
+            }     
+            
+            return $this->setDateToTasks($tasksToPlan, $timeData, $users, $project);
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 
     private function checkForStartErrors($project, $users, $workareas)

@@ -23,14 +23,16 @@ export default {
     IconStatus () {
       if (this.params.value) {   
         switch (this.params.value) {
-        case 'doing':
-          return this.AwaitingLaunch ? 'ClockIcon' : 'ZapIcon'
-        case 'waiting':
-          return 'SendIcon'
-        case 'done':
-          return 'TruckIcon'
-        default:
-          return 'EditIcon' // todo
+          case 'doing':
+            return this.AwaitingLaunch ? 'ClockIcon' : 'ZapIcon'
+          case 'waiting':
+            return 'SendIcon'
+          case 'standby':
+            return 'StopCircleIcon'
+          case 'done':
+            return 'TruckIcon'
+          default:
+            return 'EditIcon' // todo
         }
       }
     },
@@ -42,6 +44,8 @@ export default {
             return `Date de lancement : ${  moment(this.params.data.start_date).format("DD MMMM YYYY")}`
           }
           else { return 'En cours' }
+        case 'standby':
+          return 'En stand-by'
         case 'waiting':
           return 'Terminé, en attente de livraison'
         case 'done':
@@ -56,6 +60,8 @@ export default {
         switch (this.params.value) {
         case 'doing':
           return 'h-5 w-5 text-success'
+        case 'standby':
+          return 'h-5 w-5 text-danger'
         case 'waiting':
           return 'h-5 w-5 text-warning'
         case 'done':
