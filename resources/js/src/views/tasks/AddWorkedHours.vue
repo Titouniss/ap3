@@ -130,6 +130,7 @@ export default {
             type: Number,
             required: true
         },
+        status: { type: String},
         current_time_spent: { type: Number },
         refreshData: { type: Function }
     },
@@ -139,6 +140,7 @@ export default {
                 this.$store.getters["taskManagement/getItem"](this.itemId)
             )
         );
+        item.status = this.status;
         item.current_time_spent = this.current_time_spent;
         item.userTask = null;
         item.descriptionHours = ""

@@ -197,8 +197,113 @@
         ref="todoDataPS"
         :key="$vs.rtl"
       >
+          <div v-if="todoData.length > 0 && this.filtersImportantAndCompleted.is_completed == true">
+              <div v-if="tasksAfterTomorrow.length > 0">
+            <h3 class="m-5">Plus tard dans la semaine</h3>
+            <draggable
+              tag="ul"
+              :list="tasksAfterTomorrow"
+              group="todo"
+              :move="onMoveCallback"
+              class="afterTomorrow"
+            >
+              <li
+                v-for="(task, index) in tasksAfterTomorrow"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+   <div v-if="tasksTomorrow.length > 0">
+            <h3 class="m-5">Demain</h3>
+            <draggable
+              tag="ul"
+              :list="tasksTomorrow"
+              group="todo"
+              :move="onMoveCallback"
+              class="tomorrow"
+            >
+              <li
+                v-for="(task, index) in tasksTomorrow"
+                :key="task.id"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+
+          <div v-if="tasksToday.length > 0">
+            <h3 class="m-5">Aujourd'hui</h3>
+            
+            <draggable
+              tag="ul"
+              :list="tasksToday"
+              group="todo"
+              :move="onMoveCallback"
+              class="today"
+            >
+              <li
+                v-for="(task, index) in tasksToday"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+            
+ <div v-if="tasksYesterday.length > 0">
+            <h3 class="m-5">En retard</h3>
+            <draggable
+              tag="ul"
+              :list="tasksYesterday"
+              group="todo"
+              :move="onMoveCallback"
+              class="yesterday"
+            >
+              <li
+                v-for="(task, index) in tasksYesterday"
+                :key="String(task.id)"
+                :style="[{ transitionDelay: index * 0.1 + 's' }]"
+                style="cursor: pointer"
+              >
+                <todo-task
+                  :task_data="task"
+                  @showDisplayPrompt="showDisplayPrompt(task)"
+                  :key="String(task.title)"
+                />
+              </li>
+            </draggable>
+          </div>
+          <div v-else />
+        </div>
+    
+        
+
+
         <!-- Toute les tâches  -->
-        <div v-if="todoData.length > 0">
+        <div v-if="this.filtersImportantAndCompleted.is_completed == false">
           <div v-if="tasksYesterday.length > 0">
             <h3 class="m-5">En retard</h3>
             <draggable
@@ -224,8 +329,113 @@
           </div>
           <div v-else />
 
-          <div v-if="tasksToday.length > 0">
             <h3 class="m-5">Aujourd'hui</h3>
+                         <div v-if="!taskDisplay">
+                                    <span
+                                        v-on:click="showTask"
+                                        class="linkTxt ml-5"
+                                        style="font-size:12px"
+                                    >
+                                        + Ajouter une tâche
+                                    </span>
+                                </div>  
+                                 <div class="my-3">
+
+                        <div v-if="taskDisplay" class="task_editor__editing_area"
+>
+                      <form  autocomplete="off" v-on:submit.prevent>  
+                         <span style="color: black"> Ajouter une tâche</span>
+                        <div class="vx-col ml-auto flex justify-end mb-2">
+                     
+                        <feather-icon
+                            icon="StarIcon"
+                            class="cursor-pointer"
+                            :svgClasses="[
+                              { 'text-warning stroke-current': itemLocal.is_important },
+                              'w-5',
+                              'h-5 mr-4',
+                            ]"
+                            @click.prevent="itemLocal.is_important = !itemLocal.is_important"
+                          ></feather-icon>
+                         </div>
+                            <vs-input
+                                v-validate="'max:200|required'"
+                                placeholder="ex: Réunion à 15h"
+                                name="title"
+                                class="w-full mr-20 mb-2"
+                                v-model="itemLocal.title"
+                                :success="itemLocal.title != '' && !errors.has('title')"
+                                :danger="errors.has('title')"
+                                :danger-text="errors.first('title')"   
+                                
+                            />
+                             <simple-select
+                                v-model="itemLocal.tags"
+                                multiple
+                                label="title"
+                                header=""
+                                name="tags"
+                                :close-on-select="false"  
+                                :options="tagData"
+                                :reduce="item => item.id"
+                                input-id="tags"
+                                class="mb-2"
+                              />
+                             <flat-pickr
+                                  v-validate="{
+                                    required: true,
+                                  }"
+                                  v-model="itemLocal.due_date"
+                                  class="w-full mb-2"
+                                  header="Date d'embauche"
+                                  name="due_date"
+                                  :config="configdateTimePicker"
+                                /> 
+
+                             <vs-input
+                                placeholder="Description"
+                                name="description"
+                                class="w-full mr-20 "
+                                v-model="itemLocal.description"
+                                
+                            />
+  
+                         </form>
+                        </div>
+                      
+                        <div class="mt-2 flex w-full"  v-if="taskDisplay"
+>
+                            <vs-button
+                            v-if="itemLocal.title != '' &&itemLocal.due_date !='' "
+                                color="success"
+                                type="filled"
+                                size="small"
+                                style="margin-left: 5px"
+                                v-on:click="addTodo"
+                                @click="taskDisplay = false"
+                                id="button-with-loading"
+                                class="vs-con-loading__container"
+                            >
+                                Ajouter
+                            </vs-button>
+                     
+                       
+                            <vs-button
+                                color="danger"
+                                type="filled"
+                                size="small"
+                                style="margin-left: 5px"
+                                v-on:click="taskDisplay = false"
+                                @click="clearFields"
+                                id="button-with-loading"
+                                class="vs-con-loading__container"
+                            >
+                                Annuler
+                            </vs-button>
+                             
+                        </div>
+                       
+                    </div>
             <draggable
               tag="ul"
               :list="tasksToday"
@@ -246,8 +456,6 @@
                 />
               </li>
             </draggable>
-          </div>
-          <div v-else />
 
           <div v-if="tasksTomorrow.length > 0">
             <h3 class="m-5">Demain</h3>
@@ -299,6 +507,7 @@
           </div>
           <div v-else />
         </div>
+        <div v-if="todoData.length > 0"></div>
         <div v-else>
           <div class="text-center ">Vous n'avez actuellement aucune tâche</div>
         </div>
@@ -319,6 +528,7 @@
            @hideDisplayPrompt="hidePrompt"
            v-if="displayPromptTag"
         />
+         
   </div>
 </template>
 
@@ -334,12 +544,37 @@ import VuePerfectScrollbar from "vue-perfect-scrollbar";
 import SimpleSelect from "@/components/inputs/selects/SimpleSelect.vue";
 import moment from "moment";
 import draggable from "vuedraggable";
+import { French as FrenchLocale } from "flatpickr/dist/l10n/fr.js";
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
 
 export default {
   data() {
     return {
       props: {},
+      itemLocal: {
+        title: "",
+        description: "",
+        due_date: new Date(),
+        is_completed: false,
+        is_important: false,
+        tags:[],
+      },
       itemToDel: null,
+        configdateTimePicker: {
+        disableMobile: "true",
+        dateFormat: "Y-m-d",
+        altFormat: "d/m/Y",
+        altInput: true,
+        locale: FrenchLocale,
+        minDate: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(), 
+                    new Date().getDate(),
+                  
+                ),
+                },
+      dateValue: false,
       searchQuery: "",
       clickNotClose: true,
       displayPrompt: false,
@@ -347,6 +582,8 @@ export default {
       taskIdToEdit: 0,
       tagIdToEdit: 0,
       isSidebarActive: true,
+      taskDisplay: false,
+      isSubmiting: false,
       filtersImportantAndCompleted: {
         is_important: false,
         is_completed: false,
@@ -376,7 +613,7 @@ export default {
       if (this.filtersImportantAndCompleted.is_completed == 1) {
         return this.$store.getters["todoManagement/getItems"].filter(
           (todo) => todo.is_completed == true
-        );
+        ).slice(0,25);
       } else {
         return this.$store.getters["todoManagement/getItems"].filter(
           (todo) => todo.is_completed == false
@@ -406,10 +643,7 @@ export default {
     tagData() {
       return this.$store.getters["tagManagement/getItems"];
     },
-    // searchQuery:   {
-    //   get ()        { return this.$store.state.todo.todoSearchQuery        },
-    //   set (val)     { this.$store.dispatch('todoManagement/setTodoSearchQuery', val) }
-    // },
+
     scrollbarTag() {
       return this.$store.getters.scrollbarTag;
     },
@@ -418,6 +652,56 @@ export default {
     },
   },
   methods: {
+     clearFields() {
+      this.itemLocal={
+          title: "",
+          description: "",
+          due_date: new Date(),
+          is_completed: false,
+          is_important: false,
+          tags:[]
+        };
+    },
+    addTodo() {
+       if (this.isSubmiting) return;
+
+            this.isSubmiting = true;
+        const item = JSON.parse(JSON.stringify(this.itemLocal));
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          this.$store
+            .dispatch("todoManagement/addItem", item)
+            .then((data) => {
+              item.is_completed = false;
+              item.is_important = false;
+              this.clearFields(false);
+              this.$vs.notify({
+                title: "Ajout d'une tâche",
+                text: `Tâche ajouté avec succès`,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success",
+              });
+            })
+            .catch((error) => {
+              this.$vs.notify({
+                title: "Error",
+                text: error.message,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "danger",
+              });
+            }).finally(() => {
+                    this.isSubmiting = false;
+                    this.$vs.loading.close();
+                });
+          this.clearFields();
+        }
+      });
+    },
+        showTask() {
+            this.taskDisplay = true;
+        },
      itemIdToEdit() {
        console.log(this.$store.getters["tagManagement/getSelectedItem"].id)
             return (
@@ -471,7 +755,8 @@ export default {
       this.$store
         .dispatch("todoManagement/fetchItems", {
           q: this.searchQuery || undefined,
-          order_by: "due_date",
+          order_by: 'due_date',
+          order_by_desc: 1,
           is_completed:
             this.filtersImportantAndCompleted.is_completed || undefined,
           is_important:
@@ -575,6 +860,8 @@ export default {
     TodoAddTags,
     moment,
     draggable,
+    FrenchLocale,
+    flatPickr
   },
   created() {
     if (!moduleTodo.isRegistered) {
@@ -597,7 +884,25 @@ export default {
 <style lang="scss">
 @import "@sass/vuexy/apps/todo.scss";
 
-
+.linkTxt {
+    font-size: 0.8em;
+    color: #2196f3;
+    background-color: #e9e9ff;
+    border-radius: 4px;
+    margin: 3px;
+    padding: 3px 4px;
+    font-weight: 500;
+}
+.linkTxt:hover {
+    cursor: pointer;
+    background-color: #efefef;
+}
+.task_editor__editing_area {
+border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px 10px 10px;
+  margin: 20px;
+}
 $colors: (
   "51E898": #51e898,
   "61BD4F": #61bd4f,

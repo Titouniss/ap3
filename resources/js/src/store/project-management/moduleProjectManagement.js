@@ -11,11 +11,19 @@ actions.start = ({ commit }, item) => {
     return apiRequest(`${slug}/start/${item.id}`, 'post', null, item);
 }
 
+actions.reStart = ({ commit }, item) => {
+    return apiRequest(`${slug}/reStart`, 'post', null, item);
+}
+
 actions.workHoursPeriods = ({ commit }, item) => {
     return apiRequest(`${slug}/workHoursPeriods`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
 }
 actions.unavailablePeriods = ({ commit }, item) => {
     return apiRequest(`${slug}/unavailablePeriods`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
+}
+
+actions.setProjectStandby = ({ commit }, item) => {
+    return apiRequest(`${slug}/setProjectStandby`, 'get', (payload) => commit('ADD_OR_UPDATE_ITEMS', payload), item);
 }
 
 export default {

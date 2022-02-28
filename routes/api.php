@@ -137,11 +137,13 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('show/{id}', 'API\ProjectController@show');
         Route::post('store', 'API\ProjectController@store');
         Route::post('start/{id}', 'API\ProjectController@start');
+        Route::post('reStart', 'API\ProjectController@reStart');
         Route::get('workHoursPeriods', 'API\ProjectController@workHoursPeriods');
         Route::get('unavailablePeriods', 'API\ProjectController@unavailablePeriods');
         Route::post('store-range/{id}', 'API\ProjectController@addRange');
         Route::put('update/{id}', 'API\ProjectController@update');
         Route::get('updateTaskPeriod', 'API\ProjectController@updateTaskPeriod');
+        Route::get('setProjectStandby', 'API\ProjectController@setProjectStandby');
         Route::put('restore/{id?}', 'API\ProjectController@restore');
         Route::put('destroy/{id?}', 'API\ProjectController@destroy');
         Route::put('force-destroy/{id?}', 'API\ProjectController@forceDestroy');
@@ -329,6 +331,21 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('destroy/{id?}', 'API\TagController@destroy');
         Route::put('force-destroy/{id?}', 'API\TagController@forceDestroy');
 
+    });
+
+      /***********************************************************************************/
+    /*********************************   Supply   **************************************/
+    /***********************************************************************************/
+    Route::prefix('supply-management')->group(function () {
+        Route::get('index', 'API\SupplyController@index');
+        Route::get('index/task/{id}', 'API\SupplyController@getByTaskId');
+        Route::get('show/{id}', 'API\SupplyController@show');
+        Route::post('store', 'API\SupplyController@store');
+        Route::put('update/{id}', 'API\SupplyController@update');
+        Route::post('updateTaskSupplyReceived', 'API\SupplyController@updateTaskSupplyReceived');
+        Route::put('restore/{id?}', 'API\SupplyController@restore');
+        Route::put('destroy/{id?}', 'API\SupplyController@destroy');
+        Route::put('force-destroy/{id?}', 'API\SupplyController@forceDestroy');
     });
 });
 /***********************************************************************************/

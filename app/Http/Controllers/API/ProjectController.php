@@ -41,7 +41,7 @@ class ProjectController extends BaseApiController
         'company_id' => 'required',
         'customer_id' => 'nullable',
         'color' => 'nullable',
-        'token' => 'nullable'
+        'token' => 'nullable',
     ];
 
     protected static $update_validation_array = [
@@ -51,7 +51,8 @@ class ProjectController extends BaseApiController
         'customer_id' => 'nullable',
         'color' => 'nullable',
         'documents' => 'nullable|array',
-        'token' => 'nullable'
+        'token' => 'nullable',
+
     ];
 
     /**
@@ -106,7 +107,7 @@ class ProjectController extends BaseApiController
             'name' => $arrayRequest['name'],
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
-            'created_by' => Auth::id()
+            'created_by' => Auth::id(),
         ]);
 
         if (isset($arrayRequest['customer_id'])) {
@@ -132,6 +133,7 @@ class ProjectController extends BaseApiController
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
             'status' => $arrayRequest['status'],
+
         ]);
 
         if (isset($arrayRequest['customer_id'])) {
@@ -151,6 +153,38 @@ class ProjectController extends BaseApiController
         }
 
         return $item;
+    }
+
+    protected function setProjectStandby(Request $request){
+        try {
+            $taskBundle = TasksBundle::where('project_id', $request->project_id)->get();
+            $bundle_id = $taskBundle[0]['id'];
+            $tasks = Task::where('tasks_bundle_id', $bundle_id)->get();
+
+            foreach ($tasks as $task) {
+                $tasksPeriodWithSameDate=TaskPeriod::where('task_id',$task->id)
+                    ->where('start_time', '<', Carbon::parse($request->dateStandby))
+                    ->where('end_time', '>', Carbon::parse($request->dateStandby))->get();
+                
+                if(!$tasksPeriodWithSameDate->isEmpty()){
+                    throw new Exception("Vous ne pouvez pas mettre le projet en stand-by le ".Carbon::parse($request->dateStandby)->format("d/m/Y")." à ".Carbon::parse($request->dateStandby)->format("H:i")." car il y a déjà des heures planifiées sur cette période sur la tâche ".$task->name.". Veuillez sélectionner une date en dehors des heures planifiées.");
+                }
+
+                if($task->status != "done"){
+                    $tasksPeriodAfterDate=TaskPeriod::where('task_id',$task->id)->where('start_time', '>=', Carbon::parse($request->dateStandby))->get();
+                    if(!$tasksPeriodAfterDate->isEmpty()){
+                        $tasksPeriodAfterDate[0]->delete();
+                        $task->update([
+                            'date' => null,
+                            'date_end' => null,
+                        ]);
+                    }
+                }
+            }
+            return $this->successResponse(true, 'Projet en stand-by');
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 
     protected function updateTaskPeriod(Request $request)
@@ -183,7 +217,7 @@ class ProjectController extends BaseApiController
                     ) {
 
                         $erreur = true;
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
@@ -203,13 +237,13 @@ class ProjectController extends BaseApiController
 
 
                     if (count($listTaskPeriodToMoveAndCreate) == 0) {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("Il n'y a aucune période dépendante à déplacer.");
                     }
 
                     //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.");
                     }
 
@@ -270,7 +304,7 @@ class ProjectController extends BaseApiController
                         }
                     }
                 }
-                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
             }
 
             //si l'utilisateur a coché la case pour déplacer les tâches dépendantes
@@ -295,7 +329,7 @@ class ProjectController extends BaseApiController
                     ) {
 
                         $erreur = true;
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
@@ -310,13 +344,13 @@ class ProjectController extends BaseApiController
                     $listTaskPeriodToMoveAndCreate = $this->moveAndCreateTaskPeriodAfter($request, $listIdTaskDependant, $listDebutTaskPeriodIndispo, $list);
 
                     if (count($listTaskPeriodToMoveAndCreate) == 0) {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("Il n'y a aucune période dépendante à déplacer.");
                     }
 
                     //si le tableau retourné contient on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("La nouvelle date de fin n'est pas dans les heures de travail des utilisateurs.");
                     }
 
@@ -382,7 +416,7 @@ class ProjectController extends BaseApiController
                         }
                     }
                 }
-                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
             } else if ($request->moveChecked == "true" && ($request->start < $taskPeriod[0]['start_time'])) {
 
                 //vérifier si l'ilot et l'utilisateur sont dispos sur la nouvelle période
@@ -403,7 +437,7 @@ class ProjectController extends BaseApiController
                         ($request->start >= $period['start_time'] && $request->end >= $period['end_time'] && $request->start < $period['end_time'])
                     ) {
                         $erreur = true;
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         // try {
                         //     return $this->successResponse($task[0], '');
                         // } catch (\Throwable $th) {
@@ -422,18 +456,18 @@ class ProjectController extends BaseApiController
                     $controllerLog->info('listTaskPeriodToMoveAndCreate', [$listTaskPeriodToMoveAndCreate]);
 
                     if (count($listTaskPeriodToMoveAndCreate) == 0) {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("Il n'y a aucune période dépendante à déplacer.");
                     }
 
                     //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "erreur horaires") {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("La nouvelle date de début n'est pas dans les heures de travail des utilisateurs.");
                     }
                     //si le tableau retourné contient "erreur horaires" on renvoie une erreur pour dire à l'utilisateur qu'il faut déplacer dans les heures de travail des utilisateurs
                     else if (end($listTaskPeriodToMoveAndCreate) == "avant aujourd'hui") {
-                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                         throw new ApiException("Impossible de déplacer les périodes avant aujourd'hui.");
                     }
 
@@ -523,7 +557,7 @@ class ProjectController extends BaseApiController
                         }
                     }
                 }
-                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
             } else {
                 $projectUpdated = Project::where('id', $projectId)->get();
                 //si avant la date de début du projet ou après la date de livraison -> erreur
@@ -544,7 +578,7 @@ class ProjectController extends BaseApiController
                         'date' => $tasksPeriod[0]['start_time'],
                         'date_end' => $tasksPeriod[sizeof($tasksPeriod) - 1]['end_time'],
                     ]);
-                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+                    $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
                 }
             }
             return $this->successResponse($task[0], 'Chargement terminé avec succès.');
@@ -567,7 +601,7 @@ class ProjectController extends BaseApiController
         array_push($listTaskPeriodToSave, $request->start);
         array_push($listTaskPeriodToSave, $request->end);
 
-        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
 
         //s'il y a des tasks dépendantes à faire avant, ajouter les tasks_period des tasks dépendantes dans la liste des tasks_period à déplacer
         $listTaskPeriodToMove = array();
@@ -1596,7 +1630,7 @@ class ProjectController extends BaseApiController
         array_push($listTaskPeriodToSave, $request->start);
         array_push($listTaskPeriodToSave, $request->end);
 
-        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods')->get();
+        $task = Task::where('id', $taskPeriod[0]['task_id'])->with('workarea', 'skills', 'comments', 'previousTasks', 'documents', 'project', 'periods','supplies')->get();
 
         //s'il y a des tasks_periods de la même task après, déplacer les dernières task_periods de la task où l'utilisateur et le workarea de la task sont dispos
         $tasksPeriodTask = TaskPeriod::where('task_id', $taskPeriod[0]['task_id'])->get();
@@ -3064,10 +3098,82 @@ class ProjectController extends BaseApiController
         $timeData = $this->calculTimeAvailable($users, $project, $users);
 
         if ($timeData['total_hours_available'] < $nbHoursRequired) {
-            return $this->errorResponse("Le nombre d'heure de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
+            return $this->errorResponse("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
         }
 
         return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
+    }
+
+    public function reStart(Request $request)
+    {
+        try {
+            $project = Project::find($request->project_id);
+            $project->start_date=Carbon::parse($request->dateRestart);
+            if ($error = $this->itemErrors($project, 'edit')) {
+                return $error;
+            }
+
+            $arrayRequest = $request->all();
+            $users = User::where('company_id', $project->company_id)->with('workHours')->with('unavailabilities', 'skills')->get();
+            $workareas = Workarea::where('company_id', $project->company_id)->with('skills')->get();
+
+            // Alertes pour l'utilisateur
+            if ($error = $this->checkForStartErrors($project, $users, $workareas)) {
+                return $error;
+            }
+
+            $nbHoursRequired = 0;
+            $tasksToPlan=[];
+            $taskToFinish="";
+            $nbTasksToFinish=0;
+            foreach ($project->tasks as $task) {
+                if($task->date_end==null){
+                    $task->estimated_time=$task->estimated_time-$task->time_spent;
+
+                    array_push($tasksToPlan, $task);
+                    $nbHoursRequired += $task->estimated_time;
+                }
+
+                if($task->date_end!=null && $task->date_end<$request->dateRestart){
+                    if($task->status!="done"){
+                        $taskToFinish.=$task->name." ";
+                        $nbTasksToFinish++;
+                    }
+                }
+
+                $tasks_period=TaskPeriod::where('task_id',$task->id)->get();
+                foreach($tasks_period as $task_period){
+                    if($task_period->end_time>$request->dateRestart){
+                        throw new Exception("Vous ne pouvez pas redémarrer le projet le ".Carbon::parse($request->dateRestart)->format("d/m/Y")." à ".Carbon::parse($request->dateRestart)->format("H:i")." car la tâche ".$task->name." est déjà planifiée à cette date et se termine à ".Carbon::parse($task->date_end)->format("H:i").".");
+                    }
+                }
+            }
+
+            if($nbTasksToFinish==1){
+                throw new Exception("Vous ne pouvez pas redémarrer le projet car la tâche ".$taskToFinish."n'est pas finie.");
+            }else if($nbTasksToFinish>0){
+                throw new Exception("Vous ne pouvez pas redémarrer le projet car les tâches ".$taskToFinish."ne sont pas finies.");
+            }
+
+            $start_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->start_date);
+            $end_date = Carbon::createFromFormat('Y-m-d H:i:s', $project->date)->subDays('1')->endOfDay();
+            $period = CarbonPeriod::create($start_date, $end_date);
+
+            if(sizeof($period)==0){
+                throw new Exception("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
+            }
+
+            // Hours Available & Hours Unavailable
+            $timeData = $this->calculTimeAvailable($users, $project);
+
+            if ($timeData['total_hours_available'] < $nbHoursRequired) {
+                throw new Exception("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
+            }     
+            
+            return $this->setDateToTasks($tasksToPlan, $timeData, $users, $project);
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage(), static::$response_codes['error_server']);
+        }
     }
 
     private function checkForStartErrors($project, $users, $workareas)

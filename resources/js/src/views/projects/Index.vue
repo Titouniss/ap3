@@ -293,6 +293,7 @@ export default {
                 { key: "", name: "-" },
                 { key: "todo", name: "À faire" },
                 { key: "doing", name: "En cours" },
+                { key: "standby", name: "En stand-by" },
                 { key: "waiting", name: "Terminé, en attente de livraison" },
                 { key: "done", name: "Livré" }
             ],
