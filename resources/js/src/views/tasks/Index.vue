@@ -629,7 +629,7 @@ export default {
         right: 20px;
         border: 1px solid #b3b3b3;
         border-radius: 5px;
-        background-color: #e2e2e2;
+        background-color: #ffffff;
     }
     .btnChooseDisplayFormatActive {
         background-color: white;
@@ -638,7 +638,7 @@ export default {
     }
     .btnFormatTaskList:hover {
         cursor: pointer;
-        border-radius: "5px";
+        border-radius: 5px;
     }
 }
 </style>

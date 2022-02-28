@@ -969,21 +969,22 @@ export default {
 }
 .chooseTaskDisplay {
     border: 1px solid #b3b3b3;
-    border-radius: 1px;
-    background-color: #e2e2e2;
+    border-radius: 5px;
+    background-color: #ffffff;
     width: max-content !important;
 }
 .btnChooseDisplayFormatActive {
     background-color: #2196f3;
     color: white;
-    border-radius: 1px;
+    border-radius: 5px;
 }
 .btnFormatTaskListT {
     background-color: white;
     color: #2196f3;
+    border-radius: 5px;
 }
 .btnFormatTaskListT:hover {
     cursor: pointer;
-    border-radius: "5px";
+    border-radius: 5px;
 }
 </style>
