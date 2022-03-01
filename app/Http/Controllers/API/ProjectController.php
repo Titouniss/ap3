@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Exceptions\ApiException;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use App\Models\Skill;
 use App\User;
 use App\Models\Range;
 use App\Models\Task;
@@ -105,7 +106,9 @@ class ProjectController extends BaseApiController
     {
         $item = Project::create([
             'name' => $arrayRequest['name'],
+            'start_date' => $arrayRequest['startDate'],
             'date' => $arrayRequest['date'],
+            'status' => 'todo',
             'company_id' => $arrayRequest['company_id'],
             'created_by' => Auth::id(),
         ]);
@@ -130,10 +133,11 @@ class ProjectController extends BaseApiController
     {
         $item->update([
             'name' => $arrayRequest['name'],
+            'start_date' => $arrayRequest['start_date'],
             'date' => $arrayRequest['date'],
             'company_id' => $arrayRequest['company_id'],
             'status' => $arrayRequest['status'],
-
+            'is_hidden' => $arrayRequest['is_hidden'],
         ]);
 
         if (isset($arrayRequest['customer_id'])) {
@@ -172,8 +176,8 @@ class ProjectController extends BaseApiController
 
                 if($task->status != "done"){
                     $tasksPeriodAfterDate=TaskPeriod::where('task_id',$task->id)->where('start_time', '>=', Carbon::parse($request->dateStandby))->get();
-                    if(!$tasksPeriodAfterDate->isEmpty()){
-                        $tasksPeriodAfterDate[0]->delete();
+                    foreach($tasksPeriodAfterDate as $taskPeriodAfterDate){
+                        $taskPeriodAfterDate->delete();
                         $task->update([
                             'date' => null,
                             'date_end' => null,
@@ -3092,6 +3096,13 @@ class ProjectController extends BaseApiController
         foreach ($project->tasks as $task) {
             // Hours required
             $nbHoursRequired += $task->estimated_time;
+            if($request->simulation){
+                $tasks_period=TaskPeriod::where('task_id',$task->id)->get();
+                foreach($tasks_period as $task_period){
+                    $task_period->delete();
+                    $task->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
+                }
+            }
         }
 
         // Hours Available & Hours Unavailable
@@ -3101,7 +3112,22 @@ class ProjectController extends BaseApiController
             return $this->errorResponse("Le nombre d'heures de travail disponible est insuffisant pour démarrer le projet. Veuillez modifier la date de livraison du projet.");
         }
 
-        return $this->setDateToTasks($project->tasks, $timeData, $users, $project);
+        $responseAlgo=$this->setDateToTasks($project->tasks, $timeData, $users, $project);
+        //delete tasks_period after planification if simulation
+        $project=Project::findOrFail($project->id);
+        foreach ($project->tasks as $task) {
+            if($request->simulation){
+                $project->update([
+                    'status' => 'todo'
+                ]);
+                $task->update(['date' => null, 'date_end' => null, 'user_id' => null, 'workarea_id' => null]);
+                $tasks_period=TaskPeriod::where('task_id',$task->id)->get();
+                foreach($tasks_period as $task_period){
+                    $task_period->delete();
+                }
+            }
+        }
+        return $responseAlgo;
     }
 
     public function reStart(Request $request)
@@ -3196,6 +3222,13 @@ class ProjectController extends BaseApiController
         $nb_tasks_skills_worker = 0;
         $nb_tasks_skills_workarea = 0;
 
+        $userHasSkill=false;
+        $missingSkillsWorkers=[];
+        $nbMissingSkillsWorkers=0;
+        $workareaHasSkill=false;
+        $missingSkillsWorkarea=[];
+        $nbMissingSkillsWorkarea=0;
+
         foreach ($project->tasks as $task) {
 
             $project_skills_ids = [];
@@ -3205,53 +3238,66 @@ class ProjectController extends BaseApiController
 
             //workers
             foreach ($users as $user) {
-
+                $userHasSkill=false;
                 $user_skills_ids = [];
                 foreach ($user->skills as $skill) {
                     $user_skills_ids[] = $skill->id;
                 }
 
                 if (count(array_intersect($project_skills_ids, $user_skills_ids)) == count($project_skills_ids)) {
-
+                    $userHasSkill=true;
                     $nb_tasks_skills_worker += 1;
                     break;
                 }
             }
 
+            if(!$userHasSkill){
+                foreach($project_skills_ids as $skill_id){
+                    $skill=Skill::where('id', $skill_id)->get();
+                    array_push($missingSkillsWorkers,$skill[0]->name);
+                    $nbMissingSkillsWorkers++;
+                }
+            }
+
             //workareas
             foreach ($workareas as $workarea) {
-
+                $workareaHasSkill=false;
                 $workarea_skills_ids = [];
                 foreach ($workarea->skills as $skill) {
                     $workarea_skills_ids[] = $skill->id;
                 }
 
                 if (count(array_intersect($project_skills_ids, $workarea_skills_ids)) == count($project_skills_ids)) {
-
+                    $workareaHasSkill=true;
                     $nb_tasks_skills_workarea += 1;
                     break;
+                }
+            }
+
+            if(!$workareaHasSkill){
+                foreach($project_skills_ids as $skill_id){
+                    $skill=Skill::where('id', $skill_id)->get();
+                    array_push($missingSkillsWorkarea, $skill[0]->name);
+                    $nbMissingSkillsWorkarea++;
                 }
             }
         }
         $workersHaveSkills = $nb_tasks == $nb_tasks_skills_worker ? true : false;
         $workareasHaveSkills = $nb_tasks == $nb_tasks_skills_workarea ? true : false;
 
-//Alerte Planification mettre la compétence lorsqu'elle n'est pas affilié à un utilisateur ou à un pôle 
-  $taskWOrk = Task::whereNull('workarea_id')->where('name',$task->name)->get();
-
-
-
-        // // $skillNull = Task::where('workarea_id', $workarea[0]->id)->get();
-        // $workarea_id = $task[0]['workarea_id'];
-        // $tasksWorkarea = Task::where('workarea_id', $workarea_id)->whereNotNull('date')->whereNotNull('date_end')->get();
-        
-
-
+        //Alerte Planification mettre la compétence lorsqu'elle n'est pas affilié à un utilisateur ou à un pôle 
+        $taskWOrk = Task::whereNull('workarea_id')->where('name',$task->name)->get();
 
         $alerts = [];
         $haveHours ? null : $alerts[] = "Aucun utilisateur ne possède d'heures de travail";
-        $workersHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un utilisateur";
-        $workareasHaveSkills ? null : $alerts[] = "Au moins une compétence utilisée dans une tâche n'est pas associée à un pôle de production";
+        $workersHaveSkills ? null : $alerts[] = 
+            $nbMissingSkillsWorkers==1 ? 
+            "La compétence ".implode(", ", $missingSkillsWorkers)." utilisée dans une tâche n'est pas associée à un utilisateur." :
+            "Les compétences ".implode(", ", $missingSkillsWorkers)." utilisées dans une tâche ne sont pas associées à un utilisateur.";
+        $workareasHaveSkills ? null : $alerts[] = 
+            $nbMissingSkillsWorkarea==1 ?
+            "La compétence ".implode(", ", $missingSkillsWorkarea)." utilisée dans une tâche n'est pas associée à un pôle de production." :
+            "Les compétences ".implode(", ", $missingSkillsWorkarea)." utilisées dans une tâche ne sont pas associées à un pôle de production.";
 
         if (count($alerts) > 0) {
             return $this->errorResponse($alerts[0]);

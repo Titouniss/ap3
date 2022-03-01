@@ -1,6 +1,7 @@
 <template>
     <div>
         <vs-button
+            class="mr-3"
             v-if="
                 project_data.status == 'todo' && project_data.tasks.length > 0
             "

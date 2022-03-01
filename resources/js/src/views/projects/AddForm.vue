@@ -76,12 +76,29 @@
                             </vs-col>
                             <div class="my-4">
                                 <small class="date-label">
+                                    Date de démarrage prévue
+                                </small>
+                                <datepicker
+                                    class="pickadate"
+                                    :disabledDates="{
+                                        to: new Date(Date.now() - 8640000),
+                                        from: new Date(itemLocal.date - 8640000)
+                                    }"
+                                    :language="langFr"
+                                    name="date"
+                                    v-model="itemLocal.startDate"
+                                    :color="validateForm ? 'success' : 'danger'"
+                                >
+                                </datepicker>
+                            </div>
+                            <div class="my-4">
+                                <small class="date-label">
                                     Date de livraison prévue
                                 </small>
                                 <datepicker
                                     class="pickadate"
                                     :disabledDates="{
-                                        to: new Date(Date.now() - 8640000)
+                                        to: new Date(itemLocal.startDate - 8640000)
                                     }"
                                     :language="langFr"
                                     name="date"
@@ -148,6 +165,7 @@ export default {
 
             itemLocal: {
                 name: "",
+                startDate: new Date(),
                 date: new Date(),
                 customer_id: null,
                 company_id: !this.isAdmin
@@ -201,6 +219,7 @@ export default {
             }
             this.itemLocal = {
                 name: "",
+                startDate: new Date(),
                 date: new Date(),
                 customer_id: null,
                 company_id: null,
@@ -211,6 +230,7 @@ export default {
         addProject() {
             this.$validator.validateAll().then(result => {
                 const item = JSON.parse(JSON.stringify(this.itemLocal));
+                item.startDate = moment(this.itemLocal.startDate).format("YYYY-MM-DD");
                 item.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
                 if (this.uploadedFiles.length > 0) {
                     item.token = this.token;

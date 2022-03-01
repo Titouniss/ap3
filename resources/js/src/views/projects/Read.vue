@@ -184,6 +184,36 @@
                         </vs-button>
                         <vs-button
                             class="mr-3"
+                            v-if="project_data.status == 'todo'"
+                            color= 'warning'
+                            icon-pack="feather"
+                            icon="icon-refresh-cw"
+                            @click="startProject(true)"
+                        >
+                            Simuler la planification
+                        </vs-button>
+                        <vx-tooltip
+                            :text="project_data.is_hidden ? 'Afficher' : 'Masquer'"
+                            class="mx-2"
+                        >
+                            <vs-button
+                                class="mr-3"
+                                v-if="project_data.status == 'todo' && !project_data.is_hidden"
+                                icon-pack="feather"
+                                icon="icon-eye-off"
+                                type="border"
+                                @click="setIsHidden(true)"
+                            ></vs-button>
+                            <vs-button
+                                class="mr-3"
+                                v-if="project_data.status == 'todo' && project_data.is_hidden"
+                                icon-pack="feather"
+                                icon="icon-eye"
+                                @click="setIsHidden(false)"
+                            ></vs-button>
+                        </vx-tooltip>
+                        <vs-button
+                            class="mr-3"
                             v-if="project_data.status == 'doing'"
                             color="#E7A720"
                             icon-pack="feather"
@@ -450,18 +480,23 @@ export default {
                 query: { id: this.project_data.id, type: "projects" }
             });
         },
-        startProject() {
+        startProject(simulation=false) {
+            var itemToSend = {
+                id: this.project_data.id,
+                start_date: this.project_data.start_date,
+                simulation: simulation
+            };
             this.$vs.loading({
                 color: this.colorLoading,
                 type: "material",
-                text: "Planification en cours ..."
+                text: simulation ? "Simulation en cours ..." : "Planification en cours ..."
             });
             this.$store
-                .dispatch("projectManagement/start", this.project_data)
+                .dispatch("projectManagement/start", itemToSend)
                 .then(response => {
                     this.$vs.notify({
-                        title: "Planification",
-                        text: "Projet planifié avec succès",
+                        title: simulation ? "Simulation" : "Planification",
+                        text: simulation ? "Simulation réalisée avec succès" : "Projet planifié avec succès",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success"
@@ -473,17 +508,18 @@ export default {
                     // })
                     this.$router
                         .push({
-                            path: `/schedules`
+                            path: simulation ? `/projects` : `/schedules`
                         })
                         .catch(() => {});
                 })
                 .catch(err => {
                     this.$vs.notify({
-                        title: "Planification",
+                        title: simulation ? "Simulation" : "Planification",
                         text: err.message,
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
+                        time: 10000
                     });
                 })
                 .finally(() => this.$vs.loading.close());
@@ -601,6 +637,35 @@ export default {
                         });
                     });
             }
+        },
+        setIsHidden(isHidden){
+            this.$vs.loading()
+            const payload = { ...this.project_data }
+            payload.is_hidden = isHidden;
+
+            this.$store
+                .dispatch("projectManagement/updateItem", payload)
+                .then(() => {
+                    this.$vs.loading.close();
+                    this.$vs.notify({
+                        title: "Modification du projet",
+                        text: "Projet modifié avec succès",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success"
+                    });
+                    this.refreshData()
+                })
+                .catch(error => {
+                    this.$vs.loading.close();
+                    this.$vs.notify({
+                        title: "Error",
+                        text: error.message,
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger"
+                    });
+                });
         },
         editRecord() {
             this.$store
