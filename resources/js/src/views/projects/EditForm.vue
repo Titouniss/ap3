@@ -74,6 +74,23 @@
                                 ></v-swatches>
                             </vs-row>
                         </vs-col>
+                        <div class="my-4" v-if="itemLocal.status=='todo'">
+                            <small class="date-label">
+                                Date de démarrage prévue
+                            </small>
+                            <datepicker
+                                class="pickadate"
+                                :disabledDates="{
+                                    to: new Date(Date.now() - 8640000),
+                                    from: new Date(itemLocal.date)
+                                }"
+                                :language="langFr"
+                                name="startDate"
+                                v-model="itemLocal.start_date"
+                                :color="validateForm ? 'success' : 'danger'"
+                            >
+                            </datepicker>
+                        </div>
                         <div class="my-4">
                             <small class="date-label">
                                 Date de livraison prévue
@@ -81,7 +98,7 @@
                             <datepicker
                                 class="pickadate"
                                 :disabledDates="{
-                                    to: new Date(Date.now() - 8640000)
+                                    to: new Date(itemLocal.start_date)
                                 }"
                                 :language="langFr"
                                 name="date"
@@ -202,6 +219,7 @@ export default {
             this.$validator.validateAll().then(result => {
                 const item = JSON.parse(JSON.stringify(this.itemLocal));
 
+                item.startDate = moment(this.itemLocal.start_date).format("YYYY-MM-DD");
                 item.date = moment(this.itemLocal.date).format("YYYY-MM-DD");
                 item.token = this.token;
 
