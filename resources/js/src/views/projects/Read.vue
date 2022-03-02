@@ -255,7 +255,7 @@
                             <div>
                                 <form autocomplete="off">
                                     <template>
-                                        <div class="vs-select--label">Veuillez sélectionner la date et l'heure à partir de laquelle le projet sera en stand-by</div>
+                                        <div class="vs-select--label">Veuillez sélectionner la date et l'heure à partir de laquelle le projet sera en stand-by (avant la date de livraison prévue pour le {{getFormattedDate(project_data.date)}})</div>
                                     </template>
                                     <flat-pickr
                                         name="starts_at"
@@ -457,6 +457,9 @@ export default {
         }
     },
     methods: {
+        getFormattedDate(date){
+            return moment(date).format("DD/MM/YYYY");
+        },
         iconByDocument(doc) {
             switch (doc.name.split(".").pop()) {
                 case "pdf":
