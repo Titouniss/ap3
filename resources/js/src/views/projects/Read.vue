@@ -96,6 +96,15 @@
                                 </td>
                                 <td>{{ project_data.start_date_string }}</td>
                             </tr>
+                            <tr v-if="
+                                    project_data.status == 'todo' &&
+                                        project_data.start_date_string
+                                " >
+                                <td class="font-semibold">
+                                    Date de lancement prévue :
+                                </td>
+                                <td>{{ project_data.start_date_string }}</td>
+                            </tr>
                             <tr>
                                 <td class="font-semibold">
                                     Date de livraison prévue :
