@@ -179,11 +179,21 @@
           icon-no-border
           size="large"
           icon-pack="feather"
+          icon="icon-file-plus"
+          placeholder="Ajouter une tâche pour aujourd'hui, Appuyer sur [Entrer] pour ajouter"
+          class="vs-input-no-border vs-input-no-shdow-focus w-full"
+          v-model="addLineQuery"
+          v-on:keyup.enter="onAddTaskLine"
+        />
+        <vs-input
+          icon-no-border
+          size="large"
+          icon-pack="feather"
           icon="icon-search"
           placeholder="Rechercher..."
           v-model="searchQuery"
           @input="updateSearchQuery"
-          class="vs-input-no-border vs-input-no-shdow-focus w-full"
+          class="vs-input-no-shdow-focus"
         />
       </div>
 
@@ -330,7 +340,7 @@
           <div v-else />
 
             <h3 class="m-5">Aujourd'hui</h3>
-                         <div v-if="!taskDisplay">
+                         <!-- <div v-if="!taskDisplay">
                                     <span
                                         v-on:click="showTask"
                                         class="linkTxt ml-5"
@@ -338,7 +348,7 @@
                                     >
                                         + Ajouter une tâche
                                     </span>
-                                </div>  
+                                </div>   -->
                                  <div class="my-3">
 
                         <div v-if="taskDisplay" class="task_editor__editing_area"
@@ -576,6 +586,7 @@ export default {
                 },
       dateValue: false,
       searchQuery: "",
+      addLineQuery:"",
       clickNotClose: true,
       displayPrompt: false,
       displayPromptTag: false,
@@ -652,7 +663,7 @@ export default {
     },
   },
   methods: {
-     clearFields() {
+       clearFields() {
       this.itemLocal={
           title: "",
           description: "",
@@ -661,6 +672,7 @@ export default {
           is_important: false,
           tags:[]
         };
+        this.addLineQuery=""
     },
     addTodo() {
        if (this.isSubmiting) return;
@@ -699,9 +711,49 @@ export default {
         }
       });
     },
-        showTask() {
-            this.taskDisplay = true;
-        },
+    onAddTaskLine(){
+      if (this.addLineQuery) {
+          this.itemLocal={
+            title: this.addLineQuery,
+            description: "",
+            due_date: new Date(),
+            is_completed: false,
+            is_important: false,
+            tags:[]
+          };
+          const item = JSON.parse(JSON.stringify(this.itemLocal));
+          this.$store
+            .dispatch("todoManagement/addItem", item)
+            .then((data) => {
+              item.is_completed = false;
+              item.is_important = false;
+              this.clearFields(false);
+              this.$vs.notify({
+                title: "Ajout d'une tâche",
+                text: `Tâche ajouté avec succès`,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "success",
+              });
+            })
+            .catch((error) => {
+              this.$vs.notify({
+                title: "Error",
+                text: error.message,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "danger",
+              });
+            }).finally(() => {
+                    this.isSubmiting = false;
+                    this.$vs.loading.close();
+                });
+          this.clearFields();
+      }
+    },
+    showTask() {
+        this.taskDisplay = true;
+    },
      itemIdToEdit() {
        console.log(this.$store.getters["tagManagement/getSelectedItem"].id)
             return (
