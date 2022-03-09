@@ -345,25 +345,25 @@
                                         v-on:click="showTask"
                                         class="linkTxt ml-5"
                                         style="font-size:12px"
-                                    >
-                                        + Ajouter une tâche
-                                    </span>
-                                </div>   -->
-                                 <div class="my-3">
+                                      >
+                                          + Ajouter une tâche
+                                      </span>
+                                  </div>   -->
+                                    <!-- <div class="my-3">
 
-                        <div v-if="taskDisplay" class="task_editor__editing_area"
->
-                      <form  autocomplete="off" v-on:submit.prevent>  
-                         <span style="color: black"> Ajouter une tâche</span>
-                        <div class="vx-col ml-auto flex justify-end mb-2">
-                     
-                        <feather-icon
-                            icon="StarIcon"
-                            class="cursor-pointer"
-                            :svgClasses="[
-                              { 'text-warning stroke-current': itemLocal.is_important },
-                              'w-5',
-                              'h-5 mr-4',
+                          <div v-if="taskDisplay" class="task_editor__editing_area"
+        >
+                        <form  autocomplete="off" v-on:submit.prevent>  
+                            <span style="color: black"> Ajouter une tâche</span>
+                          <div class="vx-col ml-auto flex justify-end mb-2">
+                        
+                          <feather-icon
+                              icon="StarIcon"
+                              class="cursor-pointer"
+                              :svgClasses="[
+                                { 'text-warning stroke-current': itemLocal.is_important },
+                                'w-5',
+                                'h-5 mr-4',
                             ]"
                             @click.prevent="itemLocal.is_important = !itemLocal.is_important"
                           ></feather-icon>
@@ -445,7 +445,7 @@
                              
                         </div>
                        
-                    </div>
+                    </div> -->
             <draggable
               tag="ul"
               :list="tasksToday"
