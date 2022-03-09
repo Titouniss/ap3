@@ -272,7 +272,7 @@
                                 class="mt-3"
                                 v-if="
                                     project_data &&
-                                        project_data.status == 'doing'
+                                        project_data.status == 'doing' || project_data.status == 'standby'
                                 "
                             >
                                 <li class="mr-3">
@@ -320,6 +320,7 @@
                             <div v-if="itemLocal.status != 'todo'">
                                 <add-worked-hours
                                     :itemId="itemId"
+                                    :status="itemLocal.status"
                                     :current_time_spent="current_time_spent"
                                     :refreshData="submitItem"
                                 />
@@ -1046,21 +1047,22 @@ export default {
 }
 .chooseTaskDisplay {
     border: 1px solid #b3b3b3;
-    border-radius: 1px;
-    background-color: #e2e2e2;
+    border-radius: 5px;
+    background-color: #ffffff;
     width: max-content !important;
 }
 .btnChooseDisplayFormatActive {
     background-color: #2196f3;
     color: white;
-    border-radius: 1px;
+    border-radius: 5px;
 }
 .btnFormatTaskListT {
     background-color: white;
     color: #2196f3;
+    border-radius: 5px;
 }
 .btnFormatTaskListT:hover {
     cursor: pointer;
-    border-radius: "5px";
+    border-radius: 5px;
 }
 </style>

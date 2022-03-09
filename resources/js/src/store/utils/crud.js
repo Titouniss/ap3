@@ -100,7 +100,7 @@ export default function (slug, model, model_plurial, sort_items = null) {
     mutations: {
       SET_ITEMS: (state, items) => (state[model_plurial] = items),
       ADD_OR_UPDATE_ITEMS: (state, items) => {
-        (Array.isArray(items) ? items : [items]).forEach(new_item => {
+          (Array.isArray(items) ? items : [items]).forEach(new_item => {
           const index = state[model_plurial].findIndex(
             item => item.id === new_item.id
           );

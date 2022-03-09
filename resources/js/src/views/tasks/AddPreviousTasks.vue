@@ -56,7 +56,8 @@ export default {
     data() {
         return {
             activePromptPrevious: false,
-            previousTasksIds_local: this.previous_task_ids
+            previousTasksIds_local: this.previous_task_ids,
+            previousTaskList: []
         };
     },
     computed: {
@@ -64,7 +65,8 @@ export default {
             let list = [];
             if (this.current_task_id) {
                 this.tasks_list.forEach(element => {
-                    element.id != this.current_task_id
+                    console.log(this.CheckForLoopDependencies(element, false))
+                    element.id != this.current_task_id && !this.CheckForLoopDependencies(element, false)
                         ? list.push(element)
                         : "";
                 });
@@ -75,6 +77,26 @@ export default {
         }
     },
     methods: {
+        CheckForLoopDependencies(element, exist){
+            console.log(element)
+            if(!exist && element.previous_tasks.length){
+                element.previous_tasks.map(item => {
+                    console.log(['item.previous_task_id', item.previous_task_id])
+                    console.log(['this.current_task_id', this.current_task_id])
+                    console.log(item.previous_task_id == this.current_task_id || exist)
+                    if(item.previous_task_id == this.current_task_id || exist){
+                        exist = true
+                    }
+                    else {
+                        let task = this.tasks_list.filter(
+                                item_task => item_task.id === item.previous_task_id
+                            );
+                        exist = this.CheckForLoopDependencies(task[0], exist)
+                    }
+                })
+            }
+            return exist
+        },
         clearFields() {
             this.previousTasksIds_local = [];
         }

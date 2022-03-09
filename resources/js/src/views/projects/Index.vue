@@ -293,6 +293,7 @@ export default {
                 { key: "", name: "-" },
                 { key: "todo", name: "À faire" },
                 { key: "doing", name: "En cours" },
+                { key: "standby", name: "En stand-by" },
                 { key: "waiting", name: "Terminé, en attente de livraison" },
                 { key: "done", name: "Livré" }
             ],
@@ -446,7 +447,7 @@ export default {
             return this.projectsData
                 .filter(
                     p =>
-                        p.status === "doing" &&
+                        !p.is_hidden &&
                         p.start_date &&
                         moment(p.date).isAfter()
                 )
@@ -461,7 +462,7 @@ export default {
                     end: moment(p.date).format("YYYY-MM-DD"),
                     progress: p.progress.task_percent,
                     custom_class: `bar-${this.getProjectStatusColor(p)}${
-                        p.color ? `-${p.color.substring(1)}` : ""
+                        p.status!="todo" ? p.color ? `-${p.color.substring(1)}` : "-0079BF" : ""
                     }`
                 }))
                 .slice(0, 50);

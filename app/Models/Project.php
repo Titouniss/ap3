@@ -12,7 +12,7 @@ class Project extends Model
 {
     use HasDocuments, SoftDeletes, HasCompany;
 
-    protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'customer_id'];
+    protected $fillable = ['name', 'start_date', 'date', 'status', 'company_id', 'color', 'is_hidden', 'customer_id'];
 
     protected $appends = ['progress'];
 
