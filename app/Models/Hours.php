@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Hours extends Model
 {
-    protected $fillable = ['start_at', 'end_at', 'description', 'user_id', 'project_id', 'task_id'];
+    protected $fillable = ['start_at', 'end_at', 'description', 'user_id', 'project_id', 'workarea_id' , 'task_id'];
     protected $appends = ['duration', 'durationInFloatHour'];
     public function getDurationAttribute()
     {
@@ -34,5 +34,10 @@ class Hours extends Model
     public function user()
     {
         return $this->belongsTo('App\User', 'user_id', 'id');
+    }
+
+    public function workarea()
+    {
+        return $this->belongsTo('App\Models\WorkArea', 'workarea_id' , 'id');
     }
 }
