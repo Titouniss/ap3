@@ -81,9 +81,6 @@ export default {
             console.log(element)
             if(!exist && element.previous_tasks.length){
                 element.previous_tasks.map(item => {
-                    console.log(['item.previous_task_id', item.previous_task_id])
-                    console.log(['this.current_task_id', this.current_task_id])
-                    console.log(item.previous_task_id == this.current_task_id || exist)
                     if(item.previous_task_id == this.current_task_id || exist){
                         exist = true
                     }
