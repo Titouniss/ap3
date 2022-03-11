@@ -404,7 +404,6 @@ export default {
 
             this.gridApi.showLoadingOverlay();
         }
-
         /* =================================================================
       NOTE:
       Header is not aligned properly in RTL version of agGrid table.
@@ -451,6 +450,7 @@ export default {
             });
         }
     },
+
     beforeDestroy() {
         window.removeEventListener("resize", this.onResize());
 

@@ -106,6 +106,24 @@ export default {
     tooltip: {
       x: { show: false }
     }
+  },
+  donutChartOptions: {
+      chart: {
+          type: 'donut',
+          dropShadow: {
+              enabled: true,
+              top: 5,
+              left: 0,
+              blur: 4,
+              opacity: 0.10
+          },
+          toolbar: {
+              show: false
+          },
+          sparkline: {
+              enabled: true
+          }
+      },
   }
 
 }

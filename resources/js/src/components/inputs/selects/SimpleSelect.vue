@@ -3,6 +3,7 @@
         class="w-full"
         :value="value"
         :label="header"
+        :placeholder="placeholder"
         :multiple="multiple"
         :autocomplete="true"
         :success="required && !!value"
@@ -26,6 +27,10 @@
 export default {
     props: {
         header: {
+            type: String,
+            default: () => null
+        },
+        placeholder:{
             type: String,
             default: () => null
         },
@@ -68,7 +73,7 @@ export default {
     },
     methods: {
         ignore_enter(){
-            
+
         },
         onInput(value) {
             if (value) {

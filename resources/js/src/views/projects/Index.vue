@@ -165,7 +165,7 @@
                             <span class="mr-2">
                                 {{
                                     currentPage * itemsPerPage -
-                                        (itemsPerPage - 1)
+                                    (itemsPerPage - 1)
                                 }}
                                 -
                                 {{
@@ -479,6 +479,7 @@ export default {
             this.fetchProjects();
         },
         fetchProjects() {
+            console.log(this)
             const that = this;
             this.$vs.loading();
 
@@ -561,14 +562,14 @@ export default {
                             <div
                                 class="w-64 p-3 rounded text-white shadow-drop"
                                 style="background-color: rgba(var(--vs-${this.getProjectStatusColor(
-                                    project
-                                )}, 1));"
+                            project
+                        )}, 1));"
                             >
                                 <p class="mb-3 text-lg">${project.name}</p>
                                 <p class="mb-2 text-base">
                                     Livraison: ${moment(project.end).format(
-                                        "DD MMM YYYY"
-                                    )}
+                            "DD MMM YYYY"
+                        )}
                                 </p>
                                 <p class="text-base">
                                     Avancement: ${project.progress}%

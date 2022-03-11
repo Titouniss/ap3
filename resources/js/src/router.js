@@ -128,6 +128,17 @@ const router = new Router({
                         requiresAuth: true
                     }
                 },
+                /////---STATISTIQUES---/////
+                {
+                    path: "/analytics",
+                    name: "analytics",
+                    component: () => import("./views/analytics/Index.vue"),
+                    meta: {
+                        rule: "admin",
+                        pageTitle: "Statistiques",
+                        requiresAuth: true
+                    }
+                },
                 /////---ROLES---/////
                 {
                     path: "/roles",
@@ -201,8 +212,8 @@ const router = new Router({
                         parent: "projects",
                         rule: "admin",
                         requiresAuth: true,
-    
-                        },  
+
+                        },
                 },
                 /////---RANGES---/////
                 {

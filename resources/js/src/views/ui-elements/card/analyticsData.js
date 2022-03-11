@@ -759,13 +759,13 @@ export default {
   },
   // SessionsByDevice
   sessionsByDeviceDonut: {
-    // analyticsData: [
-    //     { device: 'Dekstop', icon: 'MonitorIcon', color: 'primary', sessionsPercentgae: 58.6, comparedResultPercentage: 2 },
-    //     { device: 'Mobile', icon: 'SmartphoneIcon', color: 'warning', sessionsPercentgae: 34.9, comparedResultPercentage: 8 },
-    //     { device: 'Tablet', icon: 'TabletIcon', color: 'danger', sessionsPercentgae: 6.5, comparedResultPercentage: -5 },
-    // ],
-    // comparedResult: [2, -3, 8],
-    // series: [58.6, 34.9, 6.5],
+     /*analyticsData: [
+         { device: 'Dekstop', icon: 'MonitorIcon', color: 'primary', sessionsPercentgae: 58.6, comparedResultPercentage: 2 },
+         { device: 'Mobile', icon: 'SmartphoneIcon', color: 'warning', sessionsPercentgae: 34.9, comparedResultPercentage: 8 },
+         { device: 'Tablet', icon: 'TabletIcon', color: 'danger', sessionsPercentgae: 6.5, comparedResultPercentage: -5 },
+     ],
+     comparedResult: [2, -3, 8],
+     series: [58.6, 34.9, 6.5],*/
     chartOptions: {
       labels: ['Desktop', 'Mobile', 'Tablet'],
       dataLabels: {
