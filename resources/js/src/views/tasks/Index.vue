@@ -33,7 +33,7 @@
             />
         </div>
 
-        <div class="vx-card p-6 mb-5" v-if="authorizedTo('publish') && formatActive == 'grid'">
+        <div class="vx-card p-6 mb-5" v-if="formatActive == 'grid'">
           <add-form
             :project_data="this.project_data"
             :tasks_list="tasksData"
