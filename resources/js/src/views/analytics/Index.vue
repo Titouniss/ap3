@@ -8,8 +8,9 @@
 ========================================================================================== -->
 <template>
     <div class="h-screen flex-col w-full">
+         {{GetAllStatsProjects}}
         <div class="vx-card mx-auto p-8 mt-5 ">
-            <div class="vx-row justify-around p-2 " style="width: 60%">
+            <!-- <div class="vx-row justify-around p-2 " style="width: 60%">
                 <div class="col self-center">
                     <datepicker
                         placeholder="Période sélectionnée"
@@ -30,7 +31,6 @@
                         :reduce="item => item.key"
                         :options="statusOption"
                     />
-
                 </div>
                 <div class="col self-center">
                     <InfiniteSelect
@@ -41,6 +41,14 @@
                         v-model="filters.project_id"
                         @focus="clearRefreshDataTimeout"
                     />
+                    <simple-select
+                        header=""
+                        label="name"
+                        placeholder="Statut du projet"
+                        v-model="filters.status"
+                        :reduce="item => item.key"
+                        :options="statusOption"
+                    />
                 </div>
                 <div class="col self-center">
                     <feather-icon class="cursor-pointer"
@@ -50,7 +58,7 @@
                     />
                 </div>
 
-            </div>
+            </div> -->
         </div>
         <div class=" mx-auto mt-5 flex">
             <vx-card class="analytics-container mr-4">
@@ -64,7 +72,7 @@
                             <div class="flex-col">
                                 <div class="flex items-center">
                                     <span class="text-dark font-bold text-xs">
-                                        {{ estimatedTimeData }}h
+                                        {{ estimatedTime }}h
 
                                     </span>
                                 </div>
@@ -76,7 +84,7 @@
                             <div class="flex-col">
                                 <div class="flex items-center">
                                     <span class="text-dark font-bold text-xs">
-                                        {{ achievedTimeData }}h
+                                        {{ achievedTime }}h
                                     </span>
                                 </div>
                                 <p class="text-dark text-xs">Effectuées</p>
@@ -166,12 +174,12 @@
                 <vs-row class="flex-col mb-3">
                     <div class="HoursByProject">
                         <vue-apex-charts class="HoursProjectFilled" ref="donut1" width="260" type="donut"
-                                         :options="chartOptions1" :series="HoursProject"></vue-apex-charts>
+                                         :options="chartOptions1" :series="chartSeries1"></vue-apex-charts>
                         <div class="HoursProjectEmpty"> il n'y a pas de projet correspondant aux filtres</div>
                     </div>
                 </vs-row>
             </vx-card>
-            <vx-card class="analytics-container mr-4">
+            <!-- <vx-card class="analytics-container mr-4">
                 <div class="vs-row flex mb-6">
                     <h6 class="text-dark">Heures par opérateur</h6>
                 </div>
@@ -193,7 +201,7 @@
                                          :series="HoursWorkAreas()"></vue-apex-charts>
                     </div>
                 </vs-row>
-            </vx-card>
+            </vx-card> -->
         </div>
     </div>
 </template>
@@ -235,8 +243,6 @@ export default {
     },
     data() {
         return {
-            project_data: null,
-            project_not_found: false,
             searchQuery: "",
             perPage: this.$router.history.current.query.perPage || 50,
             langFr: fr,
@@ -262,6 +268,7 @@ export default {
             },
             series: [20, 20],
 
+            chartSeries1: [],
             chartOptions1: {
                 labels: [],
                 dataLabels: {
@@ -285,6 +292,9 @@ export default {
                 legend: {show: false},
             },
             series2: [20, 20],
+
+            estimatedTime: 0,
+            achievedTime: 0,
 
             filters: {
                 status: null,
@@ -369,23 +379,23 @@ export default {
                     }
                 })
             }
-            this.NamesProjects
+            // this.NamesProjects
             this.NamesUsers
             return time;
         },
-        NamesProjects() {
-            let names = [];
-            if (this.projectsData()) {
-                this.projectsData().map(row => {
-                    names[row.id] = row.name
-                })
-            }
-            names = names.filter(Boolean)
-            if (this.$refs.donut1) {
-                this.$refs.donut1.updateOptions({labels: names});
-            }
-            return names;
-        },
+        // NamesProjects() {
+        //     let names = [];
+        //     if (this.projectsData()) {
+        //         this.projectsData().map(row => {
+        //             names[row.id] = row.name
+        //         })
+        //     }
+        //     names = names.filter(Boolean)
+        //     if (this.$refs.donut1) {
+        //         this.$refs.donut1.updateOptions({labels: names});
+        //     }
+        //     return names;
+        // },
         NamesUsers() {
             let names = [];
             if (this.hoursData()) {
@@ -400,69 +410,113 @@ export default {
             }
             return names
         },
-        HoursProject() {
-            var hour = [];
+
+        // HoursProject() {
+        //     var hour = [];
+        //     if (this.projectsData()) {
+        //         this.projectsData().map(row => {
+        //             if (this.filters.status === null && this.filters.date === null && this.filters.project_id === null) {
+        //                 if (typeof hour[row.id] === 'undefined') {
+        //                     hour[row.id] = 0
+        //                 }
+
+        //                 if (row.progress) {
+        //                     hour[row.id] = row.progress.nb_task_time_done
+        //                 }
+        //             }
+        //             if (this.filters.status !== null) {
+        //                 const result = this.projectsData().filter(row => {
+        //                     return row.status.match(this.filters)
+        //                 })
+        //                 result.map(row => {
+        //                     if (typeof hour[row.id] === 'undefined') {
+        //                         hour[row.id] = 0
+        //                     }
+        //                     if (row.progress) {
+        //                         hour[row.id] += row.progress.nb_task_time_done
+        //                     }
+
+        //                 })
+        //             }
+        //             if (this.filters.date !== null) {
+        //                 const formatDateFilter = (date) => {
+        //                     let formatted_date = date.getFullYear() + "-"
+        //                         + ("0" + (date.getMonth() + 1)).slice(-2)
+        //                     return formatted_date;
+        //                 }
+        //                 const formatDateProject = (date) => {
+        //                     let formatted_date = date.split(" ").splice(0, 1).join("")
+        //                     formatted_date = formatted_date.split("-").splice(0, 2).join("-")
+        //                     return formatted_date
+        //                 }
+        //                 const result = this.projectsData().filter(row => {
+        //                     return formatDateProject(row.date).match(formatDateFilter(this.filters.date))
+        //                 })
+        //                 if (result.length === 0) {
+        //                     hour[row.id] = 0
+        //                 } else {
+        //                     result.map(row => {
+        //                         if (typeof hour[row.id] === 'undefined') {
+        //                             hour[row.id] = 0
+        //                         }
+        //                         if (row.progress) {
+        //                             hour[row.id] += row.progress.nb_task_time_done
+        //                         }
+        //                     })
+        //                 }
+        //             }
+        //             if (this.filters.project_id !== null) {
+        //                 console.log(this.filters.project_id)
+        //             }
+        //         })
+        //     }
+
+
+        //     if (hour.filter(Boolean).length === 0) {
+        //         for (const el of document.getElementsByClassName('HoursProjectEmpty')) {
+        //             el.style.display = "inline-block"
+        //         }
+        //         for (const el of document.getElementsByClassName('HoursProjectFilled')) {
+        //             el.style.display = "none"
+        //         }
+        //     } else {
+        //         for (const el of document.getElementsByClassName('HoursProjectEmpty')) {
+        //             el.style.display = "none"
+        //         }
+        //         for (const el of document.getElementsByClassName('HoursProjectFilled')) {
+        //             el.style.display = "inline-block"
+        //         }
+        //         return hour.filter(Boolean)
+        //     }
+        // },
+         GetAllStatsProjects () {
+            const hours = []
+            const names = []
+            let estimatedTime = 0
+            let achievedTime = 0
+
             if (this.projectsData()) {
                 this.projectsData().map(row => {
-                    if (this.filters.status === null && this.filters.date === null && this.filters.project_id === null) {
-                        if (typeof hour[row.id] === 'undefined') {
-                            hour[row.id] = 0
-                        }
-
-                        if (row.progress) {
-                            hour[row.id] = row.progress.nb_task_time_done
-                        }
+                    if (row.progress.nb_task_time_done) {
+                        hours[row.id] = row.progress.nb_task_time_done     
+                        names[row.id] = row.name     
+                        estimatedTime += row.progress.nb_task_time  
                     }
-                    if (this.filters.status !== null) {
-                        const result = this.projectsData().filter(row => {
-                            return row.status.match(this.filters)
-                        })
-                        result.map(row => {
-                            if (typeof hour[row.id] === 'undefined') {
-                                hour[row.id] = 0
-                            }
-                            if (row.progress) {
-                                hour[row.id] += row.progress.nb_task_time_done
-                            }
-
-                        })
-                    }
-                    if (this.filters.date !== null) {
-                        const formatDateFilter = (date) => {
-                            let formatted_date = date.getFullYear() + "-"
-                                + ("0" + (date.getMonth() + 1)).slice(-2)
-                            return formatted_date;
-                        }
-                        const formatDateProject = (date) => {
-                            let formatted_date = date.split(" ").splice(0, 1).join("")
-                            formatted_date = formatted_date.split("-").splice(0, 2).join("-")
-                            return formatted_date
-                        }
-                        const result = this.projectsData().filter(row => {
-                            return formatDateProject(row.date).match(formatDateFilter(this.filters.date))
-                        })
-                        if (result.length === 0) {
-                            hour[row.id] = 0
-                        } else {
-                            result.map(row => {
-                                if (typeof hour[row.id] === 'undefined') {
-                                    hour[row.id] = 0
-                                }
-                                if (row.progress) {
-                                    hour[row.id] += row.progress.nb_task_time_done
-                                }
-                            })
-                        }
-                    }
-                    if (this.filters.project_id !== null) {
-                        console.log(this.filters.project_id)
-                        //supprimé car ne passait plus du tout depuis l'erreur
+                    if (row.progress.nb_task_time_done) {
+                        achievedTime += row.progress.nb_task_time_done
                     }
                 })
             }
 
+            this.estimatedTime = estimatedTime
+            this.achievedTime = achievedTime
+            
+            if (this.$refs.donut1) {
+                this.$refs.donut1.updateSeries(hours.filter(Boolean))
+                this.$refs.donut1.updateOptions({labels: names.filter(Boolean)})
+            }
 
-            if (hour.filter(Boolean).length === 0) {
+            if (hours.filter(Boolean).length === 0) {
                 for (const el of document.getElementsByClassName('HoursProjectEmpty')) {
                     el.style.display = "inline-block"
                 }
@@ -476,8 +530,9 @@ export default {
                 for (const el of document.getElementsByClassName('HoursProjectFilled')) {
                     el.style.display = "inline-block"
                 }
-                return hour.filter(Boolean)
             }
+
+            return ''
         },
         HoursUser() {
             var hour = [];
@@ -576,8 +631,8 @@ export default {
         },
         diffTimeData() {
             let time = 0;
-            if (this.achievedTimeData && this.estimatedTimeData) {
-                time = (this.estimatedTimeData - this.achievedTimeData)
+            if (this.achievedTime && this.estimatedTime) {
+                time = (this.estimatedTime - this.achievedTime)
             }
             return time
         },
