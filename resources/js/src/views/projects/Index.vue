@@ -107,6 +107,7 @@
                             class="small-radio-circle"
                             v-model="filters.formatDate"
                             vs-value="year"
+
                         >
                             Année
                         </vs-radio>
@@ -570,6 +571,7 @@ export default {
                                     Livraison: ${moment(project.end).format(
                             "DD MMM YYYY"
                         )}
+                                </p>
                                 </p>
                                 <p class="text-base">
                                     Avancement: ${project.progress}%

@@ -8,18 +8,38 @@
 ========================================================================================== -->
 <template>
     <div class="h-screen flex-col w-full">
-         {{GetAllStatsProjects}}
+        {{ GetAllStatsUsers }}
+        {{ GetAllStatsProjects }}
         <div class="vx-card mx-auto p-8 mt-5 ">
-            <!-- <div class="vx-row justify-around p-2 " style="width: 60%">
+            <div class="vx-row justify-around p-2 " style="width: 60%">
                 <div class="col self-center">
+                    <small class="small-radio-circle">
+                        <vs-radio
+                            class="date-label"
+                            v-model="filters.formatDate"
+                            vs-value="month"
+                        >
+                            Mois
+                        </vs-radio>
+                        <vs-radio
+                            class="small-radio-circle"
+                            v-model="filters.formatDate"
+                            vs-value="year"
+                        >
+                            Année
+                        </vs-radio>
+                    </small>
                     <datepicker
-                        placeholder="Période sélectionnée"
-                        class="pickDate"
+                        placeholder="Date de livraison"
+                        class="pickadate"
                         name="date"
                         :format="formatDatePicker"
-                        :minimumView="'month'"
+                        :language="langFr"
+                        :minimumView="filters.formatDate"
                         :maximumView="'year'"
-                        v-model="filters.date">
+                        :initialView="filters.formatDate"
+                        v-model="filters.date"
+                    >
                     </datepicker>
                 </div>
                 <div class="col self-center">
@@ -32,7 +52,7 @@
                         :options="statusOption"
                     />
                 </div>
-                <div class="col self-center">
+                <!--<div class="col self-center">
                     <InfiniteSelect
                         header=""
                         label="name"
@@ -41,24 +61,8 @@
                         v-model="filters.project_id"
                         @focus="clearRefreshDataTimeout"
                     />
-                    <simple-select
-                        header=""
-                        label="name"
-                        placeholder="Statut du projet"
-                        v-model="filters.status"
-                        :reduce="item => item.key"
-                        :options="statusOption"
-                    />
-                </div>
-                <div class="col self-center">
-                    <feather-icon class="cursor-pointer"
-                                  icon="SearchIcon"
-                                  svgClasses="h-7 w-7"
-                                  style="color: #000"
-                    />
-                </div>
-
-            </div> -->
+                </div>-->
+            </div>
         </div>
         <div class=" mx-auto mt-5 flex">
             <vx-card class="analytics-container mr-4">
@@ -169,7 +173,7 @@
             </vx-card>
             <vx-card class="analytics-container mr-4">
                 <div class="vs-row flex mb-6">
-                    <h6 class="text-dark">heures par projet</h6>
+                    <h6 class="text-dark HoursProject">heures par projet</h6>
                 </div>
                 <vs-row class="flex-col mb-3">
                     <div class="HoursByProject">
@@ -179,19 +183,19 @@
                     </div>
                 </vs-row>
             </vx-card>
-            <!-- <vx-card class="analytics-container mr-4">
+            <vx-card class="analytics-container mr-4">
                 <div class="vs-row flex mb-6">
                     <h6 class="text-dark">Heures par opérateur</h6>
                 </div>
                 <vs-row class="flex-col mb3">
                     <div class="HoursByOperate">
                         <vue-apex-charts class="HoursOperateFilled" ref="donut2" width="260" type="donut"
-                                         :options="chartOptions2" :series="HoursUser"></vue-apex-charts>
+                                         :options="chartOptions2" :series="chartSeries2"></vue-apex-charts>
                         <div class="HoursOperateEmpty"> il n'y a pas d'utilisateurs correspondant aux filtres</div>
                     </div>
                 </vs-row>
             </vx-card>
-            <vx-card class="analytics-container ">
+            <!--<vx-card class="analytics-container ">
                 <div class="vs-row flex mb-6">
                     <h6 class="text-dark">Heures par pôle de production</h6>
                 </div>
@@ -203,6 +207,25 @@
                 </vs-row>
             </vx-card> -->
         </div>
+        <div class="vx-card w-full mt-5 p-6">
+            <!-- AgGrid Table -->
+            <ag-grid-vue
+                ref="agGridTable"
+                :components="components"
+                :gridOptions="gridOptions"
+                class="ag-theme-material w-100 my-4 ag-grid-table"
+                overlayLoadingTemplate="Chargement..."
+                :columnDefs="columnDefs"
+                :defaultColDef="defaultColDef"
+                :rowData="projectsData, hoursData"
+                rowSelection="multiple"
+                colResizeDefault="shift"
+                :animateRows="true"
+                :floatingFilter="false"
+                :enableRtl="$vs.rtl"
+            ></ag-grid-vue>
+
+        </div>
     </div>
 </template>
 
@@ -212,33 +235,44 @@ import Datepicker from "vuejs-datepicker";
 import moment from "moment";
 import vSelect from 'vue-select'
 //Components
+import "@sass/vuexy/extraComponents/agGridStyleOverride.scss";
 import SimpleSelect from "@/components/inputs/selects/SimpleSelect";
 import InfiniteSelect from "@/components/inputs/selects/InfiniteSelect";
-
 //Store Module
 import moduleProjectManagement from "@/store/project-management/moduleProjectManagement.js";
-import moduleUserManagement from "@/store/user-management/moduleUserManagement.js";
 import moduleHoursManagement from "@/store/hours-management/moduleHoursManagement";
 import moduleDealingHoursManagement from "@/store/dealing-hours-management/moduleDealingHoursManagement";
 import moduleWorkareaManagement from "@/store/workarea-management/moduleWorkareaManagement";
 
 
+import {AgGridVue} from "ag-grid-vue";
 import {fr} from "vuejs-datepicker/dist/locale";
 import StatisticsCardLine from "../../components/statistics-cards/StatisticsCardLine";
 import _, {words} from "lodash";
 import IndexTasks from "./../tasks/Index.vue";
-
+//cell-renderer
+import CellRendererRelations from "./cell-renderer/CellRendererRelations.vue";
+import CellRendererStatus from "./cell-renderer/CellRendererStatus.vue";
+import CellRendererActions from "@/components/cell-renderer/CellRendererActions.vue";
+import CellRendererLink from "./cell-renderer/CellRendererLink.vue";
 
 export default {
     components: {
         StatisticsCardLine,
         Datepicker,
         VueApexCharts,
+        AgGridVue,
         InfiniteSelect,
         SimpleSelect,
         IndexTasks,
         'v-select': vSelect,
         name: 'DonutExample',
+
+        // Cell Renderer
+        CellRendererActions,
+        CellRendererLink,
+        CellRendererRelations,
+        CellRendererStatus,
 
     },
     data() {
@@ -256,18 +290,6 @@ export default {
                 {key: "done", name: "Livré"}
             ],
 
-            chartOptions: {
-                labels: [],
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val) {
-                        return val.toFixed(2) + "%"
-                    },
-                },
-                legend: {show: false},
-            },
-            series: [20, 20],
-
             chartSeries1: [],
             chartOptions1: {
                 labels: [],
@@ -281,6 +303,7 @@ export default {
             },
             series1: [20, 20],
 
+            chartSeries2: [],
             chartOptions2: {
                 labels: [],
                 dataLabels: {
@@ -296,11 +319,65 @@ export default {
             estimatedTime: 0,
             achievedTime: 0,
 
+            // AgGrid
+            gridApi: null,
+            gridOptions: {
+                localeText: {noRowsToShow: "Aucun projet à afficher"}
+            },
+            defaultColDef: {
+                sortable: true,
+                resizable: true,
+                suppressMenu: true
+            },
+            columnDefs: [
+                {
+                    headerName: "Identifiant",
+                    field: "id",
+                    filter: true,
+                    cellRendererFramework: "CellRendererLink"
+                },
+                {
+                    headerName: "Avancement",
+                    field: "status",
+                    cellRendererFramework: "CellRendererStatus"
+                },
+                {
+                    headerName: "Nom",
+                    field: "name",
+                    filter: true,
+                    cellRendererFramework: "CellRendererLink"
+                },
+                {
+                    headerName: "Temps Estimé",
+                    field: "estimated time",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                },
+                {
+                    headerName: "Temps réel",
+                    field: "achieved time",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                },
+                {
+                    headerName: "Différence",
+                    field: "diff time",
+                    filter: true,
+                    cellRendererFramework: "CellRendererRelations",
+                },
+            ],
+            // Cell Renderer Components
+            components: {
+                CellRendererLink,
+                CellRendererActions,
+                CellRendererRelations,
+                CellRendererStatus
+            },
             filters: {
                 status: null,
                 project_id: null,
                 date: null,
-                formatDate: "month, year"
+                formatDate: "year",
             }
         }
     },
@@ -319,12 +396,25 @@ export default {
         filters: {
             handler(val, prev) {
                 this.fetchProjects();
-                this.fetchHours();
+                //this.fetchHours();
             },
             deep: true
         }
     },
     computed: {
+        projectsData() {
+            if (!this.$store.state.projectManagement) {
+                return [];
+            }
+            return this.$store.getters["projectManagement/getItems"]
+        },
+        hoursData() {
+            if (!this.$store.state.hoursManagement) {
+                return [];
+            }
+            return this.$store.getters["hoursManagement/getItems"];
+
+        },
         formatDatePicker() {
             return this.filters.formatDate === "year" ? "yyyy" : "MMM yyyy";
         },
@@ -335,7 +425,6 @@ export default {
         },
         filterParams() {
             const filter = {};
-
             if (this.filters.project_id) {
                 filter.project_id = this.filters.project_id;
             }
@@ -353,8 +442,8 @@ export default {
         },
         estimatedTimeData() {
             let time = 0;
-            if (this.projectsData()) {
-                this.projectsData().map(row => {
+            if (this.projectsData) {
+                this.projectsData.map(row => {
                     if (row.tasks) {
                         row.tasks.map(data => {
                             time += data.estimated_time
@@ -366,8 +455,8 @@ export default {
         },
         achievedTimeData() {
             let time = 0;
-            if (this.projectsData()) {
-                this.projectsData().map(row => {
+            if (this.projectsData) {
+                this.projectsData.map(row => {
                     if (row.tasks) {
                         if (row.tasks.length === 0) {
                             time += 0
@@ -379,143 +468,34 @@ export default {
                     }
                 })
             }
-            // this.NamesProjects
             this.NamesUsers
             return time;
         },
-        // NamesProjects() {
-        //     let names = [];
-        //     if (this.projectsData()) {
-        //         this.projectsData().map(row => {
-        //             names[row.id] = row.name
-        //         })
-        //     }
-        //     names = names.filter(Boolean)
-        //     if (this.$refs.donut1) {
-        //         this.$refs.donut1.updateOptions({labels: names});
-        //     }
-        //     return names;
-        // },
-        NamesUsers() {
-            let names = [];
-            if (this.hoursData()) {
-                this.hoursData().map(row => {
-                    let map = new Map(Object.entries(row.user))
-                    names[map.get("id")] = map.get("firstname")
-                })
-            }
-            names = names.filter(Boolean)
-            if (this.$refs.donut2 != null) {
-                this.$refs.donut2.updateOptions({labels: names})
-            }
-            return names
-        },
-
-        // HoursProject() {
-        //     var hour = [];
-        //     if (this.projectsData()) {
-        //         this.projectsData().map(row => {
-        //             if (this.filters.status === null && this.filters.date === null && this.filters.project_id === null) {
-        //                 if (typeof hour[row.id] === 'undefined') {
-        //                     hour[row.id] = 0
-        //                 }
-
-        //                 if (row.progress) {
-        //                     hour[row.id] = row.progress.nb_task_time_done
-        //                 }
-        //             }
-        //             if (this.filters.status !== null) {
-        //                 const result = this.projectsData().filter(row => {
-        //                     return row.status.match(this.filters)
-        //                 })
-        //                 result.map(row => {
-        //                     if (typeof hour[row.id] === 'undefined') {
-        //                         hour[row.id] = 0
-        //                     }
-        //                     if (row.progress) {
-        //                         hour[row.id] += row.progress.nb_task_time_done
-        //                     }
-
-        //                 })
-        //             }
-        //             if (this.filters.date !== null) {
-        //                 const formatDateFilter = (date) => {
-        //                     let formatted_date = date.getFullYear() + "-"
-        //                         + ("0" + (date.getMonth() + 1)).slice(-2)
-        //                     return formatted_date;
-        //                 }
-        //                 const formatDateProject = (date) => {
-        //                     let formatted_date = date.split(" ").splice(0, 1).join("")
-        //                     formatted_date = formatted_date.split("-").splice(0, 2).join("-")
-        //                     return formatted_date
-        //                 }
-        //                 const result = this.projectsData().filter(row => {
-        //                     return formatDateProject(row.date).match(formatDateFilter(this.filters.date))
-        //                 })
-        //                 if (result.length === 0) {
-        //                     hour[row.id] = 0
-        //                 } else {
-        //                     result.map(row => {
-        //                         if (typeof hour[row.id] === 'undefined') {
-        //                             hour[row.id] = 0
-        //                         }
-        //                         if (row.progress) {
-        //                             hour[row.id] += row.progress.nb_task_time_done
-        //                         }
-        //                     })
-        //                 }
-        //             }
-        //             if (this.filters.project_id !== null) {
-        //                 console.log(this.filters.project_id)
-        //             }
-        //         })
-        //     }
-
-
-        //     if (hour.filter(Boolean).length === 0) {
-        //         for (const el of document.getElementsByClassName('HoursProjectEmpty')) {
-        //             el.style.display = "inline-block"
-        //         }
-        //         for (const el of document.getElementsByClassName('HoursProjectFilled')) {
-        //             el.style.display = "none"
-        //         }
-        //     } else {
-        //         for (const el of document.getElementsByClassName('HoursProjectEmpty')) {
-        //             el.style.display = "none"
-        //         }
-        //         for (const el of document.getElementsByClassName('HoursProjectFilled')) {
-        //             el.style.display = "inline-block"
-        //         }
-        //         return hour.filter(Boolean)
-        //     }
-        // },
-         GetAllStatsProjects () {
-            const hours = []
-            const names = []
+        GetAllStatsProjects() {
+            let hours = []
+            let names = []
             let estimatedTime = 0
             let achievedTime = 0
-
-            if (this.projectsData()) {
-                this.projectsData().map(row => {
+            if (this.projectsData) {
+                this.projectsData.map(row => {
                     if (row.progress.nb_task_time_done) {
-                        hours[row.id] = row.progress.nb_task_time_done     
-                        names[row.id] = row.name     
-                        estimatedTime += row.progress.nb_task_time  
+                        hours[row.id] = row.progress.nb_task_time_done
+                        names[row.id] = row.name
+                        estimatedTime += row.progress.nb_task_time
                     }
                     if (row.progress.nb_task_time_done) {
                         achievedTime += row.progress.nb_task_time_done
                     }
                 })
             }
-
-            this.estimatedTime = estimatedTime
-            this.achievedTime = achievedTime
-            
+            hours = hours.map(a => a.toFixed(2));
+            hours = hours.map(Number);
+            this.estimatedTime = estimatedTime.toFixed(1)
+            this.achievedTime = achievedTime.toFixed(1)
             if (this.$refs.donut1) {
                 this.$refs.donut1.updateSeries(hours.filter(Boolean))
                 this.$refs.donut1.updateOptions({labels: names.filter(Boolean)})
             }
-
             if (hours.filter(Boolean).length === 0) {
                 for (const el of document.getElementsByClassName('HoursProjectEmpty')) {
                     el.style.display = "inline-block"
@@ -531,62 +511,82 @@ export default {
                     el.style.display = "inline-block"
                 }
             }
-
             return ''
         },
-        HoursUser() {
-            var hour = [];
-            if (this.hoursData()) {
-                this.hoursData().map(row => {
-                    if (this.filters.status === null && this.filters.date === null && this.filters.project_id === null) {
-                        if (typeof hour[row.user_id] === 'undefined') {
-                            hour[row.user_id] = 0
-                        }
-                        hour[row.user_id] += row.durationInFloatHour
-                    }
-                    if (this.filters.status !== null) {
-                        const result = this.hoursData().filter(row => {
-                            return row.project.status.match(this.filters.status)
-                        })
-                        if (result.length === 0) {
-                            hour = []
-                        } else {
-                            result.map(row => {
-                                if (typeof hour[row.id] === 'undefined') {
-                                    hour[row.user_id] = 0
-                                }
-                                hour[row.user_id] += row.durationInFloatHour
-                            })
-                        }
-                    }
-                    if (this.filters.date !== null) {
-                        const formatDateFilter = (date) => {
-                            let formatted_date = date.getFullYear() + "-"
-                                + ("0" + (date.getMonth() + 1)).slice(-2)
-                            return formatted_date;
-                        }
-                        const formatDateProject = (date) => {
-                            let formatted_date = date.split(" ").splice(0, 1).join("")
-                            formatted_date = formatted_date.split("-").splice(0, 2).join("-")
-                            return formatted_date
-                        }
-                        const result = this.hoursData().filter(row => {
-                            return formatDateProject(row.project.date).match(formatDateFilter(this.filters.date))
-                        })
-                        if (result.length === 0) {
-                            hour[row.user_id] = 0
-                        } else {
-                            result.map(row => {
-                                if (typeof hour[row.user_id] === 'undefined') {
-                                    hour[row.user_id] = 0
-                                }
-                                hour[row.user_id] = row.durationInFloatHour
-                            })
-                        }
-                    }
-                })
+        GetAllStatsUsers() {
+            let hours = []
+            const names = []
+            const formatDateFilterMonth = (date) => {
+                let formatted_date = date.getFullYear() + "-"
+                    + ("0" + (date.getMonth() + 1)).slice(-2)
+                return formatted_date;
             }
-            if (hour.filter(Boolean).length === 0) {
+            const formatDateProjectMonth = (date) => {
+                let formatted_date = date.split(" ").splice(0, 1).join("")
+                formatted_date = formatted_date.split("-").splice(0, 2).join("-")
+                return formatted_date
+            }
+            const formatDateFilterYear = (date) => {
+                let formatted_date = date.getFullYear()
+                return formatted_date;
+            }
+            const formatDateProjectYear = (date) => {
+                let formatted_date = date.split(" ").splice(0, 1).join("")
+                formatted_date = formatted_date.split("-").splice(0, 1)
+                return formatted_date
+            }
+            this.hoursData.map(row => {
+                if (row.durationInFloatHour) {
+                    if (this.filters.status == null && this.filters.date == null) {
+                        hours[row.user_id] = row.durationInFloatHour
+                        names[row.user_id] = row.user.firstname
+                    }
+
+                    if (this.filters.status !== null && this.filters.date !== null){
+                        if (this.filters.formatDate === "year") {
+                            if (formatDateProjectYear(row.project.date) == formatDateFilterYear(this.filters.date) && row.project.status == this.filters.status) {
+                                hours[row.user_id] = row.durationInFloatHour
+                                names[row.user_id] = row.user.firstname
+
+                            }
+                        }
+                        if (this.filters.formatDate === "month") {
+                            if (formatDateProjectMonth(row.project.date) == formatDateFilterMonth(this.filters.date) && row.project.status == this.filters.status) {
+                                hours[row.user_id] = row.durationInFloatHour
+                                names[row.user_id] = row.user.firstname
+                            }
+                        }
+                    }
+
+                    if (row.project.status == this.filters.status && this.filters.date == null) {
+                        hours[row.user_id] = row.durationInFloatHour
+                        names[row.user_id] = row.user.firstname
+                    }
+                    if (this.filters.status == null && this.filters.date !== null ) {
+                        if (this.filters.formatDate === "year") {
+                            if (formatDateProjectYear(row.project.date) == formatDateFilterYear(this.filters.date)) {
+                                hours[row.user_id] = row.durationInFloatHour
+                                names[row.user_id] = row.user.firstname
+
+                            }
+                        }
+                        if (this.filters.formatDate === "month") {
+                            if (formatDateProjectMonth(row.project.date) == formatDateFilterMonth(this.filters.date)) {
+                                hours[row.user_id] = row.durationInFloatHour
+                                names[row.user_id] = row.user.firstname
+                            }
+                        }
+                    }
+                }
+            });
+
+            hours = hours.map(a => a.toFixed(2));
+            hours = hours.map(Number);
+            if (this.$refs.donut2) {
+                this.$refs.donut2.updateSeries(hours.filter(Boolean))
+                this.$refs.donut2.updateOptions({labels: names.filter(Boolean)})
+            }
+            if (hours.filter(Boolean).length === 0) {
                 for (const el of document.getElementsByClassName('HoursOperateEmpty')) {
                     el.style.display = "inline-block"
                 }
@@ -600,61 +600,28 @@ export default {
                 for (const el of document.getElementsByClassName('HoursOperateFilled')) {
                     el.style.display = "inline-block"
                 }
-                return hour.filter(Boolean)
             }
-        }
+            return ''
+        },
+
     },
     methods: {
-        userData() {
-            if (!this.$store.state.userManagement) {
-                return [];
-            }
-            return this.$store.getters["userManagement/getItems"];
-        },
-        hoursData() {
-            if (!this.$store.state.hoursManagement) {
-                return [];
-            }
-            return this.$store.getters["hoursManagement/getItems"];
-        },
-        projectsData() {
-            if (!this.$store.state.projectManagement) {
-                return [];
-            }
-            return this.$store.getters["projectManagement/getItems"]
-        },
-        WorkAreasData() {
-            if (!this.$store.state.workAreaManagement) {
-                return [];
-            }
-            return this.$store.getters["workAreaManagement/getItems"];
-        },
         diffTimeData() {
             let time = 0;
             if (this.achievedTime && this.estimatedTime) {
                 time = (this.estimatedTime - this.achievedTime)
             }
-            return time
+            return time.toFixed(1)
         },
         diffBudgetData() {
             let budget = 0;
             if (this.diffTimeData()) {
                 budget = (this.diffTimeData() * '55')
             }
-            return budget
-        },
-        HoursWorkAreas() {
-            var hour = [];
-            if (this.hoursData()) {
-                this.hoursData().map(row => {
-                    //console.log(row)
-                    //console.log(this.WorkAreasData())
-                })
-            }
+            return budget.toFixed(2)
         },
         refreshData() {
-            this.$vs.loading();
-            // refresh Hours
+            /*this.$vs.loading();
             this.$store
                 .dispatch("hoursManagement/fetchItems", {
                     ...this.filterParams,
@@ -682,7 +649,7 @@ export default {
                         color: "danger"
                     });
                 })
-                .finally(() => this.$vs.loading.close());
+                .finally(() => this.$vs.loading.close());*/
         },
         clearRefreshDataTimeout() {
             if (this.refreshDataTimeout) {
@@ -724,8 +691,6 @@ export default {
                 .then(data => {
                     that.projectsLoaded = true;
                     this.projects_data = data.payload;
-
-
                     if (data.pagination) {
                         const {total, last_page} = data.pagination;
                         this.totalPages = last_page;
@@ -739,7 +704,21 @@ export default {
                 });
         },
         fetchHours() {
-            this.$store.dispatch("hoursManagement/fetchItems")
+            const that = this;
+            this.$vs.loading();
+
+            let month = null;
+            let year = null;
+            if (this.filters.date && this.filters.formatDate === "year") {
+                year = moment(this.filters.date).format("YYYY");
+            }
+            if (this.filters.date && this.filters.formatDate === "month") {
+                year = moment(this.filters.date).format("YYYY");
+                month = moment(this.filters.date).format("M");
+            }
+
+            this.$store.dispatch("hoursManagement/fetchItems", {
+            })
                 .then((data) => {
                 })
                 .catch(err => {
@@ -754,13 +733,40 @@ export default {
                 .catch(err => {
                     console.error(err);
                 })
+        },
+        onResize(event) {
+            if (this.gridApi) {
+                // refresh the grid
+                this.gridApi.redrawRows();
+
+                // resize columns in the grid to fit the available space
+                this.gridApi.sizeColumnsToFit();
+            }
+        }
+    },
+    mounted() {
+        this.gridApi = this.gridOptions.api;
+
+        window.addEventListener("resize", this.onResize);
+        if (this.gridApi) {
+            // refresh the grid
+            this.gridApi.redrawRows();
+
+            // resize columns in the grid to fit the available space
+            this.gridApi.sizeColumnsToFit();
+
+            this.gridApi.showLoadingOverlay();
+        }
+        if (this.$vs.rtl) {
+            const header = this.$refs.agGridTable.$el.querySelector(
+                ".ag-header-container"
+            );
+            header.style.left = `-${String(
+                Number(header.style.transform.slice(11, -3)) + 9
+            )}px`;
         }
     },
     created() {
-        if (!moduleUserManagement.isRegistered) {
-            this.$store.registerModule("userManagement", moduleUserManagement);
-            moduleUserManagement.isRegistered = true;
-        }
         if (!moduleProjectManagement.isRegistered) {
             this.$store.registerModule(
                 "projectManagement",
@@ -793,12 +799,10 @@ export default {
         this.fetchProjects();
         this.fetchHours();
         this.fetchWorkAreas();
-        this.projectsData();
-        this.hoursData();
+        this.projectsData;
+        this.hoursData;
     },
     beforeDestroy() {
-        moduleUserManagement.isRegistered = false;
-        this.$store.unregisterModule("userManagement");
         moduleProjectManagement.isRegistered = false;
         this.$store.unregisterModule("projectManagement");
         moduleHoursManagement.isRegistered = false;
@@ -812,5 +816,11 @@ export default {
 </script>
 
 <style>
+.small-radio-circle .vs-radio--circle {
+    transform: scale(0.5) !important;
+}
 
+.small-radio-circle .vs-radio--borde {
+    transform: scale(0.5) !important;
+}
 </style>
