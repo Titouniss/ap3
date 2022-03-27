@@ -49,7 +49,7 @@ export default {
                 }
             }
 
-            return text;
+            return text + " h";
         }
     }
 }

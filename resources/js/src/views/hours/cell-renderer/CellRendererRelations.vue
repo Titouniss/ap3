@@ -13,7 +13,7 @@ export default {
       if (this.params.value) {
         text = this.params.value.name;
       }
-      return text;
+      return text ;
     }
   }
 };

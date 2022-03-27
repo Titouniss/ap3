@@ -44,24 +44,22 @@
                 </div>
                 <div class="col self-center">
                     <simple-select
-                        header=""
+                        header="statut"
                         label="name"
-                        placeholder="Statut du projet"
                         v-model="filters.status"
                         :reduce="item => item.key"
                         :options="statusOption"
                     />
                 </div>
-                <!--<div class="col self-center">
-                    <InfiniteSelect
-                        header=""
-                        label="name"
-                        placeholder="Projet"
+                <div class="col self-center">
+                    <infinite-select
+                        header="Projet"
                         model="project"
+                        label="name"
                         v-model="filters.project_id"
                         @focus="clearRefreshDataTimeout"
                     />
-                </div>-->
+                </div>
             </div>
         </div>
         <div class=" mx-auto mt-5 flex">
@@ -80,7 +78,7 @@
 
                                     </span>
                                 </div>
-                                <p class="text-dark text-xs">Plannifiées</p>
+                                <p class="text-dark text-xs">Estimées</p>
                             </div>
                         </vs-col>
                         <vs-col vs-type="flex" vs-justify="flex-start" vs-align="left" vs-w="5">
@@ -331,8 +329,8 @@ export default {
             },
             columnDefs: [
                 {
-                    headerName: "Identifiant",
-                    field: "id",
+                    headerName: "Nom",
+                    field: "name",
                     filter: true,
                     cellRendererFramework: "CellRendererLink"
                 },
@@ -340,12 +338,6 @@ export default {
                     headerName: "Avancement",
                     field: "status",
                     cellRendererFramework: "CellRendererStatus"
-                },
-                {
-                    headerName: "Nom",
-                    field: "name",
-                    filter: true,
-                    cellRendererFramework: "CellRendererLink"
                 },
                 {
                     headerName: "Temps Estimé",
@@ -427,6 +419,7 @@ export default {
             const filter = {};
             if (this.filters.project_id) {
                 filter.project_id = this.filters.project_id;
+                console.log("hey")
             }
 
             if (this.filters.user_id) {
@@ -479,9 +472,10 @@ export default {
             if (this.projectsData) {
                 this.projectsData.map(row => {
                     if (row.progress.nb_task_time_done) {
-                        hours[row.id] = row.progress.nb_task_time_done
+                        hours[row.id] = row.progress.nb_task_time_done + "h"
                         names[row.id] = row.name
                         estimatedTime += row.progress.nb_task_time
+                        console.log(ato )
                     }
                     if (row.progress.nb_task_time_done) {
                         achievedTime += row.progress.nb_task_time_done
@@ -541,7 +535,6 @@ export default {
                         hours[row.user_id] = row.durationInFloatHour
                         names[row.user_id] = row.user.firstname
                     }
-
                     if (this.filters.status !== null && this.filters.date !== null){
                         if (this.filters.formatDate === "year") {
                             if (formatDateProjectYear(row.project.date) == formatDateFilterYear(this.filters.date) && row.project.status == this.filters.status) {
@@ -557,7 +550,6 @@ export default {
                             }
                         }
                     }
-
                     if (row.project.status == this.filters.status && this.filters.date == null) {
                         hours[row.user_id] = row.durationInFloatHour
                         names[row.user_id] = row.user.firstname
@@ -675,11 +667,13 @@ export default {
 
             this.$store
                 .dispatch("projectManagement/fetchItems", {
+                    ...this.filterParams,
                     page: this.page,
                     per_page: this.perPage,
                     q: this.searchQuery || undefined,
                     company_id: this.filters.company_id || undefined,
                     customer_id: this.filters.customer_id || undefined,
+                    project: this.filters.project_id || undefined,
                     status: this.filters.status || undefined,
                     year: year || undefined,
                     month: month || undefined,

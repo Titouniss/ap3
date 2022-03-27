@@ -281,7 +281,7 @@ class UserController extends BaseApiController
             'firstname' => $arrayRequest['firstname'],
             'function' => $arrayRequest['function'],
             'email' => $arrayRequest['email'],
-            
+
         ]);
 
         return $this->successResponse($item->load(static::$show_load), "Mise à jour terminée avec succès.");
